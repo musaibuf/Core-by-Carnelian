@@ -1,123 +1,175 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-const T = {
-  // Carnelian Brand
+let T = {};
+
+const darkTheme = {
   c:     '#B01C24',
   cDark: '#8A1018',
   cDeep: '#6B0E13',
-  cGlow: 'rgba(176,28,36,0.12)',
-  cHalo: 'rgba(176,28,36,0.06)',
-
-  // Gold
+  cGlow: 'rgba(176,28,36,0.18)',
+  cHalo: 'rgba(176,28,36,0.09)',
   gold:  '#C8A84B',
   goldD: '#A07830',
-  goldP: 'rgba(200,168,75,0.1)',
+  goldP: 'rgba(200,168,75,0.12)',
+  bg0:   '#0A0808',
+  bg1:   '#111010',
+  bg2:   '#181414',
+  bg3:   '#201818',
+  bg4:   '#281E1E',
+  b0:    'rgba(255,255,255,0.06)',
+  b1:    'rgba(255,255,255,0.10)',
+  b2:    'rgba(255,255,255,0.16)',
+  bC:    'rgba(176,28,36,0.40)',
+  t0:    '#FFFFFF',
+  t1:    '#F5F5F5',
+  t2:    '#E0E0E0',
+  t3:    '#BDBDBD',
+  gn:    '#22c55e',
+  gnP:   'rgba(34,197,94,0.14)',
+  am:    '#f59e0b',
+  amP:   'rgba(245,158,11,0.14)',
+  rd:    '#ef4444',
+  rdP:   'rgba(239,68,68,0.14)',
+  gridColor: 'rgba(255,255,255,0.07)',
+  gridSize: '72px',
+};
 
-  // Dark surfaces — warmer, richer
-  bg0:   '#0F0D0D',
-  bg1:   '#161212',
-  bg2:   '#1E1818',
-  bg3:   '#261E1E',
-  bg4:   '#2E2424',
-
-  // Borders
-  b0:    'rgba(255,255,255,0.05)',
-  b1:    'rgba(255,255,255,0.09)',
-  b2:    'rgba(255,255,255,0.14)',
-  bC:    'rgba(176,28,36,0.35)',
-
-  // Text
-  t0:    '#F5F0EE',
-  t1:    '#C8BDB8',
-  t2:    '#8A7A75',
-  t3:    '#5A4A44',
-
-  // Semantic
+const lightTheme = {
+  c:     '#B01C24',
+  cDark: '#8A1018',
+  cDeep: '#6B0E13',
+  cGlow: 'rgba(176,28,36,0.10)',
+  cHalo: 'rgba(176,28,36,0.05)',
+  gold:  '#A07830',
+  goldD: '#7A5C20',
+  goldP: 'rgba(160,120,48,0.10)',
+  bg0:   '#FFFFFF',
+  bg1:   '#FAFAFA',
+  bg2:   '#F4F4F4',
+  bg3:   '#EEEEEE',
+  bg4:   '#E8E8E8',
+  b0:    'rgba(0,0,0,0.05)',
+  b1:    'rgba(0,0,0,0.09)',
+  b2:    'rgba(0,0,0,0.16)',
+  bC:    'rgba(176,28,36,0.30)',
+  t0:    '#0A0808',
+  t1:    '#1A1414',
+  t2:    '#3D3030',
+  t3:    '#6B5C5C',
   gn:    '#15803D',
-  gnP:   'rgba(21,128,61,0.12)',
+  gnP:   'rgba(21,128,61,0.10)',
   am:    '#B45309',
-  amP:   'rgba(180,83,9,0.12)',
+  amP:   'rgba(180,83,9,0.10)',
   rd:    '#B91C1C',
-  rdP:   'rgba(185,28,28,0.12)',
+  rdP:   'rgba(185,28,28,0.10)',
+  gridColor: 'rgba(0,0,0,0.06)',
+  gridSize: '72px',
 };
 
 // ─── FONTS ────────────────────────────────────────────────────────────────────
-const Fonts = () => (
-  <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Inconsolata:wght@400;500;600;700&display=swap');
-    
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: ${T.bg0};
-      color: ${T.t0};
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+const Fonts = ({ mode }) => {
+  const TT = mode === 'dark' ? darkTheme : lightTheme;
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-    /* Grain overlay for premium texture */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0.35;
-    }
-    [style*="font-weight: 300"] { font-weight: 400 !important; }
-    [style*="font-weight: 400"] { font-weight: 500 !important; }
-    .serif { font-family: 'Cormorant', serif; font-weight: 500 !important; }
-    .mono  { font-family: 'Inconsolata', monospace; }
-    
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-track { background: ${T.bg0}; }
-    ::-webkit-scrollbar-thumb { background: ${T.b2}; border-radius: 2px; }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-    @keyframes fadeUp    { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
-    @keyframes scaleIn   { from { opacity:0; transform:scale(0.97) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
-    @keyframes slideUp   { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes glow      { 0%,100% { opacity:0.4; } 50% { opacity:0.8; } }
-    @keyframes shimmer   { from { background-position:-200% center; } to { background-position:200% center; } }
-    @keyframes timerTick { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-    @keyframes checkIn   { from { transform:scale(0); } to { transform:scale(1); } }
-    @keyframes progressPulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: ${TT.bg0};
+        color: ${TT.t0};
+        min-height: 100vh;
+        overflow-x: hidden;
+        transition: background 0.3s ease, color 0.3s ease;
+        font-weight: 500;
+      }
 
-    .anim-fadeUp  { animation: fadeUp  0.7s cubic-bezier(0.22,1,0.36,1) both; }
-    .anim-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
-    .anim-slideUp { animation: slideUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+      /* Global grid overlay on body */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(${TT.gridColor} 1px, transparent 1px),
+          linear-gradient(90deg, ${TT.gridColor} 1px, transparent 1px);
+        background-size: ${TT.gridSize} ${TT.gridSize};
+        pointer-events: none;
+        z-index: 0;
+      }
 
-    /* Responsive */
-    @media (max-width: 900px) {
-      .grid-5-col { grid-template-columns: repeat(3,1fr) !important; }
-      .grid-6-col { grid-template-columns: repeat(3,1fr) !important; }
-      .grid-3-col { grid-template-columns: 1fr 1fr !important; }
-      .grid-2-col { grid-template-columns: 1fr !important; }
-      .grid-4-col { grid-template-columns: 1fr 1fr !important; }
-      .hero-title  { font-size: clamp(2.6rem,8vw,4rem) !important; }
-      .hide-mobile { display: none !important; }
-    }
-    @media (max-width: 600px) {
-      .grid-5-col { grid-template-columns: 1fr 1fr !important; }
-      .grid-6-col { grid-template-columns: repeat(2,1fr) !important; }
-      .grid-3-col { grid-template-columns: 1fr !important; }
-      .grid-4-col { grid-template-columns: 1fr !important; }
-      .section-pad { padding: 48px 20px !important; }
-      .card-pad    { padding: 24px 20px !important; }
-      .q-card-pad  { padding: 32px 24px !important; }
-      .hero-title  { font-size: clamp(2.2rem,9vw,3rem) !important; }
-      .nav-wrap    { padding: 0 16px !important; }
-      .report-wrap { padding: 32px 16px !important; }
-    }
-    @media print {
-      .no-print { display: none !important; }
-    }
-  `}</style>
-);
+      /* Noise grain for dark mode */
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: ${
+          mode === 'dark'
+            ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E")`
+            : 'none'
+        };
+        pointer-events: none;
+        z-index: 0;
+        opacity: ${mode === 'dark' ? '0.4' : '0'};
+      }
+
+      /* Everything above grid */
+      nav, main, section, div:not(body > div) {
+        position: relative;
+        z-index: 1;
+      }
+
+      .serif  { font-family: 'Playfair Display', serif; font-weight: 600; }
+      .mono   { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+      .sans   { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: ${TT.bg0}; }
+      ::-webkit-scrollbar-thumb { background: ${TT.b2}; border-radius: 2px; }
+
+      @keyframes fadeUp    { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+      @keyframes scaleIn   { from { opacity:0; transform:scale(0.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+      @keyframes slideUp   { from { opacity:0; transform:translateY(44px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes glow      { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+      @keyframes shimmer   { from { background-position:-200% center; } to { background-position:200% center; } }
+      @keyframes timerTick { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+      @keyframes checkIn   { from { transform:scale(0); } to { transform:scale(1); } }
+      @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+      .anim-fadeUp  { animation: fadeUp  0.7s cubic-bezier(0.22,1,0.36,1) both; }
+      .anim-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+      .anim-slideUp { animation: slideUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+
+      @media (max-width: 900px) {
+        .grid-5-col { grid-template-columns: repeat(3,1fr) !important; }
+        .grid-6-col { grid-template-columns: repeat(3,1fr) !important; }
+        .grid-3-col { grid-template-columns: 1fr 1fr !important; }
+        .grid-2-col { grid-template-columns: 1fr !important; }
+        .grid-4-col { grid-template-columns: 1fr 1fr !important; }
+        .hero-title  { font-size: clamp(2.4rem,7vw,3.6rem) !important; }
+        .hide-mobile { display: none !important; }
+      }
+      @media (max-width: 600px) {
+        .grid-5-col { grid-template-columns: 1fr 1fr !important; }
+        .grid-6-col { grid-template-columns: repeat(2,1fr) !important; }
+        .grid-3-col { grid-template-columns: 1fr !important; }
+        .grid-4-col { grid-template-columns: 1fr !important; }
+        .section-pad { padding: 48px 20px !important; }
+        .card-pad    { padding: 24px 20px !important; }
+        .q-card-pad  { padding: 32px 24px !important; }
+        .hero-title  { font-size: clamp(2rem,9vw,2.8rem) !important; }
+        .nav-wrap    { padding: 0 16px !important; }
+        .report-wrap { padding: 32px 16px !important; }
+      }
+      @media print {
+        .no-print { display: none !important; }
+      }
+    `}</style>
+  );
+};
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const IND = {
@@ -281,10 +333,15 @@ const getProfile = (s) => {
   return{name:'Developing Professional',desc:"A solid foundational profile with significant growth potential. With structured coaching and clear performance expectations, this individual can develop substantially across all dimensions."};
 };
 
-const bd=v=>v>=75?'High':v>=50?'Moderate':'Low';
-const bCol=v=>v>=75?T.gn:v>=50?T.am:T.rd;
-const bBg=v=>v>=75?T.gnP:v>=50?T.amP:T.rdP;
-const barGrad=v=>v>=75?`linear-gradient(90deg,#15803d,#22c55e)`:v>=50?`linear-gradient(90deg,#b45309,#f59e0b)`:`linear-gradient(90deg,#9b1c1c,#ef4444)`;
+// ─── THEME-AWARE HELPERS (called at render time, so T is current) ─────────────
+const bd = v => v>=75?'High':v>=50?'Moderate':'Low';
+const bCol = v => v>=75 ? T.gn : v>=50 ? T.am : T.rd;
+const bBg  = v => v>=75 ? T.gnP : v>=50 ? T.amP : T.rdP;
+const barGrad = v => v>=75
+  ? `linear-gradient(90deg,${darkTheme.gn},#4ade80)`
+  : v>=50
+  ? `linear-gradient(90deg,${darkTheme.am},#fcd34d)`
+  : `linear-gradient(90deg,${darkTheme.rd},#f87171)`;
 
 const dimInterp=(dim,score)=>{
   const b=bd(score);
@@ -315,18 +372,21 @@ const dimInterp=(dim,score)=>{
 };
 
 // ─── SHARED UI ────────────────────────────────────────────────────────────────
-const Pill = ({label, color=T.c, bg, style={}}) => (
-  <span className="mono" style={{
-    display:'inline-block', padding:'4px 12px', borderRadius:'3px',
-    fontSize:'10px', fontWeight:'600', letterSpacing:'0.1em', textTransform:'uppercase',
-    color, background:bg||`${color}15`, border:`1px solid ${color}30`, ...style
-  }}>{label}</span>
-);
+const Pill = ({label, color, bg, style={}}) => {
+  const c = color || T.c;
+  return (
+    <span className="mono" style={{
+      display:'inline-block', padding:'5px 14px', borderRadius:'3px',
+      fontSize:'10px', fontWeight:'700', letterSpacing:'0.12em', textTransform:'uppercase',
+      color:c, background:bg||`${c}18`, border:`1px solid ${c}35`, ...style
+    }}>{label}</span>
+  );
+};
 
 const ScoreBadge = ({score}) => (
   <span className="mono" style={{
-    fontSize:'12px', fontWeight:'600', padding:'3px 9px', borderRadius:'3px',
-    background:bBg(score), color:bCol(score), border:`1px solid ${bCol(score)}35`
+    fontSize:'12px', fontWeight:'700', padding:'3px 10px', borderRadius:'3px',
+    background:bBg(score), color:bCol(score), border:`1px solid ${bCol(score)}40`
   }}>{score}/100</span>
 );
 
@@ -337,206 +397,187 @@ const Bar = ({score, w=110, h=5}) => (
 );
 
 const GoldLine = ({style={}}) => (
-  <div style={{height:'1px', background:`linear-gradient(90deg, ${T.c}, ${T.gold}, transparent)`, ...style}} />
+  <div style={{height:'2px', background:`linear-gradient(90deg, ${T.c}, ${T.gold}, transparent)`, ...style}} />
 );
 
 // ─── ANIMATED NUMBER ──────────────────────────────────────────────────────────
 const AnimatedNumber = ({ value }) => {
   const [count, setCount] = useState(0);
-  
   useEffect(() => {
     const end = parseInt(value);
     if (isNaN(end)) return;
-    
-    const duration = 4000; // 4 seconds (very slow)
+    const duration = 3500;
     const startTime = performance.now();
-    
     const update = (currentTime) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
-      // Smooth ease-out effect (starts normal, slows down beautifully at the end)
       const easeOut = 1 - Math.pow(1 - progress, 3);
-      
       setCount(Math.floor(easeOut * end));
-      
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        setCount(end); // Ensure it lands exactly on the final number
-      }
+      if (progress < 1) requestAnimationFrame(update);
+      else setCount(end);
     };
-    
     requestAnimationFrame(update);
   }, [value]);
-  
   return <>{count}</>;
 };
 
-// ─── NAV ──────────────────────────────────────────────────────────────────────
-const Nav = ({tab, setTab, hasResults, hasHistory}) => (
-  <nav style={{
-    position:'sticky', top:0, zIndex:200,
-    background:`${T.bg0}E8`,
-    backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)',
-    borderBottom:`1px solid ${T.b1}`,
-  }} className="no-print">
-    <div className="nav-wrap" style={{
-      maxWidth:'1200px', margin:'0 auto',
-      display:'flex', alignItems:'center', justifyContent:'space-between',
-      padding:'0 32px', height:'64px',
-    }}>
-      {/* Logo */}
-      <div style={{display:'flex', alignItems:'center', gap:'12px', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
-        <img src="/logo.png" alt="Carnelian" style={{height:'30px', objectFit:'contain'}}
-          onError={e=>{e.target.style.display='none'; e.target.nextSibling.style.display='flex';}} />
-        <div style={{display:'none', width:'30px', height:'30px', background:T.c, borderRadius:'6px', alignItems:'center', justifyContent:'center', fontFamily:"'Cormorant',serif", fontWeight:'700', color:'#fff', fontSize:'15px'}}>C</div>
-        <div>
-          {/* Editorial Gold Serif CORE */}
-          <div className="serif" style={{fontSize:'28px', fontWeight:'500', color:T.gold, letterSpacing:'-0.02em', lineHeight:'0.95'}}>CORE</div>
-          {/* Carnelian Mono BY CARNELIAN */}
-          <div className="mono" style={{fontSize:'9px', color:T.c, letterSpacing:'0.15em', marginTop:'2px', fontWeight:'600'}}>BY CARNELIAN</div>
-        </div>
-      </div>
-
-      {/* Nav tabs */}
-      <div style={{display:'flex', gap:'2px', overflowX:'auto', scrollbarWidth:'none'}}>
-        {[
-          {id:'home', l:'Overview'},
-          {id:'assess', l:'Assessment'},
-          ...(hasResults?[{id:'results', l:'Reports'}]:[]),
-          ...(hasHistory?[{id:'progress', l:'Progress'}]:[]),
-          {id:'method', l:'Methodology'},
-        ].map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id)} style={{
-            padding:'8px 16px', borderRadius:'6px', border:'none', cursor:'pointer',
-            fontFamily:"'DM Sans',sans-serif", fontSize:'13px', fontWeight:'500',
-            transition:'all 0.18s', whiteSpace:'nowrap',
-            background: tab===t.id ? `${T.c}18` : 'transparent',
-            color: tab===t.id ? T.c : T.t2,
-          }}
-          onMouseOver={e=>{if(tab!==t.id){e.target.style.color=T.t1; e.target.style.background=T.b0;}}}
-          onMouseOut={e=>{if(tab!==t.id){e.target.style.color=T.t2; e.target.style.background='transparent';}}}
-          >{t.l}</button>
-        ))}
-      </div>
-    </div>
-  </nav>
-);
-
-// ─── SCROLL REVEAL ANIMATION COMPONENT ────────────────────────────────────────
-const Reveal = ({ children, delay = 0, direction = 'up', distance = 40 }) => {
+// ─── SCROLL REVEAL ────────────────────────────────────────────────────────────
+const Reveal = ({ children, delay = 0, direction = 'up', distance = 36 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
-
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setIsVisible(true);
-        observer.disconnect(); // Only animate once
-      }
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    
+      if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); }
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
-
   const y = direction === 'up' ? distance : direction === 'down' ? -distance : 0;
   const x = direction === 'left' ? distance : direction === 'right' ? -distance : 0;
-
   return (
     <div ref={ref} style={{
       opacity: isVisible ? 1 : 0,
       transform: isVisible ? 'translate(0,0)' : `translate(${x}px, ${y}px)`,
-      transition: `opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
-      width: '100%',
-      height: '100%'
+      transition: `opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s, transform 0.75s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
+      width: '100%', height: '100%'
     }}>
       {children}
     </div>
   );
 };
 
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
+  <nav style={{
+    position:'sticky', top:0, zIndex:200,
+    background:T.bg0 + 'EE',
+    backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
+    borderBottom:`1px solid ${T.b2}`,
+  }} className="no-print">
+    <div className="nav-wrap" style={{
+      maxWidth:'1200px', margin:'0 auto',
+      display:'flex', alignItems:'center', justifyContent:'space-between',
+      padding:'0 32px', height:'64px',
+    }}>
+      <div style={{display:'flex', alignItems:'center', gap:'12px', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
+        <img src="/logo.png" alt="Carnelian" style={{height:'30px', objectFit:'contain'}}
+          onError={e=>{e.target.style.display='none'; e.target.nextSibling.style.display='flex';}} />
+        <div style={{display:'none', width:'30px', height:'30px', background:T.c, borderRadius:'6px', alignItems:'center', justifyContent:'center', fontFamily:"'Playfair Display',serif", fontWeight:'700', color:'#fff', fontSize:'15px'}}>C</div>
+        <div>
+          <div style={{fontFamily:"'Playfair Display',serif", fontSize:'26px', fontWeight:'700', color:T.gold, letterSpacing:'-0.02em', lineHeight:'0.95'}}>CORE</div>
+          <div className="mono" style={{fontSize:'8px', color:T.c, letterSpacing:'0.18em', marginTop:'3px', fontWeight:'700'}}>BY CARNELIAN</div>
+        </div>
+      </div>
+
+      <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+        <div style={{display:'flex', gap:'2px', overflowX:'auto', scrollbarWidth:'none'}}>
+          {[
+            {id:'home', l:'Overview'},
+            {id:'assess', l:'Assessment'},
+            ...(hasResults?[{id:'results', l:'Reports'}]:[]),
+            ...(hasHistory?[{id:'progress', l:'Progress'}]:[]),
+            {id:'method', l:'Methodology'},
+          ].map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{
+              padding:'8px 16px', borderRadius:'6px', border:'none', cursor:'pointer',
+              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'700',
+              transition:'all 0.18s', whiteSpace:'nowrap',
+              background: tab===t.id ? `${T.c}20` : 'transparent',
+              color: tab===t.id ? T.c : T.t2,
+            }}
+            onMouseOver={e=>{if(tab!==t.id){e.target.style.color=T.t0; e.target.style.background=T.b1;}}}
+            onMouseOut={e=>{if(tab!==t.id){e.target.style.color=T.t2; e.target.style.background='transparent';}}}
+            >{t.l}</button>
+          ))}
+        </div>
+
+        {/* Theme toggle */}
+        <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
+          display:'flex', alignItems:'center', gap:'8px',
+          padding:'8px 16px', borderRadius:'6px',
+          border:`1px solid ${T.b2}`,
+          background: T.bg2,
+          color: T.t0,
+          cursor:'pointer',
+          fontFamily:"'Plus Jakarta Sans',sans-serif",
+          fontSize:'12px', fontWeight:'700',
+          letterSpacing:'0.03em',
+          transition:'all 0.2s',
+          whiteSpace:'nowrap',
+        }}
+        onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.color=T.c;}}
+        onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.color=T.t0;}}>
+          {mode === 'dark' ? '☀ Light' : '◑ Dark'}
+        </button>
+      </div>
+    </div>
+  </nav>
+);
+
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const HomePage = ({setTab}) => {
-  const [scrollY, setScrollY] = useState(0);
-  useEffect(()=>{
-    const h=()=>setScrollY(window.scrollY);
-    window.addEventListener('scroll',h,{passive:true});
-    return ()=>window.removeEventListener('scroll',h);
-  },[]);
-
   return (
     <div>
       {/* Hero */}
       <section style={{
-        background:T.bg0,
+        background:'transparent',
         minHeight:'100vh', display:'flex', flexDirection:'column',
         justifyContent:'center', position:'relative', overflow:'hidden',
         padding:'100px 32px',
       }}>
-        {/* Ambient lights */}
-        <div style={{position:'absolute', top:'-20%', right:'-10%', width:'70vw', height:'70vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.cGlow} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 8s ease-in-out infinite'}} />
-        <div style={{position:'absolute', bottom:'-15%', left:'-5%', width:'50vw', height:'50vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.goldP} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 10s ease-in-out infinite', animationDelay:'-4s'}} />
-        {/* Decorative grid lines */}
-        <div style={{position:'absolute', inset:0, backgroundImage:`linear-gradient(${T.b0} 1px, transparent 1px), linear-gradient(90deg, ${T.b0} 1px, transparent 1px)`, backgroundSize:'80px 80px', pointerEvents:'none', opacity:0.5}} />
+        {/* Ambient glows */}
+        <div style={{position:'absolute', top:'-15%', right:'-8%', width:'65vw', height:'65vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.cGlow} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 8s ease-in-out infinite', zIndex:0}} />
+        <div style={{position:'absolute', bottom:'-12%', left:'-4%', width:'45vw', height:'45vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.goldP} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 10s ease-in-out infinite', animationDelay:'-4s', zIndex:0}} />
 
         <div style={{maxWidth:'1100px', margin:'0 auto', position:'relative', zIndex:1, width:'100%'}}>
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Reveal delay={0}>
-              <Pill 
-                label="Competency & Organisational Readiness Evaluation" 
-                style={{
-                  marginBottom:'32px', 
-                  fontSize:'14px',       // Increased from 10px
-                  padding:'10px 24px',   // Increased padding
-                  letterSpacing:'0.12em' // Adjusted spacing for readability
-                }} 
-              />
+              <Pill label="Competency & Organisational Readiness Evaluation" style={{marginBottom:'32px', fontSize:'11px', padding:'8px 20px'}} />
             </Reveal>
-            
+
             <Reveal delay={0.1}>
-              <h1 className="serif hero-title" style={{
-                fontWeight:'500', fontSize:'clamp(3.2rem,6vw,5.6rem)',
-                color:T.t0, lineHeight:'1.0', margin:'0 0 16px',
-                letterSpacing:'-0.02em',
-              }}>
+              <h1 style={{
+                fontFamily:"'Playfair Display',serif",
+                fontWeight:'700', fontSize:'clamp(3rem,6vw,5.4rem)',
+                color:T.t0, lineHeight:'1.05', margin:'0 0 16px',
+                letterSpacing:'-0.03em',
+              }} className="hero-title">
                 The complete professional<br/>
                 <em style={{color:T.c, fontStyle:'italic'}}>readiness</em> benchmark.
               </h1>
             </Reveal>
 
             <Reveal delay={0.2}>
-              <GoldLine style={{width:'80px', margin:'24px auto'}} />
+              <GoldLine style={{width:'80px', margin:'28px auto'}} />
             </Reveal>
 
             <Reveal delay={0.3}>
-              <p style={{color:T.t2, fontSize:'17px', maxWidth:'540px', lineHeight:'1.75', margin:'0 auto 44px', fontWeight:'400'}}>
+              <p style={{color:T.t1, fontSize:'17px', maxWidth:'560px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'600'}}>
                 A 65-item psychometric battery engineered for Pakistan's professional landscape — with built-in validity controls, gamified behavioural challenges, and seven composite indices.
               </p>
             </Reveal>
 
             <Reveal delay={0.4}>
-              <div style={{display:'flex', gap:'14px', flexWrap:'wrap', justifyContent: 'center'}}>
+              <div style={{display:'flex', gap:'14px', flexWrap:'wrap', justifyContent:'center'}}>
                 <button onClick={()=>setTab('assess')} style={{
-                  padding:'14px 32px', borderRadius:'7px', border:'none', cursor:'pointer',
+                  padding:'15px 36px', borderRadius:'7px', border:'none', cursor:'pointer',
                   background:T.c, color:'#fff',
-                  fontFamily:"'DM Sans',sans-serif", fontSize:'14px', fontWeight:'600',
-                  letterSpacing:'0.02em', transition:'all 0.2s',
-                  boxShadow:`0 0 32px ${T.cGlow}`,
+                  fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'800',
+                  letterSpacing:'0.04em', transition:'all 0.2s',
+                  boxShadow:`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`,
                 }}
-                onMouseOver={e=>{ e.target.style.background=T.cDark; e.target.style.boxShadow=`0 0 48px ${T.cGlow}`; }}
-                onMouseOut={e=>{ e.target.style.background=T.c; e.target.style.boxShadow=`0 0 32px ${T.cGlow}`; }}>
+                onMouseOver={e=>{ e.target.style.background=T.cDark; e.target.style.transform='translateY(-2px)'; e.target.style.boxShadow=`0 0 56px ${T.cGlow}, 0 8px 28px rgba(0,0,0,0.4)`; }}
+                onMouseOut={e=>{ e.target.style.background=T.c; e.target.style.transform='none'; e.target.style.boxShadow=`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`; }}>
                   Begin Assessment
                 </button>
                 <button onClick={()=>setTab('method')} style={{
-                  padding:'14px 32px', borderRadius:'7px', cursor:'pointer',
-                  background:'transparent', border:`1px solid ${T.b2}`,
-                  color:T.t1, fontFamily:"'DM Sans',sans-serif", fontSize:'14px', fontWeight:'500',
+                  padding:'15px 36px', borderRadius:'7px', cursor:'pointer',
+                  background:'transparent', border:`2px solid ${T.b2}`,
+                  color:T.t1, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'700',
                   transition:'all 0.2s',
                 }}
-                onMouseOver={e=>{ e.target.style.borderColor=T.gold; e.target.style.color=T.gold; }}
-                onMouseOut={e=>{ e.target.style.borderColor=T.b2; e.target.style.color=T.t1; }}>
+                onMouseOver={e=>{ e.target.style.borderColor=T.gold; e.target.style.color=T.gold; e.target.style.transform='translateY(-2px)'; }}
+                onMouseOut={e=>{ e.target.style.borderColor=T.b2; e.target.style.color=T.t1; e.target.style.transform='none'; }}>
                   View the Science
                 </button>
               </div>
@@ -547,15 +588,17 @@ const HomePage = ({setTab}) => {
           <Reveal delay={0.6}>
             <div className="grid-6-col" style={{
               display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:'1px',
-              background:T.b1, border:`1px solid ${T.b1}`, borderRadius:'10px',
+              background:T.b2, border:`1px solid ${T.b2}`, borderRadius:'10px',
               overflow:'hidden', marginTop:'80px',
             }}>
               {[{n:'65',l:'Diagnostic Items'},{n:'14',l:'Dimensions'},{n:'7',l:'Composite Indices'},{n:'12',l:'L-Scale Items'},{n:'3',l:'Live Challenges'},{n:'12',l:'Sector Contexts'}].map((s,i)=>(
-                <div key={i} style={{background:T.bg1, textAlign:'center', padding:'28px 12px'}}>
-                  <div className="serif" style={{fontSize:'2.4rem', color:T.gold, fontWeight:'500', lineHeight:'1'}}>
+                <div key={i} style={{background:T.bg1, textAlign:'center', padding:'28px 12px', transition:'background 0.2s'}}
+                  onMouseOver={e=>e.currentTarget.style.background=T.bg2}
+                  onMouseOut={e=>e.currentTarget.style.background=T.bg1}>
+                  <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:'1'}}>
                     <AnimatedNumber value={s.n} />
                   </div>
-                  <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginTop:'8px', fontWeight:'600'}}>{s.l}</div>
+                  <div className="mono" style={{fontSize:'9px', color:T.t2, textTransform:'uppercase', letterSpacing:'0.12em', marginTop:'8px', fontWeight:'600'}}>{s.l}</div>
                 </div>
               ))}
             </div>
@@ -566,9 +609,9 @@ const HomePage = ({setTab}) => {
       {/* Modules */}
       <section className="section-pad" style={{padding:'100px 32px', maxWidth:'1100px', margin:'0 auto'}}>
         <Reveal delay={0}>
-          <div style={{marginBottom:'56px', textAlign: 'center'}}>
+          <div style={{marginBottom:'56px', textAlign:'center'}}>
             <Pill label="Assessment Architecture" />
-            <h2 className="serif" style={{fontSize:'clamp(2rem,4vw,3rem)', fontWeight:'500', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
+            <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,3rem)', fontWeight:'700', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
               Five modules. Three challenges.<br/>One complete picture.
             </h2>
           </div>
@@ -585,44 +628,34 @@ const HomePage = ({setTab}) => {
             <Reveal key={i} delay={i * 0.1}>
               <div style={{
                 background:T.bg1, border:`1px solid ${T.b1}`,
-                borderTop:`2px solid ${m.c}`,
+                borderTop:`3px solid ${m.c}`,
                 padding:'28px 22px', height:'100%',
                 transition:'all 0.25s', cursor:'default',
               }}
-              onMouseOver={e=>{e.currentTarget.style.background=T.bg2; e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow=`0 20px 40px ${T.bg0}`;}}
+              onMouseOver={e=>{e.currentTarget.style.background=T.bg2; e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.boxShadow=`0 20px 40px rgba(0,0,0,0.3)`;}}
               onMouseOut={e=>{e.currentTarget.style.background=T.bg1; e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='none';}}>
-                <div className="mono" style={{fontSize:'9px', color:m.c, letterSpacing:'0.12em', marginBottom:'16px', fontWeight:'600'}}>MOD {m.n}</div>
-                <div className="serif" style={{fontSize:'1.35rem', color:T.t0, fontWeight:'500', marginBottom:'12px'}}>{m.title}</div>
-                <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.6', fontWeight:'300'}}>{m.sub}</div>
+                <div className="mono" style={{fontSize:'9px', color:m.c, letterSpacing:'0.14em', marginBottom:'16px', fontWeight:'700'}}>MOD {m.n}</div>
+                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:T.t0, fontWeight:'600', marginBottom:'12px'}}>{m.title}</div>
+                <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.65', fontWeight:'500'}}>{m.sub}</div>
               </div>
             </Reveal>
           ))}
         </div>
 
-        {/* Challenges - Grouped in a unified box */}
+        {/* Challenges */}
         <Reveal delay={0}>
           <div style={{
-            background: T.bg1, 
-            border: `1px solid ${T.b1}`, 
-            borderRadius: '16px', 
-            padding: '48px 40px', 
-            marginBottom: '100px',
-            position: 'relative',
-            overflow: 'hidden'
+            background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px',
+            padding:'48px 40px', marginBottom:'100px', position:'relative', overflow:'hidden'
           }}>
-            {/* Subtle top glow for the box */}
-            <div style={{position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:'80%', height:'150px', background:`radial-gradient(ellipse at top, ${T.cGlow}, transparent 70%)`, pointerEvents:'none'}} />
-
-            <div style={{marginBottom:'40px', textAlign: 'center', position:'relative', zIndex:1}}>
+            <div style={{position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:'80%', height:'180px', background:`radial-gradient(ellipse at top, ${T.cGlow}, transparent 70%)`, pointerEvents:'none'}} />
+            <div style={{marginBottom:'40px', textAlign:'center', position:'relative', zIndex:1}}>
               <Pill label="Behaviour Under Pressure" color={T.c} style={{marginBottom:'16px'}} />
-              <h2 className="serif" style={{fontSize:'clamp(1.8rem,3vw,2.4rem)', fontWeight:'500', margin:'0 0 16px', color:T.t0}}>
-                Three Gamified Challenges
-              </h2>
-              <p style={{fontSize:'15px', color:T.t2, maxWidth:'700px', margin:'0 auto', lineHeight:'1.7'}}>
-                Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive behaviour that deliberate self-presentation cannot easily fake. All three contribute to scored dimension outputs.
+              <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(1.8rem,3vw,2.4rem)', fontWeight:'700', margin:'0 0 16px', color:T.t0}}>Three Gamified Challenges</h2>
+              <p style={{fontSize:'15px', color:T.t1, maxWidth:'700px', margin:'0 auto', lineHeight:'1.75', fontWeight:'600'}}>
+                Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive behaviour that deliberate self-presentation cannot easily fake.
               </p>
             </div>
-
             <div className="grid-3-col" style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'16px', position:'relative', zIndex:1}}>
               {[
                 {title:'Values Seesaw', sub:'Ethical Elicitation', desc:'A workplace ethical dilemma presented as a live seesaw the candidate physically positions using a slider. No timer — requires genuine reflection. Contributes to Ethical Reasoning score.'},
@@ -631,16 +664,14 @@ const HomePage = ({setTab}) => {
               ].map((c,i)=>(
                 <Reveal key={i} delay={i * 0.15}>
                   <div style={{
-                    background:T.bg2, border:`1px solid ${T.b1}`,
-                    borderRadius: '8px',
-                    padding:'32px 24px', height:'100%',
-                    transition:'all 0.25s',
+                    background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px',
+                    padding:'32px 24px', height:'100%', transition:'all 0.25s',
                   }}
                   onMouseOver={e=>{e.currentTarget.style.background=T.bg3; e.currentTarget.style.borderColor=T.bC; e.currentTarget.style.transform='translateY(-4px)';}}
                   onMouseOut={e=>{e.currentTarget.style.background=T.bg2; e.currentTarget.style.borderColor=T.b1; e.currentTarget.style.transform='none';}}>
-                    <div className="serif" style={{fontSize:'1.35rem', color:T.t0, fontWeight:'500', marginBottom:'5px'}}>{c.title}</div>
-                    <div className="mono" style={{fontSize:'10px', color:T.c, marginBottom:'16px', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.08em'}}>{c.sub}</div>
-                    <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'300'}}>{c.desc}</p>
+                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:T.t0, fontWeight:'600', marginBottom:'5px'}}>{c.title}</div>
+                    <div className="mono" style={{fontSize:'10px', color:T.c, marginBottom:'16px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.09em'}}>{c.sub}</div>
+                    <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'500'}}>{c.desc}</p>
                   </div>
                 </Reveal>
               ))}
@@ -653,13 +684,13 @@ const HomePage = ({setTab}) => {
           <Reveal delay={0}>
             <div style={{marginBottom:'48px'}}>
               <Pill label="Platform Capabilities" color={T.gold} />
-              <h2 className="serif" style={{fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'500', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
+              <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
                 Engineered for precision and scale.
               </h2>
             </div>
           </Reveal>
-          
-          <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+
+          <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
             {[
               {h:'Four-Layer Lie Detection', d:'12 invisible L-Scale items catch social desirability inflation. Reverse-scored consistency traps detect contradictions. Acquiescence detection flags candidates who click Agree on everything. Extreme response detection catches rushed or careless responding. All four combine into a single Validity Index — with hard overrides for catastrophic combinations.'},
               {h:'Seven Composite Indices', d:'14 individual dimensions combine into 7 composite indices weighted by published meta-analytic validity evidence: Compliance & Integrity, Leadership Readiness, Team Value, Adaptability, Stakeholder Effectiveness, Operational Reliability, and People Management.'},
@@ -667,10 +698,10 @@ const HomePage = ({setTab}) => {
               {h:'Role Suitability Matrix + Interview Probes', d:'Six role families rated Suitable, Conditional, or Not Recommended — each driven by the relevant composite index. Every Not Recommended verdict generates specific behavioural interview probe questions embedded directly in the HR report.'},
               {h:'Two Fully Separated Reports', d:'Technical Report (HR & Leadership): All composite indices, validity breakdown, pattern analysis, and psychometric citations. Candidate Action Plan (The Individual): Plain-language strengths, development areas, and a 30/90/180-day priority matrix. Zero HR risk language.'},
               {h:'12-Industry Context Engine', d:"Configure once for your client before assessment begins. The engine adapts the Technical Report's industry lens, risk thresholds, and high-potential benchmarks for 12 Pakistani sectors. The Candidate Action Plan adapts too — providing genuinely contextualised development actions."},
-              {h:'Longitudinal Re-Assessment Tracker', d:'Save any candidate\'s results to the device. When they retake CORE — after a development programme or promotion cycle — a side-by-side progress comparison is generated automatically. Every dimension shows its delta. Prove L&D impact with data.'},
+              {h:'Longitudinal Re-Assessment Tracker', d:"Save any candidate's results to the device. When they retake CORE — after a development programme or promotion cycle — a side-by-side progress comparison is generated automatically. Every dimension shows its delta. Prove L&D impact with data."},
               {h:'Engagement-Optimised Experience', d:'Positive reinforcement messages appear after every question. Clear timed challenge warnings mean no candidate is surprised by a clock. The seesaw provides a visual, tactile break. Runs in any browser on any device. No app or login required.'},
             ].map((item,i)=>(
-              <Reveal key={i} delay={i * 0.08} direction="left" distance={30}>
+              <Reveal key={i} delay={i * 0.07} direction="left" distance={28}>
                 <div style={{
                   display:'flex', alignItems:'flex-start', gap:'24px',
                   background:T.bg1, border:`1px solid ${T.b1}`, borderRadius:'8px',
@@ -678,31 +709,26 @@ const HomePage = ({setTab}) => {
                   transition:'all 0.3s ease', cursor:'default'
                 }}
                 onMouseOver={e=>{
-                  e.currentTarget.style.background=T.bg2; 
+                  e.currentTarget.style.background=T.bg2;
                   e.currentTarget.style.borderColor=T.b2;
-                  e.currentTarget.querySelector('.feat-num').style.color=T.gold;
-                  e.currentTarget.querySelector('.feat-num').style.transform='scale(1.1) translateX(-10px)';
+                  const num = e.currentTarget.querySelector('.feat-num');
+                  if (num) { num.style.color=T.gold; num.style.transform='scale(1.1) translateX(-10px)'; }
                 }}
                 onMouseOut={e=>{
-                  e.currentTarget.style.background=T.bg1; 
+                  e.currentTarget.style.background=T.bg1;
                   e.currentTarget.style.borderColor=T.b1;
-                  e.currentTarget.querySelector('.feat-num').style.color=T.b2;
-                  e.currentTarget.querySelector('.feat-num').style.transform='none';
+                  const num = e.currentTarget.querySelector('.feat-num');
+                  if (num) { num.style.color=T.b2; num.style.transform='none'; }
                 }}>
-                  {/* Large background number */}
-                  <div className="feat-num serif" style={{
-                    position:'absolute', right:'20px', top:'-10px', 
-                    fontSize:'120px', fontWeight:'600', color:T.b1, 
-                    opacity:0.3, transition:'all 0.5s ease', pointerEvents:'none',
-                    lineHeight:1
-                  }}>
-                    0{i+1}
-                  </div>
-                  
-                  {/* Content */}
-                  <div style={{position:'relative', zIndex:1, maxWidth:'85%'}}>
-                    <h3 className="serif" style={{fontSize:'1.4rem', fontWeight:'500', color:T.t0, marginBottom:'10px'}}>{item.h}</h3>
-                    <p style={{fontSize:'14px', color:T.t2, lineHeight:'1.7', fontWeight:'300'}}>{item.d}</p>
+                  <div className="feat-num" style={{
+                    position:'absolute', right:'16px', top:'-8px',
+                    fontFamily:"'Playfair Display',serif",
+                    fontSize:'110px', fontWeight:'700', color:T.b1,
+                    opacity:0.4, transition:'all 0.5s ease', pointerEvents:'none', lineHeight:1
+                  }}>0{i+1}</div>
+                  <div style={{position:'relative', zIndex:1, maxWidth:'88%'}}>
+                    <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.35rem', fontWeight:'600', color:T.t0, marginBottom:'10px'}}>{item.h}</h3>
+                    <p style={{fontSize:'13px', color:T.t1, lineHeight:'1.7', fontWeight:'500'}}>{item.d}</p>
                   </div>
                 </div>
               </Reveal>
@@ -712,9 +738,9 @@ const HomePage = ({setTab}) => {
 
         {/* Use cases */}
         <Reveal delay={0}>
-          <div style={{background:T.bg1, border:`1px solid ${T.b1}`, padding:'48px', borderRadius:'12px'}}>
-            <h3 className="serif" style={{fontSize:'2rem', fontWeight:'400', color:T.t0, marginBottom:'32px'}}>What organisations can use CORE for</h3>
-            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'1px', background:T.b1, border:`1px solid ${T.b1}`}}>
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, padding:'48px', borderRadius:'12px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', fontWeight:'600', color:T.t0, marginBottom:'32px'}}>What organisations can use CORE for</h3>
+            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'1px', background:T.b2, border:`1px solid ${T.b2}`}}>
               {[
                 {h:'Pre-Hiring Screening', d:'Reduce the cost of bad hires. Interview probe questions are already generated for every at-risk role.'},
                 {h:'Succession Planning', d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss — and the ones they should not promote.'},
@@ -727,10 +753,10 @@ const HomePage = ({setTab}) => {
               ].map((item,i)=>(
                 <Reveal key={i} delay={i * 0.05} distance={20}>
                   <div style={{background:T.bg2, padding:'28px 24px', height:'100%', transition:'background 0.2s'}}
-                       onMouseOver={e=>e.currentTarget.style.background=T.bg3}
-                       onMouseOut={e=>e.currentTarget.style.background=T.bg2}>
-                    <div className="serif" style={{fontSize:'1.15rem', fontWeight:'500', color:T.t0, marginBottom:'10px'}}>{item.h}</div>
-                    <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.65', fontWeight:'300'}}>{item.d}</div>
+                    onMouseOver={e=>e.currentTarget.style.background=T.bg3}
+                    onMouseOut={e=>e.currentTarget.style.background=T.bg2}>
+                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', color:T.t0, marginBottom:'10px'}}>{item.h}</div>
+                    <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.65', fontWeight:'500'}}>{item.d}</div>
                   </div>
                 </Reveal>
               ))}
@@ -746,7 +772,7 @@ const HomePage = ({setTab}) => {
 const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
   const [step, setStep] = useState('intake');
   const [intakeStage, setIntakeStage] = useState(1);
-  const [resp, setResp] = useState({name:'',emp:'',dept:'',role:'',exp:'',gender:'',org:'',purpose:'',industry:''});
+  const [resp, setResp] = useState({name:'',email:'',emp:'',dept:'',role:'',exp:'',gender:'',org:'',purpose:'',industry:''});
   const [answers, setAnswers] = useState(Array(QS.length).fill(null));
   const [cur, setCur] = useState(0);
   const [breaker, setBreaker] = useState(null);
@@ -761,14 +787,18 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
   const timerRef = useRef(null);
 
   useEffect(()=>{
-    if(resp.name){
+    if(resp.email || resp.emp){
       try{
         const h=JSON.parse(localStorage.getItem('core_v1_history')||'[]');
-        const prior=h.filter(e=>e.name===resp.name);
+        const prior=h.filter(e=>{
+          const emailMatch = resp.email && e.email && e.email === resp.email;
+          const empMatch   = resp.emp   && e.emp   && e.emp   === resp.emp;
+          return emailMatch || empMatch;
+        });
         setPriorFound(prior.length>0?prior[prior.length-1]:null);
       }catch(e){}
     }
-  },[resp.name]);
+  },[resp.email, resp.emp]);
 
   useEffect(()=>{
     if(timerActive&&timer>0){ timerRef.current=setTimeout(()=>setTimer(t=>t-1),1000); }
@@ -780,7 +810,6 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
 
   const handleAnswer=(val)=>{
     const a=[...answers]; a[cur]=val; setAnswers(a);
-    // No inline toast — just quiet state update, selection highlight is the feedback
   };
 
   const nextQ=()=>{
@@ -855,34 +884,47 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
     ];
     try{
       let h=JSON.parse(localStorage.getItem('core_v1_history')||'[]');
-      const entry={docId,date,timestamp:Date.now(),name:resp.name,emp:resp.emp||'',role:resp.role||'',dept:resp.dept||'',exp:resp.exp||'',org:resp.org||'',industry:resp.industry||'',profile:profile.name,validityOverall:validity.overall,scores:{O:S.O,C:S.C,E:S.E,A:S.A,ES:S.ES,CQavg:S.CQavg,OCBavg:S.OCBavg,LAavg:S.LAavg,EOavg:S.EOavg,OCEANavg:S.OCEANavg,overall:S.overall,CII,LRS,TVS,ADS,SES,OPS,PMS}};
-      const others=h.filter(e=>!(e.name===entry.name&&e.emp===entry.emp));
-      const same=h.filter(e=>e.name===entry.name&&e.emp===entry.emp).slice(-1);
-      h=[...others,...same,entry].slice(-200);
-      localStorage.setItem('core_v1_history',JSON.stringify(h));
+      const entry={
+        docId, date, timestamp:Date.now(),
+        name:resp.name, email:resp.email||'', emp:resp.emp||'',
+        role:resp.role||'', dept:resp.dept||'', exp:resp.exp||'',
+        org:resp.org||'', industry:resp.industry||'',
+        profile:profile.name, validityOverall:validity.overall,
+        scores:{O:S.O,C:S.C,E:S.E,A:S.A,ES:S.ES,CQavg:S.CQavg,OCBavg:S.OCBavg,LAavg:S.LAavg,EOavg:S.EOavg,OCEANavg:S.OCEANavg,overall:S.overall,CII,LRS,TVS,ADS,SES,OPS,PMS}
+      };
+      // Identify existing records by email OR emp (whichever is provided)
+      const isSamePerson = (e) => {
+        if (entry.email && e.email && entry.email === e.email) return true;
+        if (entry.emp   && e.emp   && entry.emp   === e.emp)   return true;
+        return false;
+      };
+      const others = h.filter(e => !isSamePerson(e));
+      const samePersonHistory = h.filter(isSamePerson).slice(-4); // keep last 4
+      h = [...others, ...samePersonHistory, entry].slice(-200);
+      localStorage.setItem('core_v1_history', JSON.stringify(h));
       setHistoryFlag(true);
     }catch(e){}
     setReportData({scores:S,profile,validity,CI,gameSummary,respondent:resp,cfg:{org:resp.org,industry:resp.industry,purpose:resp.purpose,conf:'Restricted — HR Leadership Only'},docId,date,roles});
     setTab('results');
   };
 
-  // ── INPUT STYLES ──
+  // styles
   const inp=(focused)=>({
     width:'100%', padding:'12px 16px',
     border:`1px solid ${focused?T.c:T.b2}`,
-    borderRadius:'6px', fontFamily:"'DM Sans',sans-serif", fontSize:'13px',
+    borderRadius:'6px', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
     background:T.bg3, color:T.t0, outline:'none', transition:'all 0.2s',
     boxShadow:focused?`0 0 0 3px ${T.cGlow}`:'none',
   });
   const [focused,setFocused]=useState({});
-  const lbl={display:'block',fontSize:'10px',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.1em',color:T.t3,marginBottom:'7px'};
-  const selStyle={width:'100%',padding:'12px 16px',border:`1px solid ${T.b2}`,borderRadius:'6px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',background:T.bg3,color:T.t0,outline:'none',cursor:'pointer'};
+  const lbl={display:'block',fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.t2,marginBottom:'7px',fontFamily:"'JetBrains Mono',monospace"};
+  const selStyle={width:'100%',padding:'12px 16px',border:`1px solid ${T.b2}`,borderRadius:'6px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'600',background:T.bg3,color:T.t0,outline:'none',cursor:'pointer'};
 
   // ── INTAKE ──
   if(step==='intake') return (
-    <div style={{minHeight:'100vh', background:T.bg0, padding:'80px 24px'}}>
-      <div style={{maxWidth:'680px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
-        {priorFound&&<div style={{background:`${T.gn}10`,border:`1px solid ${T.gn}30`,borderRadius:'8px',padding:'14px 18px',marginBottom:'24px',fontSize:'13px',color:T.gn}}>
+    <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px'}}>
+      <div style={{maxWidth:'700px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
+        {priorFound&&<div style={{background:`${T.gn}14`,border:`1px solid ${T.gn}35`,borderRadius:'8px',padding:'14px 18px',marginBottom:'24px',fontSize:'13px',color:T.gn,fontWeight:'600'}}>
           Prior assessment found for <strong style={{color:T.t0}}>{priorFound.name}</strong> dated {priorFound.date}. Progress comparison will generate automatically.
         </div>}
 
@@ -891,27 +933,27 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
           {[1,2,3].map(n=>(
             <React.Fragment key={n}>
               <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-                <div style={{width:'28px',height:'28px',borderRadius:'50%',border:`1px solid ${n<=intakeStage?T.c:T.b2}`,background:n<intakeStage?T.c:n===intakeStage?`${T.c}20`:'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{width:'28px',height:'28px',borderRadius:'50%',border:`2px solid ${n<=intakeStage?T.c:T.b2}`,background:n<intakeStage?T.c:n===intakeStage?`${T.c}20`:'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
                   {n<intakeStage
-                    ? <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
-                    : <span className="mono" style={{fontSize:'10px',color:n<=intakeStage?T.c:T.t3,fontWeight:'600'}}>{n}</span>
+                    ? <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
+                    : <span className="mono" style={{fontSize:'10px',color:n<=intakeStage?T.c:T.t3,fontWeight:'700'}}>{n}</span>
                   }
                 </div>
-                <span style={{fontSize:'12px',color:n<=intakeStage?T.t1:T.t3,fontWeight:n===intakeStage?'500':'400'}}>
+                <span style={{fontSize:'12px',color:n<=intakeStage?T.t0:T.t3,fontWeight:n===intakeStage?'700':'500'}}>
                   {n===1?'Your Details':n===2?'Context':'Instructions'}
                 </span>
               </div>
-              {n<3&&<div style={{flex:1,height:'1px',background:n<intakeStage?T.c:T.b1}} />}
+              {n<3&&<div style={{flex:1,height:'2px',background:n<intakeStage?T.c:T.b1,borderRadius:'1px'}} />}
             </React.Fragment>
           ))}
         </div>
 
-        <div style={{background:T.bg1,border:`1px solid ${T.b1}`,borderRadius:'12px',padding:'36px'}}>
+        <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
           {intakeStage===1&&(
             <div key="stage1" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 className="serif" style={{fontSize:'1.9rem',fontWeight:'400',color:T.t0,marginBottom:'24px'}}>Your Information</h2>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Your Information</h2>
               <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
-                {[['name','Full Name *','e.g. Ayesha Raza'],['emp','Employee / Roll No.','Optional'],['dept','Department','e.g. Risk Management'],['role','Current Role','e.g. Deputy Manager']].map(([k,lbl_,ph])=>(
+                {[['name','Full Name *','e.g. Ayesha Raza'],['email','Email Address *','e.g. ayesha@company.com'],['emp','Employee / Roll No.','Used to track your progress'],['dept','Department','e.g. Risk Management'],['role','Current Role','e.g. Deputy Manager']].map(([k,lbl_,ph])=>(
                   <div key={k}><label style={lbl}>{lbl_}</label><input value={resp[k]} onChange={e=>setResp(r=>({...r,[k]:e.target.value}))} placeholder={ph} style={inp(focused[k])} onFocus={()=>setFocused(f=>({...f,[k]:true}))} onBlur={()=>setFocused(f=>({...f,[k]:false}))} /></div>
                 ))}
                 <div><label style={lbl}>Years of Experience *</label>
@@ -927,7 +969,10 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
                   </select>
                 </div>
               </div>
-              <button onClick={()=>{if(!resp.name||!resp.exp){alert('Please enter your name and years of experience.');return;} setIntakeStage(2);}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+              <div style={{background:`${T.gold}10`,border:`1px solid ${T.gold}25`,borderRadius:'7px',padding:'12px 16px',marginBottom:'20px',fontSize:'12px',color:T.t1,fontWeight:'600'}}>
+                <span style={{color:T.gold,fontWeight:'700'}}>→ Progress Tracking:</span> Your email or employee number is used to identify your assessment history and generate progress comparisons across retakes. Neither field is mandatory to start, but at least one improves tracking accuracy.
+              </div>
+              <button onClick={()=>{if(!resp.name||!resp.exp){alert('Please enter your name and years of experience.');return;} setIntakeStage(2);}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
                 Continue →
               </button>
             </div>
@@ -935,7 +980,7 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
 
           {intakeStage===2&&(
             <div key="stage2" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 className="serif" style={{fontSize:'1.9rem',fontWeight:'400',color:T.t0,marginBottom:'24px'}}>Assessment Context</h2>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Assessment Context</h2>
               <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
                 <div><label style={lbl}>Organisation Name</label><input value={resp.org} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="e.g. Allied Bank Limited" style={inp(focused.org)} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} /></div>
                 <div><label style={lbl}>Assessment Purpose</label>
@@ -950,24 +995,24 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
                 {Object.entries(IND).map(([key,val])=>(
                   <button key={key} onClick={()=>setResp(r=>({...r,industry:key}))} style={{
                     padding:'11px 8px',borderRadius:'6px',cursor:'pointer',textAlign:'center',
-                    background:resp.industry===key?`${T.c}18`:T.bg3,
-                    border:`1px solid ${resp.industry===key?T.c:T.b1}`,
+                    background:resp.industry===key?`${T.c}20`:T.bg3,
+                    border:`2px solid ${resp.industry===key?T.c:T.b1}`,
                     color:resp.industry===key?T.c:T.t2,
-                    fontFamily:"'DM Sans',sans-serif",fontSize:'11px',fontWeight:'500',
+                    fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'11px',fontWeight:'700',
                     transition:'all 0.18s',lineHeight:'1.3',
                   }}>{val.short}</button>
                 ))}
               </div>
               <div style={{display:'flex',gap:'10px'}}>
-                <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.borderColor=T.b2} onMouseOut={e=>e.target.style.borderColor=T.b2}>← Back</button>
-                <button onClick={()=>{if(!resp.industry){alert('Please select an industry sector.');return;} setIntakeStage(3);}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue →</button>
+                <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
+                <button onClick={()=>{if(!resp.industry){alert('Please select an industry sector.');return;} setIntakeStage(3);}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue →</button>
               </div>
             </div>
           )}
 
           {intakeStage===3&&(
             <div key="stage3" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 className="serif" style={{fontSize:'1.9rem',fontWeight:'400',color:T.t0,marginBottom:'24px'}}>Before you begin</h2>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Before you begin</h2>
               <div style={{background:T.bg2,borderRadius:'8px',padding:'24px',marginBottom:'20px'}}>
                 {[
                   {n:'01',t:'Respond authentically',d:"Answer based on how you actually behave at work — not how you wish you behaved. There are no right or wrong answers."},
@@ -976,18 +1021,18 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
                   {n:'04',t:'Allow approximately 20 minutes',d:"Three embedded challenges will appear between sections. You cannot return to previous sections once moved forward."},
                 ].map((item,i,arr)=>(
                   <div key={i} style={{display:'flex',gap:'16px',paddingBottom:i<arr.length-1?'18px':'0',marginBottom:i<arr.length-1?'18px':'0',borderBottom:i<arr.length-1?`1px solid ${T.b1}`:'none'}}>
-                    <div className="mono" style={{fontSize:'11px',color:T.c,minWidth:'22px',paddingTop:'2px',fontWeight:'600'}}>{item.n}</div>
-                    <div><div style={{fontSize:'13px',fontWeight:'500',color:T.t0,marginBottom:'3px'}}>{item.t}</div><div style={{fontSize:'12px',color:T.t2,lineHeight:'1.65'}}>{item.d}</div></div>
+                    <div className="mono" style={{fontSize:'11px',color:T.c,minWidth:'22px',paddingTop:'2px',fontWeight:'700'}}>{item.n}</div>
+                    <div><div style={{fontSize:'13px',fontWeight:'700',color:T.t0,marginBottom:'3px'}}>{item.t}</div><div style={{fontSize:'12px',color:T.t2,lineHeight:'1.65',fontWeight:'500'}}>{item.d}</div></div>
                   </div>
                 ))}
               </div>
-              <div style={{background:`${T.am}10`,border:`1px solid ${T.am}30`,borderRadius:'7px',padding:'14px 16px',marginBottom:'20px'}}>
-                <div className="mono" style={{fontSize:'9px',fontWeight:'600',color:T.am,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'5px'}}>Validity Notice</div>
-                <p style={{fontSize:'12px',color:T.t1,lineHeight:'1.65'}}>This assessment includes checks that detect when responses do not reflect realistic self-perception. Inflated or inconsistent results are noted in the HR report and reduce the usefulness of your profile.</p>
+              <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'7px',padding:'14px 16px',marginBottom:'20px'}}>
+                <div className="mono" style={{fontSize:'9px',fontWeight:'700',color:T.am,textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'5px'}}>Validity Notice</div>
+                <p style={{fontSize:'12px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>This assessment includes checks that detect when responses do not reflect realistic self-perception. Inflated or inconsistent results are noted in the HR report and reduce the usefulness of your profile.</p>
               </div>
               <div style={{display:'flex',gap:'10px'}}>
-                <button onClick={()=>setIntakeStage(2)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',transition:'all 0.2s'}}>← Back</button>
-                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Begin Assessment →</button>
+                <button onClick={()=>setIntakeStage(2)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
+                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Begin Assessment →</button>
               </div>
             </div>
           )}
@@ -995,7 +1040,7 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
       </div>
     </div>
   );
-  
+
   // ── SEESAW GAME ──
   if(step==='questions'&&gameStage==='g1'){
     const tilt=(ssVal-50)*0.36;
@@ -1008,70 +1053,71 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
     ];
     const zone=zones.find(z=>ssVal<=z.max)||zones[zones.length-1];
     return (
-      <div style={{minHeight:'100vh',background:T.bg0,padding:'80px 24px',display:'flex',alignItems:'center'}}>
+      <div style={{minHeight:'100vh',background:'transparent',padding:'80px 24px',display:'flex',alignItems:'center'}}>
         <div style={{maxWidth:'680px',margin:'0 auto',width:'100%',animation:'slideUp 0.5s ease forwards'}}>
-          <div style={{background:`${T.c}10`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
-            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.12em',fontWeight:'600'}}>Balancing Challenge — After Part C</span>
+          <div style={{background:`${T.c}12`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
+            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>Balancing Challenge — After Part C</span>
           </div>
-          <div style={{background:T.bg1,border:`1px solid ${T.b1}`,borderRadius:'12px',padding:'36px card-pad'}}>
-            <h3 className="serif" style={{fontSize:'1.6rem',fontWeight:'400',color:T.t0,marginBottom:'8px'}}>Values in Balance</h3>
-            <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.6',marginBottom:'24px'}}>Most professionals face moments where two legitimate values pull in opposite directions. Use the slider to show where you naturally lean when these two sides conflict. There is no time limit — this requires genuine reflection. Your position contributes to your Ethical Reasoning profile.</p>
-            <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',marginBottom:'24px',borderLeft:`3px solid #8B5CF6`}}>
-              <p className="serif" style={{fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'400'}}>Your organisation has always resolved internal disputes informally — through conversation and relationships rather than formal written procedures. You believe this occasionally produces unfair outcomes, but it maintains team cohesion. A junior colleague asks your honest advice: should they follow the formal grievance process or handle this the way things have always been done here?</p>
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.7rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Values in Balance</h3>
+            <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>Most professionals face moments where two legitimate values pull in opposite directions. Use the slider to show where you naturally lean when these two sides conflict. There is no time limit — this requires genuine reflection. Your position contributes to your Ethical Reasoning profile.</p>
+            <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',marginBottom:'24px',borderLeft:`4px solid #8B5CF6`}}>
+              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>Your organisation has always resolved internal disputes informally — through conversation and relationships rather than formal written procedures. You believe this occasionally produces unfair outcomes, but it maintains team cohesion. A junior colleague asks your honest advice: should they follow the formal grievance process or handle this the way things have always been done here?</p>
             </div>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px', gap:'16px'}}>
-              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',lineHeight:'1.4',fontWeight:'500'}}>Follow the formal process — policies exist to protect people, regardless of organisational culture.</span>
-              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',textAlign:'right',lineHeight:'1.4',fontWeight:'500'}}>Handle it informally — relationships and trust matter more than process in real professional life.</span>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px',gap:'16px'}}>
+              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',lineHeight:'1.4',fontWeight:'600'}}>Follow the formal process — policies exist to protect people, regardless of organisational culture.</span>
+              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',textAlign:'right',lineHeight:'1.4',fontWeight:'600'}}>Handle it informally — relationships and trust matter more than process in real professional life.</span>
             </div>
             <svg viewBox="0 0 500 110" style={{width:'100%',overflow:'visible',marginBottom:'4px'}}>
               <polygon points="250,100 232,112 268,112" fill={T.b2}/>
-              <rect x="225" y="110" width="50" height="4" rx="2" fill={T.b2}/>
+              <rect x="225" y="110" width="50" height="5" rx="2.5" fill={T.b2}/>
               <g style={{transformOrigin:'250px 100px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
-                <rect x="60" y="96" width="380" height="7" rx="3.5" fill={T.t0}/>
+                <rect x="60" y="96" width="380" height="8" rx="4" fill={T.t0}/>
                 <rect x="52" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="76" y="80" textAnchor="middle" fontFamily="'DM Sans',sans-serif" fontSize="9" fill={T.gn} fontWeight="600">Formal</text>
+                <text x="76" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.gn} fontWeight="700">Formal</text>
                 <rect x="400" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="424" y="80" textAnchor="middle" fontFamily="'DM Sans',sans-serif" fontSize="9" fill={T.rd} fontWeight="600">Informal</text>
+                <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.rd} fontWeight="700">Informal</text>
               </g>
             </svg>
             <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVal} onChange={e=>setSsVal(parseInt(e.target.value))} style={{width:'100%',accentColor:T.c,cursor:'pointer'}} /></div>
-            <div style={{textAlign:'center',padding:'10px 14px',background:`${zone.c}12`,border:`1px solid ${zone.c}30`,borderRadius:'6px',fontSize:'12px',fontWeight:'500',color:zone.c,marginBottom:'20px'}}>{zone.label}</div>
-            <button onClick={submitSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Confirm My Position →</button>
+            <div style={{textAlign:'center',padding:'10px 14px',background:`${zone.c}14`,border:`1px solid ${zone.c}35`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:zone.c,marginBottom:'20px'}}>{zone.label}</div>
+            <button onClick={submitSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Confirm My Position →</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── TIMED GAME WARN/SCENARIO ──
+  // ── TIMED GAME WARN ──
   if(step==='questions'&&(gameStage==='g2warn'||gameStage==='g3warn')){
     const isG2=gameStage==='g2warn';
     return (
-      <div style={{minHeight:'100vh',background:T.bg0,padding:'80px 24px',display:'flex',alignItems:'center'}}>
+      <div style={{minHeight:'100vh',background:'transparent',padding:'80px 24px',display:'flex',alignItems:'center'}}>
         <div style={{maxWidth:'600px',margin:'0 auto',width:'100%',animation:'slideUp 0.5s ease forwards'}}>
-          <div style={{background:`${T.c}10`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
-            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.12em',fontWeight:'600'}}>{isG2?'Timed Challenge — 1 of 2':'Final Challenge — 2 of 2'}</span>
+          <div style={{background:`${T.c}12`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
+            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>{isG2?'Timed Challenge — 1 of 2':'Final Challenge — 2 of 2'}</span>
           </div>
-          <div style={{background:T.bg1,border:`1px solid ${T.b1}`,borderRadius:'12px',padding:'36px'}}>
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
             <div style={{textAlign:'center',marginBottom:'28px'}}>
-              <div className="serif" style={{fontSize:'2.4rem',fontWeight:'400',color:T.t0,marginBottom:'10px'}}>{isG2?'25-Second Decision Challenge':'25-Second Ethics Challenge'}</div>
-              <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',maxWidth:'440px',margin:'0 auto'}}>{isG2?'A real workplace situation will appear. You must read it and choose one of four responses. The clock starts when you click below.':'This is your last timed challenge. It tests ethical decision-making under relationship pressure — one of the most realistic situations professionals face.'}</p>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0,marginBottom:'10px'}}>{isG2?'25-Second Decision Challenge':'25-Second Ethics Challenge'}</div>
+              <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',maxWidth:'440px',margin:'0 auto',fontWeight:'500'}}>{isG2?'A real workplace situation will appear. You must read it and choose one of four responses. The clock starts when you click below.':'This is your last timed challenge. It tests ethical decision-making under relationship pressure — one of the most realistic situations professionals face.'}</p>
             </div>
             <div style={{background:T.bg2,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
               {['You have exactly 25 seconds — the clock begins immediately',isG2?'This challenge contributes to your Learning Agility profile':'This challenge contributes to your Ethical Orientation profile','Once you select a response, it is final','Answer as you honestly would — not as an ideal version of yourself'].map((b,i)=>(
-                <div key={i} style={{display:'flex',gap:'10px',padding:'7px 0',borderBottom:i<3?`1px solid ${T.b1}`:'none',fontSize:'12px',color:T.t1}}>
-                  <span style={{color:T.c,fontWeight:'700',flexShrink:0}}>→</span>{b}
+                <div key={i} style={{display:'flex',gap:'10px',padding:'7px 0',borderBottom:i<3?`1px solid ${T.b1}`:'none',fontSize:'12px',color:T.t1,fontWeight:'600'}}>
+                  <span style={{color:T.c,fontWeight:'800',flexShrink:0}}>→</span>{b}
                 </div>
               ))}
             </div>
-            <button onClick={()=>{setGameStage(isG2?'g2':'g3'); startTimer();}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Start the Clock →</button>
+            <button onClick={()=>{setGameStage(isG2?'g2':'g3'); startTimer();}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Start the Clock →</button>
           </div>
         </div>
       </div>
     );
   }
 
- if(step==='questions'&&(gameStage==='g2'||gameStage==='g3')){
+  // ── TIMED SCENARIO ──
+  if(step==='questions'&&(gameStage==='g2'||gameStage==='g3')){
     const isG2=gameStage==='g2';
     const circ=175.9;
     const offset=circ*(1-timer/25);
@@ -1091,18 +1137,16 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
     const onNext=()=>{
       setGameStage(null);
       const nextIdx=isG2?42:53;
-      const prevCh=QS[nextIdx-1]?.ch, nextCh=QS[nextIdx]?.ch;
       setCur(nextIdx);
-      if(prevCh!==nextCh&&BREAKERS[prevCh]) setBreaker(prevCh);
-      else setBreaker(null);
+      setBreaker(null);
     };
     return (
-      <div style={{minHeight:'100vh',background:T.bg0,padding:'64px 24px',display:'flex',alignItems:'center'}}>
+      <div style={{minHeight:'100vh',background:'transparent',padding:'64px 24px',display:'flex',alignItems:'center'}}>
         <div style={{maxWidth:'700px',margin:'0 auto',width:'100%',animation:'fadeIn 0.3s ease forwards'}}>
-          <div style={{background:`${T.c}10`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
-            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.12em',fontWeight:'600'}}>{isG2?'Timed Scenario — 1 of 2':'Ethics Challenge — 2 of 2'}</span>
+          <div style={{background:`${T.c}12`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
+            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>{isG2?'Timed Scenario — 1 of 2':'Ethics Challenge — 2 of 2'}</span>
           </div>
-          <div style={{background:T.bg1,border:`1px solid ${T.b1}`,borderRadius:'12px',padding:'32px'}}>
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px'}}>
             <div style={{display:'flex',alignItems:'center',gap:'16px',marginBottom:'20px'}}>
               <div style={{position:'relative',width:'64px',height:'64px',flexShrink:0}}>
                 <svg width="64" height="64" viewBox="0 0 64 64" style={{transform:'rotate(-90deg)'}}>
@@ -1111,12 +1155,12 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
                     strokeDasharray={circ} strokeDashoffset={offset}
                     style={{transition:'stroke-dashoffset 0.9s linear, stroke 0.4s', animation:urgent?'timerTick 1s infinite':undefined}}/>
                 </svg>
-                <div className="mono" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px',fontWeight:'600',color:urgent?T.rd:T.t0}}>{timer}</div>
+                <div className="mono" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px',fontWeight:'700',color:urgent?T.rd:T.t0}}>{timer}</div>
               </div>
-              <div style={{fontSize:'13px',color:T.t2,lineHeight:'1.6'}}>Read carefully and choose. <strong style={{color:urgent?T.rd:T.t0,fontWeight:'600'}}>The clock is running.</strong></div>
+              <div style={{fontSize:'13px',color:T.t2,lineHeight:'1.6',fontWeight:'600'}}>Read carefully and choose. <strong style={{color:urgent?T.rd:T.t0,fontWeight:'800'}}>The clock is running.</strong></div>
             </div>
-            <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',borderLeft:`3px solid ${T.c}`,marginBottom:'20px'}}>
-              <p className="serif" style={{fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'400'}}>{scenario}</p>
+            <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',borderLeft:`4px solid ${T.c}`,marginBottom:'20px'}}>
+              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>{scenario}</p>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'16px'}}>
               {options.map(opt=>(
@@ -1129,14 +1173,13 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
                 }}
                 onMouseOver={e=>{if(!gameLocked){e.currentTarget.style.borderColor=T.bC;e.currentTarget.style.background=T.bg3;}}}
                 onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2;e.currentTarget.style.background=T.bg2;}}>
-                  <span className="mono" style={{fontSize:'12px',fontWeight:'600',color:T.c,flexShrink:0,marginTop:'1px'}}>{opt.k}</span>
-                  {/* FIX IS HERE: Changed opt.label to opt.l */}
-                  <span style={{fontSize:'13px',color:T.t1,lineHeight:'1.6'}}>{opt.l}</span>
+                  <span className="mono" style={{fontSize:'12px',fontWeight:'700',color:T.c,flexShrink:0,marginTop:'1px'}}>{opt.k}</span>
+                  <span style={{fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'600'}}>{opt.l}</span>
                 </button>
               ))}
             </div>
-            {fb&&<div style={{background:fb.bg,border:`1px solid ${fb.bc}40`,borderRadius:'8px',padding:'14px 16px',marginBottom:'14px',fontSize:'13px',color:fb.c,lineHeight:'1.65'}}>{fb.msg}</div>}
-            {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section E →':'Continue to Final Section →'}</button>}
+            {fb&&<div style={{background:fb.bg,border:`1px solid ${fb.bc}40`,borderRadius:'8px',padding:'14px 16px',marginBottom:'14px',fontSize:'13px',color:fb.c,lineHeight:'1.65',fontWeight:'600'}}>{fb.msg}</div>}
+            {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section E →':'Continue to Final Section →'}</button>}
           </div>
         </div>
       </div>
@@ -1147,22 +1190,22 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
   if(step==='questions'&&breaker&&BREAKERS[breaker]){
     const b=BREAKERS[breaker];
     return (
-      <div style={{minHeight:'100vh',background:T.bg0,display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
+      <div style={{minHeight:'100vh',background:'transparent',display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
         <div style={{textAlign:'center',maxWidth:'460px',animation:'slideUp 0.5s ease forwards'}}>
-          <div style={{width:'60px',height:'60px',borderRadius:'50%',margin:'0 auto 22px',background:`${T.c}14`,border:`1px solid ${T.bC}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{width:'60px',height:'60px',borderRadius:'50%',margin:'0 auto 22px',background:`${T.c}16`,border:`2px solid ${T.bC}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={T.c} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <Pill label={`${b.pct}% complete`} style={{marginBottom:'18px'}} />
-          <h2 className="serif" style={{fontSize:'2.2rem',fontWeight:'400',color:T.t0,marginBottom:'8px'}}>{b.title}</h2>
-          <p style={{color:T.t2,fontSize:'14px',lineHeight:'1.7',marginBottom:'32px'}}>{b.msg}</p>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'2.2rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{b.title}</h2>
+          <p style={{color:T.t2,fontSize:'14px',lineHeight:'1.7',marginBottom:'32px',fontWeight:'600'}}>{b.msg}</p>
           <div style={{display:'flex',gap:'4px',justifyContent:'center',marginBottom:'36px'}}>
             {['A','B','C','D','E','F'].map(ch=>{
               const idx=QS.findIndex(q=>q.ch===ch);
               const done=cur>idx+9; const active=QS[cur]?.ch===ch;
-              return <div key={ch} style={{height:'3px',width:'36px',borderRadius:'2px',background:done?T.c:active?T.gold:T.b2,transition:'background 0.3s'}} />;
+              return <div key={ch} style={{height:'4px',width:'36px',borderRadius:'2px',background:done?T.c:active?T.gold:T.b2,transition:'background 0.3s'}} />;
             })}
           </div>
-          <button onClick={()=>setBreaker(null)} style={{padding:'12px 32px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t1,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'500',transition:'all 0.2s'}} onMouseOver={e=>{e.target.style.borderColor=T.c;e.target.style.color=T.c;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t1;}}>Continue →</button>
+          <button onClick={()=>setBreaker(null)} style={{padding:'12px 32px',borderRadius:'7px',border:`2px solid ${T.b2}`,background:'transparent',color:T.t1,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}} onMouseOver={e=>{e.target.style.borderColor=T.c;e.target.style.color=T.c;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t1;}}>Continue →</button>
         </div>
       </div>
     );
@@ -1170,36 +1213,31 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
 
   // ── QUESTIONS ──
   const q=QS[cur];
-  // Single overall progress bar: 0% to 100% from question 0 to last
   const totalPct=Math.round((cur/QS.length)*100);
 
   return (
-    <div style={{minHeight:'100vh',background:T.bg0,display:'flex',flexDirection:'column'}}>
-      {/* Top progress bar — single, clean, full-width */}
-      <div style={{height:'3px',background:T.b1,position:'sticky',top:'64px',zIndex:100}}>
-        <div style={{height:'100%',width:`${totalPct}%`,background:`linear-gradient(90deg,${T.c},${T.gold})`,transition:'width 0.4s ease',boxShadow:`0 0 12px ${T.cGlow}`}} />
+    <div style={{minHeight:'100vh',background:'transparent',display:'flex',flexDirection:'column'}}>
+      <div style={{height:'4px',background:T.b1,position:'sticky',top:'64px',zIndex:100}}>
+        <div style={{height:'100%',width:`${totalPct}%`,background:`linear-gradient(90deg,${T.c},${T.gold})`,transition:'width 0.4s ease',boxShadow:`0 0 16px ${T.cGlow}`}} />
       </div>
 
       <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
         <div style={{maxWidth:'680px',width:'100%'}}>
-          {/* Section label + count */}
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'28px'}}>
             <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-              <div style={{width:'7px',height:'7px',borderRadius:'50%',background:T.c,boxShadow:`0 0 8px ${T.c}`}} />
-              <span style={{fontSize:'12px',fontWeight:'500',color:T.t2}}>{PARTNAMES[q.ch]}</span>
+              <div style={{width:'8px',height:'8px',borderRadius:'50%',background:T.c,boxShadow:`0 0 10px ${T.c}`}} />
+              <span style={{fontSize:'12px',fontWeight:'700',color:T.t2,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>{PARTNAMES[q.ch]}</span>
             </div>
-            <span className="mono" style={{fontSize:'11px',color:T.t3}}>{totalPct}%</span>
+            <span className="mono" style={{fontSize:'11px',color:T.t3,fontWeight:'600'}}>{totalPct}%</span>
           </div>
 
-          {/* Question card */}
           <div className="q-card-pad" style={{
-            background:T.bg1, border:`1px solid ${T.b1}`,
+            background:T.bg1, border:`1px solid ${T.b2}`,
             borderRadius:'12px', padding:'40px 40px',
             animation:'scaleIn 0.25s ease forwards',
           }} key={cur}>
-            <p className="serif" style={{fontSize:'clamp(1.2rem,3vw,1.55rem)',color:T.t0,lineHeight:'1.5',marginBottom:'32px',fontWeight:'400'}}>{q.t}</p>
+            <p style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(1.2rem,3vw,1.55rem)',color:T.t0,lineHeight:'1.55',marginBottom:'32px',fontWeight:'600'}}>{q.t}</p>
 
-            {/* Likert options */}
             <div style={{display:'flex',flexDirection:'column',gap:'7px',marginBottom:'28px'}}>
               {LKOPTS.map(([val,label])=>{
                 const sel=answers[cur]===val;
@@ -1207,23 +1245,22 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
                   <button key={val} onClick={()=>handleAnswer(val)} style={{
                     display:'flex',alignItems:'center',gap:'14px',
                     padding:'12px 18px',borderRadius:'7px',cursor:'pointer',
-                    border:`1px solid ${sel?T.c:T.b1}`,
-                    background:sel?`${T.c}14`:T.bg2,
+                    border:`${sel?2:1}px solid ${sel?T.c:T.b1}`,
+                    background:sel?`${T.c}16`:T.bg2,
                     textAlign:'left',transition:'all 0.18s',width:'100%',
                   }}
                   onMouseOver={e=>{if(!sel){e.currentTarget.style.borderColor=T.bC;e.currentTarget.style.background=T.bg3;}}}
                   onMouseOut={e=>{if(!sel){e.currentTarget.style.borderColor=T.b1;e.currentTarget.style.background=T.bg2;}}}>
-                    {/* Custom radio dot with checkmark */}
                     <div style={{
                       width:'18px',height:'18px',borderRadius:'50%',flexShrink:0,
-                      border:`1.5px solid ${sel?T.c:T.b2}`,
+                      border:`2px solid ${sel?T.c:T.b2}`,
                       background:sel?T.c:'transparent',
                       display:'flex',alignItems:'center',justifyContent:'center',
                       transition:'all 0.18s',
                     }}>
-                      {sel&&<svg width="8" height="8" viewBox="0 0 8 8" style={{animation:'checkIn 0.2s ease'}}><path d="M1.5 4l2 2L6.5 2" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>}
+                      {sel&&<svg width="8" height="8" viewBox="0 0 8 8" style={{animation:'checkIn 0.2s ease'}}><path d="M1.5 4l2 2L6.5 2" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round"/></svg>}
                     </div>
-                    <span style={{fontSize:'13px',color:sel?T.t0:T.t1,fontWeight:sel?'500':'400'}}>{label}</span>
+                    <span style={{fontSize:'13px',color:sel?T.t0:T.t1,fontWeight:sel?'700':'600'}}>{label}</span>
                   </button>
                 );
               })}
@@ -1233,17 +1270,18 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
               <button onClick={prevQ} disabled={cur===0} style={{
                 padding:'9px 18px',borderRadius:'6px',border:`1px solid ${T.b2}`,
                 background:'transparent',color:T.t2,cursor:cur===0?'not-allowed':'pointer',
-                fontFamily:"'DM Sans',sans-serif",fontSize:'12px',
+                fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'12px',fontWeight:'700',
                 visibility:cur===0?'hidden':'visible',
                 transition:'all 0.18s',
-              }} onMouseOver={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t1;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t2;}}>← Back</button>
+              }}>← Back</button>
 
               <button onClick={nextQ} disabled={answers[cur]===null} style={{
                 padding:'9px 22px',borderRadius:'6px',border:'none',
                 cursor:answers[cur]===null?'not-allowed':'pointer',
                 background:answers[cur]===null?T.bg3:T.c,
                 color:answers[cur]===null?T.t3:'#fff',
-                fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',
+                fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',
+                letterSpacing:'0.03em',
                 transition:'all 0.2s',
               }} onMouseOver={e=>{if(answers[cur]!==null) e.target.style.background=T.cDark;}} onMouseOut={e=>{if(answers[cur]!==null) e.target.style.background=T.c;}}>
                 {cur===QS.length-1?'Generate Reports →':'Next →'}
@@ -1259,7 +1297,7 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
 // ─── RESULTS PAGE ─────────────────────────────────────────────────────────────
 const ResultsPage = ({reportData}) => {
   const [activeReport, setActiveReport] = useState('tech');
-  if(!reportData) return <div style={{padding:'100px 32px',textAlign:'center',color:T.t2}}>No assessment data found. Please complete the assessment first.</div>;
+  if(!reportData) return <div style={{padding:'100px 32px',textAlign:'center',color:T.t2,fontWeight:'600'}}>No assessment data found. Please complete the assessment first.</div>;
 
   const {scores:S,profile,validity,CI,gameSummary:gs,respondent:R,cfg,docId,date,roles} = reportData;
   const ind=IND[cfg.industry]||{short:'General',lens:'',hiPotential:'',riskNote:''};
@@ -1269,35 +1307,35 @@ const ResultsPage = ({reportData}) => {
   const sCol=(s,g,a)=>s>=g?T.gn:s>=a?T.am:T.rd;
 
   const cardStyle={background:'#fff',border:`1px solid #E5E7EB`,borderRadius:'10px',padding:'24px 26px',marginBottom:'10px'};
-  const darkCard={background:T.bg0,border:`1px solid ${T.b1}`,borderRadius:'10px',padding:'24px 26px',marginBottom:'10px'};
+  const darkCard={background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'24px 26px',marginBottom:'10px'};
+
+  const thStyle={padding:'5px 8px 9px',textAlign:'left',fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:'#9CA3AF',fontFamily:"'JetBrains Mono',monospace"};
   const hdrStyle={display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px',flexWrap:'wrap'};
 
   const DimRow=({dim,label,score})=>(
     <tr>
-      <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'500',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'middle'}}>{label}</td>
+      <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'700',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'middle'}}>{label}</td>
       <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><ScoreBadge score={score} /></td>
       <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle',width:'120px'}}><Bar score={score} w={110} /></td>
-      <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><span style={{fontSize:'10px',fontWeight:'700',color:bCol(score)}}>{bd(score)}</span></td>
-      <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5',maxWidth:'220px'}}>{dimInterp(dim,score)}</td>
+      <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><span style={{fontSize:'10px',fontWeight:'800',color:bCol(score),fontFamily:"'JetBrains Mono',monospace"}}>{bd(score)}</span></td>
+      <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5',maxWidth:'220px',fontWeight:'600'}}>{dimInterp(dim,score)}</td>
     </tr>
   );
 
   const Sec=({title,mod,modColor,cite,note,dims})=>(
     <div style={cardStyle}>
       <div style={hdrStyle}>
-        <Pill label={mod} color={modColor} bg={`${modColor}12`} />
-        <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827'}}>{title}</h3>
-        <span className="mono" style={{marginLeft:'auto',fontSize:'9px',color:'#9CA3AF'}}>{cite}</span>
+        <Pill label={mod} color={modColor} bg={`${modColor}14`} />
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827'}}>{title}</h3>
+        <span className="mono" style={{marginLeft:'auto',fontSize:'9px',color:'#9CA3AF',fontWeight:'600'}}>{cite}</span>
       </div>
       <div style={{overflowX:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse',minWidth:'480px'}}>
-          <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>
-            {['Dimension','Score','Profile','Band','Interpretation'].map(h=><th key={h} style={{padding:'5px 8px 9px',textAlign:'left',fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.1em',color:'#9CA3AF'}}>{h}</th>)}
-          </tr></thead>
+          <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Dimension','Score','Profile','Band','Interpretation'].map(h=><th key={h} style={thStyle}>{h}</th>)}</tr></thead>
           <tbody>{dims.map(d=><DimRow key={d[0]} dim={d[0]} label={d[1]} score={d[2]} />)}</tbody>
         </table>
       </div>
-      {note&&<div className="mono" style={{marginTop:'10px',padding:'9px 12px',background:'#F9FAFB',borderRadius:'5px',fontSize:'10px',color:'#6B7280',lineHeight:'1.6'}}>{note}</div>}
+      {note&&<div className="mono" style={{marginTop:'10px',padding:'9px 12px',background:'#F9FAFB',borderRadius:'5px',fontSize:'10px',color:'#6B7280',lineHeight:'1.6',fontWeight:'600'}}>{note}</div>}
     </div>
   );
 
@@ -1309,19 +1347,19 @@ const ResultsPage = ({reportData}) => {
         <div style={{position:'relative',zIndex:1}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'12px',marginBottom:'20px'}}>
             <div>
-              <div className="serif" style={{fontSize:'12px',color:T.gold,letterSpacing:'0.04em',marginBottom:'3px'}}>CORE by Carnelian · Technical Report {cfg.org&&`× ${cfg.org}`}</div>
-              <div className="mono" style={{fontSize:'10px',color:T.t3}}>{docId} · {date} · {cfg.conf}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:'12px',color:T.gold,letterSpacing:'0.04em',marginBottom:'3px',fontWeight:'600'}}>CORE by Carnelian · Technical Report {cfg.org&&`× ${cfg.org}`}</div>
+              <div className="mono" style={{fontSize:'10px',color:T.t3,fontWeight:'600'}}>{docId} · {date} · {cfg.conf}</div>
             </div>
             <Pill label={ind.short} color={T.gold} />
           </div>
-          <h1 className="serif" style={{fontSize:'clamp(2rem,5vw,2.8rem)',fontWeight:'400',color:T.t0,marginBottom:'6px'}}>{R.name}</h1>
-          <div style={{color:T.t2,fontSize:'13px',lineHeight:'1.8',marginBottom:'14px'}}>{R.role}{R.dept&&` · ${R.dept}`}<br/>{R.emp&&`ID: ${R.emp} · `}Experience: {R.exp}</div>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(2rem,5vw,2.8rem)',fontWeight:'700',color:T.t0,marginBottom:'6px'}}>{R.name}</h1>
+          <div style={{color:T.t2,fontSize:'13px',lineHeight:'1.8',marginBottom:'14px',fontWeight:'600'}}>{R.role}{R.dept&&` · ${R.dept}`}<br/>{R.email&&`Email: ${R.email} · `}{R.emp&&`ID: ${R.emp} · `}Experience: {R.exp}</div>
           <Pill label={`Profile: ${profile.name}`} color={T.c} style={{marginBottom:'20px'}} />
-          <div className="grid-6-col" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'1px',background:T.b1,borderRadius:'8px',overflow:'hidden'}}>
+          <div className="grid-6-col" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'1px',background:T.b2,borderRadius:'8px',overflow:'hidden'}}>
             {[{n:S.OCEANavg,l:'Personality'},{n:S.CQavg,l:'Cultural IQ'},{n:S.OCBavg,l:'Citizenship'},{n:S.LAavg,l:'Learning'},{n:S.EOavg,l:'Integrity'}].map((c,i)=>(
               <div key={i} style={{background:T.bg1,textAlign:'center',padding:'16px 8px'}}>
-                <div className="serif" style={{fontSize:'2rem',color:T.gold,fontWeight:'400'}}>{c.n}</div>
-                <div className="mono" style={{fontSize:'9px',color:T.t3,textTransform:'uppercase',letterSpacing:'0.1em',marginTop:'3px'}}>{c.l}</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:'2rem',color:T.gold,fontWeight:'700'}}>{c.n}</div>
+                <div className="mono" style={{fontSize:'9px',color:T.t3,textTransform:'uppercase',letterSpacing:'0.12em',marginTop:'3px',fontWeight:'600'}}>{c.l}</div>
               </div>
             ))}
           </div>
@@ -1332,20 +1370,28 @@ const ResultsPage = ({reportData}) => {
       <div style={cardStyle}>
         <div style={hdrStyle}>
           <Pill label="Composite Indices" color={T.c} />
-          <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827'}}>Cross-Module Composite Indices</h3>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827'}}>Cross-Module Composite Indices</h3>
         </div>
-        <p style={{fontSize:'12px',color:'#6B7280',marginBottom:'16px',lineHeight:'1.6'}}>Each index draws from multiple modules simultaneously, weighted by meta-analytic validity evidence. These are the primary decision-making scores for HR leadership.</p>
+        <p style={{fontSize:'12px',color:'#6B7280',marginBottom:'16px',lineHeight:'1.6',fontWeight:'600'}}>Each index draws from multiple modules simultaneously, weighted by meta-analytic validity evidence. These are the primary decision-making scores for HR leadership.</p>
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',minWidth:'500px'}}>
-            <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Index','Score','Profile','Risk','Purpose'].map(h=><th key={h} style={{padding:'5px 8px 9px',textAlign:'left',fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.1em',color:'#9CA3AF'}}>{h}</th>)}</tr></thead>
+            <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Index','Score','Profile','Risk','Purpose'].map(h=><th key={h} style={thStyle}>{h}</th>)}</tr></thead>
             <tbody>
-              {[{n:'Compliance & Integrity (CII)',s:CI.CII,g:70,a:54,p:'Primary screen for treasury, audit, and fiduciary roles. Below 54 is a placement flag.'},{n:'Leadership Readiness (LRS)',s:CI.LRS,g:72,a:55,p:'Composite predictor of senior leadership performance for promotion decisions.'},{n:'Team Value (TVS)',s:CI.TVS,g:68,a:51,p:'Predicts team cohesion contribution. Low TVS may create friction.'},{n:'Adaptability (ADS)',s:CI.ADS,g:67,a:50,p:'Suitability for change, reform, and innovation roles.'},{n:'Stakeholder Effectiveness (SES)',s:CI.SES,g:68,a:52,p:'Client, donor, regulator, and partner effectiveness.'},{n:'Operational Reliability (OPS)',s:CI.OPS,g:67,a:51,p:'Sustained delivery and reliability under pressure.'},{n:'People Management (PMS)',s:CI.PMS,g:67,a:51,p:'Suitability for team leadership and direct line management.'}].map((row,i)=>(
+              {[
+                {n:'Compliance & Integrity (CII)',s:CI.CII,g:70,a:54,p:'Primary screen for treasury, audit, and fiduciary roles.'},
+                {n:'Leadership Readiness (LRS)',s:CI.LRS,g:72,a:55,p:'Composite predictor of senior leadership performance.'},
+                {n:'Team Value (TVS)',s:CI.TVS,g:68,a:51,p:'Predicts team cohesion contribution.'},
+                {n:'Adaptability (ADS)',s:CI.ADS,g:67,a:50,p:'Suitability for change, reform, and innovation roles.'},
+                {n:'Stakeholder Effectiveness (SES)',s:CI.SES,g:68,a:52,p:'Client, donor, regulator, and partner effectiveness.'},
+                {n:'Operational Reliability (OPS)',s:CI.OPS,g:67,a:51,p:'Sustained delivery and reliability under pressure.'},
+                {n:'People Management (PMS)',s:CI.PMS,g:67,a:51,p:'Suitability for team leadership and direct line management.'},
+              ].map((row,i)=>(
                 <tr key={i}>
-                  <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'500',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'middle'}}>{row.n}</td>
+                  <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'700',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'middle'}}>{row.n}</td>
                   <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><ScoreBadge score={row.s} /></td>
                   <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle',width:'120px'}}><Bar score={row.s} w={110} /></td>
-                  <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><span style={{fontSize:'10px',fontWeight:'700',padding:'3px 8px',borderRadius:'3px',background:sBg(row.s,row.g,row.a),color:sCol(row.s,row.g,row.a)}}>{sLbl(row.s,row.g,row.a)}</span></td>
-                  <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5'}}>{row.p}</td>
+                  <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><span style={{fontSize:'10px',fontWeight:'800',padding:'3px 8px',borderRadius:'3px',background:sBg(row.s,row.g,row.a),color:sCol(row.s,row.g,row.a),fontFamily:"'JetBrains Mono',monospace"}}>{sLbl(row.s,row.g,row.a)}</span></td>
+                  <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5',fontWeight:'600'}}>{row.p}</td>
                 </tr>
               ))}
             </tbody>
@@ -1354,46 +1400,49 @@ const ResultsPage = ({reportData}) => {
       </div>
 
       {/* Validity */}
-      <div style={{...cardStyle, background:validity.overall==='green'?T.gnP:validity.overall==='amber'?T.amP:T.rdP, border:`1px solid ${validity.overall==='green'?T.gn:validity.overall==='amber'?T.am:T.rd}30`}}>
+      <div style={{...cardStyle, background:validity.overall==='green'?T.gnP:validity.overall==='amber'?T.amP:T.rdP, border:`1px solid ${validity.overall==='green'?T.gn:validity.overall==='amber'?T.am:T.rd}35`}}>
         <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}}>
           <div style={{width:'8px',height:'8px',borderRadius:'50%',background:validity.overall==='green'?T.gn:validity.overall==='amber'?T.am:T.rd}} />
-          <h3 className="serif" style={{fontSize:'1.1rem',fontWeight:'500',color:bCol(validity.overall==='green'?80:validity.overall==='amber'?60:20)}}>Response Validity — {validity.overallLabel}</h3>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'600',color:bCol(validity.overall==='green'?80:validity.overall==='amber'?60:20)}}>Response Validity — {validity.overallLabel}</h3>
         </div>
-        <div style={{marginBottom:'12px'}}>{validity.flags.map((f,i)=><div key={i} style={{fontSize:'12px',color:bCol(f.type==='green'?80:f.type==='amber'?60:20),marginBottom:'4px',lineHeight:'1.6'}}><strong>{f.key}:</strong> {f.text}</div>)}</div>
+        <div style={{marginBottom:'12px'}}>{validity.flags.map((f,i)=><div key={i} style={{fontSize:'12px',color:bCol(f.type==='green'?80:f.type==='amber'?60:20),marginBottom:'4px',lineHeight:'1.6',fontWeight:'700'}}><strong>{f.key}:</strong> {f.text}</div>)}</div>
         <div className="grid-4-col" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'8px'}}>
           {[{n:`${validity.lAgree}/12`,l:'L-Scale'},{n:`${Math.round(validity.saRatio*100)}%`,l:'Strongly Agree'},{n:`${Math.round(validity.extRatio*100)}%`,l:'Extreme'},{n:`${validity.conScore}/100`,l:'Consistency'}].map((v,i)=>(
-            <div key={i} style={{background:'rgba(255,255,255,0.5)',borderRadius:'6px',padding:'10px',textAlign:'center'}}>
+            <div key={i} style={{background:'rgba(255,255,255,0.55)',borderRadius:'6px',padding:'10px',textAlign:'center'}}>
               <div className="mono" style={{fontWeight:'700',fontSize:'1.1rem'}}>{v.n}</div>
-              <div className="mono" style={{fontSize:'9px',opacity:0.7,marginTop:'2px',textTransform:'uppercase',letterSpacing:'0.08em'}}>{v.l}</div>
+              <div className="mono" style={{fontSize:'9px',opacity:0.7,marginTop:'2px',textTransform:'uppercase',letterSpacing:'0.1em',fontWeight:'600'}}>{v.l}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Module sections */}
-      <Sec title="Personality at Work — OCEAN" mod="Module I" modColor={T.c} cite="Goldberg (1999) · Barrick & Mount (1991)" note="Meta-analytic validity r = .27 for overall job performance. Conscientiousness (r = .22) most robust. Triangulate with structured behavioural interview." dims={[['O','Openness',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability',S.ES]]} />
+      <Sec title="Personality at Work — OCEAN" mod="Module I" modColor={T.c} cite="Goldberg (1999) · Barrick & Mount (1991)" note="Meta-analytic validity r = .27 for overall job performance. Conscientiousness (r = .22) most robust." dims={[['O','Openness',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability',S.ES]]} />
       <Sec title="Cultural Intelligence (CQ)" mod="Module II" modColor={T.gold} cite="Earley & Ang (2003) · Ang et al. (2007)" note="CQ incremental predictive validity β = .31 over IQ and personality for cross-cultural performance." dims={[['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]]} />
       <Sec title="Organisational Citizenship Behaviour" mod="Module III" modColor={T.gn} cite="Organ (1988) · Williams & Anderson (1991)" dims={[['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]]} />
-      <Sec title="Adaptive Thinking & Learning Agility" mod="Module IV" modColor={T.am} cite="Lombardo & Eichinger (2000)" note="Learning agility is the single strongest predictor of leadership potential beyond current performance." dims={[['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]]} />
+      <Sec title="Adaptive Thinking & Learning Agility" mod="Module IV" modColor={T.am} cite="Lombardo & Eichinger (2000)" note="Learning agility is the single strongest predictor of leadership potential beyond current performance." dims={[['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility',S.LA_PA],['LA_CA','Change Agility',S.LA_CA],['LA_RA','Results Agility',S.LA_RA]]} />
       <Sec title="Integrity & Ethical Orientation" mod="Module V" modColor="#8B5CF6" cite="Rest (1986) · Moorman (1991)" note="Ethical orientation criterion validity for misconduct prediction (r = −.41). Low EO scores trigger mandatory ethics training." dims={[['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]]} />
 
       {/* Game Performance */}
       <div style={cardStyle}>
         <div style={hdrStyle}>
-          <Pill label="Behavioural Challenges" color="#8B5CF6" bg="#8B5CF612" />
-          <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827'}}>Challenge Results</h3>
+          <Pill label="Behavioural Challenges" color="#8B5CF6" bg="#8B5CF614" />
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827'}}>Challenge Results</h3>
         </div>
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',minWidth:'480px'}}>
-            <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Challenge','Type','Performance','Modifier','Dimensions'].map(h=><th key={h} style={{padding:'5px 8px 9px',textAlign:'left',fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.1em',color:'#9CA3AF'}}>{h}</th>)}</tr></thead>
+            <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Challenge','Type','Performance','Modifier','Dimensions'].map(h=><th key={h} style={thStyle}>{h}</th>)}</tr></thead>
             <tbody>
-              {[{c:'Values in Balance',t:'Ethical Elicitation',l:gs.seesaw.label,mod:`${gs.seesaw.bonus>=0?'+':''}${gs.seesaw.bonus}`,pos:gs.seesaw.bonus,d:'Ethical Reasoning (EO_ER)'},{c:'Quick Decision Challenge',t:'Situational Judgment',l:gs.scenario1.label,mod:`${gs.scenario1.raw>=0?'+':''}${gs.scenario1.raw}`,pos:gs.scenario1.raw,d:'People Agility, Transparency'},{c:'Ethics Under Pressure',t:'Situational Judgment',l:gs.scenario2.label,mod:`${gs.scenario2.raw>=0?'+':''}${gs.scenario2.raw}`,pos:gs.scenario2.raw,d:'Rule Compliance, Authentic Integrity'}].map((row,i)=>(
+              {[
+                {c:'Values in Balance',t:'Ethical Elicitation',l:gs.seesaw.label,mod:`${gs.seesaw.bonus>=0?'+':''}${gs.seesaw.bonus}`,pos:gs.seesaw.bonus,d:'Ethical Reasoning (EO_ER)'},
+                {c:'Quick Decision Challenge',t:'Situational Judgment',l:gs.scenario1.label,mod:`${gs.scenario1.raw>=0?'+':''}${gs.scenario1.raw}`,pos:gs.scenario1.raw,d:'People Agility, Transparency'},
+                {c:'Ethics Under Pressure',t:'Situational Judgment',l:gs.scenario2.label,mod:`${gs.scenario2.raw>=0?'+':''}${gs.scenario2.raw}`,pos:gs.scenario2.raw,d:'Rule Compliance, Authentic Integrity'},
+              ].map((row,i)=>(
                 <tr key={i}>
-                  <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'500',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'middle'}}>{row.c}</td>
-                  <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}>{row.t}</td>
-                  <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><span style={{fontSize:'11px',fontWeight:'600',color:bCol(row.pos>=5?75:row.pos>=0?60:30)}}>{row.l}</span></td>
-                  <td className="mono" style={{padding:'10px 8px',fontSize:'12px',fontWeight:'600',color:row.pos>=0?T.gn:T.rd,borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}>{row.mod} pts</td>
-                  <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5'}}>{row.d}</td>
+                  <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'700',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'middle'}}>{row.c}</td>
+                  <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle',fontWeight:'600'}}>{row.t}</td>
+                  <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}><span style={{fontSize:'11px',fontWeight:'700',color:bCol(row.pos>=5?75:row.pos>=0?60:30)}}>{row.l}</span></td>
+                  <td className="mono" style={{padding:'10px 8px',fontSize:'12px',fontWeight:'700',color:row.pos>=0?T.gn:T.rd,borderBottom:'1px solid #F3F4F6',verticalAlign:'middle'}}>{row.mod} pts</td>
+                  <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5',fontWeight:'600'}}>{row.d}</td>
                 </tr>
               ))}
             </tbody>
@@ -1405,11 +1454,11 @@ const ResultsPage = ({reportData}) => {
       <div style={cardStyle}>
         <div style={hdrStyle}>
           <Pill label="Role Suitability" color={T.c} />
-          <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827'}}>Role Suitability Matrix</h3>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827'}}>Role Suitability Matrix</h3>
         </div>
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',minWidth:'480px'}}>
-            <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Role Family','Score','Profile','Verdict','Guidance'].map(h=><th key={h} style={{padding:'5px 8px 9px',textAlign:'left',fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.1em',color:'#9CA3AF'}}>{h}</th>)}</tr></thead>
+            <thead><tr style={{borderBottom:'2px solid #F3F4F6'}}>{['Role Family','Score','Profile','Verdict','Guidance'].map(h=><th key={h} style={thStyle}>{h}</th>)}</tr></thead>
             <tbody>
               {roles.map((r,i)=>{
                 const rat=r.score>=r.g?'green':r.score>=r.a?'amber':'red';
@@ -1417,11 +1466,11 @@ const ResultsPage = ({reportData}) => {
                 const lbl_=rat==='green'?'Suitable':rat==='amber'?'Conditional':'Not Recommended';
                 return(
                   <tr key={i}>
-                    <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'500',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'top'}}>{r.name}</td>
+                    <td style={{padding:'10px 8px',fontSize:'12px',fontWeight:'700',borderBottom:'1px solid #F3F4F6',color:'#111827',verticalAlign:'top'}}>{r.name}</td>
                     <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'top'}}><ScoreBadge score={r.score} /></td>
                     <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'top',width:'110px'}}><Bar score={r.score} w={100} /></td>
-                    <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'top'}}><span style={{fontSize:'10px',fontWeight:'700',color:fc}}>{lbl_}</span></td>
-                    <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5',verticalAlign:'top'}}>
+                    <td style={{padding:'10px 8px',borderBottom:'1px solid #F3F4F6',verticalAlign:'top'}}><span style={{fontSize:'10px',fontWeight:'800',color:fc,fontFamily:"'JetBrains Mono',monospace"}}>{lbl_}</span></td>
+                    <td style={{padding:'10px 8px',fontSize:'11px',color:'#6B7280',borderBottom:'1px solid #F3F4F6',lineHeight:'1.5',verticalAlign:'top',fontWeight:'600'}}>
                       {rat==='red'?<div style={{color:T.rd}}>{r.redNote}</div>:rat==='amber'?'Use with structured onboarding and defined performance milestones.':'Suitable for deployment. Standard performance management applies.'}
                     </td>
                   </tr>
@@ -1434,19 +1483,19 @@ const ResultsPage = ({reportData}) => {
 
       {/* Industry Lens */}
       {cfg.industry&&<div style={darkCard}>
-        <div className="mono" style={{fontSize:'9px',fontWeight:'600',color:T.gold,textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'10px'}}>{ind.short} — Industry Context</div>
-        <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.7',marginBottom:'10px'}} dangerouslySetInnerHTML={{__html:ind.lens}} />
-        <p style={{fontSize:'12px',color:T.t2,marginBottom:'5px'}}><strong style={{color:T.t0}}>High Potential Benchmark:</strong> {ind.hiPotential}</p>
-        <p style={{fontSize:'12px',color:`${T.rd}`}}><strong>Risk Note:</strong> {ind.riskNote}</p>
+        <div className="mono" style={{fontSize:'9px',fontWeight:'700',color:T.gold,textTransform:'uppercase',letterSpacing:'0.14em',marginBottom:'10px'}}>{ind.short} — Industry Context</div>
+        <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.7',marginBottom:'10px',fontWeight:'600'}} dangerouslySetInnerHTML={{__html:ind.lens}} />
+        <p style={{fontSize:'12px',color:T.t2,marginBottom:'5px',fontWeight:'600'}}><strong style={{color:T.t0}}>High Potential Benchmark:</strong> {ind.hiPotential}</p>
+        <p style={{fontSize:'12px',color:`${T.rd}`,fontWeight:'700'}}><strong>Risk Note:</strong> {ind.riskNote}</p>
       </div>}
 
-      <div className="mono" style={{fontSize:'10px',color:T.t3,background:T.bg1,border:`1px solid ${T.b1}`,padding:'12px 14px',borderRadius:'7px',lineHeight:'1.7',marginBottom:'16px'}}>
+      <div className="mono" style={{fontSize:'10px',color:T.t3,background:T.bg1,border:`1px solid ${T.b2}`,padding:'12px 14px',borderRadius:'7px',lineHeight:'1.7',marginBottom:'16px',fontWeight:'600'}}>
         CORE by Carnelian is a self-report instrument with four built-in validity controls. Scores are diagnostic inputs — not standalone hiring decisions. All red-rated categories require triangulation with structured interview. © Carnelian Pvt Ltd. Licensed use only.
       </div>
 
       <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
-        <button onClick={()=>window.print()} style={{padding:'11px 22px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.bg1,color:T.t0,border:`1px solid ${T.b2}`,fontFamily:"'DM Sans',sans-serif",fontSize:'12px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>{e.target.style.borderColor=T.b2;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;}}>Print Technical Report</button>
-        <button onClick={()=>setActiveReport('action')} style={{padding:'11px 22px',borderRadius:'7px',cursor:'pointer',background:T.c,color:'#fff',border:'none',fontFamily:"'DM Sans',sans-serif",fontSize:'12px',fontWeight:'600',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>View Action Plan →</button>
+        <button onClick={()=>window.print()} style={{padding:'11px 22px',borderRadius:'7px',border:`1px solid ${T.b2}`,cursor:'pointer',background:T.bg1,color:T.t0,fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'12px',fontWeight:'700',transition:'all 0.2s'}}>Print Technical Report</button>
+        <button onClick={()=>setActiveReport('action')} style={{padding:'11px 22px',borderRadius:'7px',cursor:'pointer',background:T.c,color:'#fff',border:'none',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'12px',fontWeight:'800',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>View Action Plan →</button>
       </div>
     </div>
   );
@@ -1467,102 +1516,98 @@ const ResultsPage = ({reportData}) => {
     const bot2=[...allDims].sort((a,b)=>a.v-b.v).slice(0,2);
     const devAreas=[];
     const add=(d,v,why,acts,now,soon,fut)=>devAreas.push({d,v,why,acts,now,soon,fut});
-    if(S.C<55) add('Conscientiousness & Delivery',S.C,"Consistent delivery is the foundation of professional credibility. Missed commitments compound over time and shape how colleagues and managers perceive your capability.","Use a weekly priority matrix — list your top 3 deliverables and set personal deadlines two days ahead of official ones;Break large projects into fortnightly milestone check-ins with your line manager;Track one commitment per week that you made and completed — build the evidence base for your own reliability".split(';'),"Agree a weekly check-in with your supervisor on three explicit priority deliverables","Enrol in a personal productivity workshop or study one methodology","Lead a project end-to-end within six months to build delivery confidence");
-    if(S.ES<55) add('Emotional Resilience',S.ES,"High-stakes professional environments involve pressure cycles. Remaining clear-headed under pressure is a career-determining competency.","Build a ten-minute daily decompression practice — journalling or reflection;After difficult situations, write: what happened, how I responded, what I would do differently;Identify two trusted colleagues who can serve as grounded sounding boards under pressure".split(';'),"Speak to your HR team about employee assistance programmes or wellbeing resources","Attend a resilience or emotional intelligence workshop this quarter","Seek a role with progressively increasing accountability to build resilience through real exposure");
-    if(S.CQavg<55) add('Cultural Intelligence',S.CQavg,"Pakistan's professional landscape spans diverse regional, linguistic, and socioeconomic contexts. Professionals who navigate these differences build networks and trust others cannot access.","Deliberately seek a cross-provincial or cross-departmental project this quarter;Before meetings with unfamiliar backgrounds, spend five minutes researching the context;After cross-cultural interactions that felt awkward, examine your assumptions before attributing difficulty to others".split(';'),"Have a genuine conversation with one colleague from a meaningfully different background","Attend a diversity, intercultural, or community engagement workshop","Volunteer for a posting in a different regional office or stakeholder community");
-    if(S.LAavg<55) add('Learning Agility',S.LAavg,"The professionals who rise in every Pakistani sector are those who learn and adapt fastest. Current knowledge has a shelf life. Learning agility is how you extend yours.","Dedicate thirty minutes weekly to reading one report or publication outside your normal scope;After completing significant tasks, ask: what did I learn, and how could I apply it somewhere different?;Request feedback from at least two colleagues per quarter — write down what you will change, then follow up".split(';'),"Subscribe to one sector publication you do not currently follow","Build a ninety-day self-directed learning plan on one topic outside your expertise","Facilitate or co-design a training session — teaching accelerates learning agility fastest");
-    if(S.EOavg<60) add('Professional Integrity',S.EOavg,"Authentic integrity is the foundation of trust — and trust is the foundation of every meaningful professional relationship.","Read your organisation's Code of Conduct — identify one clause you have never actively reflected on;Apply the full light test: would you be comfortable if your supervisor, family, and auditor saw exactly what you decided and why?;Practise full proactive disclosure in your next five reporting situations".split(';'),"Complete any mandatory compliance training that is outstanding","Attend a professional ethics or values-based leadership workshop","Take on a compliance champion role — accountability to others deepens your own commitment");
-    if(S.OCB_S<50) add('Constructive Attitude',S.OCB_S,"How we respond to institutional frustration shapes the morale of everyone around us. In Pakistan's professional culture, sustained negativity has a compounding cost to your standing.","Adopt the solution before complaint rule — before voicing any frustration, have at least one concrete suggestion ready;Create a private journal for institutional frustrations — writing them down reduces the pressure to share them;Make a deliberate decision: either act on a frustration constructively, or release it — not both".split(';'),"Identify one frustration recently shared with colleagues and commit to a more constructive approach","Discuss improvement channels with your line manager","Volunteer to lead a process improvement initiative");
+    if(S.C<55) add('Conscientiousness & Delivery',S.C,"Consistent delivery is the foundation of professional credibility.","Use a weekly priority matrix — list your top 3 deliverables;Break large projects into fortnightly milestone check-ins;Track one commitment per week that you made and completed".split(';'),"Agree a weekly check-in with your supervisor on three explicit priority deliverables","Enrol in a personal productivity workshop","Lead a project end-to-end within six months");
+    if(S.ES<55) add('Emotional Resilience',S.ES,"High-stakes professional environments involve pressure cycles.","Build a ten-minute daily decompression practice;After difficult situations, write: what happened, how I responded, what I would do differently;Identify two trusted colleagues who can serve as grounded sounding boards".split(';'),"Speak to your HR team about employee assistance programmes","Attend a resilience or emotional intelligence workshop","Seek a role with progressively increasing accountability");
+    if(S.CQavg<55) add('Cultural Intelligence',S.CQavg,"Pakistan's professional landscape spans diverse regional, linguistic, and socioeconomic contexts.","Deliberately seek a cross-provincial or cross-departmental project;Before meetings with unfamiliar backgrounds, spend five minutes researching the context;After cross-cultural interactions that felt awkward, examine your own assumptions".split(';'),"Have a genuine conversation with one colleague from a meaningfully different background","Attend a diversity or intercultural workshop","Volunteer for a posting in a different regional office");
+    if(S.LAavg<55) add('Learning Agility',S.LAavg,"The professionals who rise in every Pakistani sector are those who learn and adapt fastest.","Dedicate thirty minutes weekly to reading one report outside your normal scope;After completing significant tasks, ask: what did I learn, and how could I apply it elsewhere?;Request feedback from at least two colleagues per quarter".split(';'),"Subscribe to one sector publication you do not currently follow","Build a ninety-day self-directed learning plan on one topic outside your expertise","Facilitate or co-design a training session");
+    if(S.EOavg<60) add('Professional Integrity',S.EOavg,"Authentic integrity is the foundation of trust.","Read your organisation's Code of Conduct;Apply the full light test: would you be comfortable if your supervisor, family, and auditor saw exactly what you decided?;Practise full proactive disclosure in your next five reporting situations".split(';'),"Complete any mandatory compliance training that is outstanding","Attend a professional ethics or values-based leadership workshop","Take on a compliance champion role");
+    if(S.OCB_S<50) add('Constructive Attitude',S.OCB_S,"How we respond to institutional frustration shapes the morale of everyone around us.","Adopt the solution before complaint rule — before voicing any frustration, have at least one concrete suggestion ready;Create a private journal for institutional frustrations;Make a deliberate decision: either act on a frustration constructively, or release it — not both".split(';'),"Identify one frustration recently shared with colleagues and commit to a more constructive approach","Discuss improvement channels with your line manager","Volunteer to lead a process improvement initiative");
 
     const bars=[['Overall',S.overall],['Personality',S.OCEANavg],['Cultural Intelligence',S.CQavg],['Citizenship',S.OCBavg],['Learning Agility',S.LAavg],['Ethical Integrity',S.EOavg],['Conscientiousness',S.C],['Emotional Resilience',S.ES]];
 
     return(
       <div>
-        {/* Header */}
         <div style={{background:T.bg0,borderRadius:'12px',padding:'36px 40px',marginBottom:'10px',position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.goldP} 0%,transparent 70%)`}} />
           <div style={{position:'relative',zIndex:1}}>
-            <div className="mono" style={{fontSize:'9px',color:T.gold,letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:'6px'}}>Personal Development Report</div>
-            <h1 className="serif" style={{fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'400',color:T.t0,marginBottom:'12px'}}>{R.name}</h1>
-            <p style={{color:T.t2,fontSize:'13px',maxWidth:'520px',lineHeight:'1.75',marginBottom:'22px',fontWeight:'300'}}>This report is written directly to you. It translates your assessment into plain language — what your scores mean, where your genuine strengths lie, and specific actions you can take immediately.</p>
+            <div className="mono" style={{fontSize:'9px',color:T.gold,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:'6px',fontWeight:'700'}}>Personal Development Report</div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>{R.name}</h1>
+            <p style={{color:T.t2,fontSize:'13px',maxWidth:'520px',lineHeight:'1.75',marginBottom:'22px',fontWeight:'600'}}>This report is written directly to you. It translates your assessment into plain language — what your scores mean, where your genuine strengths lie, and specific actions you can take immediately.</p>
             <div style={{background:`rgba(255,255,255,0.04)`,border:`1px solid ${T.b2}`,borderRadius:'8px',padding:'18px 20px'}}>
-              <div className="mono" style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'0.12em',color:T.gold,fontWeight:'600',marginBottom:'5px'}}>Your Professional Profile</div>
-              <div className="serif" style={{fontSize:'1.5rem',color:T.t0,fontWeight:'500',marginBottom:'5px'}}>{profile.name}</div>
-              <div style={{fontSize:'12px',color:T.t2,lineHeight:'1.65'}}>{profile.desc}</div>
+              <div className="mono" style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'0.14em',color:T.gold,fontWeight:'700',marginBottom:'5px'}}>Your Professional Profile</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',color:T.t0,fontWeight:'700',marginBottom:'5px'}}>{profile.name}</div>
+              <div style={{fontSize:'12px',color:T.t2,lineHeight:'1.65',fontWeight:'600'}}>{profile.desc}</div>
             </div>
           </div>
         </div>
 
-        {/* Score Overview */}
-        <div style={cardStyle}>
-          <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827',marginBottom:'20px'}}>Score Overview</h3>
+        <div style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'10px',padding:'24px 26px',marginBottom:'10px'}}>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827',marginBottom:'20px'}}>Score Overview</h3>
           <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
             {bars.map(([l,v],i)=>(
               <div key={l} style={{display:'flex',alignItems:'center',gap:'14px',paddingBottom:i===0?'12px':'0',marginBottom:i===0?'2px':'0',borderBottom:i===0?'1px solid #F3F4F6':'none'}}>
-                <div style={{width:'175px',flexShrink:0,fontSize:'12px',color:i===0?'#111827':'#6B7280',fontWeight:i===0?'600':'400'}}>{l}</div>
+                <div style={{width:'175px',flexShrink:0,fontSize:'12px',color:i===0?'#111827':'#6B7280',fontWeight:i===0?'800':'700'}}>{l}</div>
                 <div style={{flex:1,background:'#F3F4F6',height:i===0?'8px':'5px',borderRadius:'3px',overflow:'hidden'}}>
                   <div style={{width:`${v}%`,height:'100%',background:barGrad(v),borderRadius:'3px',transition:'width 1s ease'}} />
                 </div>
-                <div className="mono" style={{width:'40px',textAlign:'right',fontSize:'11px',color:bCol(v),fontWeight:'600'}}>{v}</div>
+                <div className="mono" style={{width:'40px',textAlign:'right',fontSize:'11px',color:bCol(v),fontWeight:'700'}}>{v}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Strengths & Gaps */}
-        <div style={cardStyle}>
-          <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827',marginBottom:'16px'}}>Core Strengths & Development Priorities</h3>
+        <div style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'10px',padding:'24px 26px',marginBottom:'10px'}}>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827',marginBottom:'16px'}}>Core Strengths & Development Priorities</h3>
           <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'10px'}}>
             {top2.map(d=>(
               <div key={d.k} style={{padding:'18px',borderRadius:'8px',border:'1px solid #E5E7EB',borderLeft:`4px solid ${T.gn}`}}>
-                <div className="mono" style={{fontSize:'9px',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.1em',color:T.gn,marginBottom:'7px'}}>Core Strength</div>
-                <h4 className="serif" style={{fontSize:'1.1rem',fontWeight:'500',marginBottom:'5px',color:'#111827'}}>{d.l}</h4>
-                <p style={{fontSize:'12px',color:'#6B7280',lineHeight:'1.6',marginBottom:'9px'}}>{d.str}</p>
+                <div className="mono" style={{fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.gn,marginBottom:'7px'}}>Core Strength</div>
+                <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'600',marginBottom:'5px',color:'#111827'}}>{d.l}</h4>
+                <p style={{fontSize:'12px',color:'#6B7280',lineHeight:'1.6',marginBottom:'9px',fontWeight:'600'}}>{d.str}</p>
                 <ScoreBadge score={d.v} />
               </div>
             ))}
             {bot2.map(d=>(
               <div key={d.k} style={{padding:'18px',borderRadius:'8px',border:'1px solid #E5E7EB',borderLeft:`4px solid ${T.am}`}}>
-                <div className="mono" style={{fontSize:'9px',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.1em',color:T.am,marginBottom:'7px'}}>Development Priority</div>
-                <h4 className="serif" style={{fontSize:'1.1rem',fontWeight:'500',marginBottom:'5px',color:'#111827'}}>{d.l}</h4>
-                <p style={{fontSize:'12px',color:'#6B7280',lineHeight:'1.6',marginBottom:'9px'}}>Your highest-leverage development area. Focused effort here creates the greatest impact on overall effectiveness.</p>
+                <div className="mono" style={{fontSize:'9px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.am,marginBottom:'7px'}}>Development Priority</div>
+                <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'600',marginBottom:'5px',color:'#111827'}}>{d.l}</h4>
+                <p style={{fontSize:'12px',color:'#6B7280',lineHeight:'1.6',marginBottom:'9px',fontWeight:'600'}}>Your highest-leverage development area. Focused effort here creates the greatest impact on overall effectiveness.</p>
                 <ScoreBadge score={d.v} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Roadmap */}
-        <div style={cardStyle}>
-          <h3 className="serif" style={{fontSize:'1.15rem',fontWeight:'500',color:'#111827',marginBottom:'16px'}}>Development Roadmap</h3>
+        <div style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'10px',padding:'24px 26px',marginBottom:'10px'}}>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.15rem',fontWeight:'600',color:'#111827',marginBottom:'16px'}}>Development Roadmap</h3>
           {devAreas.length>0?devAreas.map((d,i)=>(
             <div key={i} style={{border:'1px solid #E5E7EB',borderRadius:'8px',padding:'20px 22px',marginBottom:'10px'}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'4px'}}>
-                <h4 className="serif" style={{fontSize:'1.05rem',fontWeight:'500',color:'#111827'}}>{d.d}</h4>
+                <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.05rem',fontWeight:'600',color:'#111827'}}>{d.d}</h4>
                 <ScoreBadge score={d.v} />
               </div>
-              <div className="mono" style={{fontSize:'9px',color:'#9CA3AF',marginBottom:'12px',textTransform:'uppercase',letterSpacing:'0.08em'}}>{bd(d.v)} range</div>
-              <div style={{background:`${T.cHalo}`,border:`1px solid ${T.c}20`,borderRadius:'6px',padding:'11px 14px',fontSize:'12px',color:'#374151',lineHeight:'1.7',marginBottom:'12px'}}>{d.why}</div>
+              <div className="mono" style={{fontSize:'9px',color:'#9CA3AF',marginBottom:'12px',textTransform:'uppercase',letterSpacing:'0.1em',fontWeight:'600'}}>{bd(d.v)} range</div>
+              <div style={{background:`${T.cHalo}`,border:`1px solid ${T.c}20`,borderRadius:'6px',padding:'11px 14px',fontSize:'12px',color:'#374151',lineHeight:'1.7',marginBottom:'12px',fontWeight:'600'}}>{d.why}</div>
               <ul style={{paddingLeft:0,listStyle:'none',marginBottom:'14px'}}>
                 {d.acts.map((a,j)=>(
-                  <li key={j} style={{display:'flex',gap:'10px',padding:'6px 0',borderBottom:j<d.acts.length-1?'1px solid #F9FAFB':'none',fontSize:'12px',color:'#374151',lineHeight:'1.6'}}>
-                    <span style={{color:T.c,fontWeight:'700',flexShrink:0}}>→</span>{a}
+                  <li key={j} style={{display:'flex',gap:'10px',padding:'6px 0',borderBottom:j<d.acts.length-1?'1px solid #F9FAFB':'none',fontSize:'12px',color:'#374151',lineHeight:'1.6',fontWeight:'600'}}>
+                    <span style={{color:T.c,fontWeight:'800',flexShrink:0}}>→</span>{a}
                   </li>
                 ))}
               </ul>
               <div style={{display:'flex',gap:'7px',flexWrap:'wrap'}}>
                 {[{l:`Now: ${d.now}`,bg:T.rdP,c:T.rd},{l:`Soon: ${d.soon}`,bg:T.amP,c:T.am},{l:`Future: ${d.fut}`,bg:T.gnP,c:T.gn}].map((chip,k)=>(
-                  <span key={k} style={{padding:'4px 10px',borderRadius:'3px',fontSize:'10px',fontWeight:'600',background:chip.bg,color:chip.c,display:'inline-block'}}>{chip.l}</span>
+                  <span key={k} style={{padding:'4px 10px',borderRadius:'3px',fontSize:'10px',fontWeight:'700',background:chip.bg,color:chip.c,display:'inline-block'}}>{chip.l}</span>
                 ))}
               </div>
             </div>
-          )):<div style={{padding:'20px',background:T.gnP,borderRadius:'8px',fontSize:'13px',color:T.gn}}>No critical development priorities detected. Your profile is well-balanced. Focus on sustaining current strengths and expanding impact through stretch assignments.</div>}
+          )):<div style={{padding:'20px',background:T.gnP,borderRadius:'8px',fontSize:'13px',color:T.gn,fontWeight:'700'}}>No critical development priorities detected. Your profile is well-balanced. Focus on sustaining current strengths and expanding impact through stretch assignments.</div>}
         </div>
 
         <div style={{background:T.bg0,borderRadius:'10px',padding:'24px 28px'}}>
-          <div className="serif" style={{fontSize:'1.1rem',color:T.t0,marginBottom:'8px',fontWeight:'400'}}>A Note to Close</div>
-          <p style={{fontSize:'12px',color:T.t2,lineHeight:'1.8',fontWeight:'300'}}>This report is a starting point, not a verdict. Psychometric scores describe tendencies — they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. Use this report in your next conversation with your manager, your training coordinator, or your mentor.</p>
-          <div className="mono" style={{marginTop:'12px',fontSize:'9px',color:T.t3}}>{docId} · CORE by Carnelian · {date}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',color:T.t0,marginBottom:'8px',fontWeight:'600'}}>A Note to Close</div>
+          <p style={{fontSize:'12px',color:T.t2,lineHeight:'1.8',fontWeight:'600'}}>This report is a starting point, not a verdict. Psychometric scores describe tendencies — they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. Use this report in your next conversation with your manager, your training coordinator, or your mentor.</p>
+          <div className="mono" style={{marginTop:'12px',fontSize:'9px',color:T.t3,fontWeight:'600'}}>{docId} · CORE by Carnelian · {date}</div>
         </div>
       </div>
     );
@@ -1574,13 +1619,13 @@ const ResultsPage = ({reportData}) => {
         {[{id:'tech',l:'Technical Report',sub:'HR & Leadership'},{id:'action',l:'Action Plan',sub:'Individual'}].map(r=>(
           <button key={r.id} onClick={()=>setActiveReport(r.id)} style={{
             padding:'10px 20px',borderRadius:'7px',cursor:'pointer',
-            fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',
+            fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',
             background:activeReport===r.id?T.bg0:'#fff',
             color:activeReport===r.id?T.t0:'#6B7280',
             border:`1px solid ${activeReport===r.id?T.b2:'#E5E7EB'}`,
             transition:'all 0.18s',
           }}>
-            {r.l} <span style={{fontSize:'10px',opacity:0.6}}>({r.sub})</span>
+            {r.l} <span style={{fontSize:'10px',opacity:0.6,fontWeight:'600'}}>({r.sub})</span>
           </button>
         ))}
       </div>
@@ -1591,85 +1636,191 @@ const ResultsPage = ({reportData}) => {
 
 // ─── PROGRESS PAGE ────────────────────────────────────────────────────────────
 const ProgressPage = () => {
-  const [history,setHistory]=useState([]);
-  useEffect(()=>{try{setHistory(JSON.parse(localStorage.getItem('core_v1_history')||'[]'));}catch(e){}});
+  const [history, setHistory] = useState([]);
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searchEmp, setSearchEmp]     = useState('');
+  const [searched, setSearched]       = useState(false);
+  const [results, setResults]         = useState([]);
 
-  const del = (name, emp) => {
-  if (!window.confirm(`Delete all CORE records for ${name}?`)) return;
+  useEffect(()=>{
+    try { setHistory(JSON.parse(localStorage.getItem('core_v1_history')||'[]')); } catch(e){}
+  },[]);
 
-  const h = history.filter(
-    e => !(e.name === name && (emp ? e.emp === emp : true))
-  );
+  const handleSearch = () => {
+    setSearched(true);
+    if (!searchEmail.trim() && !searchEmp.trim()) { setResults([]); return; }
+    const matches = history.filter(e => {
+      const emailHit = searchEmail.trim() && e.email && e.email.toLowerCase() === searchEmail.trim().toLowerCase();
+      const empHit   = searchEmp.trim()   && e.emp   && e.emp.toLowerCase()   === searchEmp.trim().toLowerCase();
+      return emailHit || empHit;
+    });
+    // group by unique person identifier
+    const byPerson = {};
+    matches.forEach(e => {
+      const pid = (e.email||'') + '||' + (e.emp||'') + '||' + (e.name||'');
+      if (!byPerson[pid]) byPerson[pid] = [];
+      byPerson[pid].push(e);
+    });
+    setResults(Object.values(byPerson));
+  };
 
-  setHistory(h);
+  const del = (pid_email, pid_emp) => {
+    if (!window.confirm('Delete all CORE records for this person?')) return;
+    const h = history.filter(e => {
+      if (pid_email && e.email && e.email === pid_email) return false;
+      if (pid_emp   && e.emp   && e.emp   === pid_emp)   return false;
+      return true;
+    });
+    setHistory(h);
+    try { localStorage.setItem('core_v1_history', JSON.stringify(h)); } catch(e){}
+    // re-run search
+    const updatedResults = results.map(entries =>
+      entries.filter(e => {
+        if (pid_email && e.email === pid_email) return false;
+        if (pid_emp   && e.emp   === pid_emp)   return false;
+        return true;
+      })
+    ).filter(arr => arr.length > 0);
+    setResults(updatedResults);
+  };
 
-  try {
-    localStorage.setItem('core_v1_history', JSON.stringify(h));
-  } catch (e) {}
-};
+  const compKeys=[['CII','Compliance & Integrity'],['LRS','Leadership Readiness'],['TVS','Team Value'],['ADS','Adaptability'],['SES','Stakeholder'],['OPS','Operational'],['PMS','People Mgmt']];
 
-  if(!history.length) return(
-    <div style={{maxWidth:'700px',margin:'0 auto',padding:'80px 32px',textAlign:'center'}}>
-      <div style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'12px',padding:'56px 40px'}}>
-        <div className="serif" style={{fontSize:'2rem',fontWeight:'400',color:'#111827',marginBottom:'10px'}}>No Assessment History</div>
-        <p style={{fontSize:'13px',color:'#6B7280',lineHeight:'1.7',maxWidth:'360px',margin:'0 auto'}}>Once candidates complete CORE, their history appears here for side-by-side progress comparison.</p>
-      </div>
-    </div>
-  );
-
-  const byPerson={};
-  history.forEach(e=>{const pid=e.name+'||'+(e.emp||''); if(!byPerson[pid]) byPerson[pid]=[]; byPerson[pid].push(e);});
+  const inp = {
+    padding:'12px 16px', border:`1px solid ${T.b2}`, borderRadius:'6px',
+    fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
+    background:T.bg3, color:T.t0, outline:'none', transition:'all 0.2s', flex:1,
+  };
 
   return(
-    <div style={{maxWidth:'900px',margin:'0 auto',padding:'56px 24px'}}>
+    <div style={{maxWidth:'900px', margin:'0 auto', padding:'56px 24px'}}>
       <Pill label="Progress Tracker" style={{marginBottom:'16px'}} />
-      <h2 className="serif" style={{fontSize:'2.4rem',fontWeight:'400',color:'#111827',marginBottom:'32px'}}>Assessment History</h2>
-      {Object.entries(byPerson).sort(([,a],[,b])=>b[b.length-1].timestamp-a[a.length-1].timestamp).map(([pid,entries])=>{
-        const latest=entries[entries.length-1];
-        const prev=entries.length>=2?entries[entries.length-2]:null;
-        const delta=prev?latest.scores.overall-prev.scores.overall:0;
-        const compKeys=[['CII','Compliance & Integrity'],['LRS','Leadership Readiness'],['TVS','Team Value'],['ADS','Adaptability'],['SES','Stakeholder'],['OPS','Operational'],['PMS','People Management']];
-        return(
-          <div key={pid} style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'12px',marginBottom:'16px',overflow:'hidden'}}>
-            <div style={{background:T.bg0,padding:'20px 24px',display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'12px'}}>
+      <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'2.4rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>Assessment History</h2>
+      <p style={{fontSize:'14px', color:T.t2, fontWeight:'600', marginBottom:'36px', lineHeight:'1.7'}}>
+        Look up a candidate's assessment history using their <strong style={{color:T.t0}}>email address</strong> or <strong style={{color:T.t0}}>employee / roll number</strong>. Both fields are optional — one is enough.
+      </p>
+
+      {/* Search box */}
+      <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'28px 28px', marginBottom:'32px'}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', fontWeight:'700', color:T.c, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:'16px'}}>Search by Identifier</div>
+        <div style={{display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'12px'}}>
+          <input
+            value={searchEmail}
+            onChange={e=>setSearchEmail(e.target.value)}
+            placeholder="Email address"
+            style={{...inp, minWidth:'200px'}}
+            onKeyDown={e=>e.key==='Enter'&&handleSearch()}
+          />
+          <input
+            value={searchEmp}
+            onChange={e=>setSearchEmp(e.target.value)}
+            placeholder="Employee / Roll No."
+            style={{...inp, minWidth:'180px'}}
+            onKeyDown={e=>e.key==='Enter'&&handleSearch()}
+          />
+          <button
+            onClick={handleSearch}
+            style={{
+              padding:'12px 24px', borderRadius:'6px', border:'none', cursor:'pointer',
+              background:T.c, color:'#fff',
+              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800',
+              letterSpacing:'0.03em', transition:'all 0.2s', whiteSpace:'nowrap',
+            }}
+            onMouseOver={e=>e.target.style.background=T.cDark}
+            onMouseOut={e=>e.target.style.background=T.c}
+          >Search →</button>
+        </div>
+        <div style={{fontSize:'11px', color:T.t3, fontWeight:'600'}}>
+          {history.length} record{history.length!==1?'s':''} stored locally on this device.
+        </div>
+      </div>
+
+      {/* Results */}
+      {searched && results.length === 0 && (
+        <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'40px', textAlign:'center'}}>
+          <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>No records found</div>
+          <p style={{fontSize:'13px', color:T.t2, fontWeight:'600'}}>No assessments match the email or employee number you entered. Make sure the candidate used the same identifier when taking the assessment.</p>
+        </div>
+      )}
+
+      {results.map((entries, ri) => {
+        const latest = entries[entries.length-1];
+        const prev   = entries.length>=2 ? entries[entries.length-2] : null;
+        const delta  = prev ? latest.scores.overall - prev.scores.overall : 0;
+        const pid_email = latest.email||'';
+        const pid_emp   = latest.emp||'';
+
+        return (
+          <div key={ri} style={{background:'#fff', border:'1px solid #E5E7EB', borderRadius:'12px', marginBottom:'20px', overflow:'hidden'}}>
+            {/* Header */}
+            <div style={{background:T.bg0, padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'12px'}}>
               <div>
-                <div className="serif" style={{fontSize:'1.5rem',color:T.t0,fontWeight:'400',marginBottom:'3px'}}>{latest.name}</div>
-                <div className="mono" style={{fontSize:'10px',color:T.t3}}>{latest.role&&`${latest.role} · `}{latest.org||latest.industry||''}{latest.emp&&` · ${latest.emp}`}</div>
+                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', color:T.t0, fontWeight:'700', marginBottom:'4px'}}>{latest.name}</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>
+                  {latest.role&&`${latest.role} · `}
+                  {latest.org||latest.industry||''}
+                  {latest.email&&` · ${latest.email}`}
+                  {latest.emp&&` · ID: ${latest.emp}`}
+                </div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div className="mono" style={{fontSize:'9px',color:T.t3,marginBottom:'4px'}}>{entries.length} assessment{entries.length>1?'s':''}</div>
-                {prev&&<div className="mono" style={{fontSize:'12px',fontWeight:'600',color:delta>0?T.gn:delta<0?T.rd:T.t3}}>{delta>0?`↑ +${delta}`:delta<0?`↓ ${delta}`:'→ Stable'}</div>}
+                <div className="mono" style={{fontSize:'9px', color:T.t3, marginBottom:'4px', fontWeight:'600'}}>{entries.length} assessment{entries.length>1?'s':''}</div>
+                {prev&&<div className="mono" style={{fontSize:'13px', fontWeight:'800', color:delta>0?T.gn:delta<0?T.rd:T.t3}}>{delta>0?`↑ +${delta}`:delta<0?`↓ ${delta}`:'→ Stable'}</div>}
               </div>
             </div>
+
             <div style={{padding:'22px 24px'}}>
+              {/* Before / After comparison */}
               {prev&&(
-                <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px',marginBottom:'18px'}}>
-                  <div style={{background:'#F9FAFB',borderRadius:'8px',padding:'14px 16px'}}>
-                    <div className="mono" style={{fontSize:'9px',color:'#9CA3AF',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'5px'}}>Previous · {prev.date}</div>
-                    <div className="serif" style={{fontSize:'1.1rem',fontWeight:'500',marginBottom:'5px',color:'#111827'}}>{prev.profile}</div>
-                    <div className="mono" style={{fontSize:'1.4rem',color:'#9CA3AF',fontWeight:'600'}}>{prev.scores.overall}/100</div>
+                <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'18px'}}>
+                  <div style={{background:'#F9FAFB', borderRadius:'8px', padding:'14px 16px'}}>
+                    <div className="mono" style={{fontSize:'9px', color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Previous · {prev.date}</div>
+                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', marginBottom:'5px', color:'#111827'}}>{prev.profile}</div>
+                    <div className="mono" style={{fontSize:'1.4rem', color:'#9CA3AF', fontWeight:'700'}}>{prev.scores.overall}/100</div>
                   </div>
-                  <div style={{background:T.bg0,borderRadius:'8px',padding:'14px 16px'}}>
-                    <div className="mono" style={{fontSize:'9px',color:T.t3,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'5px'}}>Latest · {latest.date}</div>
-                    <div className="serif" style={{fontSize:'1.1rem',color:T.t0,fontWeight:'500',marginBottom:'5px'}}>{latest.profile}</div>
-                    <div className="mono" style={{fontSize:'1.4rem',color:T.gold,fontWeight:'600'}}>{latest.scores.overall}/100 <span style={{fontSize:'11px',color:delta>=0?T.gn:T.rd}}>({delta>=0?'+':''}{delta})</span></div>
+                  <div style={{background:T.bg0, borderRadius:'8px', padding:'14px 16px'}}>
+                    <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Latest · {latest.date}</div>
+                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', color:T.t0, fontWeight:'700', marginBottom:'5px'}}>{latest.profile}</div>
+                    <div className="mono" style={{fontSize:'1.4rem', color:T.gold, fontWeight:'700'}}>{latest.scores.overall}/100 <span style={{fontSize:'11px', color:delta>=0?T.gn:T.rd, fontWeight:'800'}}>({delta>=0?'+':''}{delta})</span></div>
                   </div>
                 </div>
               )}
-              <div style={{display:'flex',flexDirection:'column',gap:'9px',marginBottom:'16px'}}>
+
+              {/* Timeline of all assessments */}
+              {entries.length > 1 && (
+                <div style={{marginBottom:'16px'}}>
+                  <div className="mono" style={{fontSize:'9px', color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'10px', fontWeight:'700'}}>Full History</div>
+                  <div style={{display:'flex', gap:'6px', flexWrap:'wrap'}}>
+                    {entries.map((e,idx)=>(
+                      <div key={idx} style={{background:'#F3F4F6', borderRadius:'6px', padding:'8px 12px', textAlign:'center', minWidth:'80px'}}>
+                        <div className="mono" style={{fontSize:'8px', color:'#9CA3AF', marginBottom:'3px', fontWeight:'600'}}>{e.date}</div>
+                        <div className="mono" style={{fontSize:'14px', fontWeight:'800', color:bCol(e.scores.overall)}}>{e.scores.overall}</div>
+                        <div style={{fontSize:'9px', color:'#9CA3AF', fontWeight:'600', lineHeight:'1.3', marginTop:'2px'}}>{e.profile.split(' ').slice(0,2).join(' ')}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dimension bars */}
+              <div style={{display:'flex', flexDirection:'column', gap:'9px', marginBottom:'16px'}}>
                 {compKeys.map(([k,l])=>{
-                  const v=latest.scores[k]; const d=prev?latest.scores[k]-prev.scores[k]:null;
-                  return(<div key={k} style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                    <div style={{width:'160px',fontSize:'11px',color:'#374151',flexShrink:0,fontWeight:'500'}}>{l}</div>
-                    <div style={{flex:1,background:'#F3F4F6',borderRadius:'3px',height:'6px',overflow:'hidden'}}>
-                      <div style={{width:`${v}%`,height:'100%',background:barGrad(v),transition:'width 0.8s ease'}} />
+                  const v=latest.scores[k];
+                  const d=prev?latest.scores[k]-prev.scores[k]:null;
+                  return(
+                    <div key={k} style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                      <div style={{width:'160px', fontSize:'11px', color:'#374151', flexShrink:0, fontWeight:'700'}}>{l}</div>
+                      <div style={{flex:1, background:'#F3F4F6', borderRadius:'3px', height:'6px', overflow:'hidden'}}>
+                        <div style={{width:`${v}%`, height:'100%', background:barGrad(v), transition:'width 0.8s ease'}} />
+                      </div>
+                      <div className="mono" style={{fontSize:'11px', color:bCol(v), width:'28px', textAlign:'right', fontWeight:'700'}}>{v}</div>
+                      {d!==null&&<div className="mono" style={{fontSize:'10px', fontWeight:'800', color:d>5?T.gn:d<-5?T.rd:'#9CA3AF', width:'48px', textAlign:'right'}}>{d>5?`▲ +${d}`:d<-5?`▼ ${d}`:'—'}</div>}
                     </div>
-                    <div className="mono" style={{fontSize:'11px',color:bCol(v),width:'28px',textAlign:'right',fontWeight:'600'}}>{v}</div>
-                    {d!==null&&<div className="mono" style={{fontSize:'10px',fontWeight:'600',color:d>5?T.gn:d<-5?T.rd:'#9CA3AF',width:'48px',textAlign:'right'}}>{d>5?`▲ +${d}`:d<-5?`▼ ${d}`:'—'}</div>}
-                  </div>);
+                  );
                 })}
               </div>
-              <button onClick={()=>del(latest.name,latest.emp)} style={{padding:'7px 14px',borderRadius:'5px',border:`1px solid ${T.rdP}`,background:'transparent',color:T.rd,fontFamily:"'DM Sans',sans-serif",fontSize:'11px',fontWeight:'600',cursor:'pointer'}}>Delete Records</button>
+
+              <button onClick={()=>del(pid_email, pid_emp)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
             </div>
           </div>
         );
@@ -1680,27 +1831,26 @@ const ProgressPage = () => {
 
 // ─── METHODOLOGY PAGE ─────────────────────────────────────────────────────────
 const MethodologyPage = () => (
-  <div style={{maxWidth:'1000px',margin:'0 auto',padding:'80px 32px'}}>
-    <div style={{textAlign: 'center', marginBottom: '64px'}}>
+  <div style={{maxWidth:'1000px', margin:'0 auto', padding:'80px 32px'}}>
+    <div style={{textAlign:'center', marginBottom:'64px'}}>
       <Reveal delay={0}>
         <Pill label="Scientific Foundation" style={{marginBottom:'16px'}} />
       </Reveal>
       <Reveal delay={0.1}>
-        <h2 className="serif" style={{fontSize:'clamp(2rem,4vw,2.8rem)',fontWeight:'400',margin:'0 0 8px',color:T.t0}}>
+        <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'0 0 8px', color:T.t0}}>
           Validity Controls & Scientific Basis
         </h2>
       </Reveal>
       <Reveal delay={0.2}>
-        <GoldLine style={{width:'60px',margin:'24px auto 0'}} />
+        <GoldLine style={{width:'60px', margin:'24px auto 0'}} />
       </Reveal>
     </div>
 
-    {/* 1. References */}
     <Reveal delay={0.1}>
-      <h3 className="serif" style={{fontSize:'1.5rem',fontWeight:'400',marginBottom:'20px',color:T.t0}}>Peer-Reviewed References</h3>
+      <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>Peer-Reviewed References</h3>
     </Reveal>
     <Reveal delay={0.2}>
-      <div style={{background:T.bg1,border:`1px solid ${T.b1}`,borderRadius:'8px',padding:'32px',marginBottom:'64px'}}>
+      <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'8px', padding:'32px', marginBottom:'64px'}}>
         {[
           "Goldberg, L. R. (1999). A broad-bandwidth, public domain personality inventory. Personality Psychology in Europe, 7, 7–28. [IPIP — explicitly public domain, unrestricted commercial use]",
           "Barrick, M. R., & Mount, M. K. (1991). The Big Five personality dimensions and job performance. Personnel Psychology, 44(1), 1–26.",
@@ -1713,38 +1863,50 @@ const MethodologyPage = () => (
           "Crowne, D. P., & Marlowe, D. (1960). A new scale of social desirability. Journal of Consulting Psychology, 24(4), 349–354.",
           "Khalid, S. A., et al. (2009). OCB as a predictor of performance: Pakistani university sample. International Journal of Economics & Finance, 1(2), 139–145.",
         ].map((ref,i)=>(
-          <div key={i} className="mono" style={{padding:'12px 16px',background:T.bg2,borderRadius:'6px',marginBottom:'6px',fontSize:'11px',color:T.t2,lineHeight:'1.6',borderLeft:`3px solid ${i%2===0?T.c:T.gold}`}}>{ref}</div>
+          <div key={i} className="mono" style={{padding:'12px 16px',background:T.bg2,borderRadius:'6px',marginBottom:'6px',fontSize:'11px',color:T.t2,lineHeight:'1.6',borderLeft:`4px solid ${i%2===0?T.c:T.gold}`,fontWeight:'600'}}>{ref}</div>
         ))}
       </div>
     </Reveal>
 
-    {/* 2. Validity detection */}
     <Reveal delay={0.1}>
-      <h3 className="serif" style={{fontSize:'1.5rem',fontWeight:'400',marginBottom:'20px',color:T.t0}}>How CORE Detects Dishonest Responses</h3>
+      <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>How CORE Detects Dishonest Responses</h3>
     </Reveal>
-    <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'64px'}}>
+    <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
       {[
-        {t:'L-Scale (Lie Scale) — 12 Items',c:T.rd,bg:T.rdP,d:'Twelve items describing near-impossible behaviours — never procrastinating, always feeling positive about every employer. Honest respondents agree with 0–3. Agreement with 6 or more indicates social desirability inflation. Items are deliberately subtle.'},
-        {t:'Reverse Consistency Index',c:T.am,bg:T.amP,d:'Forward and reverse-scored items per dimension are mathematically compared. Scoring high on contradictory items simultaneously is a logical contradiction that gets caught and scored.'},
-        {t:'Acquiescence Bias Detection',c:T.c,bg:T.cGlow,d:'Respondents choosing "Strongly Agree" on more than 55% of all items — regardless of reverse scoring — are detected. This pattern indicates a response style artifact or deliberate inflation.'},
-        {t:'Extreme Response Style Index',c:T.gn,bg:T.gnP,d:'Respondents choosing only extreme responses on more than 70% of items are flagged. Above 85% triggers a hard red. Above 90% triggers a critical override labelling the entire result uninterpretable.'},
+        {t:'L-Scale (Lie Scale) — 12 Items',c:T.rd,d:'Twelve items describing near-impossible behaviours — never procrastinating, always feeling positive about every employer. Honest respondents agree with 0–3. Agreement with 6 or more indicates social desirability inflation. Items are deliberately subtle.'},
+        {t:'Reverse Consistency Index',c:T.am,d:'Forward and reverse-scored items per dimension are mathematically compared. Scoring high on contradictory items simultaneously is a logical contradiction that gets caught and scored.'},
+        {t:'Acquiescence Bias Detection',c:T.c,d:'Respondents choosing "Strongly Agree" on more than 55% of all items — regardless of reverse scoring — are detected. This pattern indicates a response style artifact or deliberate inflation.'},
+        {t:'Extreme Response Style Index',c:T.gn,d:'Respondents choosing only extreme responses on more than 70% of items are flagged. Above 85% triggers a hard red. Above 90% triggers a critical override labelling the entire result uninterpretable.'},
       ].map((v,i)=>(
         <Reveal key={i} delay={i * 0.15}>
-          <div style={{padding:'32px 28px',background:`${v.c}08`,border:`1px solid ${v.c}25`,borderRadius:'8px',height:'100%',transition:'all 0.2s',cursor:'default'}}
-            onMouseOver={e=>{e.currentTarget.style.background=`${v.c}15`; e.currentTarget.style.transform='translateY(-4px)';}} 
-            onMouseOut={e=>{e.currentTarget.style.background=`${v.c}08`; e.currentTarget.style.transform='none';}}>
-            <div className="mono" style={{fontSize:'10px',fontWeight:'600',color:v.c,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'14px',borderBottom:`1px solid ${v.c}25`,paddingBottom:'12px'}}>{v.t}</div>
-            <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.7',fontWeight:'300'}}>{v.d}</p>
+          <div style={{
+            padding:'32px 28px', 
+            background:`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`, 
+            border:`1px solid ${v.c}28`, 
+            borderRadius:'8px', 
+            height:'100%', 
+            transition:'all 0.2s', 
+            cursor:'default'
+          }}
+          onMouseOver={e=>{
+            e.currentTarget.style.background=`linear-gradient(${v.c}16, ${v.c}16), ${T.bg1}`; 
+            e.currentTarget.style.transform='translateY(-4px)';
+          }}
+          onMouseOut={e=>{
+            e.currentTarget.style.background=`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`; 
+            e.currentTarget.style.transform='none';
+          }}>
+            <div className="mono" style={{fontSize:'10px',fontWeight:'700',color:v.c,textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'14px',borderBottom:`1px solid ${v.c}28`,paddingBottom:'12px'}}>{v.t}</div>
+            <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.7',fontWeight:'600'}}>{v.d}</p>
           </div>
         </Reveal>
       ))}
     </div>
 
-    {/* 3. Governance */}
     <Reveal delay={0.1}>
-      <h3 className="serif" style={{fontSize:'1.5rem',fontWeight:'400',marginBottom:'20px',color:T.t0}}>Instrument Governance</h3>
+      <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>Instrument Governance</h3>
     </Reveal>
-    <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
+    <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
       {[
         {h:'Copyright Status',p:'All five CORE modules are built on theoretical constructs that are not copyrightable. IPIP personality items are explicitly public domain. New items authored for CORE constitute original work owned by Carnelian Pvt Ltd.',c:'ipip.ori.org · Goldberg (1999)'},
         {h:'Validity Methodology',p:'L-scale methodology follows Crowne-Marlowe Social Desirability Scale principles (1960). Consistency index adapted from MMPI F-scale methodology. All items are original Carnelian work.',c:'Paulhus (1991) · MMPI principles'},
@@ -1753,17 +1915,17 @@ const MethodologyPage = () => (
       ].map((card,i)=>(
         <Reveal key={i} delay={i * 0.15}>
           <div style={{
-            background:T.bg1,border:`1px solid ${T.b1}`,borderRadius:'8px',
-            borderTop:`3px solid ${i%2===0?T.c:T.gold}`,
-            padding:'32px 28px',display:'flex',flexDirection:'column',height:'100%',
+            background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'8px',
+            borderTop:`4px solid ${i%2===0?T.c:T.gold}`,
+            padding:'32px 28px', display:'flex', flexDirection:'column', height:'100%',
             transition:'all 0.2s',
           }}
           onMouseOver={e=>{e.currentTarget.style.background=T.bg2; e.currentTarget.style.transform='translateY(-4px)';}}
           onMouseOut={e=>{e.currentTarget.style.background=T.bg1; e.currentTarget.style.transform='none';}}>
-            <h4 className="serif" style={{fontSize:'1.25rem',fontWeight:'500',marginBottom:'12px',color:T.t0}}>{card.h}</h4>
-            <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.7',flex:1,marginBottom:'20px',fontWeight:'300'}}>{card.p}</p>
-            <div style={{height:'1px',background:T.b1,marginBottom:'16px'}} />
-            <div className="mono" style={{fontSize:'10px',color:T.c,fontWeight:'600',letterSpacing:'0.08em'}}>{card.c}</div>
+            <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.25rem', fontWeight:'700', marginBottom:'12px', color:T.t0}}>{card.h}</h4>
+            <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', flex:1, marginBottom:'20px', fontWeight:'600'}}>{card.p}</p>
+            <div style={{height:'1px', background:T.b2, marginBottom:'16px'}} />
+            <div className="mono" style={{fontSize:'10px', color:T.c, fontWeight:'700', letterSpacing:'0.1em'}}>{card.c}</div>
           </div>
         </Reveal>
       ))}
@@ -1773,25 +1935,48 @@ const MethodologyPage = () => (
 
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tab,setTab]=useState('home');
-  const [reportData,setReportData]=useState(null);
-  const [hasHistory,setHasHistory]=useState(false);
+  const [tab, setTab] = useState('home');
+  const [reportData, setReportData] = useState(null);
+  const [hasHistory, setHasHistory] = useState(false);
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem('themeMode') || 'dark'; } catch(e) { return 'dark'; }
+  });
 
-  useEffect(()=>{
-    try{const h=JSON.parse(localStorage.getItem('core_v1_history')||'[]'); setHasHistory(h.length>0);}catch(e){}
-  },[]);
+  // Update T synchronously so all child renders use the correct theme
+  T = mode === 'dark' ? darkTheme : lightTheme;
 
-  const handleSetTab=(t)=>{ setTab(t); window.scrollTo({top:0,behavior:'smooth'}); };
+  useEffect(() => {
+    try { localStorage.setItem('themeMode', mode); } catch(e) {}
+  }, [mode]);
+
+  useEffect(() => {
+    try {
+      const h = JSON.parse(localStorage.getItem('core_v1_history') || '[]');
+      setHasHistory(h.length > 0);
+    } catch(e) {}
+  }, []);
+
+  const handleSetTab = (t) => {
+    setTab(t);
+    window.scrollTo({top:0, behavior:'smooth'});
+  };
 
   return (
     <>
-      <Fonts />
-      <Nav tab={tab} setTab={handleSetTab} hasResults={!!reportData} hasHistory={hasHistory} />
-      {tab==='home'&&<HomePage setTab={handleSetTab} />}
-      {tab==='assess'&&<AssessmentPage setTab={handleSetTab} setReportData={setReportData} setHistoryFlag={setHasHistory} />}
-      {tab==='results'&&<ResultsPage reportData={reportData} />}
-      {tab==='progress'&&<ProgressPage />}
-      {tab==='method'&&<MethodologyPage />}
+      <Fonts mode={mode} />
+      <Nav
+        tab={tab}
+        setTab={handleSetTab}
+        hasResults={!!reportData}
+        hasHistory={hasHistory}
+        mode={mode}
+        setMode={setMode}
+      />
+      {tab==='home'    && <HomePage    setTab={handleSetTab} />}
+      {tab==='assess'  && <AssessmentPage setTab={handleSetTab} setReportData={setReportData} setHistoryFlag={setHasHistory} />}
+      {tab==='results' && <ResultsPage reportData={reportData} />}
+      {tab==='progress'&& <ProgressPage />}
+      {tab==='method'  && <MethodologyPage />}
     </>
   );
 }

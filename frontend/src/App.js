@@ -138,6 +138,7 @@ const Fonts = ({ mode }) => {
       @keyframes timerTick { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
       @keyframes checkIn   { from { transform:scale(0); } to { transform:scale(1); } }
       @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+      @keyframes blink     { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
       .anim-fadeUp  { animation: fadeUp  0.7s cubic-bezier(0.22,1,0.36,1) both; }
       .anim-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
@@ -465,7 +466,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
         <div style={{display:'none', width:'30px', height:'30px', background:T.c, borderRadius:'6px', alignItems:'center', justifyContent:'center', fontFamily:"'Playfair Display',serif", fontWeight:'700', color:'#fff', fontSize:'15px'}}>C</div>
         <div>
           <div style={{fontFamily:"'Playfair Display',serif", fontSize:'26px', fontWeight:'700', color:T.gold, letterSpacing:'-0.02em', lineHeight:'0.95'}}>CORE</div>
-          <div className="mono" style={{fontSize:'8px', color:T.c, letterSpacing:'0.18em', marginTop:'3px', fontWeight:'700'}}>BY CARNELIAN</div>
+          <div className="mono" style={{fontSize:'8px', color:T.c, letterSpacing:'0.18em', marginTop:'3px', fontWeight:'800'}}>BY CARNELIAN</div>
         </div>
       </div>
 
@@ -516,6 +517,9 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const HomePage = ({setTab}) => {
+  // Colors array for the 8-point lists
+  const listColors = [T.c, T.gold, T.gn, T.am, '#8B5CF6', T.c, T.gold, T.gn];
+
   return (
     <div>
       {/* Hero */}
@@ -532,7 +536,20 @@ const HomePage = ({setTab}) => {
         <div style={{maxWidth:'1100px', margin:'0 auto', position:'relative', zIndex:1, width:'100%'}}>
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Reveal delay={0}>
-              <Pill label="Competency & Organisational Readiness Evaluation" style={{marginBottom:'32px', fontSize:'11px', padding:'8px 20px'}} />
+              <Pill 
+                label={
+                  <span style={{display:'inline-flex', alignItems:'center'}}>
+                    <span style={{
+                      display:'inline-block', width:'6px', height:'6px', borderRadius:'50%',
+                      background: T.c, boxShadow: `0 0 8px ${T.c}`, marginRight:'8px',
+                      animation: 'blink 1.5s infinite'
+                    }} />
+                    Competency & Organisational Readiness Evaluation
+                  </span>
+                } 
+                color={T.t0} 
+                style={{marginBottom:'32px', fontSize:'11px', padding:'8px 20px', fontWeight:'800'}} 
+              />
             </Reveal>
 
             <Reveal delay={0.1}>
@@ -612,7 +629,8 @@ const HomePage = ({setTab}) => {
           <div style={{marginBottom:'56px', textAlign:'center'}}>
             <Pill label="Assessment Architecture" />
             <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,3rem)', fontWeight:'700', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
-              Five modules. Three challenges.<br/>One complete picture.
+              Five modules. Three challenges.<br/>
+              <em style={{color:T.c, fontStyle:'italic'}}>One complete picture.</em>
             </h2>
           </div>
         </Reveal>
@@ -700,39 +718,43 @@ const HomePage = ({setTab}) => {
               {h:'12-Industry Context Engine', d:"Configure once for your client before assessment begins. The engine adapts the Technical Report's industry lens, risk thresholds, and high-potential benchmarks for 12 Pakistani sectors. The Candidate Action Plan adapts too — providing genuinely contextualised development actions."},
               {h:'Longitudinal Re-Assessment Tracker', d:"Save any candidate's results to the device. When they retake CORE — after a development programme or promotion cycle — a side-by-side progress comparison is generated automatically. Every dimension shows its delta. Prove L&D impact with data."},
               {h:'Engagement-Optimised Experience', d:'Positive reinforcement messages appear after every question. Clear timed challenge warnings mean no candidate is surprised by a clock. The seesaw provides a visual, tactile break. Runs in any browser on any device. No app or login required.'},
-            ].map((item,i)=>(
-              <Reveal key={i} delay={i * 0.07} direction="left" distance={28}>
-                <div style={{
-                  display:'flex', alignItems:'flex-start', gap:'24px',
-                  background:T.bg1, border:`1px solid ${T.b1}`, borderRadius:'8px',
-                  padding:'28px 32px', position:'relative', overflow:'hidden',
-                  transition:'all 0.3s ease', cursor:'default'
-                }}
-                onMouseOver={e=>{
-                  e.currentTarget.style.background=T.bg2;
-                  e.currentTarget.style.borderColor=T.b2;
-                  const num = e.currentTarget.querySelector('.feat-num');
-                  if (num) { num.style.color=T.gold; num.style.transform='scale(1.1) translateX(-10px)'; }
-                }}
-                onMouseOut={e=>{
-                  e.currentTarget.style.background=T.bg1;
-                  e.currentTarget.style.borderColor=T.b1;
-                  const num = e.currentTarget.querySelector('.feat-num');
-                  if (num) { num.style.color=T.b2; num.style.transform='none'; }
-                }}>
-                  <div className="feat-num" style={{
-                    position:'absolute', right:'16px', top:'-8px',
-                    fontFamily:"'Playfair Display',serif",
-                    fontSize:'110px', fontWeight:'700', color:T.b1,
-                    opacity:0.4, transition:'all 0.5s ease', pointerEvents:'none', lineHeight:1
-                  }}>0{i+1}</div>
-                  <div style={{position:'relative', zIndex:1, maxWidth:'88%'}}>
-                    <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.35rem', fontWeight:'600', color:T.t0, marginBottom:'10px'}}>{item.h}</h3>
-                    <p style={{fontSize:'13px', color:T.t1, lineHeight:'1.7', fontWeight:'500'}}>{item.d}</p>
+            ].map((item,i)=>{
+              const accent = listColors[i];
+              return (
+                <Reveal key={i} delay={i * 0.07} direction="left" distance={28}>
+                  <div style={{
+                    display:'flex', alignItems:'flex-start', gap:'24px',
+                    background:T.bg1, border:`1px solid ${T.b1}`, borderRadius:'8px',
+                    borderLeft:`4px solid ${accent}`,
+                    padding:'28px 32px', position:'relative', overflow:'hidden',
+                    transition:'all 0.3s ease', cursor:'default'
+                  }}
+                  onMouseOver={e=>{
+                    e.currentTarget.style.background=T.bg2;
+                    e.currentTarget.style.borderColor=T.b2;
+                    const num = e.currentTarget.querySelector('.feat-num');
+                    if (num) { num.style.color=T.gold; num.style.transform='scale(1.1) translateX(-10px)'; }
+                  }}
+                  onMouseOut={e=>{
+                    e.currentTarget.style.background=T.bg1;
+                    e.currentTarget.style.borderColor=T.b1;
+                    const num = e.currentTarget.querySelector('.feat-num');
+                    if (num) { num.style.color=T.b2; num.style.transform='none'; }
+                  }}>
+                    <div className="feat-num" style={{
+                      position:'absolute', right:'16px', top:'-8px',
+                      fontFamily:"'Playfair Display',serif",
+                      fontSize:'110px', fontWeight:'700', color:T.b1,
+                      opacity:0.4, transition:'all 0.5s ease', pointerEvents:'none', lineHeight:1
+                    }}>0{i+1}</div>
+                    <div style={{position:'relative', zIndex:1, maxWidth:'88%'}}>
+                      <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.35rem', fontWeight:'600', color:accent, marginBottom:'10px'}}>{item.h}</h3>
+                      <p style={{fontSize:'13px', color:T.t1, lineHeight:'1.7', fontWeight:'500'}}>{item.d}</p>
+                    </div>
                   </div>
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              );
+            })}
           </div>
         </div>
 
@@ -750,16 +772,22 @@ const HomePage = ({setTab}) => {
                 {h:'Post-Training Evaluation', d:'Re-assess after a development programme. The progress tracker shows exactly which scores moved — and proves ROI to leadership.'},
                 {h:'Donor Accountability', d:'Development sector organisations can show donors peer-reviewed evidence behind their staff selection and capacity building investments.'},
                 {h:'Civil Service Promotion', d:'Objective, legally defensible data for BPS promotion decisions — merit-based, standardised, and auditable.'},
-              ].map((item,i)=>(
-                <Reveal key={i} delay={i * 0.05} distance={20}>
-                  <div style={{background:T.bg2, padding:'28px 24px', height:'100%', transition:'background 0.2s'}}
-                    onMouseOver={e=>e.currentTarget.style.background=T.bg3}
-                    onMouseOut={e=>e.currentTarget.style.background=T.bg2}>
-                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', color:T.t0, marginBottom:'10px'}}>{item.h}</div>
-                    <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.65', fontWeight:'500'}}>{item.d}</div>
-                  </div>
-                </Reveal>
-              ))}
+              ].map((item,i)=>{
+                const boxAccent = listColors[i];
+                return (
+                  <Reveal key={i} delay={i * 0.05} distance={20}>
+                    <div style={{
+                      background:T.bg2, padding:'28px 24px', height:'100%', transition:'background 0.2s',
+                      borderTop:`3px solid ${boxAccent}`
+                    }}
+                      onMouseOver={e=>e.currentTarget.style.background=T.bg3}
+                      onMouseOut={e=>e.currentTarget.style.background=T.bg2}>
+                      <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', color:boxAccent, marginBottom:'10px'}}>{item.h}</div>
+                      <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.65', fontWeight:'500'}}>{item.d}</div>
+                    </div>
+                  </Reveal>
+                );
+              })}
             </div>
           </div>
         </Reveal>

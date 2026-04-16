@@ -950,7 +950,7 @@ const generate = async () => { // <-- 1. Make this async
 
     // 4. Send to Backend Database (NEW CODE)
     try {
-      await fetch('http://localhost:5000/api/assessments', {
+      await fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

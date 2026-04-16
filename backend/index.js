@@ -6,7 +6,10 @@ const { Pool } = require('pg');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ['https://core-by-carnelian.onrender.com', 'http://localhost:3000'],
+    credentials: true
+}));
 app.use(express.json()); // Parses incoming JSON requests
 
 // Database connection

@@ -142,6 +142,7 @@ const Fonts = ({ mode }) => {
       @keyframes checkIn   { from { transform:scale(0); } to { transform:scale(1); } }
       @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
       @keyframes blink     { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+      @keyframes spin      { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
       .anim-fadeUp  { animation: fadeUp  0.7s cubic-bezier(0.22,1,0.36,1) both; }
       .anim-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
@@ -812,7 +813,8 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
   const [ssVal, setSsVal] = useState(50);
   const [timer, setTimer] = useState(25);
   const [timerActive, setTimerActive] = useState(false);
-  const [gameLocked, setGameLocked] = useState(false);
+   const [gameLocked, setGameLocked] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [gameChoice, setGameChoice] = useState(null);
   const [priorFound, setPriorFound] = useState(null);
   const timerRef = useRef(null);
@@ -863,7 +865,8 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
     setGameChoice({quality,score});
   };
 
-const generate = async () => { // <-- 1. Make this async
+const generate = async () => {
+    setGenerating(true);
     const O=scoreDim('O',answers),C=scoreDim('C',answers),E=scoreDim('E',answers),A=scoreDim('A',answers);
     const ES=scoreDim('ES',answers);
     const CQ_K=scoreDim('CQ_K',answers),CQ_M=scoreDim('CQ_M',answers),CQ_B=scoreDim('CQ_B',answers);
@@ -965,6 +968,7 @@ const generate = async () => { // <-- 1. Make this async
     }
 
     // 5. Update UI State
+    setGenerating(false);
     setReportData(reportDataObj);
     setTab('results');
   };
@@ -1360,16 +1364,25 @@ const generate = async () => { // <-- 1. Make this async
                 transition:'all 0.18s',
               }}>← Back</button>
 
-              <button onClick={nextQ} disabled={answers[cur]===null} style={{
+              <button onClick={nextQ} disabled={answers[cur]===null || generating} style={{
                 padding:'9px 22px',borderRadius:'6px',border:'none',
-                cursor:answers[cur]===null?'not-allowed':'pointer',
-                background:answers[cur]===null?T.bg3:T.c,
-                color:answers[cur]===null?T.t3:'#fff',
+                cursor:(answers[cur]===null || generating)?'not-allowed':'pointer',
+                background:(answers[cur]===null || generating)?T.bg3:T.c,
+                color:(answers[cur]===null || generating)?T.t3:'#fff',
                 fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',
                 letterSpacing:'0.03em',
                 transition:'all 0.2s',
-              }} onMouseOver={e=>{if(answers[cur]!==null) e.target.style.background=T.cDark;}} onMouseOut={e=>{if(answers[cur]!==null) e.target.style.background=T.c;}}>
-                {cur===QS.length-1?'Generate Report →':'Next →'}
+                display:'flex', alignItems:'center', gap:'8px',
+              }} onMouseOver={e=>{if(answers[cur]!==null&&!generating) e.currentTarget.style.background=T.cDark;}} onMouseOut={e=>{if(answers[cur]!==null&&!generating) e.currentTarget.style.background=T.c;}}>
+                {generating ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{animation:'spin 1s linear infinite', flexShrink:0}}>
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3"/>
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                    </svg>
+                    Generating…
+                  </>
+                ) : cur===QS.length-1 ? 'Generate Report →' : 'Next →'}
               </button>
             </div>
           </div>

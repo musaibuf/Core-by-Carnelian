@@ -17,11 +17,32 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-
-// Test DB Connection
+// Test DB Connection and Create Table if it doesn't exist
 pool.connect()
-  .then(() => console.log('✅ Connected to PostgreSQL database'))
-  .catch(err => console.error('❌ Database connection error', err.stack));
+  .then(() => {
+    console.log('✅ Connected to PostgreSQL database');
+    
+    // Auto-create the table
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS assessments (
+        id SERIAL PRIMARY KEY,
+        doc_id VARCHAR(255),
+        cnic VARCHAR(255),
+        name VARCHAR(255),
+        email VARCHAR(255),
+        department VARCHAR(255),
+        role VARCHAR(255),
+        industry VARCHAR(255),
+        overall_score NUMERIC,
+        profile_name VARCHAR(255),
+        report_data JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    return pool.query(createTableQuery);
+  })
+  .then(() => console.log('✅ Assessments table is ready'))
+  .catch(err => console.error('❌ Database connection/setup error', err.stack));
 
 // ----------------------------------------------------
 // ROUTES

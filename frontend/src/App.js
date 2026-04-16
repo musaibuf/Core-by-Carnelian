@@ -1386,7 +1386,7 @@ const ResultsPage = ({reportData}) => {
     bg1: '#ffffffec',
     t0: '#000000',
     t1: '#000000',
-    t2: '#9CA3AF',
+    t2: '#B01C24',
     t3: '#6B7280',
     c: '#B01C24',
     cGlow: 'rgba(176, 28, 36, 0.15)',

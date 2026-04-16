@@ -515,7 +515,7 @@ const OverviewTab = ({ data, T, onSelect }) => {
   const total = data.length;
   if (total === 0) return <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>No assessments found in the database.</div>;
 
-  const avgScore = Math.round(data.reduce((s, r) => s + r.overall_score, 0) / total);
+  const avgScore = Math.round(data.reduce((s, r) => s + Number(r.overall_score), 0) / total);
   const validCount = data.filter(r => r.report_data?.validity?.overall === 'green').length;
   const highPot = data.filter(r => r.overall_score >= 75).length;
   const flagged = data.filter(r => r.report_data?.validity?.overall === 'red').length;
@@ -980,7 +980,7 @@ const IndustryTab = ({ data, T, onSelect }) => {
           </div>
           <div style={{ overflowY:'auto', maxHeight:'500px' }}>
             {indList.map(([ind, recs]) => {
-              const avg = Math.round(recs.reduce((s, r) => s + r.overall_score, 0) / recs.length);
+              const avg = Math.round(recs.reduce((s, r) => s + Number(r.overall_score), 0) / recs.length);
               const isSelected = selectedInd === ind;
               return (
                 <button key={ind} onClick={() => setSelectedInd(isSelected ? null : ind)}
@@ -1019,7 +1019,7 @@ const IndustryTab = ({ data, T, onSelect }) => {
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
                   {[
                     { n:selectedCandidates.length, l:'Candidates' },
-                    { n:Math.round(selectedCandidates.reduce((s,r)=>s+r.overall_score,0)/selectedCandidates.length), l:'Avg Overall' },
+                    { n:Math.round(selectedCandidates.reduce((s,r)=>s+Number(r.overall_score),0)/selectedCandidates.length), l:'Avg Overall' },
                     { n:selectedCandidates.filter(r=>r.overall_score>=75).length, l:'High Potential' },
                     { n:selectedCandidates.filter(r=>r.report_data?.validity?.overall==='red').length, l:'Flagged' },
                   ].map((s,i)=>(

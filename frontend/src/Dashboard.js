@@ -1073,8 +1073,9 @@ export default function Dashboard() {
 
   const T = mode === 'dark' ? darkTheme : lightTheme;
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/assessments')
+useEffect(() => {
+    // Replaced localhost with your live Render backend URL
+    fetch('https://core-by-carnelian-backend.onrender.com/api/assessments')
       .then(res => { if (!res.ok) throw new Error('API error'); return res.json(); })
       .then(data => { setAssessments(data); setLoading(false); })
       .catch((err) => {

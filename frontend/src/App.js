@@ -865,7 +865,7 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
 
 const generate = async () => { // <-- 1. Make this async
     const O=scoreDim('O',answers),C=scoreDim('C',answers),E=scoreDim('E',answers),A=scoreDim('A',answers);
-    const ES=100-scoreDim('ES',answers);
+    const ES=scoreDim('ES',answers);
     const CQ_K=scoreDim('CQ_K',answers),CQ_M=scoreDim('CQ_M',answers),CQ_B=scoreDim('CQ_B',answers);
     const CQavg=Math.round((CQ_K+CQ_M+CQ_B)/3);
     const OCB_A=scoreDim('OCB_A',answers),OCB_CV=scoreDim('OCB_CV',answers),OCB_S=scoreDim('OCB_S',answers),OCB_CO=scoreDim('OCB_CO',answers),OCB_Cn=scoreDim('OCB_Cn',answers);
@@ -873,7 +873,7 @@ const generate = async () => { // <-- 1. Make this async
     const LA_MA=scoreDim('LA_MA',answers),LA_PA_raw=scoreDim('LA_PA',answers),LA_CA=scoreDim('LA_CA',answers),LA_RA=scoreDim('LA_RA',answers);
     const EO_RC_raw=scoreDim('EO_RC',answers),EO_T_raw=scoreDim('EO_T',answers),EO_ER_raw=scoreDim('EO_ER',answers),EO_AI_raw=scoreDim('EO_AI',answers);
     const gs=gameScores;
-    const ssBonus=gs.seesaw<=20?3:gs.seesaw<=40?7:gs.seesaw<=60?2:gs.seesaw<=80?-4:-7;
+    const ssBonus=gs.seesaw<=20?8:gs.seesaw<=40?5:gs.seesaw<=60?0:gs.seesaw<=80?-4:-8;
     const adjEO_ER=Math.min(100,Math.max(0,EO_ER_raw+ssBonus));
     const sc1=gs.scenario1;
     const adjLA_PA=Math.min(100,Math.max(0,LA_PA_raw+sc1));
@@ -1407,8 +1407,8 @@ const ResultsPage = ({reportData}) => {
     return `linear-gradient(90deg, ${T.rd}, #EF4444)`;
   };
 
-  const bCol = (v) => v >= 70 ? T.gn : v >= 50 ? T.am : T.rd;
-  const bd = (v) => v >= 70 ? 'HIGH' : v >= 50 ? 'MID' : 'LOW';
+const bCol = (v) => v >= 75 ? T.gn : v >= 50 ? T.am : T.rd;
+const bd = (v) => v >= 75 ? 'HIGH' : v >= 50 ? 'MID' : 'LOW';
 
   // ─── EARLY RETURN ────────────────────────────────────────────────────
   if(!reportData) return (
@@ -2610,4 +2610,3 @@ export default function App() {
 
   );
 }
-

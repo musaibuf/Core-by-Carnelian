@@ -19,10 +19,10 @@ const pool = new Pool({
 
 // Test DB Connection and Create Table if it doesn't exist
 pool.connect()
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to PostgreSQL database');
     
-    // Auto-create the table
+    // Auto-create the table with the new v3.0 fields (batch, purpose, level)
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS assessments (
         id SERIAL PRIMARY KEY,
@@ -33,15 +33,29 @@ pool.connect()
         department VARCHAR(255),
         role VARCHAR(255),
         industry VARCHAR(255),
+        batch VARCHAR(255),
+        purpose VARCHAR(255),
+        level VARCHAR(255),
         overall_score NUMERIC,
         profile_name VARCHAR(255),
         report_data JSONB,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    return pool.query(createTableQuery);
+    await pool.query(createTableQuery);
+
+    // Safely attempt to add new columns in case the table already existed from v1.0
+    // (This prevents errors if you already have data in your database)
+    try {
+      await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS batch VARCHAR(255);`);
+      await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS purpose VARCHAR(255);`);
+      await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level VARCHAR(255);`);
+    } catch (alterErr) {
+      console.log('Columns already exist or alter skipped.');
+    }
+
+    console.log('✅ Assessments table is ready');
   })
-  .then(() => console.log('✅ Assessments table is ready'))
   .catch(err => console.error('❌ Database connection/setup error', err.stack));
 
 // ----------------------------------------------------
@@ -52,15 +66,22 @@ pool.connect()
 app.post('/api/assessments', async (req, res) => {
   try {
     const reportData = req.body;
-    const { respondent, scores, profile, docId } = reportData;
+    // Extract cfg alongside the others (cfg holds batch, purpose, level in the new React code)
+    const { respondent, scores, profile, docId, cfg } = reportData;
 
     // Use department Other if selected
     const actualDept = respondent.dept === 'Other' ? respondent.deptOther : respondent.dept;
 
+    // Extract the new context fields (fallback to respondent if they are there)
+    const batch = cfg?.batch || respondent?.batch || '';
+    const purpose = cfg?.purpose || respondent?.purpose || '';
+    const level = cfg?.level || respondent?.level || '';
+    const industry = cfg?.industry || respondent?.industry || '';
+
     const query = `
       INSERT INTO assessments 
-      (doc_id, cnic, name, email, department, role, industry, overall_score, profile_name, report_data)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      (doc_id, cnic, name, email, department, role, industry, batch, purpose, level, overall_score, profile_name, report_data)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *;
     `;
 
@@ -71,7 +92,10 @@ app.post('/api/assessments', async (req, res) => {
       respondent.email,
       actualDept,
       respondent.role,
-      respondent.industry,
+      industry,
+      batch,
+      purpose,
+      level,
       scores.overall,
       profile.name,
       reportData // The entire JSON object goes into the JSONB column

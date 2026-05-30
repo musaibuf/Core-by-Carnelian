@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Dashboard from './Dashboard';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 let T = {};
@@ -68,202 +67,184 @@ const lightTheme = {
   gridSize: '72px',
 };
 
-// ─── FONTS ────────────────────────────────────────────────────────────────────
+// ─── FONTS & GLOBAL STYLES ────────────────────────────────────────────────────
 const Fonts = ({ mode }) => {
   const TT = mode === 'dark' ? darkTheme : lightTheme;
   return (
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-@media print {
-  footer { display: none !important; }
-}
+      @media print { footer, nav, .no-print { display: none !important; } body { background: #fff !important; color: #000 !important; } }
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-
-      body {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        background: ${TT.bg0};
-        color: ${TT.t0};
-        min-height: 100vh;
-        overflow-x: hidden;
-        transition: background 0.3s ease, color 0.3s ease;
-        font-weight: 500;
-      }
-
-      /* Global grid overlay on body */
-      body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background-image:
-          linear-gradient(${TT.gridColor} 1px, transparent 1px),
-          linear-gradient(90deg, ${TT.gridColor} 1px, transparent 1px);
-        background-size: ${TT.gridSize} ${TT.gridSize};
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      /* Noise grain for dark mode */
-      body::after {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background-image: ${
-          mode === 'dark'
-            ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E")`
-            : 'none'
-        };
-        pointer-events: none;
-        z-index: 0;
-        opacity: ${mode === 'dark' ? '0.4' : '0'};
-      }
-
-      /* Everything above grid */
-      nav, main, section, div:not(body > div) {
-        position: relative;
-        z-index: 1;
-      }
-
-      .serif  { font-family: 'Playfair Display', serif; font-weight: 600; }
-      .mono   { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
-      .sans   { font-family: 'Plus Jakarta Sans', sans-serif; }
-
+      body { font-family: 'Plus Jakarta Sans', sans-serif; background: ${TT.bg0}; color: ${TT.t0}; min-height: 100vh; overflow-x: hidden; transition: background 0.3s ease, color 0.3s ease; font-weight: 500; }
+      body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(${TT.gridColor} 1px, transparent 1px), linear-gradient(90deg, ${TT.gridColor} 1px, transparent 1px); background-size: ${TT.gridSize} ${TT.gridSize}; pointer-events: none; z-index: 0; }
+      body::after { content: ''; position: fixed; inset: 0; background-image: ${mode === 'dark' ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E")` : 'none'}; pointer-events: none; z-index: 0; opacity: ${mode === 'dark' ? '0.4' : '0'}; }
+      nav, main, section, div:not(body > div) { position: relative; z-index: 1; }
+      .serif { font-family: 'Playfair Display', serif; font-weight: 600; }
+      .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: ${TT.bg0}; }
       ::-webkit-scrollbar-thumb { background: ${TT.b2}; border-radius: 2px; }
-
-      @keyframes fadeUp    { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-      @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
-      @keyframes scaleIn   { from { opacity:0; transform:scale(0.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
-      @keyframes slideUp   { from { opacity:0; transform:translateY(44px); } to { opacity:1; transform:translateY(0); } }
-      @keyframes glow      { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
-      @keyframes shimmer   { from { background-position:-200% center; } to { background-position:200% center; } }
+      @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+      @keyframes scaleIn { from { opacity:0; transform:scale(0.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+      @keyframes slideUp { from { opacity:0; transform:translateY(44px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes glow { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
       @keyframes timerTick { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-      @keyframes checkIn   { from { transform:scale(0); } to { transform:scale(1); } }
-      @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
-      @keyframes blink     { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-      @keyframes spin      { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-      .anim-fadeUp  { animation: fadeUp  0.7s cubic-bezier(0.22,1,0.36,1) both; }
+      @keyframes checkIn { from { transform:scale(0); } to { transform:scale(1); } }
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      .anim-fadeUp { animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
       .anim-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
       .anim-slideUp { animation: slideUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
-
-      @media (max-width: 900px) {
-        .grid-5-col { grid-template-columns: repeat(3,1fr) !important; }
-        .grid-6-col { grid-template-columns: repeat(3,1fr) !important; }
-        .grid-3-col { grid-template-columns: 1fr 1fr !important; }
-        .grid-2-col { grid-template-columns: 1fr !important; }
-        .grid-4-col { grid-template-columns: 1fr 1fr !important; }
-        .hero-title  { font-size: clamp(2.4rem,7vw,3.6rem) !important; }
-        .hide-mobile { display: none !important; }
-      }
-      @media (max-width: 600px) {
-        .grid-5-col { grid-template-columns: 1fr 1fr !important; }
-        .grid-6-col { grid-template-columns: repeat(2,1fr) !important; }
-        .grid-3-col { grid-template-columns: 1fr !important; }
-        .grid-4-col { grid-template-columns: 1fr !important; }
-        .section-pad { padding: 48px 20px !important; }
-        .card-pad    { padding: 24px 20px !important; }
-        .q-card-pad  { padding: 32px 24px !important; }
-        .hero-title  { font-size: clamp(2rem,9vw,2.8rem) !important; }
-        .nav-wrap    { padding: 0 16px !important; }
-        .report-wrap { padding: 32px 16px !important; }
-      }
-      @media print {
-        .no-print { display: none !important; }
-      }
+      @media (max-width: 900px) { .grid-5-col, .grid-6-col { grid-template-columns: repeat(3,1fr) !important; } .grid-3-col, .grid-4-col { grid-template-columns: 1fr 1fr !important; } .grid-2-col { grid-template-columns: 1fr !important; } .hide-mobile { display: none !important; } }
+      @media (max-width: 600px) { .grid-5-col, .grid-6-col { grid-template-columns: repeat(2,1fr) !important; } .grid-3-col, .grid-4-col { grid-template-columns: 1fr !important; } .section-pad { padding: 48px 20px !important; } .card-pad { padding: 24px 20px !important; } .q-card-pad { padding: 32px 24px !important; } .nav-wrap { padding: 0 16px !important; } .report-wrap { padding: 32px 16px !important; } }
     `}</style>
   );
 };
 
-// ─── DATA ─────────────────────────────────────────────────────────────────────
+// ─── DATA & CONSTANTS ─────────────────────────────────────────────────────────
 const IND = {
-  'Banking & Financial Services':{ short:'Banking & Finance', priority:['EO_RC','EO_AI','C','ES','OCB_Cn'], lens:`In banking, <strong>Ethical Orientation</strong> is the highest-stakes dimension. Regulatory compliance, fiduciary duty, and prudential standards demand authentic integrity. Low EO scores — especially in Rule Compliance and Authentic Integrity — carry material regulatory risk before placement in treasury, audit, or credit functions. <strong>Conscientiousness</strong> and <strong>Emotional Stability</strong> are the strongest performance predictors under regulatory scrutiny.`, hiPotential:`C ≥ 75, ES ≥ 70, EOavg ≥ 75, LAavg ≥ 65`, riskNote:`EO_RC or EO_AI below 50 → do not place in treasury, audit, or credit roles without mandatory ethics coaching.` },
-  'Insurance & Takaful':{ short:'Insurance & Takaful', priority:['EO_T','EO_AI','C','A','CQ_K'], lens:`Insurance and Takaful require <strong>Conscientiousness</strong>, <strong>Agreeableness</strong>, and <strong>Transparent Ethics</strong>. Cultural Knowledge is critical where Shariah compliance and community trust are foundational. Low EO_T in underwriting or claims represents significant fraud risk.`, hiPotential:`A ≥ 70, C ≥ 72, EOavg ≥ 72`, riskNote:`Low EO_T in claims or underwriting → structured supervision before independent case handling.` },
-  'Government & Civil Service':{ short:'Government / Civil Service', priority:['EO_RC','EO_AI','OCB_CV','C','CQ_K'], lens:`Pakistan's civil service has the highest social desirability inflation of any sector. <strong>Learning Agility</strong> is the strongest predictor of reform and policy role success yet the most under-measured in promotion systems. Traditional seniority-based promotion misses all four of CORE's most predictive dimensions.`, hiPotential:`BPS-18+: LAavg ≥ 65, CQavg ≥ 62, EOavg ≥ 75, C ≥ 70`, riskNote:`Social desirability inflation is significantly more common in hierarchical bureaucratic cultures.` },
-  'FMCG & Consumer Goods':{ short:'FMCG / Consumer Goods', priority:['E','O','LA_MA','CQ_B','A'], lens:`FMCG depends on <strong>social confidence</strong> combined with <strong>adaptive thinking</strong> and cultural fluency to engage Pakistan's diverse consumer base — from boardroom to kiryana. <strong>CQ_B</strong> is critical because commercial professionals must be effective across every register of Pakistani social interaction.`, hiPotential:`E ≥ 70, LAavg ≥ 68, CQavg ≥ 65, O ≥ 68`, riskNote:`Low OCB_S in sales teams creates toxicity during high-pressure cycles.` },
-  'Telecommunications & Technology':{ short:'Telecom & Technology', priority:['O','LA_MA','LA_RA','CQ_B','LA_CA'], lens:`Pakistan's tech sector requires the highest <strong>Learning Agility</strong> of any CORE sector. Technical knowledge depreciates rapidly. <strong>Openness</strong> and <strong>Results Agility</strong> are the strongest sustained performance predictors.`, hiPotential:`LAavg ≥ 75, O ≥ 72, LA_CA ≥ 70`, riskNote:`EO_T below 55 in data-handling roles represents data privacy risk.` },
-  'Energy & Utilities':{ short:'Energy & Utilities', priority:['C','EO_RC','ES','LA_CA','OCB_Cn'], lens:`Energy and utilities demand exceptional <strong>procedural conscientiousness</strong> and <strong>safety-oriented ethics</strong>. EO_RC and Conscientiousness are highest-stakes where infrastructure failures carry public safety consequences.`, hiPotential:`C ≥ 78, ES ≥ 72, EOavg ≥ 72`, riskNote:`EO_RC below 50 in operational roles carries safety risk.` },
-  'Healthcare & Pharmaceuticals':{ short:'Healthcare & Pharma', priority:['A','EO_ER','EO_RC','ES','C'], lens:`Healthcare requires extraordinary <strong>Agreeableness</strong>, <strong>Ethical Reasoning</strong>, and <strong>Emotional Stability</strong>. Cultural Knowledge is critical for engaging rural and vulnerable patient populations.`, hiPotential:`A ≥ 72, ES ≥ 72, EOavg ≥ 75, C ≥ 73`, riskNote:`EO_ER below 60 in patient-contact roles represents patient safety risk.` },
-  'Manufacturing & Industrial':{ short:'Manufacturing & Industrial', priority:['C','EO_RC','OCB_Cn','ES','OCB_CO'], lens:`Manufacturing prizes <strong>procedural conscientiousness</strong>, <strong>rule compliance</strong>, and <strong>consistent citizenship</strong>. In export-oriented manufacturing, CQ is increasingly relevant for international buyer relationships.`, hiPotential:`C ≥ 78, ES ≥ 72, EOavg ≥ 70, OCB_Cn ≥ 72`, riskNote:`EO_RC below 50 in QA or safety roles carries product liability risk.` },
-  'Development Sector & NGOs':{ short:'Development / NGOs', priority:['CQ_K','CQ_M','A','OCB_A','EO_ER'], lens:`The development sector requires the highest Cultural Intelligence of any CORE sector. The most common failure is low <strong>Conscientiousness</strong> — high-empathy professionals who struggle with M&E documentation and financial accountability.`, hiPotential:`CQavg ≥ 72, A ≥ 72, LAavg ≥ 65, EOavg ≥ 70`, riskNote:`Low EO_T in financial management is a fiduciary risk to funding relationships.` },
-  'Education & Academia':{ short:'Education & Academia', priority:['A','O','LA_RA','OCB_CV','CQ_K'], lens:`Education professionals require strong <strong>Agreeableness</strong>, <strong>Openness</strong>, and <strong>Results Agility</strong>. Civic Virtue is a strong predictor of faculty quality and departmental health.`, hiPotential:`O ≥ 72, A ≥ 70, LAavg ≥ 70, OCB_CV ≥ 70`, riskNote:`EO_AI below 50 in faculty roles creates academic integrity risk.` },
-  'Real Estate & Construction':{ short:'Real Estate & Construction', priority:['EO_RC','EO_T','C','LA_CA','OCB_CO'], lens:`Pakistan's construction sector has significant compliance challenges under RERA reform. <strong>Rule Compliance</strong> and <strong>Transparent Disclosure</strong> are the highest-stakes dimensions.`, hiPotential:`C ≥ 75, EOavg ≥ 70, LA_CA ≥ 65`, riskNote:`Low EO_RC or EO_T in procurement represents significant corruption risk.` },
-  'Retail & Distribution':{ short:'Retail & Distribution', priority:['E','A','CQ_B','OCB_Cn','ES'], lens:`Retail requires <strong>social energy</strong> combined with <strong>cultural behavioural flexibility</strong> to engage Pakistan's diverse consumer segments. Agreeableness predicts customer relationship quality.`, hiPotential:`E ≥ 68, A ≥ 68, CQ_B ≥ 65, C ≥ 72`, riskNote:`Low OCB_S in retail creates team toxicity during peak seasons.` },
+  'Banking & Financial Services':{ short:'Banking & Finance', icon:'🏦',
+    lens:`In banking, <strong>Ethical Orientation</strong> is the highest-stakes dimension. Regulatory compliance, fiduciary duty, and prudential standards demand authentic integrity. Low EO scores — especially in Rule Compliance and Authentic Integrity — carry material regulatory risk before placement in treasury, audit, or credit functions. <strong>Conscientiousness</strong> and <strong>Emotional Stability</strong> are the strongest performance predictors under regulatory scrutiny. Cultural Intelligence is increasingly critical for institutions engaging across Pakistan's diverse regional footprint and with international regulators.`,
+    hiPotential:`Candidates showing C ≥ 75, ES ≥ 70, EOavg ≥ 75, LAavg ≥ 65.`,
+    riskNote:`EO_RC or EO_AI below 50 → do not place in treasury, audit, credit, or unsupervised customer-fund roles without mandatory ethics coaching.`
+  },
+  'Insurance & Takaful':{ short:'Insurance & Takaful', icon:'📋',
+    lens:`Insurance and Takaful require <strong>Conscientiousness</strong> (policy accuracy), <strong>Agreeableness</strong> (claims empathy), and <strong>Transparent Ethics</strong> (EO_T). Cultural Knowledge is critical in Takaful contexts where Shariah compliance and community trust are foundational. Low EO_T in underwriting or claims represents significant fraud risk.`,
+    hiPotential:`Candidates showing A ≥ 70, C ≥ 72, EOavg ≥ 72. Sales leadership additionally needs E ≥ 65.`,
+    riskNote:`Low EO_T in claims or underwriting roles → trigger structured supervision before independent case handling.`
+  },
+  'Government & Civil Service':{ short:'Government / Civil Service', icon:'🏛',
+    lens:`Pakistan's civil service has the highest social desirability inflation of any sector — the Validity Index is especially important here. <strong>Learning Agility</strong> is the most under-measured dimension in civil service promotion systems, yet it is the strongest predictor of success in reform and policy roles. Low CQ in senior officers overseeing multi-provincial programmes carries significant implementation risk. Traditional seniority-based promotion misses all four of CORE's most predictive dimensions.`,
+    hiPotential:`Candidates for BPS-18+ roles: LAavg ≥ 65, CQavg ≥ 62, EOavg ≥ 75, C ≥ 70.`,
+    riskNote:`Pay extra attention to Validity Index. Social desirability inflation is significantly more common in hierarchical bureaucratic cultures. Also flag LAavg < 45 before reform-facing appointments.`
+  },
+  'FMCG & Consumer Goods':{ short:'FMCG / Consumer Goods', icon:'🛒',
+    lens:`FMCG depends on professionals combining <strong>social confidence</strong> (Extraversion) with <strong>adaptive thinking</strong> (Learning Agility) and cultural fluency to engage Pakistan's enormously diverse consumer base — from boardroom to kiryana. <strong>CQ_B</strong> (behavioural flexibility) is critical because commercial professionals must be equally effective across every register of Pakistani social interaction. Openness predicts innovation in brand and product development.`,
+    hiPotential:`Commercial leadership: E ≥ 70, LAavg ≥ 68, CQavg ≥ 65, O ≥ 68. Supply chain leadership substitutes C ≥ 78 for Extraversion.`,
+    riskNote:`Low OCB_S in sales teams creates cultural toxicity during high-pressure cycles (Ramzan, Eid, year-end). Monitor and address proactively.`
+  },
+  'Telecommunications & Technology':{ short:'Telecom & Technology', icon:'📡',
+    lens:`Pakistan's tech sector requires the highest <strong>Learning Agility</strong> concentration of any CORE sector. Technical knowledge depreciates rapidly in this environment. <strong>Openness</strong> and <strong>Results Agility</strong> (cross-domain learning) are the strongest sustained performance predictors. CQ is particularly important for teams bridging Pakistan's urban-rural digital divide, where user empathy requires genuine cultural knowledge.`,
+    hiPotential:`LAavg ≥ 75, O ≥ 72, LA_CA ≥ 70. Commercial and product roles add CQ_M ≥ 68, E ≥ 65.`,
+    riskNote:`EO_T below 55 in data-handling or user-facing tech roles represents data privacy risk. Screen carefully before access to personal customer data.`
+  },
+  'Energy & Utilities':{ short:'Energy & Utilities', icon:'⚡',
+    lens:`Energy and utilities demand exceptional <strong>procedural conscientiousness</strong> and <strong>safety-oriented ethics</strong>. In Pakistan's energy sector — where infrastructure failures carry public safety and national economic consequences — EO_RC and Conscientiousness are the highest-stakes dimensions. The renewable transition is increasing the importance of <strong>Learning Agility</strong> for technical leadership. Emotional Stability is critical for operational roles managing emergency response.`,
+    hiPotential:`C ≥ 78, ES ≥ 72, EOavg ≥ 72. Renewable transition roles add LAavg ≥ 68, O ≥ 65.`,
+    riskNote:`EO_RC below 50 in operational, maintenance, or control-room roles carries safety risk. Preclude unsupervised responsibility for critical infrastructure.`
+  },
+  'Healthcare & Pharmaceuticals':{ short:'Healthcare & Pharma', icon:'🏥',
+    lens:`Healthcare requires extraordinary <strong>Agreeableness</strong> (patient empathy), <strong>Ethical Reasoning</strong> (consent and resource allocation decisions), and <strong>Emotional Stability</strong> (managing trauma and high-stakes pressure). In pharma, EO_RC and EO_T are defining ethical dimensions. Cultural Knowledge (CQ_K) is critical for professionals engaging rural, conservative, or socioeconomically vulnerable patient populations across Pakistan.`,
+    hiPotential:`A ≥ 72, ES ≥ 72, EOavg ≥ 75, C ≥ 73. Training and education leadership adds LAavg ≥ 68.`,
+    riskNote:`EO_ER below 60 in any role with patient contact or prescriber influence represents patient safety risk.`
+  },
+  'Manufacturing & Industrial':{ short:'Manufacturing & Industrial', icon:'🏭',
+    lens:`Manufacturing prizes <strong>procedural conscientiousness</strong>, <strong>rule compliance</strong> (quality standards, ISO, safety protocols), and <strong>consistent institutional citizenship</strong>. In export-oriented manufacturing — textiles, chemicals, surgical instruments — CQ is increasingly relevant for international buyer relationships and compliance audits. Emotional Stability is critical for operations leadership managing production pressure, labour relations, and supply chain disruption.`,
+    hiPotential:`C ≥ 78, ES ≥ 72, EOavg ≥ 70, OCB_Cn ≥ 72. Export-facing roles add CQ_B ≥ 65.`,
+    riskNote:`EO_RC below 50 in QA, safety, or compliance roles carries product liability and regulatory risk. Screen before certification or inspection authority.`
+  },
+  'Development Sector & NGOs':{ short:'Development / NGOs', icon:'🌍',
+    lens:`The development sector requires the highest Cultural Intelligence of any CORE sector — professionals work across Pakistan's full ethnolinguistic and socioeconomic spectrum while managing international donor, government, and community relationships simultaneously. The sector's most common organisational failure is low <strong>Conscientiousness</strong> — high-empathy professionals who struggle with M&E documentation and financial accountability. EO_T is non-negotiable for donor-funded roles.`,
+    hiPotential:`CQavg ≥ 72, A ≥ 72, LAavg ≥ 65, EOavg ≥ 70. Programme management adds C ≥ 68.`,
+    riskNote:`Low C in programme management creates donor accountability risk. Low EO_T in financial management is a fiduciary risk to the organisation and its funding relationships.`
+  },
+  'Education & Academia':{ short:'Education & Academia', icon:'🎓',
+    lens:`Education professionals require strong <strong>Agreeableness</strong> (learner relationship), <strong>Openness</strong> (curriculum innovation), and <strong>Results Agility</strong> (translating knowledge from diverse domains into effective instruction). Civic Virtue (OCB_CV) is a strong predictor of faculty quality and departmental health. Cultural Intelligence is critical in diverse student populations and for institutions with international academic partnerships.`,
+    hiPotential:`O ≥ 72, A ≥ 70, LAavg ≥ 70, OCB_CV ≥ 70. Administration adds C ≥ 72, EOavg ≥ 70.`,
+    riskNote:`EO_AI below 50 in faculty or administrative roles creates academic integrity risk — especially in assessment, grading, or research oversight.`
+  },
+  'Real Estate & Construction':{ short:'Real Estate & Construction', icon:'🏗',
+    lens:`Pakistan's real estate and construction sector has significant compliance challenges under RERA reform and anti-money laundering regulations. <strong>Rule Compliance</strong> (EO_RC) and <strong>Transparent Disclosure</strong> (EO_T) are the highest-stakes dimensions — particularly for project directors, procurement officers, and client relationship managers. Learning Agility (LA_CA) is critical as the regulatory landscape continues to evolve.`,
+    hiPotential:`C ≥ 75, EOavg ≥ 70, LA_CA ≥ 65. Client-facing roles add SES ≥ 65, CQ_B ≥ 62.`,
+    riskNote:`Low EO_RC or EO_T in procurement, land acquisition, or client fund management represents significant corruption and regulatory risk.`
+  },
+  'Retail & Distribution':{ short:'Retail & Distribution', icon:'🛍',
+    lens:`Retail requires <strong>social energy</strong> (Extraversion) combined with <strong>cultural behavioural flexibility</strong> (CQ_B) to engage Pakistan's enormously diverse consumer segments — from premium urban to peri-urban and rural. Agreeableness predicts customer relationship quality and complaint resolution effectiveness. Conscientiousness is critical for inventory management and operational compliance. Sportsmanship (OCB_S) is the strongest predictor of retail team culture quality.`,
+    hiPotential:`E ≥ 68, A ≥ 68, CQ_B ≥ 65, C ≥ 72. Regional distribution leadership adds LA_CA ≥ 65.`,
+    riskNote:`Low OCB_S in retail or distribution teams creates cultural toxicity during peak seasons. Low EO_T in inventory or cash-handling roles represents shrinkage risk.`
+  },
 };
 
 const QS = [
-  {ch:'A',d:'C',r:false,t:"When assigned a task I find tedious, I complete it to the same standard as work I find genuinely engaging."},
-  {ch:'A',d:'C',r:true,t:"In an average month, there are commitments I made that end up partially done or silently deprioritised."},
-  {ch:'A',d:'O',r:false,t:"I proactively look for better approaches to work I have been doing the same way for a long time."},
-  {ch:'A',d:'O',r:true,t:"I am more comfortable refining how things are done than proposing they be done completely differently."},
+  // ─── PART A: HOW YOU WORK (11) ───
+  {ch:'A',d:'C',r:false,t:"When assigned a task I find tedious, I complete it to the same standard as work I find engaging."},
+  {ch:'A',d:'C',r:true, t:"In a typical month, some commitments I have made end up partially done or quietly set aside."},
+  {ch:'A',d:'O',r:false,t:"I look for better approaches to work I have been doing the same way for a long time."},
+  {ch:'A',d:'O',r:true, t:"When my team faces a new challenge, my natural instinct is to refine what already exists rather than propose starting from scratch."},
   {ch:'A',d:'C',r:false,t:"I hold myself to quality standards that go beyond what is formally required or likely to be inspected."},
-  {ch:'A',d:'ES',r:false,t:"When I receive pointed criticism about something I worked hard on, I can hear and process it without becoming defensive."},
-  {ch:'A',d:'ES',r:true,t:"A demanding period at work noticeably affects my mood and the quality of decisions I make."},
+  {ch:'A',d:'ES',r:false,t:"When I receive pointed criticism about work I have invested effort in, I process it without becoming defensive."},
+  {ch:'A',d:'ES',r:true, t:"A demanding period at work noticeably affects my mood and the quality of decisions I make."},
   {ch:'A',d:'O',r:false,t:"I find problems with no established solution more interesting than problems with clear, known answers."},
-  {ch:'A',d:'L',r:false,t:"I have always given full effort to every task at work, regardless of how inconsequential or unnoticed it seemed.",validity:'L'},
-  {ch:'A',d:'L',r:false,t:"I have never taken on a commitment at work that I privately doubted I could deliver on time.",validity:'L'},
-  {ch:'A',d:'C',r:true,t:"I sometimes begin tasks later than I should and rely on the pressure of approaching deadlines to get things done."},
-  {ch:'B',d:'E',r:false,t:"I find it easy to engage with people I have just met in a professional context, even in large or senior groups."},
-  {ch:'B',d:'E',r:true,t:"After a day with significant social interaction at work, I typically need time alone to properly recharge."},
-  {ch:'B',d:'A',r:false,t:"When a colleague challenges my position, my first instinct is to understand their reasoning rather than defend mine."},
-  {ch:'B',d:'A',r:true,t:"I find it genuinely hard to concede in a professional disagreement, even when the counter-argument is sound."},
-  {ch:'B',d:'OCB_A',r:false,t:"I voluntarily take on extra work to support a struggling colleague, even when my own schedule is already tight."},
-  {ch:'B',d:'OCB_A',r:true,t:"I typically complete my own responsibilities fully before considering whether colleagues need support."},
-  {ch:'B',d:'OCB_CO',r:false,t:"Before taking actions that affect my team's plans or workload, I consult relevant colleagues even when it is not required."},
-  {ch:'B',d:'A',r:false,t:"When a colleague's idea is clearly better than mine, I acknowledge it openly — not just privately to myself."},
-  {ch:'B',d:'L',r:false,t:"I have never, even for a moment, felt frustrated or resentful toward any colleague or manager I have ever worked with.",validity:'L'},
-  {ch:'B',d:'L',r:false,t:"I have never taken any form of credit — even partially or accidentally — for work that was primarily a colleague's contribution.",validity:'L'},
-  {ch:'B',d:'OCB_CO',r:false,t:"I share information with colleagues that may be relevant to their work, even when they have not specifically asked for it."},
-  {ch:'C',d:'CQ_K',r:false,t:"I have a working understanding of how cultural background shapes how different colleagues approach hierarchy, communication, and relationships at work."},
-  {ch:'C',d:'CQ_K',r:false,t:"I am aware of the key cultural differences — regional, religious, linguistic — that shape how people I work with approach professional norms."},
-  {ch:'C',d:'CQ_K',r:true,t:"I often find cultural differences in the workplace more confusing or frustrating than enriching."},
-  {ch:'C',d:'CQ_M',r:false,t:"I actively seek to work with people from cultural backgrounds different from my own — not just accept it when the situation requires it."},
-  {ch:'C',d:'CQ_M',r:true,t:"I am most comfortable and effective in professional environments where most people share my own cultural background and norms."},
-  {ch:'C',d:'CQ_M',r:false,t:"When a cross-cultural professional interaction goes poorly, I reflect on my own role in that before attributing it to the other person."},
-  {ch:'C',d:'CQ_B',r:false,t:"I move naturally between formal and informal communication styles — or between direct and indirect approaches — depending on who I am dealing with."},
-  {ch:'C',d:'CQ_B',r:false,t:"In unfamiliar professional or cultural contexts, I adjust my own approach rather than expecting others to adapt to me."},
-  {ch:'C',d:'CQ_B',r:true,t:"I find it difficult to significantly alter my professional communication style for different audiences or cultural contexts."},
-  {ch:'C',d:'L',r:false,t:"I have always treated every colleague with perfectly equal patience and respect, regardless of their personality, background, or how they treated me.",validity:'L'},
-  {ch:'C',d:'L',r:false,t:"I have never, even privately, made an assumption about a colleague's professional competence based on their cultural or linguistic background.",validity:'L'},
-  {ch:'D',d:'LA_MA',r:false,t:"I work effectively even when the expected outcome is unclear, the information is incomplete, and there is no established procedure to follow."},
-  {ch:'D',d:'LA_MA',r:true,t:"My performance is noticeably stronger in structured, well-defined situations than in ambiguous or rapidly changing ones."},
-  {ch:'D',d:'LA_PA',r:false,t:"After a professional setback or failure, my first priority is to examine what I personally could have done differently."},
-  {ch:'D',d:'LA_PA',r:true,t:"When a professional situation goes wrong, I typically find that external factors or others' decisions were the primary cause."},
-  {ch:'D',d:'LA_PA',r:false,t:"I actively invite critical feedback on my work — including from people who are likely to challenge my thinking."},
-  {ch:'D',d:'LA_CA',r:false,t:"I routinely consider how my decisions and actions affect people and functions outside my immediate team."},
-  {ch:'D',d:'LA_CA',r:true,t:"I tend to focus on solving the problem directly in front of me rather than exploring its broader systemic implications."},
-  {ch:'D',d:'LA_RA',r:false,t:"I voluntarily update my professional knowledge through my own initiative — not only when formal training is scheduled."},
-  {ch:'D',d:'LA_RA',r:true,t:"I prefer to build deeper expertise in areas I already know well rather than investing time in unfamiliar domains."},
-  {ch:'D',d:'L',r:false,t:"I have never procrastinated on any work task, even briefly — I always begin immediately when something is assigned to me.",validity:'L'},
-  {ch:'D',d:'L',r:false,t:"I genuinely look forward to receiving critical feedback on my work, regardless of who it comes from or how it is delivered.",validity:'L'},
-  {ch:'E',d:'EO_RC',r:false,t:"I follow institutional policies and professional standards even when I know non-compliance will go completely unnoticed."},
-  {ch:'E',d:'EO_RC',r:true,t:"When following a rule precisely would produce a clearly worse outcome, I use my own judgment to deviate from it."},
-  {ch:'E',d:'EO_RC',r:false,t:"If I discovered a colleague clearly breaking an important rule, I would raise it appropriately — even at the risk of damaging our relationship."},
-  {ch:'E',d:'EO_T',r:false,t:"I proactively disclose information others need to make good decisions, even when I am not formally required to share it."},
-  {ch:'E',d:'EO_T',r:true,t:"I sometimes exercise my own judgment about what information stakeholders need to know rather than sharing everything by default."},
-  {ch:'E',d:'EO_ER',r:false,t:"When facing an ethically ambiguous situation, I consult relevant guidelines, colleagues, or supervisors rather than acting purely on my own judgment."},
-  {ch:'E',d:'EO_ER',r:false,t:"I actively consider the interests of people affected by my decisions who have no direct voice in the outcome."},
-  {ch:'E',d:'EO_ER',r:true,t:"Under significant pressure to deliver results, I have sometimes made decisions I would not fully defend on purely ethical grounds."},
-  {ch:'E',d:'EO_AI',r:false,t:"My professional behaviour is essentially the same whether I believe I am being observed and evaluated — or not."},
-  {ch:'E',d:'L',r:false,t:"I have never, under any circumstances, allowed a personal relationship to influence a professional decision I made.",validity:'L'},
-  {ch:'E',d:'L',r:false,t:"When colleagues come to me for advice, I always give them my honest assessment, even when I know it is not what they want to hear.",validity:'L'},
-  {ch:'F',d:'OCB_CV',r:false,t:"I stay informed about developments in my organisation that go beyond the immediate scope of my role."},
-  {ch:'F',d:'OCB_CV',r:false,t:"I participate in institutional improvement initiatives and processes, even when participation is entirely voluntary."},
-  {ch:'F',d:'OCB_CV',r:true,t:"I generally limit my engagement to matters that directly relate to my formal job responsibilities."},
-  {ch:'F',d:'OCB_S',r:false,t:"I can feel frustrated with institutional imperfections or management decisions without allowing it to affect how I treat my colleagues."},
-  {ch:'F',d:'OCB_S',r:true,t:"I occasionally share my frustrations about workplace processes or leadership decisions with colleagues."},
-  {ch:'F',d:'OCB_Cn',r:false,t:"I arrive reliably, manage my time well, and meet commitments in ways my colleagues can genuinely count on."},
-  {ch:'F',d:'OCB_Cn',r:false,t:"I invest effort beyond the minimum required when the quality of the outcome matters for my colleagues or the institution."},
-  {ch:'F',d:'EO_AI',r:false,t:"I would refuse an instruction I believed to be clearly unethical, even if compliance would have been professionally safer for me."},
-  {ch:'F',d:'L',r:false,t:"I have never taken any form of credit — even partially or accidentally — for work that was primarily a colleague's contribution.",validity:'L'},
-  {ch:'F',d:'L',r:false,t:"I have always spoken positively about every organisation I have ever worked for, even in private conversations with close friends.",validity:'L'},
-  {ch:'F',d:'L',r:false,t:"In every team I have worked in, I have contributed at least as much as every other member.",validity:'L'},
+  {ch:'A',d:'L',r:false, t:"I have always given full effort to every task at work, regardless of how inconsequential or unnoticed it seemed.", validity:'L'},
+  {ch:'A',d:'L',r:false, t:"I have never taken on a commitment at work that I privately doubted I could deliver on time.", validity:'L'},
+  {ch:'A',d:'C',r:true, t:"I sometimes begin tasks late and rely on deadline pressure to move them forward."},
+
+  // ─── PART B: WORKING WITH OTHERS (11) ───
+  {ch:'B',d:'E',r:false, t:"I engage easily with people I have just met in professional settings, even in large or senior groups."},
+  {ch:'B',d:'E',r:true,  t:"After a day with significant social interaction at work, I need time alone to recharge."},
+  {ch:'B',d:'A',r:false, t:"When a colleague challenges my position, my first instinct is to understand their reasoning rather than defend mine."},
+  {ch:'B',d:'A',r:true,  t:"Even when a colleague makes a point that logically challenges my position, my first reaction is to look for the flaw in their argument rather than consider changing my mind."},
+  {ch:'B',d:'OCB_A',r:false,t:"I help colleagues with their work even when it takes time I had planned for my own tasks."},
+  {ch:'B',d:'OCB_A',r:true, t:"I complete my responsibilities fully before considering whether colleagues need support."},
+  {ch:'B',d:'OCB_CO',r:false,t:"Before taking actions that affect my team's plans or workload, I consult relevant colleagues even when not required."},
+  {ch:'B',d:'A',r:false, t:"When a colleague's idea is better than mine, I say so directly to them and to others involved."},
+  {ch:'B',d:'L',r:false, t:"I have never, even for a moment, felt frustrated or resentful toward any colleague or manager I have ever worked with.", validity:'L'},
+  {ch:'B',d:'L',r:false, t:"I have never taken any form of credit — even partially or accidentally — for work that was primarily a colleague's contribution.", validity:'L'},
+  {ch:'B',d:'OCB_CO',r:false,t:"I share information with colleagues that may be relevant to their work, even when they have not asked for it."},
+
+  // ─── PART C: NAVIGATING DIVERSITY (11) ───
+  {ch:'C',d:'CQ_K',r:false,t:"I understand how cultural background shapes the way colleagues approach hierarchy, communication, and professional relationships."},
+  {ch:'C',d:'CQ_K',r:false,t:"I am aware of how regional, religious, and linguistic differences shape the way colleagues approach hierarchy, communication, and professional norms."},
+  {ch:'C',d:'CQ_K',r:true, t:"I find cultural differences in the workplace more confusing or frustrating than enriching."},
+  {ch:'C',d:'CQ_M',r:false,t:"I seek to work with people from cultural backgrounds different from mine — not merely accept it when the situation requires it."},
+  {ch:'C',d:'CQ_M',r:true, t:"I am more comfortable and effective in professional environments where people share my cultural background and norms."},
+  {ch:'C',d:'CQ_M',r:false,t:"When a cross-cultural interaction goes poorly, I reflect on my role before attributing it to the other person."},
+  {ch:'C',d:'CQ_B',r:false,t:"I adjust naturally between formal and informal styles, and between direct and indirect approaches, depending on my audience."},
+  {ch:'C',d:'CQ_B',r:false,t:"In unfamiliar professional or cultural contexts, I adjust my approach rather than expecting others to adapt to me."},
+  {ch:'C',d:'CQ_B',r:true, t:"I struggle to meaningfully adjust my communication style for different audiences or cultural contexts."},
+  {ch:'C',d:'L',r:false,   t:"I have always treated every colleague with perfectly equal patience and respect, regardless of their personality, background, or how they treated me.", validity:'L'},
+  {ch:'C',d:'L',r:false,   t:"I have never, even privately, made an assumption about a colleague's professional competence based on their cultural, regional, or linguistic background.", validity:'L'},
+
+  // ─── PART D: THINKING & ADAPTING (10) ───
+  {ch:'D',d:'LA_MA',r:false,t:"I work effectively when the outcome is unclear, the information is incomplete, and no established procedure exists."},
+  {ch:'D',d:'LA_MA',r:true, t:"My performance is noticeably stronger in structured, well-defined situations than in ambiguous or rapidly changing ones."},
+  {ch:'D',d:'LA_PA',r:false,t:"After a professional setback, my first priority is to examine what I could have done differently."},
+  {ch:'D',d:'LA_PA',r:true, t:"When something goes wrong at work, my first instinct is to identify what others did or failed to do — before examining my own contribution."},
+  {ch:'D',d:'LA_PA',r:false,t:"I invite critical feedback on my work — including from people likely to challenge my thinking."},
+  {ch:'D',d:'LA_CA',r:false,t:"I consider how my decisions and actions affect people and teams beyond my immediate group."},
+  {ch:'D',d:'LA_CA',r:true, t:"I focus on solving the immediate problem rather than exploring its broader systemic implications."},
+  {ch:'D',d:'LA_RA',r:false,t:"I update my professional knowledge on my own — not only when formal training is scheduled."},
+  {ch:'D',d:'LA_RA',r:true, t:"I prefer to build deeper expertise in areas I already know rather than exploring unfamiliar ones."},
+  {ch:'D',d:'L',r:false,    t:"I have never procrastinated on any work task, even briefly — I always begin immediately when something is assigned to me.", validity:'L'},
+
+  // ─── PART E: PROFESSIONAL INTEGRITY (10) ───
+  {ch:'E',d:'EO_RC',r:false,t:"I follow institutional policies and professional standards even when I know non-compliance will go unnoticed."},
+  {ch:'E',d:'EO_RC',r:true, t:"When following a rule precisely would produce a clearly worse outcome, I use my judgment to deviate from it."},
+  {ch:'E',d:'EO_RC',r:false,t:"When I have seen a colleague breaking an important rule, I have raised it through appropriate channels."},
+  {ch:'E',d:'EO_T',r:false, t:"I disclose information others need to make good decisions, even when not formally required to share it."},
+  {ch:'E',d:'EO_T',r:true,  t:"I sometimes exercise my judgment about what information stakeholders need rather than sharing everything by default."},
+  {ch:'E',d:'EO_ER',r:false,t:"When facing an ethically ambiguous situation, I consult relevant guidelines, colleagues, or supervisors rather than acting on my judgment alone."},
+  {ch:'E',d:'EO_ER',r:false,t:"I consider the interests of people affected by my decisions who have no direct voice in the outcome."},
+  {ch:'E',d:'EO_ER',r:true, t:"Under delivery pressure, I have occasionally told myself the outcome justifies the method — even when I sensed that reasoning would not hold up to scrutiny."},
+  {ch:'E',d:'EO_AI',r:false,t:"When I am in a situation where a small shortcut would go unnoticed, I handle it the same way I would if my manager were present."},
+  {ch:'E',d:'L',r:false,    t:"I have never, under any circumstances, allowed a personal relationship to influence a professional decision I made.", validity:'L'},
+
+  // ─── PART F: WORKPLACE CITIZENSHIP (10) ───
+  {ch:'F',d:'OCB_CV',r:false,t:"I stay informed about developments in my organisation beyond the scope of my direct role."},
+  {ch:'F',d:'OCB_CV',r:false,t:"I participate in institutional improvement initiatives, even when participation is voluntary."},
+  {ch:'F',d:'OCB_CV',r:true, t:"When an organisational improvement effort has nothing to do with my direct role, my inclination is to leave it to the people whose responsibility it is."},
+  {ch:'F',d:'OCB_S',r:false, t:"When I feel frustrated with institutional decisions or processes, I keep that frustration from affecting how I treat my colleagues."},
+  {ch:'F',d:'OCB_S',r:true,  t:"I share my frustrations about workplace processes or leadership decisions with colleagues."},
+  {ch:'F',d:'OCB_Cn',r:false,t:"I arrive reliably, manage my time well, and meet commitments my colleagues can count on."},
+  {ch:'F',d:'OCB_Cn',r:false,t:"I invest effort beyond the minimum when the quality of the outcome matters to my colleagues or the institution."},
+  {ch:'F',d:'EO_AI',r:false, t:"I have raised concerns about instructions or decisions I believed were ethically wrong, even when staying silent would have been the easier choice."},
+  {ch:'F',d:'L',r:false,     t:"I have always spoken positively about every organisation I have ever worked for, even in private conversations with close friends.", validity:'L'},
+  {ch:'F',d:'L',r:false,     t:"In every team I have worked in, I have contributed at least as much as every other member.", validity:'L'},
 ];
 
 const LKOPTS = [[1,'Strongly Disagree'],[2,'Disagree'],[3,'Neutral'],[4,'Agree'],[5,'Strongly Agree']];
 const PARTNAMES = {A:'Work Style & Drive',B:'Working with Others',C:'Navigating Diversity',D:'Thinking & Adapting',E:'Professional Integrity',F:'Workplace Citizenship'};
-
 const BREAKERS = {
   A:{title:'Section complete',msg:'Work style & drive assessed.',pct:17},
   B:{title:'Good progress',msg:'Interpersonal profile captured.',pct:33},
@@ -272,7 +253,7 @@ const BREAKERS = {
   E:{title:'Almost done',msg:'Integrity profile captured. One section left.',pct:83},
 };
 
-// ─── SCORING ──────────────────────────────────────────────────────────────────
+// ─── SCORING ENGINE ───────────────────────────────────────────────────────────
 const scoreDim = (dim, answers) => {
   const items = QS.map((q,i)=>({...q,ans:answers[i]})).filter(q=>q.d===dim&&!q.validity);
   if (!items.length) return 50;
@@ -300,81 +281,99 @@ const computeValidity = (answers) => {
   });
   const avgConDiff=conDiffs.length?conDiffs.reduce((a,b)=>a+b,0)/conDiffs.length:0;
   const conScore=Math.max(0,Math.round(100-(avgConDiff/4)*100));
-  const catastrophic=conScore<20&&extRatio>0.80;
+  
+  const catastrophic = conScore<20 && extRatio>0.80;
+  const incoherentData = conScore<30 && extRatio>0.70;
+  const extremeCareless = extRatio>0.90;
+
   const flags=[];
-  if(extRatio>0.80) flags.push({type:'red',key:'L-Scale',text:`${lAgree}/12 L-Scale agreements. With ${Math.round(extRatio*100)}% extreme responses this result is uninterpretable.`});
-  else if(lAgree>=6) flags.push({type:'red',key:'L-Scale',text:`Likely inflated — agreed with ${lAgree}/12 impossible-standard items.`});
-  else if(lAgree>=4) flags.push({type:'amber',key:'L-Scale',text:`Moderate inflation risk — ${lAgree}/12 L-scale items endorsed.`});
-  else flags.push({type:'green',key:'L-Scale',text:`Valid — only ${lAgree}/12 L-scale items endorsed.`});
-  if(saRatio>0.55) flags.push({type:'amber',key:'Acquiescence',text:`${Math.round(saRatio*100)}% Strongly Agree rate exceeds expected range.`});
-  else flags.push({type:'green',key:'Acquiescence',text:`Natural response distribution at ${Math.round(saRatio*100)}% Strongly Agree.`});
-  if(extRatio>0.90) flags.push({type:'red',key:'Extreme Responses',text:`CRITICAL: ${Math.round(extRatio*100)}% extreme responses — results statistically meaningless.`});
+  if(extRatio>0.80) flags.push({type:'red',key:'L-Scale (Contextual)',text:`${lAgree}/10 L-Scale agreements. With ${Math.round(extRatio*100)}% extreme responses, this result is uninterpretable.`});
+  else if(lAgree>=5) flags.push({type:'red',key:'L-Scale',text:`Likely Inflated: Agreed with ${lAgree}/10 impossible-standard items.`});
+  else if(lAgree>=3) flags.push({type:'amber',key:'L-Scale',text:`Moderate Inflation Risk: Agreed with ${lAgree}/10 L-scale items.`});
+  else flags.push({type:'green',key:'L-Scale',text:`Valid: Agreed with only ${lAgree}/10 L-scale items.`});
+
+  if(saRatio>0.55) flags.push({type:'amber',key:'Acquiescence',text:`${Math.round(saRatio*100)}% of responses were "Strongly Agree" — possible acquiescence bias.`});
+  else flags.push({type:'green',key:'Acquiescence',text:`Response distribution appears natural (${Math.round(saRatio*100)}% Strongly Agree).`});
+
+  if(extRatio>0.90) flags.push({type:'red',key:'Extreme Responses',text:`CRITICAL: ${Math.round(extRatio*100)}% extreme responses. Dimension scores are statistically meaningless.`});
   else if(extRatio>0.80) flags.push({type:'red',key:'Extreme Responses',text:`${Math.round(extRatio*100)}% extreme responses — cannot interpret with confidence.`});
   else if(extRatio>0.70) flags.push({type:'amber',key:'Extreme Responses',text:`${Math.round(extRatio*100)}% extreme responses — above expected range.`});
-  else flags.push({type:'green',key:'Extreme Responses',text:`Response extremity within expected range at ${Math.round(extRatio*100)}%.`});
-  if(conScore<30) flags.push({type:'red',key:'Consistency',text:`CRITICAL: Consistency ${conScore}/100 — severe contradictions detected.`});
-  else if(conScore<55) flags.push({type:'red',key:'Consistency',text:`Low internal consistency (${conScore}/100). Contradictions detected.`});
-  else if(conScore<75) flags.push({type:'amber',key:'Consistency',text:`Moderate consistency (${conScore}/100). Minor contradictions present.`});
+  else flags.push({type:'green',key:'Extreme Responses',text:`Response extremity within expected range (${Math.round(extRatio*100)}%).`});
+
+  if(conScore<20) flags.push({type:'red',key:'Consistency',text:`CRITICAL: Consistency index is ${conScore}/100. Severe contradictions detected.`});
+  else if(conScore<40) flags.push({type:'red',key:'Consistency',text:`Very low internal consistency (${conScore}/100). Results unlikely to represent genuine profile.`});
+  else if(conScore<55) flags.push({type:'red',key:'Consistency',text:`Low internal consistency (${conScore}/100). Contradictory responses detected.`});
+  else if(conScore<75) flags.push({type:'amber',key:'Consistency',text:`Moderate consistency (${conScore}/100). Some contradictions across item pairs.`});
   else flags.push({type:'green',key:'Consistency',text:`High internal consistency (${conScore}/100).`});
+
+  if(catastrophic||incoherentData||extremeCareless){
+    flags.push({type:'red',key:'Pattern Override',text:`PATTERN ALERT: Response pattern is incompatible with genuine self-reflection. Results are unreliable.`});
+  }
+
   const redCount=flags.filter(f=>f.type==='red').length;
   const amberCount=flags.filter(f=>f.type==='amber').length;
   let overall,overallLabel;
-  if(catastrophic||extRatio>0.90||(conScore<30&&extRatio>0.70)){overall='red';overallLabel='Invalid — Do Not Use Results. Verification Required.';}
-  else if(redCount>=2){overall='red';overallLabel='Low — Verification Interview Recommended.';}
-  else if(redCount===1||amberCount>=2){overall='amber';overallLabel='Moderate — Interpret with Caution.';}
+  if(catastrophic||extremeCareless||(conScore<30&&extRatio>0.70)){overall='red';overallLabel='Invalid — Do Not Use Results. Recommend Immediate Verification.';}
+  else if(conScore<20||extRatio>0.90){overall='red';overallLabel='Invalid — Results Uninterpretable. Retake Required.';}
+  else if(redCount>=2){overall='red';overallLabel='Low — Recommend Verification Interview Before Any Decision.';}
+  else if(redCount===1||amberCount>=2){overall='amber';overallLabel='Moderate — Interpret with Caution. Cross-Validate with Interview.';}
   else{overall='green';overallLabel='High — Proceed with Confidence.';}
+  
   return{lAgree,saRatio,extRatio,conScore,flags,overall,overallLabel};
 };
 
 const getProfile = (s) => {
-  const {O,C,E,A,ES,CQavg,OCBavg,LAavg,EOavg}=s;
-  if(C>=70&&E>=65&&EOavg>=70&&LAavg>=60) return{name:'Strategic Integrity Leader',desc:"A high-performance profile combining delivery drive, social presence, strong ethical orientation, and adaptive learning. Ready for senior leadership in high-accountability environments. Rare — prioritise for succession planning."};
-  if(C>=70&&OCBavg>=70&&EOavg>=65) return{name:'Institutional Anchor',desc:"Conscientious, ethical, and deeply invested in organisational citizenship. Delivers consistently, supports colleagues, and upholds institutional norms. Highly valuable in compliance and team leadership."};
-  if(O>=65&&LAavg>=70&&CQavg>=65) return{name:'Adaptive Innovator',desc:"High intellectual curiosity with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
-  if(EOavg>=75&&C>=65) return{name:'Ethics-Driven Executor',desc:"A reliable and principled professional with strong compliance orientation. Excellent for audit, compliance, risk management, and regulatory liaison roles."};
-  if(CQavg>=70&&E>=65&&A>=65) return{name:'Cross-Cultural Bridge',desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
-  if(OCBavg>=70&&A>=65&&EOavg>=65) return{name:'Collaborative Team Leader',desc:"An empathetic, cooperative, and institutionally committed professional who strengthens team cohesion. Recommended for team lead, HR, and coaching roles."};
-  if(LAavg>=70&&O>=65) return{name:'Learning Champion',desc:"A fast learner who thrives on intellectual challenge. Strong asset in research, training design, and knowledge management roles."};
-  return{name:'Developing Professional',desc:"A solid foundational profile with significant growth potential. With structured coaching and clear performance expectations, this individual can develop substantially across all dimensions."};
+  const {O,C,E,A,ES,CQavg,OCBavg,LAavg,EOavg,CQ_M,CQ_B,OCB_A,LA_CA,LA_RA,OCB_S}=s;
+  const burnoutRisk = ES<50 && C>=68;
+  if(burnoutRisk && ((C>=76&&E>=68&&EOavg>=74&&LAavg>=65) || (C>=70&&OCBavg>=74&&EOavg>=68) || (EOavg>=75&&C>=65)))
+    return {name:'High-Capability, Under Strain',tier:3,desc:"Strong delivery or ethical orientation combined with signs of reduced emotional stability. The capability is real, but sustained high performance is at risk without deliberate recovery practices."};
+  if(C>=76&&E>=68&&EOavg>=74&&LAavg>=65) return {name:'Strategic Integrity Leader',tier:1,desc:"A high-performance profile combining delivery drive, social presence, strong ethical orientation, and adaptive learning. Ready for senior leadership in high-accountability environments."};
+  if(C>=70&&OCBavg>=74&&EOavg>=68) return {name:'Institutional Anchor',tier:1,desc:"Conscientious, ethical, and deeply invested in organisational citizenship. The institutional backbone — delivers consistently, supports colleagues, and upholds institutional norms."};
+  if(O>=65&&LAavg>=70&&CQavg>=65) return {name:'Adaptive Innovator',tier:2,desc:"High intellectual curiosity combined with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
+  if(EOavg>=75&&C>=65) return {name:'Ethics-Driven Executor',tier:2,desc:"A reliable and principled professional with strong compliance orientation and consistent delivery. Excellent for audit, compliance, and risk management."};
+  if(CQavg>=70&&E>=65&&A>=65) return {name:'Cross-Cultural Bridge',tier:2,desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
+  if(OCBavg>=70&&A>=65&&EOavg>=65) return {name:'Collaborative Team Leader',tier:2,desc:"An empathetic, cooperative, and institutionally committed professional who strengthens team cohesion. Brings out the best in colleagues."};
+  if(O>=70&&C<52&&LAavg>=62) return {name:'Visionary Sprinter',tier:3,desc:"High intellectual energy and idea generation combined with lower structured delivery. Most effective in short-burst, project-based environments."};
+  if(CQ_M>=70&&CQ_B<55&&CQavg<65) return {name:'Eager Cultural Bridge-Builder',tier:3,desc:"Strong motivation to engage across cultural contexts combined with a gap in behavioural flexibility. The enthusiasm is genuine, but the toolkit needs development."};
+  if(OCB_A>=75&&E<48&&OCBavg>=68&&OCB_S<52) return {name:'Generous Under Pressure',tier:3,desc:"Exceptionally strong team support orientation combined with lower social assertiveness and signs of accumulated frustration with institutional demands."};
+  if(LA_CA>=72&&LA_RA<52&&LAavg>=62) return {name:'Strategic Pivoter',tier:3,desc:"Strong capacity to identify when a direction needs to change — combined with a gap in driving initiatives through to completion."};
+  if(LAavg>=70&&O>=65) return {name:'Learning Champion',tier:2,desc:"A fast learner who thrives on intellectual challenge and new knowledge. Strong asset in research, training design, and capacity building."};
+  return {name:'Emerging Professional',tier:4,desc:"A profile with clear foundations and specific dimensions ready for focused development. Structured development investment here creates measurable change."};
 };
 
-// ─── THEME-AWARE HELPERS (called at render time, so T is current) ─────────────
-const bd = v => v>=75?'High':v>=50?'Moderate':'Low';
-const bCol = v => v>=75 ? T.gn : v>=50 ? T.am : T.rd;
-const bBg  = v => v>=75 ? T.gnP : v>=50 ? T.amP : T.rdP;
-const barGrad = v => v>=75
-  ? `linear-gradient(90deg,${darkTheme.gn},#4ade80)`
-  : v>=50
-  ? `linear-gradient(90deg,${darkTheme.am},#fcd34d)`
-  : `linear-gradient(90deg,${darkTheme.rd},#f87171)`;
-
-const dimInterp=(dim,score)=>{
-  const b=bd(score);
-  const map={
-    O:{High:"Strong creative drive and intellectual curiosity. Valuable in innovation, strategy, and research.",Moderate:"Balanced between exploration and structure.",Low:"Prefers established procedures. Reliable in operational roles."},
-    C:{High:"Highly self-disciplined and reliable. Core predictor of job performance.",Moderate:"Generally reliable; occasional lapses under competing demands.",Low:"May struggle with consistent delivery. Structured management recommended."},
-    E:{High:"Socially confident and assertive. Natural for leadership and stakeholder roles.",Moderate:"Comfortable in selective social contexts.",Low:"Performs best in focused, independent work."},
-    A:{High:"Highly cooperative and empathetic. Strong team player.",Moderate:"Balances cooperation and independence effectively.",Low:"Direct and assertive. May create friction — benefits from coaching."},
-    ES:{High:"Highly stable under pressure. Suited to high-stakes decision-making.",Moderate:"Generally stable with some vulnerability under sustained pressure.",Low:"Resilience coaching and workload calibration recommended."},
-    CQ_K:{High:"Deep understanding of cultural dynamics.",Moderate:"Basic awareness with some gaps.",Low:"Limited cultural self-awareness. Intercultural training recommended."},
-    CQ_M:{High:"Intrinsically motivated to engage across cultural boundaries.",Moderate:"Selectively motivated.",Low:"Limited motivation. May create barriers in diverse environments."},
+const dimI = (dim, score) => {
+  const b = score >= 75 ? 'High' : score >= 50 ? 'Moderate' : 'Low';
+  const map = {
+    O:{High:"Strong creative drive and intellectual curiosity. Seeks novel approaches.",Moderate:"Balanced between exploration and structure.",Low:"Prefers established procedures and defined frameworks."},
+    C:{High:"Highly self-disciplined and reliable. Core predictor of job performance.",Moderate:"Generally reliable; occasional lapses under competing demands.",Low:"May struggle with consistent delivery. Recommend structured performance management."},
+    E:{High:"Socially confident and assertive. Natural for leadership.",Moderate:"Comfortable in selective social contexts.",Low:"Performs best in focused, independent work."},
+    A:{High:"Highly cooperative and empathetic. Strong team player.",Moderate:"Balances cooperation and independence effectively.",Low:"Direct and assertive. Can drive results but may create friction."},
+    ES:{High:"Highly stable and composed under pressure.",Moderate:"Generally stable with some vulnerability under sustained pressure.",Low:"May experience significant stress under pressure."},
+    CQ_K:{High:"Deep understanding of cultural dynamics.",Moderate:"Basic cultural awareness with gaps in nuanced understanding.",Low:"Limited cultural self-awareness."},
+    CQ_M:{High:"Intrinsically motivated to engage across cultural boundaries.",Moderate:"Selectively motivated.",Low:"Limited motivation to engage cross-culturally."},
     CQ_B:{High:"Highly adaptive communicator across cultural contexts.",Moderate:"Adapts in familiar cross-cultural situations.",Low:"Communication style may be perceived as rigid."},
     OCB_A:{High:"Exceptional team support behaviour.",Moderate:"Helps others when capacity allows.",Low:"Primarily task-focused."},
     OCB_CV:{High:"Highly engaged institutional citizen.",Moderate:"Participates selectively.",Low:"Engagement confined to formal job requirements."},
-    OCB_S:{High:"Tolerant of institutional imperfections.",Moderate:"Generally constructive but may voice frustrations.",Low:"May negatively influence team morale."},
-    OCB_CO:{High:"Proactively manages information flow.",Moderate:"Keeps relevant parties informed when prompted.",Low:"Information shared reactively."},
-    OCB_Cn:{High:"Highly conscientious about time and effort.",Moderate:"Meets expectations consistently.",Low:"Attendance or effort may fall below standards."},
-    LA_MA:{High:"Thrives in ambiguous, fast-changing environments.",Moderate:"Handles moderate ambiguity.",Low:"Needs substantial support during change."},
-    LA_PA:{High:"Highly self-aware and reflective learner.",Moderate:"Reflects when prompted.",Low:"Limited reflective practice. Coaching recommended."},
-    LA_CA:{High:"Systems thinker with strong consequence analysis.",Moderate:"Understands immediate interdependencies.",Low:"Primarily task-focused."},
-    LA_RA:{High:"Continuous learner applying diverse knowledge.",Moderate:"Learns within defined areas.",Low:"Limited independent learning."},
-    EO_RC:{High:"Strong rule compliance. Low regulatory risk.",Moderate:"Generally compliant with occasional shortcuts.",Low:"Elevated compliance risk. Ethics training mandatory."},
+    OCB_S:{High:"Tolerant of institutional imperfections.",Moderate:"Generally constructive but may voice frustrations.",Low:"Tendency to magnify workplace frustrations."},
+    OCB_CO:{High:"Proactively manages information flow.",Moderate:"Keeps relevant parties informed when prompted.",Low:"Information is shared reactively."},
+    OCB_Cn:{High:"Highly conscientious about time and effort.",Moderate:"Meets expectations consistently.",Low:"Attendance or effort may fall below expected standards."},
+    LA_MA:{High:"Thrives in ambiguous, fast-changing environments.",Moderate:"Handles moderate ambiguity.",Low:"Prefers defined environments."},
+    LA_PA:{High:"Highly self-aware and reflective learner.",Moderate:"Reflects when prompted.",Low:"Limited reflective practice."},
+    LA_CA:{High:"Systems thinker with strong capacity for cross-functional analysis.",Moderate:"Understands immediate interdependencies.",Low:"Primarily task-focused."},
+    LA_RA:{High:"Continuous learner who applies diverse knowledge.",Moderate:"Learns within defined areas.",Low:"Limited independent learning."},
+    EO_RC:{High:"Strong rule compliance orientation.",Moderate:"Generally compliant; occasional pragmatic deviations.",Low:"Elevated compliance risk."},
     EO_T:{High:"Highly transparent in decision-making.",Moderate:"Transparent in most situations.",Low:"Transparency gaps detected."},
-    EO_ER:{High:"Strong ethical reasoning. Considers stakeholder impacts.",Moderate:"Ethical reasoning may yield to pressure.",Low:"Ethical reasoning may be compromised."},
-    EO_AI:{High:"Behavioural integrity is high. Acts consistently.",Moderate:"Generally acts with integrity.",Low:"Integrity indicators inconsistent. High-discretion risk."},
+    EO_ER:{High:"Strong ethical reasoning.",Moderate:"Ethical reasoning present but may yield to pressure.",Low:"Ethical reasoning may be compromised by results-orientation."},
+    EO_AI:{High:"Strong pattern of authentic integrity.",Moderate:"Generally consistent behaviour.",Low:"Integrity indicators are inconsistent."}
   };
-  return map[dim]?.[b]||b+' range.';
+  return map[dim] ? map[dim][b] || b+' range.' : b+' range.';
 };
+
+// ─── THEME-AWARE HELPERS ──────────────────────────────────────────────────────
+const bd = v => v>=75?'High':v>=50?'Moderate':'Low';
+const bCol = v => v>=75 ? T.gn : v>=50 ? T.am : T.rd;
+const bBg  = v => v>=75 ? T.gnP : v>=50 ? T.amP : T.rdP;
+const barGrad = v => v>=75 ? `linear-gradient(90deg,${darkTheme.gn},#4ade80)` : v>=50 ? `linear-gradient(90deg,${darkTheme.am},#fcd34d)` : `linear-gradient(90deg,${darkTheme.rd},#f87171)`;
 
 // ─── SHARED UI ────────────────────────────────────────────────────────────────
 const Pill = ({label, color, bg, style={}}) => {
@@ -405,13 +404,12 @@ const GoldLine = ({style={}}) => (
   <div style={{height:'2px', background:`linear-gradient(90deg, ${T.c}, ${T.gold}, transparent)`, ...style}} />
 );
 
-// ─── ANIMATED NUMBER ──────────────────────────────────────────────────────────
 const AnimatedNumber = ({ value }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     const end = parseInt(value);
     if (isNaN(end)) return;
-    const duration = 3500;
+    const duration = 2000;
     const startTime = performance.now();
     const update = (currentTime) => {
       const elapsed = currentTime - startTime;
@@ -426,7 +424,6 @@ const AnimatedNumber = ({ value }) => {
   return <>{count}</>;
 };
 
-// ─── SCROLL REVEAL ────────────────────────────────────────────────────────────
 const Reveal = ({ children, delay = 0, direction = 'up', distance = 36 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
@@ -496,19 +493,13 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
           ))}
         </div>
 
-        {/* Theme toggle */}
         <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
           display:'flex', alignItems:'center', gap:'8px',
           padding:'8px 16px', borderRadius:'6px',
-          border:`1px solid ${T.b2}`,
-          background: T.bg2,
-          color: T.t0,
-          cursor:'pointer',
-          fontFamily:"'Plus Jakarta Sans',sans-serif",
-          fontSize:'12px', fontWeight:'700',
-          letterSpacing:'0.03em',
-          transition:'all 0.2s',
-          whiteSpace:'nowrap',
+          border:`1px solid ${T.b2}`, background: T.bg2, color: T.t0,
+          cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif",
+          fontSize:'12px', fontWeight:'700', letterSpacing:'0.03em',
+          transition:'all 0.2s', whiteSpace:'nowrap',
         }}
         onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.color=T.c;}}
         onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.color=T.t0;}}>
@@ -521,17 +512,15 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const HomePage = ({setTab}) => {
-  // Colors array for the 8-point lists
-  const listColors = [T.c, T.gold, T.gn, T.am, '#8B5CF6', T.c, T.gold, T.gn];
+  // Colors array for lists and accents
+  const listColors = [T.c, T.gold, T.gn, T.am, '#8B5CF6', '#38BDF8', '#F472B6', '#A78BFA'];
 
   return (
     <div>
-      {/* Hero */}
+      {/* ── HERO SECTION ── */}
       <section style={{
-        background:'transparent',
-        minHeight:'100vh', display:'flex', flexDirection:'column',
-        justifyContent:'center', position:'relative', overflow:'hidden',
-        padding:'100px 32px',
+        background:'transparent', minHeight:'100vh', display:'flex', flexDirection:'column',
+        justifyContent:'center', position:'relative', overflow:'hidden', padding:'100px 32px',
       }}>
         {/* Ambient glows */}
         <div style={{position:'absolute', top:'-15%', right:'-8%', width:'65vw', height:'65vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.cGlow} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 8s ease-in-out infinite', zIndex:0}} />
@@ -541,16 +530,7 @@ const HomePage = ({setTab}) => {
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Reveal delay={0}>
               <Pill 
-                label={
-                  <span style={{display:'inline-flex', alignItems:'center'}}>
-                    <span style={{
-                      display:'inline-block', width:'6px', height:'6px', borderRadius:'50%',
-                      background: T.c, boxShadow: `0 0 8px ${T.c}`, marginRight:'8px',
-                      animation: 'blink 1.5s infinite'
-                    }} />
-                    Competency & Organisational Readiness Evaluation
-                  </span>
-                } 
+                label={<span style={{display:'inline-flex', alignItems:'center'}}>🇵🇰 Built for Pakistan's Professional Landscape</span>} 
                 color={T.t0} 
                 style={{marginBottom:'32px', fontSize:'11px', padding:'8px 20px', fontWeight:'800'}} 
               />
@@ -558,13 +538,11 @@ const HomePage = ({setTab}) => {
 
             <Reveal delay={0.1}>
               <h1 style={{
-                fontFamily:"'Playfair Display',serif",
-                fontWeight:'700', fontSize:'clamp(3rem,6vw,5.4rem)',
-                color:T.t0, lineHeight:'1.05', margin:'0 0 16px',
-                letterSpacing:'-0.03em',
+                fontFamily:"'Playfair Display',serif", fontWeight:'700', fontSize:'clamp(2.8rem,6vw,5rem)',
+                color:T.t0, lineHeight:'1.05', margin:'0 0 16px', letterSpacing:'-0.03em',
               }} className="hero-title">
-                The complete professional<br/>
-                <em style={{color:T.c, fontStyle:'italic'}}>readiness</em> benchmark.
+                Assess the whole professional.<br/>
+                <em style={{color:T.c, fontStyle:'italic'}}>Not just the performance review.</em>
               </h1>
             </Reveal>
 
@@ -573,8 +551,8 @@ const HomePage = ({setTab}) => {
             </Reveal>
 
             <Reveal delay={0.3}>
-              <p style={{color:T.t1, fontSize:'17px', maxWidth:'560px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'600'}}>
-                A 65-item psychometric battery engineered for Pakistan's professional landscape — with built-in validity controls, gamified behavioural challenges, and seven composite indices.
+              <p style={{color:T.t1, fontSize:'16px', maxWidth:'700px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'500'}}>
+                CORE is a validated, 63-item psychometric battery with built-in validity controls, social desirability screening, and an industry context engine for 12 Pakistani sectors. Four distinct reports — Technical (HR), Candidate Action Plan, Team Aggregate, and a gamified Player Report. Instant, scientifically grounded results.
               </p>
             </Reveal>
 
@@ -582,20 +560,16 @@ const HomePage = ({setTab}) => {
               <div style={{display:'flex', gap:'14px', flexWrap:'wrap', justifyContent:'center'}}>
                 <button onClick={()=>setTab('assess')} style={{
                   padding:'15px 36px', borderRadius:'7px', border:'none', cursor:'pointer',
-                  background:T.c, color:'#fff',
-                  fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'800',
-                  letterSpacing:'0.04em', transition:'all 0.2s',
-                  boxShadow:`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`,
+                  background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'800',
+                  letterSpacing:'0.04em', transition:'all 0.2s', boxShadow:`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`,
                 }}
                 onMouseOver={e=>{ e.target.style.background=T.cDark; e.target.style.transform='translateY(-2px)'; e.target.style.boxShadow=`0 0 56px ${T.cGlow}, 0 8px 28px rgba(0,0,0,0.4)`; }}
                 onMouseOut={e=>{ e.target.style.background=T.c; e.target.style.transform='none'; e.target.style.boxShadow=`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`; }}>
-                  Begin Assessment
+                  Begin Assessment →
                 </button>
                 <button onClick={()=>setTab('method')} style={{
-                  padding:'15px 36px', borderRadius:'7px', cursor:'pointer',
-                  background:'transparent', border:`2px solid ${T.b2}`,
-                  color:T.t1, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'700',
-                  transition:'all 0.2s',
+                  padding:'15px 36px', borderRadius:'7px', cursor:'pointer', background:'transparent', border:`2px solid ${T.b2}`,
+                  color:T.t1, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'700', transition:'all 0.2s',
                 }}
                 onMouseOver={e=>{ e.target.style.borderColor=T.gold; e.target.style.color=T.gold; e.target.style.transform='translateY(-2px)'; }}
                 onMouseOut={e=>{ e.target.style.borderColor=T.b2; e.target.style.color=T.t1; e.target.style.transform='none'; }}>
@@ -612,10 +586,12 @@ const HomePage = ({setTab}) => {
               background:T.b2, border:`1px solid ${T.b2}`, borderRadius:'10px',
               overflow:'hidden', marginTop:'80px',
             }}>
-              {[{n:'65',l:'Diagnostic Items'},{n:'14',l:'Dimensions'},{n:'7',l:'Composite Indices'},{n:'12',l:'L-Scale Items'},{n:'3',l:'Live Challenges'},{n:'12',l:'Sector Contexts'}].map((s,i)=>(
+              {[
+                {n:'63',l:'Diagnostic Items'},{n:'14',l:'Dimensions Scored'},{n:'4',l:'Validity Indices'},
+                {n:'10',l:'Lie-Detection Items'},{n:'12',l:'Industry Contexts'},{n:'4',l:'Distinct Reports'}
+              ].map((s,i)=>(
                 <div key={i} style={{background:T.bg1, textAlign:'center', padding:'28px 12px', transition:'background 0.2s'}}
-                  onMouseOver={e=>e.currentTarget.style.background=T.bg2}
-                  onMouseOut={e=>e.currentTarget.style.background=T.bg1}>
+                  onMouseOver={e=>e.currentTarget.style.background=T.bg2} onMouseOut={e=>e.currentTarget.style.background=T.bg1}>
                   <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:'1'}}>
                     <AnimatedNumber value={s.n} />
                   </div>
@@ -627,174 +603,301 @@ const HomePage = ({setTab}) => {
         </div>
       </section>
 
-      {/* Modules */}
-      <section className="section-pad" style={{padding:'100px 32px', maxWidth:'1100px', margin:'0 auto'}}>
+      <div style={{maxWidth:'1100px', margin:'0 auto', padding:'0 32px'}}>
+        
+        {/* ── FOUR REPORTS ── */}
         <Reveal delay={0}>
-          <div style={{marginBottom:'56px', textAlign:'center'}}>
-            <Pill label="Assessment Architecture" />
-            <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,3rem)', fontWeight:'700', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
-              Five modules. Three challenges.<br/>
-              <em style={{color:T.c, fontStyle:'italic'}}>One complete picture.</em>
-            </h2>
-          </div>
-        </Reveal>
-
-        <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'2px', marginBottom:'64px'}}>
-          {[
-            {n:'I', title:'Personality at Work', sub:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit. Public domain items (IPIP).', c:T.c},
-            {n:'II', title:'Cultural Intelligence', sub:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:T.gold},
-            {n:'III', title:'Workplace Initiative', sub:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals who sustains your institution.', c:T.gn},
-            {n:'IV', title:'Learning Agility', sub:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:T.am},
-            {n:'V', title:'Integrity & Ethics', sub:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#8B5CF6'},
-          ].map((m,i)=>(
-            <Reveal key={i} delay={i * 0.1}>
-              <div style={{
-                background:T.bg1, border:`1px solid ${T.b1}`,
-                borderTop:`3px solid ${m.c}`,
-                padding:'28px 22px', height:'100%',
-                transition:'all 0.25s', cursor:'default',
-              }}
-              onMouseOver={e=>{e.currentTarget.style.background=T.bg2; e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.boxShadow=`0 20px 40px rgba(0,0,0,0.3)`;}}
-              onMouseOut={e=>{e.currentTarget.style.background=T.bg1; e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='none';}}>
-                <div className="mono" style={{fontSize:'9px', color:m.c, letterSpacing:'0.14em', marginBottom:'16px', fontWeight:'700'}}>MOD {m.n}</div>
-                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:T.t0, fontWeight:'600', marginBottom:'12px'}}>{m.title}</div>
-                <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.65', fontWeight:'500'}}>{m.sub}</div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        {/* Challenges */}
-        <Reveal delay={0}>
-          <div style={{
-            background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px',
-            padding:'48px 40px', marginBottom:'100px', position:'relative', overflow:'hidden'
-          }}>
-            <div style={{position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:'80%', height:'180px', background:`radial-gradient(ellipse at top, ${T.cGlow}, transparent 70%)`, pointerEvents:'none'}} />
-            <div style={{marginBottom:'40px', textAlign:'center', position:'relative', zIndex:1}}>
-              <Pill label="Behaviour Under Pressure" color={T.c} style={{marginBottom:'16px'}} />
-              <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(1.8rem,3vw,2.4rem)', fontWeight:'700', margin:'0 0 16px', color:T.t0}}>Three Gamified Challenges</h2>
-              <p style={{fontSize:'15px', color:T.t1, maxWidth:'700px', margin:'0 auto', lineHeight:'1.75', fontWeight:'600'}}>
-                Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive behaviour that deliberate self-presentation cannot easily fake.
-              </p>
-            </div>
-            <div className="grid-3-col" style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'16px', position:'relative', zIndex:1}}>
+          <div style={{background:`linear-gradient(135deg, ${T.bg1} 0%, ${T.bg2} 100%)`, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'48px', marginBottom:'32px'}}>
+            <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'12px'}}>📊 Four Reports from One Assessment</h2>
+            <p style={{fontSize:'15px', color:T.t2, lineHeight:'1.7', marginBottom:'32px', fontWeight:'500'}}>
+              Every CORE assessment produces four complete, purpose-built reports — each one written for a specific reader. HR gets technical detail. The individual gets a development roadmap. The organisation gets team-level insights. And the individual gets a gamified experience designed to make development feel achievable.
+            </p>
+            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px'}}>
               {[
-                {title:'Values Seesaw', sub:'Ethical Elicitation', desc:'A workplace ethical dilemma presented as a live seesaw the candidate physically positions using a slider. No timer — requires genuine reflection. Contributes to Ethical Reasoning score.'},
-                {title:'Timed Scenario 1', sub:'Dynamic presentation crisis', desc:'A rapid presentation crisis: the candidate must choose under time pressure (dynamically scaled to language proficiency). Tests transparency and adaptive decision-making. Contributes to People Agility and Transparency scores.'},
-                {title:'Timed Scenario 2', sub:'Dynamic ethics dilemma', desc:'An ethics dilemma involving relationship pressure and procurement bypass. Tests integrity under social influence and time constraints. Contributes to Rule Compliance and Authentic Integrity scores.'},
-              ].map((c,i)=>(
-                <Reveal key={i} delay={i * 0.15}>
-                  <div style={{
-                    background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px',
-                    padding:'32px 24px', height:'100%', transition:'all 0.25s',
-                  }}
-                  onMouseOver={e=>{e.currentTarget.style.background=T.bg3; e.currentTarget.style.borderColor=T.bC; e.currentTarget.style.transform='translateY(-4px)';}}
-                  onMouseOut={e=>{e.currentTarget.style.background=T.bg2; e.currentTarget.style.borderColor=T.b1; e.currentTarget.style.transform='none';}}>
-                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:T.t0, fontWeight:'600', marginBottom:'5px'}}>{c.title}</div>
-                    <div className="mono" style={{fontSize:'10px', color:T.c, marginBottom:'16px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.09em'}}>{c.sub}</div>
-                    <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'500'}}>{c.desc}</p>
-                  </div>
-                </Reveal>
+                {i:'📊', c:'#60A5FA', t:'Technical Report', s:'(HR & Leadership)', d:'Full psychometric breakdown. 7 composite indices, validity analysis, cross-dimensional risk patterns, role suitability matrix with interview probes, industry lens, completion time tracking.'},
+                {i:'🧭', c:'#4ADE80', t:'Candidate Action Plan', s:'(Individual)', d:'Personal development roadmap. Visual score dashboard, numbered 10-step action plans per gap, profile-matched books, TED talks, YouTube resources, peer-reviewed research.'},
+                {i:'👥', c:'#FBBF24', t:'Team Aggregate Report', s:'(Batch-level)', d:'Appears automatically when you run 2+ assessments in a batch. Team dimension averages, composite benchmarks, archetype distribution, collective risk pattern frequency, validity summary.'},
+                {i:'🎮', c:'#E879F9', t:'Player Report', s:'(Gamified)', d:'Dark RPG aesthetic. Game class, XP, levels 1–10, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.'}
+              ].map((r,i)=>(
+                <div key={i} style={{background:T.b0, border:`1px solid ${T.b1}`, borderRadius:'12px', padding:'24px', transition:'transform 0.2s'}} onMouseOver={e=>e.currentTarget.style.transform='translateY(-4px)'} onMouseOut={e=>e.currentTarget.style.transform='none'}>
+                  <div style={{fontSize:'2rem', marginBottom:'12px'}}>{r.i}</div>
+                  <div style={{fontSize:'14px', fontWeight:'700', color:r.c, marginBottom:'4px'}}>{r.t}</div>
+                  <div style={{fontSize:'11px', color:T.t3, marginBottom:'12px', fontWeight:'600'}}>{r.s}</div>
+                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>{r.d}</div>
+                </div>
               ))}
             </div>
           </div>
         </Reveal>
 
-        {/* Platform Capabilities */}
-        <div style={{marginBottom:'64px'}}>
-          <Reveal delay={0}>
-            <div style={{marginBottom:'48px'}}>
-              <Pill label="Platform Capabilities" color={T.gold} />
-              <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'16px 0 0', color:T.t0, letterSpacing:'-0.02em'}}>
-                Engineered for precision and scale.
-              </h2>
+        {/* ── INDIVIDUAL VS ORG (TWO COLUMNS) ── */}
+        <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'32px'}}>
+          
+          {/* Individual */}
+          <Reveal delay={0.1}>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', height:'100%'}}>
+              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:T.t0, marginBottom:'12px'}}>✨ What You Walk Away With — As an Individual</h3>
+              <p style={{fontSize:'14px', color:T.t2, lineHeight:'1.6', marginBottom:'24px', fontWeight:'500'}}>CORE is not an evaluation of your worth. It is a mirror — one most professionals never get access to. Here is exactly what you receive.</p>
+              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+                {[
+                  {t:'🧭 Your Professional Identity', d:'A named archetype explaining how you work — your natural strengths, decision-making style, and the contexts where you perform best.'},
+                  {t:'📊 Real Scores Across 9 Dimensions', d:'Personality, cultural intelligence, team citizenship, learning agility, ethical orientation — with plain-language interpretation.'},
+                  {t:'🎯 A 10-Step Plan Built Around You', d:'Numbered, specific 10-step action plans per development area. Not generic advice — actions designed for your profile and industry.'},
+                  {t:'📚 Curated Books, TED Talks, YouTube & Research', d:'Matched to your specific lowest-scoring dimensions. Books like Atomic Habits, TED talks with YouTube links, peer-reviewed research papers.'},
+                  {t:'💡 Pattern Insights & If-Then Protocols', d:'How your dimensions interact — combinations that create hidden strengths or risks. Plus decision frameworks for situations you will actually encounter.'},
+                  {t:'🔒 Your Data Stays Yours', d:'Your personal Action Plan belongs to you. Carnelian never sells your data. You can request deletion any time.'}
+                ].map((item,i)=>(
+                  <div key={i} style={{background:`${T.gold}10`, border:`1px solid ${T.gold}25`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'4px'}}>{item.t}</div>
+                    <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>{item.d}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </Reveal>
 
-          <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
-            {[
-              {h:'Seven Composite Indices', d:'14 individual dimensions combine into 7 composite indices weighted by published meta-analytic validity evidence: Compliance & Integrity, Leadership Readiness, Team Value, Adaptability, Stakeholder Effectiveness, Operational Reliability, and People Management.'},
-              {h:'12-Industry Context Engine', d:"Configure once for your client before assessment begins. The engine adapts the Technical Report's industry lens, risk thresholds, and high-potential benchmarks for 12 Pakistani sectors. The Candidate Action Plan adapts too — providing genuinely contextualised development actions."},
-              {h:'Cross-Dimensional Pattern Analysis', d:'Ten named patterns detect dangerous or valuable combinations that individual scores miss entirely. The Performance-Ethics Disconnect, the Charismatic Integrity Risk, the Talented Maverick — patterns research consistently links to institutional misconduct — are flagged automatically.'},
-              {h:'Role Suitability Matrix + Interview Probes', d:'Six role families rated Suitable, Conditional, or Not Recommended — each driven by the relevant composite index. Every Not Recommended verdict generates specific behavioural interview probe questions embedded directly in the HR report.'},
-              {h:'Two Fully Separated Reports', d:'Technical Report (HR & Leadership): All composite indices, validity breakdown, pattern analysis, and psychometric citations. Candidate Action Plan (The Individual): Plain-language strengths, development areas, and a 30/90/180-day priority matrix. Zero HR risk language.'},
-              {h:'Longitudinal Re-Assessment Tracker', d:"Save any candidate's results to the device. When they retake CORE — after a development programme or promotion cycle — a side-by-side progress comparison is generated automatically. Every dimension shows its delta. Prove L&D impact with data."},
-              {h:'Engagement-Optimised Experience', d:'Positive reinforcement messages appear after every question. Clear timed challenge warnings mean no candidate is surprised by a clock. The seesaw provides a visual, tactile break. Runs in any browser on any device. No app or login required.'},
-              {h:'Four-Layer Lie Detection', d:'12 invisible L-Scale items catch social desirability inflation. Reverse-scored consistency traps detect contradictions. Acquiescence detection flags candidates who click Agree on everything. Extreme response detection catches rushed or careless responding. All four combine into a single Validity Index — with hard overrides for catastrophic combinations.'},
-            ].map((item,i)=>{
-              const accent = listColors[i];
-              return (
-                <Reveal key={i} delay={i * 0.07} direction="left" distance={28}>
-                  <div style={{
-                    display:'flex', alignItems:'flex-start', gap:'24px',
-                    background:T.bg1, border:`1px solid ${T.b1}`, borderRadius:'8px',
-                    borderLeft:`4px solid ${accent}`,
-                    padding:'28px 32px', position:'relative', overflow:'hidden',
-                    transition:'all 0.3s ease', cursor:'default'
-                  }}
-                  onMouseOver={e=>{
-                    e.currentTarget.style.background=T.bg2;
-                    e.currentTarget.style.borderColor=T.b2;
-                    const num = e.currentTarget.querySelector('.feat-num');
-                    if (num) { num.style.color=T.gold; num.style.transform='scale(1.1) translateX(-10px)'; }
-                  }}
-                  onMouseOut={e=>{
-                    e.currentTarget.style.background=T.bg1;
-                    e.currentTarget.style.borderColor=T.b1;
-                    const num = e.currentTarget.querySelector('.feat-num');
-                    if (num) { num.style.color=T.b2; num.style.transform='none'; }
-                  }}>
-                    <div className="feat-num" style={{
-                      position:'absolute', right:'16px', top:'-8px',
-                      fontFamily:"'Playfair Display',serif",
-                      fontSize:'110px', fontWeight:'700', color:T.b1,
-                      opacity:0.4, transition:'all 0.5s ease', pointerEvents:'none', lineHeight:1
-                    }}>0{i+1}</div>
-                    <div style={{position:'relative', zIndex:1, maxWidth:'88%'}}>
-                      <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.35rem', fontWeight:'600', color:accent, marginBottom:'10px'}}>{item.h}</h3>
-                      <p style={{fontSize:'13px', color:T.t1, lineHeight:'1.7', fontWeight:'500'}}>{item.d}</p>
+          {/* Organisation */}
+          <Reveal delay={0.2}>
+            <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', height:'100%'}}>
+              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:T.t0, marginBottom:'12px'}}>📈 What Your Organisation Gets — The Business Case</h3>
+              <p style={{fontSize:'14px', color:T.t2, lineHeight:'1.6', marginBottom:'24px', fontWeight:'500'}}>Psychometric assessment is not a cost. The peer-reviewed evidence consistently shows it is one of the highest-return investments in people. Here is what the research says.</p>
+              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+                {[
+                  {c:'#4ADE80', t:'💰 Cost of a Bad Hire', n:'50–200%', d:'of annual salary per bad hire. Structured psychometric screening reduces mis-hire rates by 30–40%.', s:'SHRM (2022); Cascio (2000)'},
+                  {c:'#60A5FA', t:'🎯 Predictive Validity', n:'r = 0.51', d:'Personality + integrity combined — one of the strongest job performance predictors in the literature. Beats unstructured interviews.', s:'Schmidt & Hunter (1998)'},
+                  {c:'#FBBF24', t:'⚠ Compliance & Fraud Risk', n:'67%', d:'of institutional fraud cases involve no prior criminal record. Integrity assessments have ρ=.41 predictive validity for counterproductive behaviour.', s:'ACFE (2022); Ones et al. (1993)'},
+                  {c:'#A78BFA', t:'📚 L&D Return', n:'4× higher', d:'ROI on targeted training vs. generic programmes. CORE tells you exactly which dimensions to develop per individual.', s:'Salas et al. (2012)'},
+                  {c:'#38BDF8', t:'🌍 Cultural Intelligence Impact', n:'+35%', d:"revenue from cross-cultural teams with high CQ. In Pakistan's cross-provincial and donor-facing sectors, CQ is a direct revenue driver.", s:'Earley & Ang (2003); HBR (2018)'},
+                  {c:'#FB7185', t:'👥 Leadership Succession', n:'40%', d:"of new senior leaders fail within 18 months — at enormous cost. CORE's LRS and pattern engine detect these risks before placement.", s:'CEB Corporate Leadership Council (2014)'}
+                ].map((item,i)=>(
+                  <div key={i} style={{background:`${item.c}10`, border:`1px solid ${item.c}25`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'4px'}}>
+                      <div style={{fontSize:'13px', fontWeight:'700', color:item.c}}>{item.t}</div>
+                      <div className="mono" style={{fontSize:'14px', fontWeight:'800', color:item.c}}>{item.n}</div>
                     </div>
+                    <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500', marginBottom:'6px'}}>{item.d}</div>
+                    <div style={{fontSize:'10px', color:T.t3, fontStyle:'italic', fontWeight:'600'}}>{item.s}</div>
                   </div>
-                </Reveal>
-              );
-            })}
-          </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
 
-        {/* Use cases */}
+        {/* ── HORIZON ── */}
         <Reveal delay={0}>
-          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, padding:'48px', borderRadius:'12px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', fontWeight:'600', color:T.t0, marginBottom:'32px'}}>What organisations can use CORE for</h3>
-            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'1px', background:T.b2, border:`1px solid ${T.b2}`}}>
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'32px', marginBottom:'64px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.gold, marginBottom:'20px'}}>📅 What This Means for Your Organisation</h3>
+            <div className="grid-3-col" style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'16px'}}>
               {[
-                {h:'Pre-Hiring Screening', d:'Reduce the cost of bad hires. Interview probe questions are already generated for every at-risk role.'},
-                {h:'Succession Planning', d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss — and the ones they should not promote.'},
-                {h:'L&D Targeting', d:'Map specific development investments to specific individual gaps. Stop sending everyone to the same programme.'},
-                {h:'Compliance Risk Management', d:'The Compliance & Integrity Index gives risk committees a psychometric data point before placing staff in fiduciary roles.'},
-                {h:'Team Composition', d:'Run a cohort and compare Team Value Scores across the group. Identify gaps and redundancies before a project launches.'},
-                {h:'Post-Training Evaluation', d:'Re-assess after a development programme. The progress tracker shows exactly which scores moved — and proves ROI to leadership.'},
-                {h:'Donor Accountability', d:'Development sector organisations can show donors peer-reviewed evidence behind their staff selection and capacity building investments.'},
-                {h:'Civil Service Promotion', d:'Objective, legally defensible data for BPS promotion decisions — merit-based, standardised, and auditable.'},
-              ].map((item,i)=>{
-                const boxAccent = listColors[i];
-                return (
-                  <Reveal key={i} delay={i * 0.05} distance={20}>
-                    <div style={{
-                      background:T.bg2, padding:'28px 24px', height:'100%', transition:'background 0.2s',
-                      borderTop:`3px solid ${boxAccent}`
-                    }}
-                      onMouseOver={e=>e.currentTarget.style.background=T.bg3}
-                      onMouseOut={e=>e.currentTarget.style.background=T.bg2}>
-                      <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', color:boxAccent, marginBottom:'10px'}}>{item.h}</div>
-                      <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.65', fontWeight:'500'}}>{item.d}</div>
-                    </div>
-                  </Reveal>
-                );
-              })}
+                {t:'Short Term (0–6 months)', d:'Better hiring decisions. Reduced interview time through pre-screening. Immediate identification of compliance risks before placement in sensitive roles.'},
+                {t:'Medium Term (6–18 months)', d:'Targeted L&D investment producing measurable score improvements. Reduction in conduct incidents. Stronger succession pipeline with data-backed promotion decisions.'},
+                {t:'Long Term (18+ months)', d:'A normative dataset specific to your organisation. Longitudinal tracking that proves which interventions work. Auditable, defensible basis for all promotion and placement decisions.'}
+              ].map((h,i)=>(
+                <div key={i} style={{background:T.b0, borderRadius:'8px', padding:'20px'}}>
+                  <div style={{fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'8px'}}>{h.t}</div>
+                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>{h.d}</div>
+                </div>
+              ))}
             </div>
           </div>
         </Reveal>
+
+      </div>
+
+      {/* ── DEEP DIVE ARCHITECTURE ── */}
+      <section className="section-pad" style={{padding:'64px 32px', maxWidth:'1100px', margin:'0 auto'}}>
+        <Reveal delay={0}>
+          <div style={{marginBottom:'48px', textAlign:'center'}}>
+            <Pill label="Platform Deep Dive" />
+            <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'16px 0 12px', color:T.t0, letterSpacing:'-0.02em'}}>
+              What makes CORE the tool for you
+            </h2>
+            <p style={{fontSize:'15px', color:T.t2, maxWidth:'700px', margin:'0 auto', fontWeight:'500'}}>
+              A complete picture of everything CORE does — built for HR leaders, L&D professionals, and organisational decision-makers across Pakistan.
+            </p>
+          </div>
+        </Reveal>
+
+        {/* Modules */}
+        <div style={{marginBottom:'40px'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
+            <span style={{fontSize:'24px'}}>🧠</span>
+            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>Five Validated Assessment Modules — 63 Items Total</h3>
+          </div>
+          <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'12px'}}>
+            {[
+              {n:'1', t:'Personality at Work', d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit. Public domain items (IPIP).', c:T.c},
+              {n:'2', t:'Cultural Intelligence', d:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:T.gold},
+              {n:'3', t:'Workplace Initiative', d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals who sustains your institution.', c:T.gn},
+              {n:'4', t:'Learning Agility', d:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:T.am},
+              {n:'5', t:'Integrity & Ethics', d:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#8B5CF6'},
+            ].map((m,i)=>(
+              <Reveal key={i} delay={i * 0.1}>
+                <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', height:'100%'}}>
+                  <div className="mono" style={{fontSize:'10px', fontWeight:'700', color:m.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'8px'}}>Module {m.n}</div>
+                  <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{m.t}</div>
+                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{m.d}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        {/* Challenges */}
+        <div style={{marginBottom:'40px'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+            <span style={{fontSize:'24px'}}>🎯</span>
+            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>Three Gamified Challenges — Behaviour Under Pressure</h3>
+          </div>
+          <p style={{fontSize:'14px', color:T.t2, marginBottom:'20px', fontWeight:'500'}}>Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive behaviour that deliberate self-presentation cannot easily fake. All three contribute to scored dimension outputs.</p>
+          <div className="grid-3-col" style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px'}}>
+            {[
+              {t:'⚖️ Values Seesaw × 3 dilemmas', d:'Three sequential workplace ethical dilemmas, each presented as a live seesaw the candidate physically positions using a slider. No timer — requires genuine reflection. Results averaged across all three scenarios. Contributes to Ethical Reasoning score.'},
+              {t:'⏱ Timed Scenario 1', d:'A 45-second presentation crisis: the candidate must choose under time pressure. Tests transparency and adaptive decision-making. Contributes to People Agility and Transparency scores.'},
+              {t:'⏱ Timed Scenario 2', d:'A 45-second ethics dilemma involving relationship pressure and procurement bypass. Tests integrity under social influence. Contributes to Rule Compliance and Authentic Integrity scores.'}
+            ].map((c,i)=>(
+              <Reveal key={i} delay={i * 0.1}>
+                <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', height:'100%'}}>
+                  <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{c.t}</div>
+                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{c.d}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        {/* ROW 3: Lie Detection + Scoring */}
+        <Reveal delay={0.1}>
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px'}}>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+                <span style={{fontSize:'24px'}}>🎭</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Four-Layer Lie Detection</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>10 invisible L-Scale items catch social desirability inflation. Reverse-scored consistency traps detect contradictions. Acquiescence detection flags candidates who click Agree on everything. Extreme response detection catches rushed or careless responding. All four combine into a single Validity Index — with hard overrides for catastrophic combinations.</p>
+            </div>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+                <span style={{fontSize:'24px'}}>📊</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Seven Composite Indices — Interlinked Scoring</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>14 individual dimensions combine into 7 composite indices weighted by published meta-analytic validity evidence: Compliance & Integrity, Leadership Readiness, Team Value, Adaptability, Stakeholder Effectiveness, Operational Reliability, and People Management. No single dimension determines an outcome — the composites reflect how dimensions interact.</p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ROW 4: Pattern Analysis + Role Matrix */}
+        <Reveal delay={0.2}>
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px'}}>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+                <span style={{fontSize:'24px'}}>🔍</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Cross-Dimensional Pattern Analysis</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Ten named patterns detect dangerous or valuable combinations that individual scores miss entirely. The Performance-Ethics Disconnect, the Charismatic Integrity Risk, the Talented Maverick — patterns research consistently links to institutional misconduct — are flagged automatically. Four positive patterns identify rare high-value profiles for succession planning.</p>
+            </div>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+                <span style={{fontSize:'24px'}}>🎯</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Role Suitability Matrix + Interview Probes</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Six role families rated Suitable, Conditional, or Not Recommended — each driven by the relevant composite index. Every Not Recommended verdict generates specific behavioural interview probe questions embedded directly in the HR report. HR walks into the interview knowing exactly what to test.</p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ROW 5: Four Reports + Industry Engine (The specific UI from your screenshot) */}
+        <Reveal delay={0.3}>
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px'}}>
+            
+            {/* Left Card: Four Reports */}
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+                <span style={{fontSize:'24px'}}>📋</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Four Complete, Purpose-Built Reports</h4>
+              </div>
+              <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid ${T.c}`}}>
+                  <div style={{fontSize:'12px', fontWeight:'700', color:T.c, marginBottom:'4px'}}>📊 Technical Report — HR & Leadership</div>
+                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>All composite indices, validity breakdown, cross-dimensional patterns, role suitability matrix with interview probes, industry lens, completion time. Restricted to HR.</div>
+                </div>
+                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid ${T.gn}`}}>
+                  <div style={{fontSize:'12px', fontWeight:'700', color:T.gn, marginBottom:'4px'}}>🧭 Candidate Action Plan — The Individual</div>
+                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>Visual dashboard. 10-step action plans per gap. Profile-matched books, TED talks, YouTube, and peer-reviewed research. Carnelian programme recommendations. Zero HR risk language.</div>
+                </div>
+                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid ${T.am}`}}>
+                  <div style={{fontSize:'12px', fontWeight:'700', color:T.am, marginBottom:'4px'}}>👥 Team Aggregate Report — Batch-Level</div>
+                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>Auto-generated when batch has 2+ respondents. Team dimension averages, composite benchmarks, archetype distribution, collective risk patterns, validity summary, respondent ranking.</div>
+                </div>
+                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid #A78BFA`}}>
+                  <div style={{fontSize:'12px', fontWeight:'700', color:'#A78BFA', marginBottom:'4px'}}>🎮 Player Report — Gamified Development</div>
+                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for resources, Web Audio feedback, mobile haptics.</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Card: Industry Engine */}
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+                <span style={{fontSize:'24px'}}>🏭</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>12-Industry Context Engine + Context-Aware Actions</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', marginBottom:'12px', fontWeight:'500'}}>
+                Configure once for your client before assessment begins. The engine adapts the Technical Report's industry lens, risk thresholds, and high-potential benchmarks for 12 Pakistani sectors — banking, government, development, FMCG, telecom, energy, healthcare, manufacturing, education, real estate, and retail.
+              </p>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>
+                The Candidate Action Plan adapts too — a junior banking officer and a senior civil servant with the same gap score receive genuinely different, contextualised development actions rather than identical generic advice.
+              </p>
+            </div>
+
+          </div>
+        </Reveal>
+
+        {/* ROW 6: Longitudinal + Engagement */}
+        <Reveal delay={0.4}>
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+                <span style={{fontSize:'24px'}}>📈</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Longitudinal Re-Assessment Tracker</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Save any candidate's results to the device after their assessment. When they retake CORE — after a development programme, promotion cycle, or 6-month interval — a side-by-side progress comparison is generated automatically. Every dimension and composite index shows its delta. This is how you prove L&D impact with data.</p>
+            </div>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+                <span style={{fontSize:'24px'}}>✅</span>
+                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Engagement-Optimised Assessment Experience</h4>
+              </div>
+              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Positive reinforcement messages appear after every question — keeping candidates engaged and discouraging careless responding. Clear timed challenge warnings mean no candidate is surprised by a clock. The seesaw provides a visual, tactile break from the Likert format. Runs in any browser on any device. Typically completed in 20 minutes.</p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Use Cases */}
+        <Reveal delay={0}>
+          <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>What organisations can use CORE for</h3>
+            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px'}}>
+              {[
+                {t:'Pre-Hiring Screening', d:'Reduce the cost of bad hires. Interview probe questions are already generated for every at-risk role.'},
+                {t:'Succession Planning', d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss — and the ones they should not promote.'},
+                {t:'L&D Targeting', d:'Map specific development investments to specific individual gaps. Stop sending everyone to the same programme.'},
+                {t:'Compliance Risk Management', d:'The Compliance & Integrity Index gives risk committees a psychometric data point before placing staff in fiduciary roles.'},
+                {t:'Team Composition', d:'Run a cohort and compare Team Value Scores across the group. Identify gaps and redundancies before a project launches.'},
+                {t:'Post-Training Evaluation', d:'Re-assess after a development programme. The progress tracker shows exactly which scores moved — and proves ROI to leadership.'},
+                {t:'Donor Accountability', d:'Development sector organisations can show donors peer-reviewed evidence behind their staff selection and capacity building investments.'},
+                {t:'Civil Service Promotion', d:'Objective, legally defensible data for BPS promotion decisions — merit-based, standardised, and auditable.'}
+              ].map((u,i)=>(
+                <div key={i} style={{background:T.b0, borderRadius:'8px', padding:'16px', borderTop:`3px solid ${listColors[i % listColors.length]}`}}>
+                  <div style={{fontSize:'13px', fontWeight:'700', color:listColors[i % listColors.length], marginBottom:'6px'}}>{u.t}</div>
+                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>{u.d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+
       </section>
     </div>
   );
@@ -802,32 +905,36 @@ const HomePage = ({setTab}) => {
 
 // ─── ASSESSMENT PAGE ──────────────────────────────────────────────────────────
 const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
-  const [step, setStep] = useState('intake');
+  const [step, setStep] = useState('admin'); // Starts at Admin now
   const [intakeStage, setIntakeStage] = useState(1);
-  const [resp, setResp] = useState({name:'',email:'',emp:'',cnic:'',dept:'',deptOther:'',role:'',exp:'',gender:'',org:'',purpose:'',industry:'', eng:''});
-  const [answers, setAnswers] = useState(Array(QS.length).fill(null));
+const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptOther:'',role:'',exp:'',gender:'',org:'',industry:'', batch:'', purpose:'', level:'', conf:'Restricted — HR Leadership Only'});  const [answers, setAnswers] = useState(Array(QS.length).fill(null));
   const [cur, setCur] = useState(0);
   const [breaker, setBreaker] = useState(null);
   const [gameStage, setGameStage] = useState(null);
   const [gameScores, setGameScores] = useState({seesaw:50,scenario1:0,scenario2:0});
-  const [ssVal, setSsVal] = useState(50);
-  const [timer, setTimer] = useState(25);
+  
+  // Seesaw state
+  const [ssVals, setSsVals] = useState([50,50,50]);
+  const [ssStep, setSsStep] = useState(0);
+  
+  const [timer, setTimer] = useState(45);
   const [timerActive, setTimerActive] = useState(false);
-   const [gameLocked, setGameLocked] = useState(false);
+  const [gameLocked, setGameLocked] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [gameChoice, setGameChoice] = useState(null);
   const [priorFound, setPriorFound] = useState(null);
+  const [consentChecked, setConsentChecked] = useState(false);
   const timerRef = useRef(null);
 
-  useEffect(()=>{
-    if(resp.cnic && resp.cnic.length >= 13){
-      try{
-        const h=JSON.parse(localStorage.getItem('core_v1_history')||'[]');
-        const prior=h.filter(e => e.cnic && e.cnic === resp.cnic);
-        setPriorFound(prior.length>0?prior[prior.length-1]:null);
-      }catch(e){}
-    }
-  },[resp.cnic]);
+useEffect(()=>{
+  if(resp.email && resp.email.includes('@')){
+    try{
+      const h=JSON.parse(localStorage.getItem('core_v3_history')||'[]');
+      const prior=h.filter(e => e.email && e.email.toLowerCase()===resp.email.toLowerCase());
+      setPriorFound(prior.length>0?prior[prior.length-1]:null);
+    }catch(e){}
+  }
+},[resp.email]);
 
   useEffect(()=>{
     if(timerActive&&timer>0){ timerRef.current=setTimeout(()=>setTimer(t=>t-1),1000); }
@@ -835,37 +942,61 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
     return()=>clearTimeout(timerRef.current);
   },[timerActive,timer]);
 
-  const getMaxTimer = () => resp.eng === 'Basic' ? 40 : resp.eng === 'Professional' ? 32 : 25;
-  const startTimer=()=>{ setTimer(getMaxTimer()); setTimerActive(true); setGameLocked(false); setGameChoice(null); };
+  const startTimer=()=>{ setTimer(45); setTimerActive(true); setGameLocked(false); setGameChoice(null); };
 
   const handleAnswer=(val)=>{
     const a=[...answers]; a[cur]=val; setAnswers(a);
   };
 
-  const nextQ=()=>{
+const nextQ=()=>{
     if(cur===QS.length-1){ generate(); return; }
     const curCh=QS[cur].ch, nextCh=QS[cur+1].ch, nextIdx=cur+1;
-    if(nextIdx===31){setGameStage('g1'); return;}
-    if(nextIdx===42){setGameStage('g2warn'); return;}
-    if(nextIdx===53){setGameStage('g3warn'); return;}
+    
+    // New PACER v3.0 Game Triggers
+    if(nextIdx===8){setGameStage('g1'); setSsStep(0); return;}     // Seesaw 1
+    if(nextIdx===20){setGameStage('g1'); setSsStep(1); return;}    // Seesaw 2
+    if(nextIdx===28){setGameStage('g2warn'); return;}              // Timed Scenario 1
+    if(nextIdx===42){setGameStage('g1'); setSsStep(2); return;}    // Seesaw 3
+    if(nextIdx===53){setGameStage('g3warn'); return;}              // Timed Scenario 2
+    
     setCur(nextIdx);
     if(curCh!==nextCh&&BREAKERS[curCh]) setBreaker(curCh);
     else setBreaker(null);
   };
 
   const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null);} };
-  const submitSeesaw=()=>{ setGameScores(g=>({...g,seesaw:ssVal})); setGameStage(null); setCur(31); };
+
+  const updateSeesaw = (val) => {
+    const newVals = [...ssVals];
+    newVals[ssStep] = parseInt(val);
+    setSsVals(newVals);
+  };
+
+  const nextSeesaw = () => {
+    // Calculate running average and save
+    const avg = Math.round((ssVals[0]+ssVals[1]+ssVals[2])/3);
+    setGameScores(g=>({...g,seesaw:avg}));
+    setGameStage(null);
+    
+    // Resume assessment exactly where we left off
+    let resumeIdx = cur;
+    if (ssStep === 0) resumeIdx = 8;
+    if (ssStep === 1) resumeIdx = 20;
+    if (ssStep === 2) resumeIdx = 42;
+    
+    setCur(resumeIdx);
+  };
 
   const chooseScenario=(quality,gameNum)=>{
     if(gameLocked) return;
     setTimerActive(false); setGameLocked(true);
-    const score=quality==='best'?10:quality==='ok'?5:quality==='timeout'?0:-5;
+    const score=quality==='best'?7:quality==='ok'?4:quality==='timeout'?0:-5;
     if(gameNum===2) setGameScores(g=>({...g,scenario1:score}));
     else setGameScores(g=>({...g,scenario2:score}));
     setGameChoice({quality,score});
   };
 
-const generate = async () => {
+  const generate = async () => {
     setGenerating(true);
     const O=scoreDim('O',answers),C=scoreDim('C',answers),E=scoreDim('E',answers),A=scoreDim('A',answers);
     const ES=scoreDim('ES',answers);
@@ -875,8 +1006,9 @@ const generate = async () => {
     const OCBavg=Math.round((OCB_A+OCB_CV+OCB_S+OCB_CO+OCB_Cn)/5);
     const LA_MA=scoreDim('LA_MA',answers),LA_PA_raw=scoreDim('LA_PA',answers),LA_CA=scoreDim('LA_CA',answers),LA_RA=scoreDim('LA_RA',answers);
     const EO_RC_raw=scoreDim('EO_RC',answers),EO_T_raw=scoreDim('EO_T',answers),EO_ER_raw=scoreDim('EO_ER',answers),EO_AI_raw=scoreDim('EO_AI',answers);
+    
     const gs=gameScores;
-    const ssBonus=gs.seesaw<=20?8:gs.seesaw<=40?5:gs.seesaw<=60?0:gs.seesaw<=80?-4:-8;
+    const ssBonus=gs.seesaw<=20?3:gs.seesaw<=40?7:gs.seesaw<=60?2:gs.seesaw<=80?-4:-7;
     const adjEO_ER=Math.min(100,Math.max(0,EO_ER_raw+ssBonus));
     const sc1=gs.scenario1;
     const adjLA_PA=Math.min(100,Math.max(0,LA_PA_raw+sc1));
@@ -884,10 +1016,12 @@ const generate = async () => {
     const sc2=gs.scenario2;
     const adjEO_RC=Math.min(100,Math.max(0,EO_RC_raw+sc2));
     const adjEO_AI=Math.min(100,Math.max(0,EO_AI_raw+sc2));
+    
     const LAavg=Math.min(100,Math.round((LA_MA+adjLA_PA+LA_CA+LA_RA)/4));
     const EOavg=Math.min(100,Math.round((adjEO_RC+adjEO_T+adjEO_ER+adjEO_AI)/4));
     const OCEANavg=Math.round((O+C+E+A+ES)/5);
     const S={O,C,E,A,ES,CQ_K,CQ_M,CQ_B,CQavg,OCB_A,OCB_CV,OCB_S,OCB_CO,OCB_Cn,OCBavg,LA_MA,LA_PA:adjLA_PA,LA_CA,LA_RA,LAavg,EO_RC:adjEO_RC,EO_T:adjEO_T,EO_ER:adjEO_ER,EO_AI:adjEO_AI,EOavg,OCEANavg,overall:Math.round((OCEANavg+CQavg+OCBavg+LAavg+EOavg)/5)};
+    
     const CII=Math.round(S.EO_RC*0.32+S.EO_AI*0.32+S.EO_T*0.20+S.C*0.16);
     const LRS=Math.round(S.C*0.22+S.E*0.18+S.LAavg*0.25+S.EOavg*0.20+S.ES*0.15);
     const TVS=Math.round(S.A*0.22+S.OCB_A*0.20+S.OCB_S*0.18+S.OCB_CO*0.18+S.OCBavg*0.22);
@@ -896,15 +1030,36 @@ const generate = async () => {
     const OPS=Math.round(S.C*0.35+S.ES*0.30+S.OCB_Cn*0.20+S.LA_MA*0.15);
     const PMS=Math.round(TVS*0.35+S.A*0.25+S.EOavg*0.25+S.E*0.15);
     const CI={CII,LRS,TVS,ADS,SES,OPS,PMS};
+    
     const profile=getProfile(S);
     const validity=computeValidity(answers);
-    const docId='CORE-'+Date.now().toString(36).toUpperCase();
+    const docId='PACER3-'+Date.now().toString(36).toUpperCase();
     const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+    
     const gameSummary={
       seesaw:{val:gs.seesaw,bonus:ssBonus,label:ssBonus>=7?'Principled & Nuanced':ssBonus>=2?'Balanced':ssBonus>=-2?'Relational-leaning':'High relational — process risk'},
       scenario1:{raw:sc1,label:sc1>=7?'Optimal response':sc1>=4?'Good approach':sc1===0?'Timed out':'Below average — poor response'},
       scenario2:{raw:sc2,label:sc2>=7?'Strong integrity under pressure':sc2>=4?'Moderate awareness':sc2===0?'Timed out':'High-risk — compliance concern'},
     };
+
+    // CROSS-DIMENSIONAL PATTERNS
+    const patterns = [];
+    if(S.C>=68&&S.EOavg<=60) patterns.push({sev:'red', name:'Performance-Ethics Disconnect', headline:'High Delivery Drive + Weak Ethical Guardrails', detail:'Conscientiousness is strong, but Ethical Orientation falls below the threshold needed for unsupervised accountability.', action:'DO NOT place in treasury, procurement, audit, credit, or any role with unsupervised financial discretion.'});
+    if(S.E>=70&&S.EO_AI<=60) patterns.push({sev:'red', name:'Charismatic Integrity Risk', headline:'High Social Confidence + Inconsistent Authentic Integrity', detail:'Extraversion places this person in high-visibility roles, but Authentic Integrity is below threshold. High extraversion can mask integrity deficits.', action:'Add a structured integrity reference check. Do not place in client fund management without direct oversight.'});
+    if(S.LAavg>=70&&S.EOavg<=60) patterns.push({sev:'red', name:'Talented Maverick', headline:'High Learning Agility + Weak Ethical Framework', detail:'Learns exceptionally fast but has weak Ethical Orientation. Will quickly identify workarounds and use them without adequate ethical guardrails.', action:'Assign a senior mentor with explicit ethical accountability remit. Do not give unsupervised discretion in first 12 months.'});
+    if(S.EO_RC<55) patterns.push({sev:'red', name:'Direct Compliance Risk', headline:'Rule Compliance Below Acceptable Threshold', detail:'Rule Compliance is below 55. This indicates a material risk in any position of institutional trust.', action:'Mandatory ethics and compliance training before any placement.'});
+    if(S.ES<=60&&S.E>=65) patterns.push({sev:'red', name:'Visible and Volatile', headline:'High Public Presence + Low Emotional Stability', detail:'Energetic and front-facing, but Emotional Stability is below threshold. Under pressure, emotional stability gaps become visible.', action:'Resilience coaching and emotional regulation support before elevation to senior or external-facing roles.'});
+    
+    if(S.C>=70&&S.ES<=60&&!patterns.find(p=>p.name==='Visible and Volatile')) patterns.push({sev:'amber', name:'Brittle High Performer', headline:'High Conscientiousness + Lower Emotional Stability', detail:'Delivers reliably but fragile emotional regulation can produce perfectionism-driven stress or burnout under sustained pressure.'});
+    if(S.EOavg>=72&&S.LAavg<55) patterns.push({sev:'amber', name:'Ethical but Rigid', headline:'Strong Ethics + Low Learning Agility', detail:'Trustworthy and principled, but may be resistant to procedural change and struggle with ambiguity.'});
+    if(S.OCBavg>=72&&S.C<=60) patterns.push({sev:'amber', name:'Team Citizen, Low Output', headline:'Exceptional Team Citizenship + Lower Individual Delivery', detail:'A team anchor who supports colleagues, but individual delivery is below threshold. May cover for weaker colleagues at the expense of their own deliverables.'});
+    if(S.CQavg<=60&&S.E>=65) patterns.push({sev:'amber', name:'Confident but Parochial', headline:'High Social Confidence + Lower Cultural Intelligence', detail:'Socially confident in familiar contexts, but lacks cultural adaptability. May damage relationships in unfamiliar cultural contexts.'});
+
+    if(S.C>=75&&S.EOavg>=75&&S.LAavg>=65&&S.ES>=65) patterns.push({sev:'pos', name:'Elite Integrity Leader', headline:'Top-Quartile across Delivery, Ethics, Learning & Stability', detail:'Rare combination predictive of long-term performance in high-accountability leadership roles.'});
+    if(S.OCBavg>=78&&!patterns.find(p=>p.name==='Team Citizen, Low Output')) patterns.push({sev:'pos', name:'Institutional Anchor', headline:'Exceptional Organisational Citizenship', detail:'Sustains team function, absorbs institutional friction, and maintains morale beyond formal role requirements.'});
+    if(S.CQavg>=72&&S.E>=68&&S.A>=68) patterns.push({sev:'pos', name:'Cross-Cultural Bridge', headline:'Strong Cultural Intelligence + Social Effectiveness', detail:'Best suited for multi-stakeholder, multi-cultural, and relationship-intensive professional environments.'});
+    if(S.LAavg>=75&&S.O>=70) patterns.push({sev:'pos', name:'Learning Champion', headline:'High Learning Agility + Intellectual Openness', detail:'Will outgrow their current role faster than peers. Strong training investment.'});
+
     const roles=[
       {name:'Compliance / Audit / Risk',score:CII,g:70,a:54,redNote:'CII below threshold. Do not place in treasury, procurement, audit, or unsupervised fiduciary roles without mandatory ethics intervention.',probeQ:['Describe a time following a rule precisely would have produced a worse outcome. What did you do and why?','Have you ever been asked by a superior to do something conflicting with policy? Walk me through exactly what happened.','Tell me about a decision that no one would have known about if you had decided differently. What did you do?']},
       {name:'Senior Leadership / Executive',score:LRS,g:72,a:55,redNote:'LRS below threshold. Not ready for senior leadership without structured development in the low-scoring composite dimensions.',probeQ:['Describe a time making a high-stakes decision with incomplete information. What was your process?','How do you manage your own performance and accountability? Give me a specific system.','Tell me about a time your team underperformed. What was your role, and what did you change?']},
@@ -914,76 +1069,184 @@ const generate = async () => {
       {name:'People Management / Team Lead',score:PMS,g:67,a:51,redNote:'PMS below threshold. Interpersonal, ethical, or team cohesion dimensions insufficiently developed for people management.',probeQ:['Tell me about a team member you had difficulty with. How did you manage that relationship?','Describe a time you had to give critical feedback to someone. How did you approach it?']},
     ];
 
-    // 2. Create the final report object
-    const reportDataObj = {
-      scores: S,
-      profile,
-      validity,
-      CI,
-      gameSummary,
-      respondent: resp,
-      cfg: { org: resp.org, industry: resp.industry, purpose: resp.purpose, conf: 'Restricted — HR Leadership Only' },
-      docId,
-      date,
-      roles
-    };
+    const reportDataObj = { scores: S, profile, validity, CI, gameSummary, patterns, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles };
 
-    // 3. Save to LocalStorage (for the user's local progress tracker)
     try {
-      let h = JSON.parse(localStorage.getItem('core_v1_history') || '[]');
+      let h = JSON.parse(localStorage.getItem('core_v3_history') || '[]');
       const actualDept = resp.dept === 'Other' ? resp.deptOther : resp.dept;
       const entry = {
         docId, date, timestamp: Date.now(),
-        name: resp.name, email: resp.email || '', emp: resp.emp || '', cnic: resp.cnic || '',
+name: resp.name, email: resp.email || '', phone: resp.phone || '', emp: resp.emp || '',
         role: resp.role || '', dept: actualDept || '', exp: resp.exp || '',
-        org: resp.org || '', industry: resp.industry || '',
+        org: resp.org || '', industry: resp.industry || '', purpose: resp.purpose || '', batch: resp.batch || '',
         profile: profile.name, validityOverall: validity.overall,
         scores: { O: S.O, C: S.C, E: S.E, A: S.A, ES: S.ES, CQavg: S.CQavg, OCBavg: S.OCBavg, LAavg: S.LAavg, EOavg: S.EOavg, OCEANavg: S.OCEANavg, overall: S.overall, CII, LRS, TVS, ADS, SES, OPS, PMS }
       };
-      const isSamePerson = (e) => {
-        if (entry.cnic && e.cnic && entry.cnic === e.cnic) return true;
-        return false;
-      };
+const isSamePerson = (e) => (entry.email && e.email && entry.email.toLowerCase() === e.email.toLowerCase());
       const others = h.filter(e => !isSamePerson(e));
       const samePersonHistory = h.filter(isSamePerson).slice(-4);
       h = [...others, ...samePersonHistory, entry].slice(-200);
-      localStorage.setItem('core_v1_history', JSON.stringify(h));
+      localStorage.setItem('core_v3_history', JSON.stringify(h));
+      
+      // Save to Batch specifically for Team Reports
+      if (resp.batch) {
+        const batchKey = 'core_batch_' + resp.batch.replace(/\s+/g, '_');
+        let batchData = JSON.parse(localStorage.getItem(batchKey) || '[]');
+        batchData = batchData.filter(b => b.docId !== docId && !(b.cnic === entry.cnic));
+        batchData.push({...entry, composites: CI});
+        localStorage.setItem(batchKey, JSON.stringify(batchData.slice(-500)));
+      }
+      
       setHistoryFlag(true);
     } catch (e) { console.error("Local storage error:", e); }
 
-    // 4. Send to Backend Database (NEW CODE)
-    try {
-      await fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reportDataObj),
-      });
-      console.log("Successfully saved to database!");
-    } catch (error) {
-      console.error("Failed to save to database:", error);
-      // Note: We catch the error so that even if the backend is down, 
-      // the user still gets to see their results on the screen.
-    }
-
-    // 5. Update UI State
     setGenerating(false);
     setReportData(reportDataObj);
     setTab('results');
   };
 
-  // styles
   const inp=(focused)=>({
-    width:'100%', padding:'12px 16px',
-    border:`1px solid ${focused?T.c:T.b2}`,
-    borderRadius:'6px', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
+    width:'100%', padding:'12px 16px', border:`1px solid ${focused?T.c:T.b2}`, borderRadius:'6px',
+    fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
     background:T.bg3, color:T.t0, outline:'none', transition:'all 0.2s',
     boxShadow:focused?`0 0 0 3px ${T.cGlow}`:'none',
   });
   const [focused,setFocused]=useState({});
   const lbl={display:'block',fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.t2,marginBottom:'7px',fontFamily:"'JetBrains Mono',monospace"};
   const selStyle={width:'100%',padding:'12px 16px',border:`1px solid ${T.b2}`,borderRadius:'6px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'600',background:T.bg3,color:T.t0,outline:'none',cursor:'pointer'};
+
+  // ── ASSESSMENT CONTEXT (Formerly Admin Setup) ──
+  if(step==='admin') return (
+    <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px'}}>
+      <div style={{maxWidth:'700px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
+        <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'24px'}}>
+          <span style={{fontSize:'28px'}}>🏢</span>
+          <div>
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0}}>Assessment Context</h2>
+            <p style={{fontSize:'13px',color:T.t2,fontWeight:'500'}}>Please provide your organizational details to calibrate your results.</p>
+          </div>
+        </div>
+
+        <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Industry & Role Details</h3>
+          <p style={{fontSize:'13px',color:T.t2,marginBottom:'24px',fontWeight:'500'}}>Select your sector and assessment purpose. Your development plan will adapt automatically to this context.</p>
+
+          <div style={{marginBottom:'20px'}}>
+            <label style={lbl}>Organisation Name</label>
+            <input value={resp.org} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="e.g. Allied Bank Limited" style={inp(focused.org)} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} />
+          </div>
+
+          <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
+            <div>
+              <label style={lbl}>Assessment Batch Name</label>
+              <input value={resp.batch} onChange={e=>setResp(r=>({...r,batch:e.target.value}))} placeholder="e.g. Q2 2026 Leadership Cohort" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>setFocused(f=>({...f,batch:false}))} />
+            </div>
+            <div>
+              <label style={lbl}>Primary Assessment Purpose</label>
+              <select value={resp.purpose} onChange={e=>setResp(r=>({...r,purpose:e.target.value}))} style={selStyle}>
+                <option value="">Select…</option>
+                <option>Pre-Hiring Screening</option>
+                <option>Leadership Pipeline Assessment</option>
+                <option>Succession Planning</option>
+                <option>Post-Training Evaluation</option>
+                <option>Team Composition Analysis</option>
+                <option>Personal Development Planning</option>
+              </select>
+            </div>
+          </div>
+
+          <label style={{...lbl,marginBottom:'12px'}}>Select Industry Sector *</label>
+          <div className="grid-3-col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'6px',marginBottom:'24px'}}>
+            {Object.entries(IND).map(([key,val])=>(
+              <button key={key} onClick={()=>setResp(r=>({...r,industry:key}))} style={{
+                padding:'11px 8px',borderRadius:'6px',cursor:'pointer',textAlign:'center',
+                background:resp.industry===key?`${T.c}20`:T.bg3,
+                border:`2px solid ${resp.industry===key?T.c:T.b1}`,
+                color:resp.industry===key?T.c:T.t2,
+                fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'11px',fontWeight:'700',
+                transition:'all 0.18s',lineHeight:'1.3',
+              }}>
+                <div style={{fontSize:'18px', marginBottom:'4px'}}>{val.icon}</div>
+                <div>{val.short}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
+            <div>
+              <label style={lbl}>Role Level Being Assessed</label>
+              <select value={resp.level} onChange={e=>setResp(r=>({...r,level:e.target.value}))} style={selStyle}>
+                <option value="">All Levels</option>
+                <option>Entry Level (0–3 years)</option>
+                <option>Junior Officer (3–7 years)</option>
+                <option>Mid-Level Manager (7–12 years)</option>
+                <option>Senior Manager / Head</option>
+                <option>Executive / Director+</option>
+              </select>
+            </div>
+            <div>
+              <label style={lbl}>Confidentiality Level</label>
+              <select value={resp.conf} onChange={e=>setResp(r=>({...r,conf:e.target.value}))} style={selStyle}>
+                <option>Restricted — HR Leadership Only</option>
+                <option>Internal — Management & Candidate</option>
+                <option>Candidate-Visible — Both Reports</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'7px',padding:'14px 16px',marginBottom:'24px'}}>
+            <p style={{fontSize:'12px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>
+              <strong style={{color:T.am}}>Validity Alert System is always active.</strong> Ten L-scale items and four validity indices run automatically for every assessment regardless of configuration. Candidates are never informed of validity checks. The Validity Index appears only in the Technical Report.
+            </p>
+          </div>
+
+          <button onClick={()=>{if(!resp.industry){alert('Please select an industry sector.');return;} setStep('consent');}} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+            Continue to Consent →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── CONSENT ──
+  if(step==='consent') return (
+    <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px'}}>
+      <div style={{maxWidth:'600px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Before We Begin</h2>
+        <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>Carnelian takes your privacy seriously. Please read this short summary before you start.</p>
+        
+        <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>What we collect and why</div>
+          <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'500'}}>
+            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your name, email, phone number, and professional details — to generate your personalised report.</span>
+            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your assessment responses — scored by our engine to produce dimension profiles.</span>
+            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Anonymised data — used internally by Carnelian to improve future assessment products.</span>
+          </div>
+        </div>
+
+        <div style={{background:T.gnP,border:`1px solid ${T.gn}40`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.gn}}>What we will never do</div>
+          <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.gn,lineHeight:'1.6',fontWeight:'600'}}>
+            <span style={{fontWeight:'800'}}>✗</span><span>Sell your data to any third party.</span>
+            <span style={{fontWeight:'800'}}>✗</span><span>Share your identifiable results with anyone outside your assessment process.</span>
+            <span style={{fontWeight:'800'}}>✗</span><span>Make your individual responses or scores publicly accessible.</span>
+            <span style={{fontWeight:'800'}}>✗</span><span>Use your contact details for any purpose other than assessment delivery and progress tracking</span>
+          </div>
+        </div>
+
+        <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'16px 20px',marginBottom:'24px',display:'flex',alignItems:'flex-start',gap:'12px'}}>
+          <input type="checkbox" checked={consentChecked} onChange={e=>setConsentChecked(e.target.checked)} style={{marginTop:'4px',accentColor:T.c,width:'18px',height:'18px',flexShrink:0,cursor:'pointer'}} />
+          <label onClick={()=>setConsentChecked(!consentChecked)} style={{fontSize:'13px',color:T.t1,lineHeight:'1.6',cursor:'pointer',fontWeight:'500'}}>
+            I have read the above summary and consent to Carnelian collecting and processing my assessment data as described. I understand that my results may be shared with the organisation that commissioned my assessment.
+          </label>
+        </div>
+
+        <button onClick={()=>{if(consentChecked) setStep('intake');}} disabled={!consentChecked} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:consentChecked?'pointer':'not-allowed',background:consentChecked?T.c:T.bg3,color:consentChecked?'#fff':T.t3,fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>{if(consentChecked) e.target.style.background=T.cDark;}} onMouseOut={e=>{if(consentChecked) e.target.style.background=T.c;}}>
+          I Agree — Continue →
+        </button>
+      </div>
+    </div>
+  );
 
   // ── INTAKE ──
   if(step==='intake') return (
@@ -993,22 +1256,16 @@ const generate = async () => {
           Prior assessment found for <strong style={{color:T.t0}}>{priorFound.name}</strong> dated {priorFound.date}. Progress comparison will generate automatically.
         </div>}
 
-        {/* Progress steps */}
         <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'36px'}}>
-          {[1,2,3].map(n=>(
+          {[1,2].map(n=>(
             <React.Fragment key={n}>
               <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
                 <div style={{width:'28px',height:'28px',borderRadius:'50%',border:`2px solid ${n<=intakeStage?T.c:T.b2}`,background:n<intakeStage?T.c:n===intakeStage?`${T.c}20`:'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  {n<intakeStage
-                    ? <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
-                    : <span className="mono" style={{fontSize:'10px',color:n<=intakeStage?T.c:T.t3,fontWeight:'700'}}>{n}</span>
-                  }
+                  {n<intakeStage ? <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg> : <span className="mono" style={{fontSize:'10px',color:n<=intakeStage?T.c:T.t3,fontWeight:'700'}}>{n}</span>}
                 </div>
-                <span style={{fontSize:'12px',color:n<=intakeStage?T.t0:T.t3,fontWeight:n===intakeStage?'700':'500'}}>
-                  {n===1?'Your Details':n===2?'Context':'Instructions'}
-                </span>
+                <span style={{fontSize:'12px',color:n<=intakeStage?T.t0:T.t3,fontWeight:n===intakeStage?'700':'500'}}>{n===1?'Your Details':'Instructions'}</span>
               </div>
-              {n<3&&<div style={{flex:1,height:'2px',background:n<intakeStage?T.c:T.b1,borderRadius:'1px'}} />}
+              {n<2&&<div style={{flex:1,height:'2px',background:n<intakeStage?T.c:T.b1,borderRadius:'1px'}} />}
             </React.Fragment>
           ))}
         </div>
@@ -1018,36 +1275,19 @@ const generate = async () => {
             <div key="stage1" style={{animation:'scaleIn 0.3s ease forwards'}}>
               <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Your Information</h2>
               <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
-                <div><label style={lbl}>Full Name *</label><input value={resp.name} onChange={e=>setResp(r=>({...r,name:e.target.value}))} placeholder="e.g. Ayesha Raza" style={inp(focused.name)} onFocus={()=>setFocused(f=>({...f,name:true}))} onBlur={()=>setFocused(f=>({...f,name:false}))} /></div>
-                <div><label style={lbl}>CNIC Number * (No dashes)</label><input value={resp.cnic} onChange={e=>setResp(r=>({...r,cnic:e.target.value.replace(/[^0-9]/g, '')}))} placeholder="e.g. 4210112345671" maxLength="13" style={inp(focused.cnic)} onFocus={()=>setFocused(f=>({...f,cnic:true}))} onBlur={()=>setFocused(f=>({...f,cnic:false}))} /></div>
-                <div><label style={lbl}>Email Address</label><input value={resp.email} onChange={e=>setResp(r=>({...r,email:e.target.value}))} placeholder="ayesha@company.com" style={inp(focused.email)} onFocus={()=>setFocused(f=>({...f,email:true}))} onBlur={()=>setFocused(f=>({...f,email:false}))} /></div>
-                <div><label style={lbl}>Employee / Roll No.</label><input value={resp.emp} onChange={e=>setResp(r=>({...r,emp:e.target.value}))} placeholder="Optional" style={inp(focused.emp)} onFocus={()=>setFocused(f=>({...f,emp:true}))} onBlur={()=>setFocused(f=>({...f,emp:false}))} /></div>
-                
-                <div><label style={lbl}>Department</label>
-                  <select value={resp.dept} onChange={e=>setResp(r=>({...r,dept:e.target.value}))} style={selStyle}>
-                    <option value="">Select…</option>
-                    {['Human Resources','Finance / Accounting','Marketing / PR','Sales / Business Development','Operations / Production','Supply Chain / Procurement','IT / Technology','Engineering / R&D','Legal / Compliance / Audit','Customer Service','Administration','Other'].map(o=><option key={o}>{o}</option>)}
-                  </select>
-                </div>
+  <div><label style={lbl}>Full Name *</label><input value={resp.name} onChange={e=>setResp(r=>({...r,name:e.target.value}))} placeholder="e.g. Ayesha Raza" style={inp(focused.name)} onFocus={()=>setFocused(f=>({...f,name:true}))} onBlur={()=>setFocused(f=>({...f,name:false}))} /></div>
+  <div><label style={lbl}>Email Address *</label><input value={resp.email} onChange={e=>setResp(r=>({...r,email:e.target.value}))} placeholder="ayesha@company.com" style={inp(focused.email)} onFocus={()=>setFocused(f=>({...f,email:true}))} onBlur={()=>setFocused(f=>({...f,email:false}))} /></div>
+  <div><label style={lbl}>Phone Number *</label><input value={resp.phone||''} onChange={e=>setResp(r=>({...r,phone:e.target.value.replace(/[^0-9+\-\s]/g,'')}))} placeholder="e.g. 03001234567" style={inp(focused.phone)} onFocus={()=>setFocused(f=>({...f,phone:true}))} onBlur={()=>setFocused(f=>({...f,phone:false}))} /></div>
+  <div><label style={lbl}>Employee / Roll No. (Optional)</label><input value={resp.emp} onChange={e=>setResp(r=>({...r,emp:e.target.value}))} placeholder="Optional" style={inp(focused.emp)} onFocus={()=>setFocused(f=>({...f,emp:true}))} onBlur={()=>setFocused(f=>({...f,emp:false}))} /></div>
+
                 <div><label style={lbl}>Current Role</label><input value={resp.role} onChange={e=>setResp(r=>({...r,role:e.target.value}))} placeholder="e.g. Deputy Manager" style={inp(focused.role)} onFocus={()=>setFocused(f=>({...f,role:true}))} onBlur={()=>setFocused(f=>({...f,role:false}))} /></div>
-                
                 {resp.dept === 'Other' && (
                   <div style={{gridColumn: '1 / -1'}}><label style={lbl}>Please Specify Department</label><input value={resp.deptOther} onChange={e=>setResp(r=>({...r,deptOther:e.target.value}))} placeholder="e.g. Quality Assurance" style={inp(focused.deptOther)} onFocus={()=>setFocused(f=>({...f,deptOther:true}))} onBlur={()=>setFocused(f=>({...f,deptOther:false}))} /></div>
                 )}
-                
                 <div><label style={lbl}>Years of Experience *</label>
                   <select value={resp.exp} onChange={e=>setResp(r=>({...r,exp:e.target.value}))} style={selStyle}>
                     <option value="">Select…</option>
                     {['0–2 years','3–5 years','6–10 years','11–15 years','16+ years'].map(o=><option key={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={lbl}>English Proficiency *</label>
-                  <select value={resp.eng} onChange={e=>setResp(r=>({...r,eng:e.target.value}))} style={selStyle}>
-                    <option value="">Select…</option>
-                    <option value="Fluent/Native">Fluent / Native</option>
-                    <option value="Professional">Professional Working</option>
-                    <option value="Basic">Basic</option>
                   </select>
                 </div>
                 <div><label style={lbl}>Gender</label>
@@ -1058,9 +1298,10 @@ const generate = async () => {
                 </div>
               </div>
               <div style={{background:`${T.gold}10`,border:`1px solid ${T.gold}25`,borderRadius:'7px',padding:'12px 16px',marginBottom:'20px',fontSize:'12px',color:T.t1,fontWeight:'600'}}>
-                <span style={{color:T.gold,fontWeight:'700'}}>→ Unique Identifier:</span> Your CNIC is securely used to track your assessment history and generate progress comparisons across retakes.
-              </div>
-              <button onClick={()=>{if(!resp.name||!resp.exp||!resp.cnic||resp.cnic.length<13||!resp.eng){alert('Please enter your Full Name, 13-digit CNIC, Years of Experience, and English Proficiency Level.');return;} setIntakeStage(2);}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+  <span style={{color:T.gold,fontWeight:'700'}}>→ Progress Tracking:</span> Your email is used to link your results across retakes and generate progress comparisons.
+</div>
+              <button onClick={()=>{if(!resp.name||!resp.email||!resp.phone||!resp.exp){alert('Please enter your Full Name, Email Address, Phone Number, and Years of Experience.');return;}
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address.');return;} setIntakeStage(2);}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
                 Continue →
               </button>
             </div>
@@ -1068,38 +1309,6 @@ const generate = async () => {
 
           {intakeStage===2&&(
             <div key="stage2" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Assessment Context</h2>
-              <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
-                <div><label style={lbl}>Organisation Name</label><input value={resp.org} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="e.g. Allied Bank Limited" style={inp(focused.org)} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} /></div>
-                <div><label style={lbl}>Assessment Purpose</label>
-                  <select value={resp.purpose} onChange={e=>setResp(r=>({...r,purpose:e.target.value}))} style={selStyle}>
-                    <option value="">Select…</option>
-                    {['Pre-Hiring Screening','Leadership Pipeline Assessment','Succession Planning','Post-Training Evaluation','Team Composition Analysis','Performance Improvement','Personal Development Planning'].map(o=><option key={o}>{o}</option>)}
-                  </select>
-                </div>
-              </div>
-              <label style={{...lbl,marginBottom:'12px'}}>Industry Sector *</label>
-              <div className="grid-3-col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'6px',marginBottom:'24px'}}>
-                {Object.entries(IND).map(([key,val])=>(
-                  <button key={key} onClick={()=>setResp(r=>({...r,industry:key}))} style={{
-                    padding:'11px 8px',borderRadius:'6px',cursor:'pointer',textAlign:'center',
-                    background:resp.industry===key?`${T.c}20`:T.bg3,
-                    border:`2px solid ${resp.industry===key?T.c:T.b1}`,
-                    color:resp.industry===key?T.c:T.t2,
-                    fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'11px',fontWeight:'700',
-                    transition:'all 0.18s',lineHeight:'1.3',
-                  }}>{val.short}</button>
-                ))}
-              </div>
-              <div style={{display:'flex',gap:'10px'}}>
-                <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
-                <button onClick={()=>{if(!resp.industry){alert('Please select an industry sector.');return;} setIntakeStage(3);}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue →</button>
-              </div>
-            </div>
-          )}
-
-          {intakeStage===3&&(
-            <div key="stage3" style={{animation:'scaleIn 0.3s ease forwards'}}>
               <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Before you begin</h2>
               <div style={{background:T.bg2,borderRadius:'8px',padding:'24px',marginBottom:'20px'}}>
                 {[
@@ -1119,7 +1328,7 @@ const generate = async () => {
                 <p style={{fontSize:'12px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>This assessment includes checks that detect when responses do not reflect realistic self-perception. Inflated or inconsistent results are noted in the HR report and reduce the usefulness of your profile.</p>
               </div>
               <div style={{display:'flex',gap:'10px'}}>
-                <button onClick={()=>setIntakeStage(2)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
+                <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
                 <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Begin Assessment →</button>
               </div>
             </div>
@@ -1129,9 +1338,9 @@ const generate = async () => {
     </div>
   );
 
-  // ── SEESAW GAME ──
+// ── SEESAW GAME ──
   if(step==='questions'&&gameStage==='g1'){
-    const tilt=(ssVal-50)*0.36;
+    const tilt=(ssVals[ssStep]-50)*0.36;
     const zones=[
       {max:20,label:'Strongly formal — clear compliance orientation',c:'#60A5FA'},
       {max:40,label:'Principled — leans formal with relational awareness',c:T.gn},
@@ -1139,22 +1348,51 @@ const generate = async () => {
       {max:80,label:'Relational-leaning — culture over formal procedure',c:T.am},
       {max:100,label:'Strongly relational — relationships over process',c:T.rd},
     ];
-    const zone=zones.find(z=>ssVal<=z.max)||zones[zones.length-1];
+    const zone=zones.find(z=>ssVals[ssStep]<=z.max)||zones[zones.length-1];
+    
+    const scenarios = [
+      {
+        title: "Dilemma 1 of 3 — Process vs. Culture",
+        text: "Your organisation has always resolved internal disputes informally — through conversation and relationships rather than formal written procedures. You believe this occasionally produces unfair outcomes, but it maintains team cohesion. A junior colleague asks your honest advice: should they follow the formal grievance process or handle this the way things have always been done here?",
+        left: "Follow the formal process — policies exist to protect people, regardless of organisational culture.",
+        right: "Handle it informally — relationships and trust matter more than process in real professional life.",
+        lLabel: "Formal", rLabel: "Informal",
+        intro: "This is a short dilemma where two legitimate professional values pull in opposite directions. Use the slider to show where you genuinely lean — not where you think you should lean. There is no time limit."
+      },
+      {
+        title: "Dilemma 2 of 3 — Loyalty vs. Transparency",
+        text: "A colleague you respect and work closely with is leading a project that is clearly falling behind. They have not yet disclosed this to leadership and are quietly hoping to recover before anyone notices. You are aware of the situation. The next leadership update is in three days.",
+        left: "Raise it with leadership yourself — stakeholders deserve accurate information to make good decisions.",
+        right: "Give your colleague the chance to disclose it themselves — loyalty and trust come first in a team.",
+        lLabel: "Transparent", rLabel: "Loyal",
+        intro: "Here is the second of three brief dilemmas. Use the slider to show your genuine lean — there is no right answer."
+      },
+      {
+        title: "Dilemma 3 of 3 — Results vs. Method",
+        text: "You have been asked to deliver a significant outcome by end of quarter. Halfway through, you realise the method your team is using is producing the right numbers but cutting corners on quality checks that are technically required by your institution's procedures. The outcome will look good. The risk is low but not zero.",
+        left: "Slow down and restore the quality checks — procedures exist for good reasons, even when the risk feels low.",
+        right: "Continue as is — the outcome is what matters, and the risk is manageable in this case.",
+        lLabel: "Process", rLabel: "Results",
+        intro: "This is the final dilemma in this short series. Use the slider to show your genuine lean — there is no right answer."
+      }
+    ];
+    const sc = scenarios[ssStep];
+
     return (
       <div style={{minHeight:'100vh',background:'transparent',padding:'80px 24px',display:'flex',alignItems:'center'}}>
         <div style={{maxWidth:'680px',margin:'0 auto',width:'100%',animation:'slideUp 0.5s ease forwards'}}>
           <div style={{background:`${T.c}12`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
-            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>Balancing Challenge — After Part C</span>
+            <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>Values in Balance — {ssStep+1} of 3</span>
           </div>
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.7rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Values in Balance</h3>
-            <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>Most professionals face moments where two legitimate values pull in opposite directions. Use the slider to show where you naturally lean when these two sides conflict. There is no time limit — this requires genuine reflection. Your position contributes to your Ethical Reasoning profile.</p>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.7rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{sc.title}</h3>
+            <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>{sc.intro}</p>
             <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',marginBottom:'24px',borderLeft:`4px solid #8B5CF6`}}>
-              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>Your organisation has always resolved internal disputes informally — through conversation and relationships rather than formal written procedures. You believe this occasionally produces unfair outcomes, but it maintains team cohesion. A junior colleague asks your honest advice: should they follow the formal grievance process or handle this the way things have always been done here?</p>
+              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>{sc.text}</p>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px',gap:'16px'}}>
-              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',lineHeight:'1.4',fontWeight:'600'}}>Follow the formal process — policies exist to protect people, regardless of organisational culture.</span>
-              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',textAlign:'right',lineHeight:'1.4',fontWeight:'600'}}>Handle it informally — relationships and trust matter more than process in real professional life.</span>
+              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',lineHeight:'1.4',fontWeight:'600'}}>{sc.left}</span>
+              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',textAlign:'right',lineHeight:'1.4',fontWeight:'600'}}>{sc.right}</span>
             </div>
             <svg viewBox="0 0 500 110" style={{width:'100%',overflow:'visible',marginBottom:'4px'}}>
               <polygon points="250,100 232,112 268,112" fill={T.b2}/>
@@ -1162,21 +1400,21 @@ const generate = async () => {
               <g style={{transformOrigin:'250px 100px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
                 <rect x="60" y="96" width="380" height="8" rx="4" fill={T.t0}/>
                 <rect x="52" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="76" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.gn} fontWeight="700">Formal</text>
+                <text x="76" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.gn} fontWeight="700">{sc.lLabel}</text>
                 <rect x="400" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.rd} fontWeight="700">Informal</text>
+                <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.rd} fontWeight="700">{sc.rLabel}</text>
               </g>
             </svg>
-            <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVal} onChange={e=>setSsVal(parseInt(e.target.value))} style={{width:'100%',accentColor:T.c,cursor:'pointer'}} /></div>
+            <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.c,cursor:'pointer'}} /></div>
             <div style={{textAlign:'center',padding:'10px 14px',background:`${zone.c}14`,border:`1px solid ${zone.c}35`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:zone.c,marginBottom:'20px'}}>{zone.label}</div>
-            <button onClick={submitSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Confirm My Position →</button>
+            <button onClick={nextSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
           </div>
         </div>
       </div>
     );
   }
 
-// ── TIMED GAME WARN ──
+  // ── TIMED GAME WARN ──
   if(step==='questions'&&(gameStage==='g2warn'||gameStage==='g3warn')){
     const isG2=gameStage==='g2warn';
     return (
@@ -1187,11 +1425,11 @@ const generate = async () => {
           </div>
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
             <div style={{textAlign:'center',marginBottom:'28px'}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0,marginBottom:'10px'}}>{isG2?`${getMaxTimer()}-Second Decision Challenge`:`${getMaxTimer()}-Second Ethics Challenge`}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0,marginBottom:'10px'}}>45-Second {isG2?'Decision':'Ethics'} Challenge</div>
               <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',maxWidth:'440px',margin:'0 auto',fontWeight:'500'}}>{isG2?'A real workplace situation will appear. You must read it and choose one of four responses. The clock starts when you click below.':'This is your last timed challenge. It tests ethical decision-making under relationship pressure — one of the most realistic situations professionals face.'}</p>
             </div>
             <div style={{background:T.bg2,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
-              {[`You have exactly ${getMaxTimer()} seconds — the clock begins immediately`,isG2?'This challenge contributes to your Learning Agility profile':'This challenge contributes to your Ethical Orientation profile','Once you select a response, it is final','Answer as you honestly would — not as an ideal version of yourself'].map((b,i)=>(
+              {['You have exactly 45 seconds — the clock begins immediately',isG2?'This challenge contributes to your Learning Agility profile':'This challenge contributes to your Ethical Orientation profile','Once you select a response, it is final','Answer as you honestly would — not as an ideal version of yourself'].map((b,i)=>(
                 <div key={i} style={{display:'flex',gap:'10px',padding:'7px 0',borderBottom:i<3?`1px solid ${T.b1}`:'none',fontSize:'12px',color:T.t1,fontWeight:'600'}}>
                   <span style={{color:T.c,fontWeight:'800',flexShrink:0}}>→</span>{b}
                 </div>
@@ -1207,10 +1445,9 @@ const generate = async () => {
   // ── TIMED SCENARIO ──
   if(step==='questions'&&(gameStage==='g2'||gameStage==='g3')){
     const isG2=gameStage==='g2';
-    const maxT = getMaxTimer();
     const circ=175.9;
-    const offset=circ*(1-timer/maxT);
-    const urgent=timer<=8;
+    const offset=circ*(1-timer/45);
+    const urgent=timer<=12;
     const fb=gameChoice?{
       best:{bg:T.gnP,bc:T.gn,c:T.gn,msg:isG2?'Disclosing the issue proactively protects team credibility and demonstrates transparency under pressure — the strongest combination of learning agility and ethical ownership.':'Strong integrity under relationship pressure. Declining while suggesting a legitimate alternative demonstrates rule compliance and ethical courage.'},
       ok:{bg:T.amP,bc:T.am,c:T.am,msg:isG2?'This shows situational awareness and some degree of caution. A solid instinct, not the optimal one.':'This response maintains some oversight or documentation — awareness of the ethical issues, though not the most decisive approach.'},
@@ -1225,7 +1462,7 @@ const generate = async () => {
       :[{k:'A',q:'best',l:"Decline to approve and suggest a faster legitimate alternative — even if this frustrates your manager."},{k:'B',q:'ok',l:"Tell your manager you will approve only after he gets written sign-off from his own supervisor first."},{k:'C',q:'ok',l:"Approve it, but immediately send a written note documenting that you were asked to bypass procedure."},{k:'D',q:'poor',l:"Approve it — your manager vouched for it, the relationship matters, and you trust his judgement."}];
     const onNext=()=>{
       setGameStage(null);
-      const nextIdx=isG2?42:53;
+      const nextIdx=isG2?28:53;
       setCur(nextIdx);
       setBreaker(null);
     };
@@ -1268,7 +1505,7 @@ const generate = async () => {
               ))}
             </div>
             {fb&&<div style={{background:fb.bg,border:`1px solid ${fb.bc}40`,borderRadius:'8px',padding:'14px 16px',marginBottom:'14px',fontSize:'13px',color:fb.c,lineHeight:'1.65',fontWeight:'600'}}>{fb.msg}</div>}
-            {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section E →':'Continue to Final Section →'}</button>}
+            {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section D →':'Continue to Final Section →'}</button>}
           </div>
         </div>
       </div>
@@ -1392,648 +1629,1463 @@ const generate = async () => {
   );
 };
 
+// ─── RESULTS PAGE (TABS: Action Plan, Technical, Player) ──────────────────────
 const ResultsPage = ({reportData}) => {
-  // ─── THEME & HELPERS (defined inline for portability) ─────────────────
-  const T = {
-    bg0: '#c9c9c9',
-    bg1: '#ffffffec',
-    t0: '#000000',
-    t1: '#000000',
-    t2: '#B01C24',
-    t3: '#6B7280',
-    c: '#B01C24',
-    cGlow: 'rgba(176, 28, 36, 0.15)',
-    gold: '#B8912E',
-    goldP: 'rgba(184, 145, 46, 0.12)',
-    gn: '#16A34A',
-    gnP: 'rgba(22, 163, 74, 0.08)',
-    am: '#D97706',
-    amP: 'rgba(217, 119, 6, 0.1)',
-    rd: '#DC2626',
-    rdP: 'rgba(220, 38, 38, 0.08)',
-    b2: 'rgba(255,255,255,0.08)'
+  const [resTab, setResTab] = useState('action');
+  const [batchData, setBatchData] = useState([]);
+  const [promoRole, setPromoRole] = useState(0);
+  const [evState, setEvState] = useState({});
+
+  useEffect(() => {
+    if (reportData?.docId) {
+      try { setEvState(JSON.parse(localStorage.getItem(`core_ev_${reportData.docId}`) || '{}')); } catch(e) {}
+    }
+    if (reportData?.respondent?.batch) {
+      try {
+        const data = JSON.parse(localStorage.getItem('core_batch_' + reportData.respondent.batch.replace(/\s+/g, '_')) || '[]');
+        setBatchData(data);
+      } catch(e) {}
+    }
+  }, [reportData]);
+
+  const toggleEvidence = (key, xp) => {
+    const newState = {...evState};
+    if(newState[key]) delete newState[key];
+    else newState[key] = { ts: Date.now(), xp };
+    setEvState(newState);
+    localStorage.setItem(`core_ev_${reportData.docId}`, JSON.stringify(newState));
   };
 
-  const barGrad = (v) => {
-    if (v >= 70) return `linear-gradient(90deg, ${T.gn}, #22C55E)`;
-    if (v >= 50) return `linear-gradient(90deg, ${T.am}, #F59E0B)`;
-    return `linear-gradient(90deg, ${T.rd}, #EF4444)`;
-  };
-
-const bCol = (v) => v >= 75 ? T.gn : v >= 50 ? T.am : T.rd;
-const bd = (v) => v >= 75 ? 'HIGH' : v >= 50 ? 'MID' : 'LOW';
-
-  // ─── EARLY RETURN ────────────────────────────────────────────────────
   if(!reportData) return (
     <div style={{padding:'100px 32px',textAlign:'center',color:T.t2,fontWeight:'600'}}>
       No assessment data found. Please complete the assessment first.
     </div>
   );
 
-  const {scores:S, profile, respondent:R, docId, date} = reportData;
+  const {scores:S, profile, respondent:R, docId, date, CI, validity, roles, gameSummary, patterns} = reportData;
 
-  // ─── PDF DOWNLOAD ────────────────────────────────────────────────────
-const downloadPDF = async () => {
-  // Load libraries
-  const loadScript = (src) => new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = reject;
-    document.body.appendChild(s);
-  });
-
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  const A4_W = 210, A4_H = 297;
-
-  const firstName = R.name?.split(' ')[0] || 'Professional';
-  const logoURL = `${window.location.origin}/logo.png`;
-
-  // Helper to render an HTML string to a canvas and add to PDF
-  const addPageFromHTML = async (htmlContent, bgColor = '#F8F7F5') => {
-    const container = document.createElement('div');
-    container.style.cssText = `
-      position:fixed; top:-9999px; left:-9999px;
-      width:794px; min-height:1122px;
-      background:${bgColor};
-      font-family:'Plus Jakarta Sans',sans-serif;
-      -webkit-print-color-adjust:exact;
-    `;
-    container.innerHTML = htmlContent;
-    document.body.appendChild(container);
-
-    // Wait for fonts/images
-    await new Promise(r => setTimeout(r, 400));
-
-    const canvas = await window.html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: bgColor,
-      width: 794,
-      windowWidth: 794,
-    });
-
-    document.body.removeChild(container);
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const canvasH = canvas.height;
-    const canvasW = canvas.width;
-    const pageHeightPx = (canvasW / A4_W) * A4_H;
-    const totalPages = Math.ceil(canvasH / pageHeightPx);
-
-    for (let pg = 0; pg < totalPages; pg++) {
-      if (pg > 0 || pdf.internal.pages.length > 1) pdf.addPage();
-      const srcY = pg * pageHeightPx;
-      const srcH = Math.min(pageHeightPx, canvasH - srcY);
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvasW;
-      sliceCanvas.height = pageHeightPx;
-      const ctx = sliceCanvas.getContext('2d');
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvasW, pageHeightPx);
-      ctx.drawImage(canvas, 0, srcY, canvasW, srcH, 0, 0, canvasW, srcH);
-      const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-      pdf.addImage(sliceData, 'JPEG', 0, 0, A4_W, A4_H);
-    }
-  };
-
-  const fontLink = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>`;
-
-  const baseStyles = `
-    ${fontLink}
-    <style>
-      * { margin:0; padding:0; box-sizing:border-box; }
-      body, div, p, span, h1, h2, h3, h4, h5 {
-        font-family:'Plus Jakarta Sans',sans-serif;
-      }
-      .serif { font-family:'Playfair Display',serif !important; }
-      .mono { font-family:'Courier New',monospace !important; }
-    </style>
-  `;
-
-  // ── PAGE WRAPPER (centered A4 content area) ──────────────────────────
-  const wrap = (content, bg = '#F8F7F5', pad = '56px 64px') => `
-    ${baseStyles}
-    <div style="width:794px;min-height:1122px;background:${bg};padding:${pad};box-sizing:border-box;display:flex;flex-direction:column;">
-      ${content}
-    </div>`;
-
-  // ══════════════════════════════════
-  // PAGE 1 — COVER
-  // ══════════════════════════════════
-  await addPageFromHTML(wrap(`
-    <div style="position:absolute;top:0;left:0;right:0;height:6px;background:#B01C24;"></div>
-    <div style="position:absolute;top:-100px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.09) 0%,transparent 72%);"></div>
-
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:auto;position:relative;z-index:2;">
-      <img src="${logoURL}" style="width:52px;height:52px;object-fit:contain;" crossorigin="anonymous"/>
-      <div>
-        <div class="serif" style="font-size:32px;font-weight:700;line-height:1;color:#B8912E;letter-spacing:0.01em;">CORE</div>
-        <div class="mono" style="font-size:9px;font-weight:800;color:#B01C24;letter-spacing:0.22em;text-transform:uppercase;margin-top:3px;">By Carnelian</div>
-      </div>
-    </div>
-
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 0 40px;position:relative;z-index:2;">
-      <div class="mono" style="font-size:10px;font-weight:800;color:#B01C24;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;">Personal Action Plan</div>
-      <h1 class="serif" style="font-size:58px;line-height:1.06;font-weight:700;color:#111111;margin:0 0 22px;max-width:650px;">${R.name}</h1>
-      <div style="display:inline-block;padding:10px 20px;border:1px solid #D8C9A0;border-radius:999px;background:#FFF9EC;color:#8D6B15;font-size:12px;font-weight:800;width:fit-content;">${profile?.name || 'Professional Profile'}</div>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:22px;border-top:1px solid #E6E0D4;position:relative;z-index:2;">
-      <div style="font-size:11px;color:#6B7280;font-weight:700;letter-spacing:0.06em;">CORE by Carnelian</div>
-      <div style="text-align:right;">
-        <div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:5px;">${date}</div>
-        <div class="mono" style="font-size:10px;color:#9CA3AF;font-weight:700;letter-spacing:0.08em;">${docId}</div>
-      </div>
-    </div>
-  `, '#F8F7F5', '56px 64px'), '#F8F7F5');
-
-  // ══════════════════════════════════
-  // PAGE 2 — WELCOME + SCORES
-  // ══════════════════════════════════
-  const barsHTML = bars.map(([l, v], i) => {
-    const color = v >= 70 ? '#16A34A' : v >= 50 ? '#D97706' : '#DC2626';
-    const grad = v >= 70 ? 'linear-gradient(90deg,#16A34A,#22C55E)' : v >= 50 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#DC2626,#EF4444)';
-    return `
-      <div style="display:flex;align-items:center;gap:14px;padding-bottom:${i===0?'14px':'0'};margin-bottom:${i===0?'6px':'0'};border-bottom:${i===0?'1px solid #F3F4F6':'none'}">
-        <div style="width:170px;flex-shrink:0;font-size:12px;color:${i===0?'#111827':'#4B5563'};font-weight:${i===0?'800':'700'};">${l}</div>
-        <div style="flex:1;background:#F3F4F6;height:${i===0?'9px':'5px'};border-radius:4px;overflow:hidden;">
-          <div style="width:${Math.max(0,Math.min(100,v))}%;height:100%;background:${grad};border-radius:4px;"></div>
-        </div>
-        <div class="mono" style="width:36px;text-align:right;font-size:11px;color:${color};font-weight:800;">${v}</div>
-      </div>`;
-  }).join('');
-
-  await addPageFromHTML(wrap(`
-    <!-- Welcome dark card -->
-    <div style="background:#1A1A1A;border-radius:12px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(184,145,46,0.12) 0%,transparent 70%);"></div>
-      <div style="position:relative;z-index:1;">
-        <div class="mono" style="font-size:9px;color:#B8912E;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;font-weight:700;">Your Personal Blueprint</div>
-        <h2 class="serif" style="font-size:2rem;font-weight:700;color:#fff;margin-bottom:14px;">Welcome, ${firstName}.</h2>
-        <p style="color:#E5E7EB;font-size:13px;line-height:1.75;margin-bottom:12px;font-weight:500;">Thank you for trusting us with your reflections. We know that taking an assessment can feel vulnerable. Please know that this report is not a judgment, nor a final verdict on who you are. Human beings are beautifully complex, and psychometrics simply capture a snapshot of your current professional habits.</p>
-        <p style="color:#E5E7EB;font-size:13px;line-height:1.75;margin-bottom:22px;font-weight:500;">Think of this document as a mirror held up to your professional self—designed to celebrate your natural gifts and gently highlight the spaces where you have the greatest room to grow.</p>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:20px;border-left:4px solid #B01C24;">
-          <div class="mono" style="font-size:8px;text-transform:uppercase;letter-spacing:0.14em;color:#B8912E;font-weight:700;margin-bottom:7px;">Your Natural Work Style</div>
-          <div class="serif" style="font-size:1.5rem;color:#fff;font-weight:700;margin-bottom:8px;">${profile?.name || 'Professional Profile'}</div>
-          <div style="font-size:12px;color:#9CA3AF;line-height:1.6;font-weight:600;">${profile?.desc || 'A reliable and principled professional with strong compliance orientation.'}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Score Landscape -->
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 32px;">
-      <h3 class="serif" style="font-size:1.25rem;font-weight:700;color:#111827;margin-bottom:20px;">Your Score Landscape</h3>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        ${barsHTML}
-      </div>
-    </div>
-  `));
-
-  // ══════════════════════════════════
-  // PAGE 3 — STRENGTHS
-  // ══════════════════════════════════
-  const strengthsHTML = top2.map(d => `
-    <div style="padding:22px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;">
-      <div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">Core Strength</div>
-      <h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4>
-      <p style="font-size:12px;color:#15803D;line-height:1.65;font-weight:500;margin-bottom:14px;">${d.str}</p>
-      <span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">${d.v}/100</span>
-    </div>`).join('');
-
-  await addPageFromHTML(wrap(`
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
-      <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;">What You Bring to the Table</h3>
-      <p style="color:#4B5563;font-size:12px;line-height:1.7;margin-bottom:22px;font-weight:500;">These are your anchor strengths. When things get difficult, these are the natural instincts you rely on. Lean into them—they are what make you uniquely valuable to your team.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        ${strengthsHTML}
-      </div>
-    </div>
-  `));
-
-  // ══════════════════════════════════
-  // PAGE(S) 4+ — DEVELOPMENT ROADMAP (one card per page)
-  // ══════════════════════════════════
-  for (const d of devAreas) {
-    const habitsHTML = d.habits.map(h => `
-      <li style="display:flex;gap:10px;padding:7px 0;font-size:12px;color:#374151;line-height:1.55;font-weight:500;">
-        <span style="color:#D97706;font-weight:800;flex-shrink:0;">→</span>
-        <span><strong style="color:#111827;">${h.h}</strong> ${h.t}</span>
-      </li>`).join('');
-
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-          <h4 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;">${d.d}</h4>
-          <span style="padding:5px 12px;background:rgba(217,119,6,0.1);color:#D97706;border-radius:6px;font-size:12px;font-weight:800;">${d.v}/100</span>
-        </div>
-        <div class="mono" style="font-size:9px;color:#6B7280;margin-bottom:18px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;">${d.v >= 70 ? 'HIGH' : d.v >= 50 ? 'MID' : 'LOW'} range</div>
-
-        <p style="font-size:12.5px;color:#4B5563;line-height:1.75;margin-bottom:24px;font-weight:500;padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid #D97706;">${d.empathyIntro}</p>
-
-        <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Daily Habits to Build:</h5>
-        <ul style="padding-left:0;list-style:none;margin-bottom:28px;">${habitsHTML}</ul>
-
-        <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Your Growth Timeline:</h5>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;gap:18px;background:#FEF2F2;padding:16px;border-radius:8px;border-left:4px solid #DC2626;align-items:flex-start;">
-            <div style="min-width:80px;font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:0.04em;">Now<br/><span style="font-size:8px;opacity:0.8">(0–30 Days)</span></div>
-            <div style="font-size:12.5px;color:#7F1D1D;line-height:1.55;font-weight:600;">${d.day30}</div>
-          </div>
-          <div style="display:flex;gap:18px;background:#FFFBEB;padding:16px;border-radius:8px;border-left:4px solid #D97706;align-items:flex-start;">
-            <div style="min-width:80px;font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;letter-spacing:0.04em;">Soon<br/><span style="font-size:8px;opacity:0.8">(30–90 Days)</span></div>
-            <div style="font-size:12.5px;color:#92400E;line-height:1.55;font-weight:600;">${d.day90}</div>
-          </div>
-          <div style="display:flex;gap:18px;background:#F0FDF4;padding:16px;border-radius:8px;border-left:4px solid #16A34A;align-items:flex-start;">
-            <div style="min-width:80px;font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:0.04em;">Future<br/><span style="font-size:8px;opacity:0.8">(90–180 Days)</span></div>
-            <div style="font-size:12.5px;color:#166534;line-height:1.55;font-weight:600;">${d.day180}</div>
-          </div>
-        </div>
-      </div>
-    `));
-  }
-
-  // ══════════════════════════════════
-  // NEXT PAGE — PRIORITY ACTION MATRIX
-  // ══════════════════════════════════
-  const matrixCards = [
-    {bg:'#FEF2F2',border:'#FECACA',color:'#B91C1C',title:'1. Act Now (0–30 Days)',sub:'Micro-Habit Formation',text:"Focus purely on the 'Daily Habits' listed in your roadmap. Pick just one dimension to start. Do not attempt a massive overhaul—focus on tiny, 5-minute behavioral shifts that you can sustain daily without burnout."},
-    {bg:'#FFFBEB',border:'#FDE68A',color:'#D97706',title:'2. Build Soon (30–90 Days)',sub:'Social Accountability',text:'Involve others. Share your specific development goals with a trusted manager or mentor. This is the phase for enrolling in workshops, restructuring your workflows, and actively asking colleagues for feedback.'},
-    {bg:'#F0FDF4',border:'#BBF7D0',color:'#15803D',title:'3. Sustain (90–180 Days)',sub:'Pressure Testing',text:'Transition from learning to leading. Take ownership of a complex project that forces you to use your new skills under pressure. Cement your new brand within the team by delivering consistently.'},
-    {bg:'#F3F4F6',border:'#E5E7EB',color:'#4B5563',title:'4. The Feedback Loop',sub:'Measuring Success',text:'Book a recurring 15-minute calendar block on the last Friday of every month. Ask yourself: "Am I reacting out of habit, or responding with intention?" Adjust your approach based on what is working.'},
-    {bg:'#EFF6FF',border:'#BFDBFE',color:'#1D4ED8',title:'5. Anticipating Relapse',sub:'Grace Under Fire',text:'When stress hits, you will likely revert to old habits. Expect this. When it happens, do not abandon the plan. Acknowledge the slip, reset your environment, and start fresh the very next morning.'},
-    {bg:'#FAF5FF',border:'#E9D5FF',color:'#7E22CE',title:'6. Expanding Impact',sub:'Teaching Others',text:'The ultimate test of mastering a new skill is teaching it. Once you have solidified your new habits, look for a junior colleague struggling with the same issues and gently mentor them through your process.'}
-  ].map(item => `
-    <div style="background:${item.bg};border:1px solid ${item.border};border-radius:10px;padding:20px;">
-      <div style="font-size:11px;font-weight:800;color:${item.color};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">${item.title}</div>
-      <div style="font-size:13px;font-weight:700;color:${item.color};margin-bottom:7px;">${item.sub}</div>
-      <p style="font-size:11.5px;color:${item.color};line-height:1.55;font-weight:500;opacity:0.85;">${item.text}</p>
-    </div>`).join('');
-
-  await addPageFromHTML(wrap(`
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
-      <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;">Priority Action Matrix</h3>
-      <p style="color:#4B5563;font-size:12px;line-height:1.7;margin-bottom:28px;font-weight:500;">A comprehensive visual guide on how to distribute your energy over the next 6 months for maximum career impact.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        ${matrixCards}
-      </div>
-    </div>
-  `));
-
-  // ══════════════════════════════════
-  // LAST PAGE — CTA
-  // ══════════════════════════════════
-  await addPageFromHTML(wrap(`
-    <div style="background:#1A1A1A;border-radius:12px;padding:56px 48px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-      <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;">🤝</div>
-      <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
-      <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
-      <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">Reach out at hello@carnelianco.com</div>
-      <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
-    </div>
-  `));
-
-  // ── SAVE ────────────────────────────────────────────────────────────
-  pdf.deletePage(1);
-  pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
-};
-
-  // ─── DIMENSION DATA ──────────────────────────────────────────────────
+  // ─── ACTION PLAN DATA PREP ───
   const allDims = [
-    {k:'C', l:'Conscientiousness', v:S.C, str:'You possess a remarkable inner drive. People know they can rely on you to bring order and completion to your environments. You are the anchor that ensures projects cross the finish line.'},
-    {k:'O', l:'Openness to Ideas', v:S.O, str:'You bring a beautiful intellectual curiosity to complex, messy problems. You are naturally wired to see possibilities where others only see roadblocks.'},
-    {k:'E', l:'Social Confidence', v:S.E, str:'Your natural presence allows you to lead and connect with genuine ease. You bring energy into the rooms you enter and can rally stakeholders around a shared vision.'},
-    {k:'A', l:'Collaborative Spirit', v:S.A, str:'You have a deep capacity for empathy. You create environments where others feel psychologically safe, valued, and willing to share their best ideas.'},
-    {k:'ES', l:'Emotional Resilience', v:S.ES, str:'You carry a quiet strength that grounds you and your team during turbulent times. You are an anchor in the storm, capable of making rational decisions under intense pressure.'},
-    {k:'CQavg', l:'Cultural Intelligence', v:S.CQavg, str:"You intuitively navigate the beautiful complexities of Pakistan's diverse environments with profound respect and adaptability. You build bridges across different backgrounds effortlessly."},
-    {k:'OCBavg', l:'Organisational Citizenship', v:S.OCBavg, str:'You give selflessly to your institution, often doing the unseen work that holds teams together, resolves quiet conflicts, and builds true, lasting workplace culture.'},
-    {k:'LAavg', l:'Learning Agility', v:S.LAavg, str:'Your mind is beautifully adaptable. You absorb lessons quickly, reflect honestly on your missteps, and apply those insights rapidly to entirely new challenges.'},
-    {k:'EOavg', l:'Ethical Integrity', v:S.EOavg, str:'You are anchored by a profound sense of right and wrong. Your commitment to transparent, authentic behaviour is a rare gift that builds deep, unshakeable trust with your colleagues.'},
+    {k:'C', l:'Conscientiousness', v:S.C, str:'You are a highly reliable, organised professional. People can depend on you to deliver — even when it is inconvenient.'},
+    {k:'O', l:'Openness to Ideas', v:S.O, str:'You bring genuine intellectual curiosity and creative problem-solving to your work.'},
+    {k:'E', l:'Social Confidence', v:S.E, str:'You communicate with confidence and energy — effective in leadership and stakeholder-facing roles.'},
+    {k:'A', l:'Collaborative Spirit', v:S.A, str:'You are empathetic and cooperative — a team builder who creates psychologically safe environments.'},
+    {k:'ES', l:'Emotional Resilience', v:S.ES, str:'You stay grounded under pressure — invaluable in high-stakes situations.'},
+    {k:'CQavg', l:'Cultural Intelligence', v:S.CQavg, str:"You navigate Pakistan's diverse professional landscape with skill and genuine interest."},
+    {k:'OCBavg', l:'Team Citizenship', v:S.OCBavg, str:'You go well beyond your formal role to support colleagues and the institution.'},
+    {k:'LAavg', l:'Learning Agility', v:S.LAavg, str:'You learn fast, reflect honestly, and apply lessons across domains.'},
+    {k:'EOavg', l:'Ethical Integrity', v:S.EOavg, str:'Your commitment to transparency and authentic behaviour is rare and highly valued.'},
   ].filter(d => d.v !== undefined && d.v !== null).sort((a,b) => b.v - a.v);
   
   const top2 = allDims.slice(0, 2);
+  const bot2 = [...allDims].sort((a,b) => a.v - b.v).slice(0, 2);
+
+  // ── CONTEXT ENGINE ──
+  const ind = R.industry || '';
+  const lvl = R.level || R.exp || '';
+  const isBanking = ind.includes('Banking')||ind.includes('Insurance')||ind.includes('Takaful');
+  const isGovt = ind.includes('Government')||ind.includes('Civil');
+  const isDev = ind.includes('Development')||ind.includes('NGO');
+  const isJunior = lvl.includes('Entry')||lvl.includes('Junior')||lvl.includes('0–2')||lvl.includes('3–5');
+  const isSenior = lvl.includes('Senior')||lvl.includes('Executive')||lvl.includes('Director')||lvl.includes('C-Suite')||lvl.includes('16+');
+
+  const ctxAction = (generic, bankAlt, govtAlt, devAlt, seniorAlt, juniorAlt) => {
+    if(isSenior&&seniorAlt) return seniorAlt;
+    if(isJunior&&juniorAlt) return juniorAlt;
+    if(isBanking&&bankAlt) return bankAlt;
+    if(isGovt&&govtAlt) return govtAlt;
+    if(isDev&&devAlt) return devAlt;
+    return generic;
+  };
+
   const devAreas = [];
-  const add = (d, v, empathyIntro, habits, day30, day90, day180) => 
-    devAreas.push({d, v, empathyIntro, habits, day30, day90, day180});
-
-  // ─── DEVELOPMENT AREA LOGIC ─────────────────────────────────────────
-  if(S.C < 55) add('Conscientiousness & Delivery', S.C,
-    "Consistent delivery is the foundation of professional credibility. We notice that under heavy workloads, your tracking systems might occasionally slip. This isn't about working 'harder'; it's about building a safety net for your brilliant ideas so nothing falls through the cracks. Creating reliable personal systems will free up your mental bandwidth and bring you immense peace of mind.",
-    [
-      {h:"The Priority Matrix:", t:"Use a weekly priority matrix — explicitly list your top 3 non-negotiable deliverables before Monday morning begins."},
-      {h:"Milestone Mapping:", t:"Break large, overwhelming projects into fortnightly (or even weekly) milestone check-ins to create a constant sense of momentum."},
-      {h:"The Completion Audit:", t:"Track one commitment per week that you made and successfully completed. Write it down to build a psychological habit of closure."},
-      {h:"The 'Touch It Once' Rule:", t:"If an email or minor request takes less than 2 minutes to resolve, do it immediately rather than saving it for later."}
+  if(S.C<55) devAreas.push({dim:'Conscientiousness & Delivery',v:S.C,
+    why: ctxAction("Consistent delivery is the foundation of professional credibility. Missed deadlines or incomplete work creates friction that compounds over time.", "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),
+    acts:[
+      ctxAction("Use a weekly priority matrix every Monday: list your top 3 deliverables and set personal deadlines 2 days ahead of official ones","Review your open regulatory or compliance deliverables every Monday and set internal deadlines 2 days ahead","Map your weekly deliverables against departmental KPIs every Monday morning","Review your programme milestones against donor reporting timelines every Monday","Implement a weekly leadership accountability check-in","Every Monday, identify your 3 most important deliverables for the week"),
+      "Break large projects into milestone check-ins with your line manager every two weeks — make progress visible before problems become surprises",
+      ctxAction("Track one commitment per week that you made and actually completed","Keep a simple log of every regulatory or compliance commitment you make","Document your completed commitments in writing","Track your programme deliverables against donor commitments in a shared log","Your team is watching how you follow through. Document your own commitments publicly","Keep a weekly log of three things you committed to and whether you completed them")
     ],
-    "Agree to a weekly 15-minute check-in with your supervisor focusing strictly on three explicit priority deliverables. Remove all ambiguity about what 'done' looks like.",
-    "Enroll in a personal productivity workshop or adopt a formal tracking system (like Trello, Asana, or a structured planner). Transition from keeping tasks 'in your head' to keeping them on paper.",
-    "Lead a project end-to-end within six months. Map out the timeline, anticipate the bottlenecks, and deliver it exactly on the agreed-upon date to cement your new reputation for reliability."
-  );
+    now:ctxAction("Agree a weekly check-in with your supervisor on 3 explicit priority deliverables","Book a 30-minute weekly slot with your line manager to review your open regulatory deliverables","Schedule a weekly meeting with your supervisor to review your progress against departmental KPIs","Set up a shared milestone tracker with your programme coordinator this week","Send your team a written commitment list every Monday","Have an honest conversation with your line manager this week about which current commitments you are most at risk of missing"),
+    soon:ctxAction("Enrol in a personal productivity workshop or study one methodology (GTD, Agile personal planning)","Complete a structured time management or professional effectiveness programme","Attend a civil service effectiveness workshop through your Training Institute","Enrol in a project management short course","Commission a team productivity audit to understand where delivery bottlenecks are systemic","Attend a productivity and professional effectiveness workshop"),
+    fut:ctxAction("Lead a project end-to-end within 6 months to build delivery confidence with structured accountability","Take ownership of an end-to-end compliance or regulatory project","Lead a cross-departmental working group to demonstrate sustained delivery over a 6-month period","Lead a full programme cycle from design to donor reporting","Commission an organisational review of how delivery accountability is structured across your team","Ask to lead a complete project or initiative end-to-end")
+  });
 
-  if(S.ES < 55) add('Emotional Resilience', S.ES,
-    "High-stakes professional environments involve intense pressure cycles, and it is completely natural to feel the weight of that. Building emotional resilience is about protecting your energy. By creating healthy boundaries and decompression rituals, you can remain grounded and effective even when the environment around you is chaotic.",
-    [
-      {h:"The Decompression Buffer:", t:"Build a ten-minute daily decompression practice between work and home. Use this time to actively 'switch off' your professional brain."},
-      {h:"The Post-Crisis Autopsy:", t:"After difficult situations, write down three things: what actually happened, how you instinctively responded, and what you would do differently next time."},
-      {h:"Grounding Anchors:", t:"Identify two trusted colleagues who can serve as grounded sounding boards—people who listen without amplifying your anxiety."},
-      {h:"Strategic Pauses:", t:"When faced with an urgent crisis or aggressive email, practice taking a 5-minute physical step away from your desk before responding."}
-    ],
-    "Speak to your HR team about employee assistance programmes, or implement a strict 'no-email after 7 PM' rule to guarantee your nervous system gets a chance to recover daily.",
-    "Attend a resilience, stress-management, or emotional intelligence workshop. Focus specifically on techniques for separating your self-worth from temporary professional setbacks.",
-    "Seek a role or project with progressively increasing accountability. Navigate it using your new boundary tools, proving to yourself that you can handle increased stakes without sacrificing your internal peace."
-  );
+  if(S.ES<55) devAreas.push({dim:'Emotional Resilience',v:S.ES,
+    why: ctxAction("High-stakes professional environments involve pressure cycles. Your ability to remain clear-headed under pressure is not a soft skill — it is career-determining.", "Banking environments are characterised by regulatory cycles, audit periods, and market pressure.", "Civil service reform creates sustained pressure on officers at all levels.", "Development sector professionals work in environments of resource constraints, community pressure, and donor scrutiny simultaneously.", "At senior level, your emotional state sets the emotional tone for the entire team.", "Early career is when pressure tolerance is built."),
+    acts:["Build a 10-minute daily decompression practice — journalling, walking, or structured reflection — so daily stress does not accumulate","After difficult professional situations, write three sentences: what happened, how I responded, and what I would do differently","Identify 2–3 trusted colleagues who can provide a grounded sounding board when you are under pressure — and use them proactively"],
+    now:ctxAction("Speak to your HR team about access to an employee assistance programme or wellbeing resources","Ask your institution's HR team this week about EAP access and stress management resources","Contact your Training Institute about resilience coaching resources available to civil service officers","Speak to your programme director about workload distribution","Identify one specific pressure source in your current role and have a direct conversation with your leadership about managing it structurally","Talk to your line manager this week about one specific pressure point in your role and what support is available"),
+    soon:ctxAction("Attend a resilience or emotional intelligence workshop this quarter","Attend a professional resilience workshop — specifically one designed for high-accountability financial environments","Attend a public sector leadership and resilience programme through your Provincial or Federal Training Institute","Attend an NGO or development sector leadership workshop","Commission an executive coaching engagement for yourself","Attend an emotional intelligence or resilience workshop and keep a personal learning journal throughout"),
+    fut:ctxAction("Seek a role with progressively increasing accountability to build resilience through real-world exposure","Seek out a role rotation that includes a high-pressure function","Pursue a secondment or cross-posting to a reform-facing role","Accept an assignment in a resource-constrained or high-stakes programme context","Build a senior leadership resilience programme for your team","Ask to be included in high-stakes projects or client-facing situations where you will be stretched")
+  });
 
-  if(S.LAavg < 55) add('Learning Agility', S.LAavg,
-    "The professionals who rise fastest in every Pakistani sector are those who learn and adapt fastest. Cultivating a beautifully adaptable mind means getting comfortable with being a 'beginner' again. It is about structured curiosity and realizing that every challenge is just data for your growth.",
-    [
-      {h:"The Weekly Expansion:", t:"Dedicate thirty minutes weekly to reading one report, article, or case study completely outside your normal scope of work."},
-      {h:"The Reflection Habit:", t:"After completing significant tasks, ask yourself: 'What did I actually learn here, and how could I apply this exact lesson to a different department?'"},
-      {h:"Feedback as Fuel:", t:"Request constructive feedback from at least two colleagues per quarter. Ask specifically: 'What is one blind spot you think I have?'"},
-      {h:"Embracing Ambiguity:", t:"When given a task with unclear instructions, try to map out a proposed solution first before immediately asking for clarification."}
+  if(S.LAavg<55) devAreas.push({dim:'Learning Agility',v:S.LAavg,
+    why: ctxAction("In every Pakistani sector, the professionals who rise are those who learn and adapt fastest. Current knowledge has a shelf life. Learning agility is how you extend yours.", "Pakistan's banking sector is changing faster than almost any other.", "Pakistan's civil service is in active reform.", "The development sector's evidence base, tools, and best practices evolve continuously.", "At your seniority level, your learning agility determines whether you remain strategically relevant as your sector evolves.", "The first decade of a career is where learning habits are formed."),
+    acts:[
+      ctxAction("Dedicate 30 minutes per week to reading one regulation, industry report, or domain publication outside your normal scope","Set a standing 30-minute weekly appointment with SBP's regulatory circulars","Set a standing 30-minute weekly appointment with relevant NCGR documents","Subscribe to OECD Development Co-operation Reports"),
+      "After completing any significant task, ask: 'What did I learn from this, and how could I apply it somewhere completely different?' — this single habit accelerates learning agility faster than any training course",
+      ctxAction("Request feedback from at least 2 colleagues or supervisors per quarter, write down what you will change, and follow through","After every significant banking transaction, write a brief reflection","After every major policy implementation, conduct a personal After-Action Review","After every programme cycle, conduct a personal learning review")
     ],
-    "Subscribe to one sector publication or newsletter you do not currently follow. Commit to bringing one new external idea to your team meetings this month.",
-    "Build a ninety-day self-directed learning plan on one topic completely outside your current expertise (e.g., basic data analytics, financial literacy, or a new software).",
-    "Facilitate or co-design a training session for your broader team. Teach them the new skill you've been practicing, proving that you have transitioned from a learner to an institutional resource."
-  );
+    now:ctxAction("Subscribe to one sector publication or regulatory update you do not currently follow","Subscribe today to SBP's official regulatory updates","Subscribe today to at least one international public administration publication","Subscribe today to one international development sector publication"),
+    soon:ctxAction("Build a 90-day self-directed learning plan on one topic outside your current expertise","Build a 90-day learning plan on one banking domain outside your current specialty","Build a 90-day learning plan on one reform area directly relevant to your department","Build a 90-day learning plan on one methodology outside your current programme toolkit"),
+    fut:ctxAction("Apply to facilitate or co-design a training or knowledge-sharing session — teaching is the fastest way to deepen learning agility","Apply to co-design or facilitate an internal knowledge-sharing session at your institution","Apply to deliver a session at your Training Institute","Apply to design or facilitate a staff capacity building session for your programme team")
+  });
 
-  if(S.OCB_S < 50) add('Constructive Attitude', S.OCB_S,
-    "How we respond to institutional frustration shapes the morale of everyone around us. Every organization has imperfections, and it is easy to let frustrations build up. Shifting toward a constructive attitude protects your own joy at work and makes you a deeply stabilizing, magnetic presence for your colleagues.",
-    [
-      {h:"Solution Before Complaint:", t:"Adopt the 'solution before complaint' rule — before voicing any frustration to a colleague, force yourself to have at least one concrete suggestion ready."},
-      {h:"The Private Outlet:", t:"Create a private journal for institutional frustrations. Write them down to get them out of your head, but do not broadcast them to the floor."},
-      {h:"The Deliberate Choice:", t:"Make a deliberate decision: either act on a frustration constructively to fix it, or actively release it — but do not let it linger as passive complaints."},
-      {h:"The Venting Boundary:", t:"Politely excuse yourself from toxic venting sessions at the watercooler. Protect your mental diet."}
-    ],
-    "Identify one recurring frustration you have recently shared with colleagues. Make a private commitment to stop complaining about it for the next 30 days, focusing only on how you can adapt to it.",
-    "Discuss improvement channels with your line manager. Take one of your biggest process frustrations and turn it into a formal, polite, written proposal for improvement.",
-    "Volunteer to lead a culture or process-improvement initiative. Guide the team through institutional roadblocks with a visibly positive, resilient mindset, proving you can elevate team morale."
-  );
-
-  if(S.CQavg < 55) add('Cultural Intelligence', S.CQavg,
-    "Pakistan's professional landscape spans an incredibly beautiful, complex tapestry of regional, linguistic, and socioeconomic contexts. Expanding your cultural intelligence will make you a powerful bridge-builder. It is about moving from simply 'accepting' diversity to actively leveraging it to create stronger teams.",
-    [
-      {h:"The Empathetic Pause:", t:"Before meetings with colleagues from unfamiliar backgrounds, spend five minutes considering their unique operational context and constraints."},
-      {h:"Curiosity Over Assumption:", t:"When someone approaches a problem differently than you would, replace the thought 'Why are they doing it wrong?' with 'What context am I missing?'"},
-      {h:"Adaptive Communication:", t:"Practice adjusting your tone. Notice when a situation requires deep formal respect, versus when it requires warm, informal connection."},
-      {h:"Active Listening:", t:"In cross-departmental meetings, make it a habit to speak last. Listen to how different groups frame their priorities before offering your solution."}
-    ],
-    "Have a genuine, non-work-related 20-minute conversation with a colleague from a meaningfully different regional or departmental background. Listen purely to understand.",
-    "Identify a recurring communication friction point you experience with a specific stakeholder group. Experiment with a completely different communication style and observe the shift.",
-    "Volunteer to co-lead a cross-provincial or cross-departmental initiative. Use your growing cultural agility to ensure that all voices are actively integrated into the final solution."
-  );
-
-  if(S.EOavg < 60) add('Professional Integrity', S.EOavg,
-    "Authentic integrity is the ultimate foundation of professional trust. Sometimes, the pressure to deliver results can blur the lines of policy. Strengthening this dimension is about aligning your daily actions with your deepest values, ensuring you have the courage to do what is right, even when it is difficult or unpopular.",
-    [
-      {h:"The Full Light Test:", t:"Before making a gray-area decision, ask: 'Would I be completely comfortable if my family, my CEO, and an auditor saw this exact choice?'"},
-      {h:"Proactive Transparency:", t:"Share bad news early. It is always better to say 'We have a problem' today than 'I hid a problem' tomorrow."},
-      {h:"Consultation Over Isolation:", t:"When faced with an ethical dilemma, do not carry the burden alone. Consult a mentor or compliance officer immediately."},
-      {h:"Documenting Decisions:", t:"Make it a habit to write down the 'why' behind your major decisions. Clear documentation is the strongest defense of your integrity."}
-    ],
-    "Review your organization's core values and explicitly map how your current projects align with them. Identify one area where you have been taking a 'shortcut' and correct it.",
-    "Practice 'Courageous Dissent.' In your next team meeting, if a proposed solution feels slightly misaligned with ethical best practices, politely but firmly raise the concern.",
-    "Become an informal 'Ethics Champion' within your unit. Mentor a junior colleague on the importance of transparency, showing them that reputation is more valuable than convenience."
-  );
+  if(S.OCB_S<50) devAreas.push({dim:'Constructive Attitude & Sportsmanship',v:S.OCB_S,
+    why: ctxAction("How we respond to institutional frustration shapes the morale of everyone around us. In Pakistani professional culture, sustained negativity has a compounding cost to your standing.", "Banking environments involve significant process constraints, regulatory pressure, and institutional bureaucracy.", "The civil service has structural inefficiencies that frustrate virtually everyone who works within it.", "Development sector environments involve resource constraints, bureaucratic donor requirements, and community expectations.", "At senior level, your attitude toward institutional frustration is magnified across your team.", "Early career frustrations are real and often valid. The professional habit of channelling them constructively is critical."),
+    acts:["Adopt the 'solution before complaint' rule — before voicing any frustration, have at least one concrete improvement suggestion ready","Create a private written log for institutional frustrations — getting them out of your head and onto paper reduces the emotional pressure to share them with colleagues","Identify one institutional frustration you currently hold, and make a deliberate decision: either act on it through the right channel, or consciously let it go"],
+    now:ctxAction("Identify one frustration you have recently shared with colleagues and commit to a more constructive approach","Identify one operational or regulatory constraint you have recently complained about — write down what a constructive improvement proposal would look like","Identify one civil service process you have recently complained about — draft a one-page improvement proposal","Identify one donor requirement or programme constraint you have recently expressed frustration about — write down what a constructive alternative would look like"),
+    soon:ctxAction("Discuss with your line manager the most effective channel for improvement ideas in your organisation","Schedule a conversation with your line manager about the most effective channels for raising process improvement ideas","Identify and use your department's formal suggestion and reform proposal mechanisms","Map your organisation's internal feedback and improvement channels and commit to routing your frustrations through them"),
+    fut:ctxAction("Volunteer to lead a process improvement initiative — channelling frustration into change is the most effective long-term strategy","Volunteer to lead a process improvement workstream in your institution","Apply to join a civil service reform working group or departmental improvement committee","Apply to lead a programme process improvement review")
+  });
 
   const bars = [
-    ['Overall Match', S.overall],
-    ['Personality & Drive', S.OCEANavg],
-    ['Cultural Agility', S.CQavg],
-    ['Team Citizenship', S.OCBavg],
-    ['Learning Agility', S.LAavg],
-    ['Ethical Integrity', S.EOavg],
-    ['Conscientiousness', S.C],
-    ['Emotional Resilience', S.ES]
+    ['Overall Match', S.overall], ['Personality & Drive', S.OCEANavg], ['Cultural Agility', S.CQavg],
+    ['Team Citizenship', S.OCBavg], ['Learning Agility', S.LAavg], ['Ethical Integrity', S.EOavg],
+    ['Conscientiousness', S.C], ['Emotional Resilience', S.ES]
   ].filter(([_,v]) => v !== undefined && v !== null);
 
-  // ─── RENDER ─────────────────────────────────────────────────────────
-  return (
-    <div className="report-wrap" style={{maxWidth:'960px', margin:'0 auto', padding:'40px 24px', fontFamily:"'Plus Jakarta Sans', sans-serif", color: T.t1}}>
-      
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          .page-break { page-break-before: always; }
-          .avoid-break { page-break-inside: avoid; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-        .mono { font-family: 'Courier New', monospace; }
-        .grid-2-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        @media (max-width: 768px) { .grid-2-col { grid-template-columns: 1fr; } }
-      `}</style>
+  // ── RESOURCES & PROTOCOLS ──
+  const getResources = () => {
+    const res = [];
+    if(S.C<65) {
+      res.push({type:'book', title:'Atomic Habits', author:'James Clear', why:'The most evidence-grounded system for building reliable delivery habits.'});
+      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', why:'Explains the psychology of task-avoidance and deadline-dependency.'});
+    }
+    if(S.ES<65) {
+      res.push({type:'book', title:'Chatter', author:'Ethan Kross', why:'Evidence-based techniques for managing the inner critical voice under pressure.'});
+      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', why:'Reframe stress as a tool for performance.'});
+    }
+    if(S.CQavg<65) {
+      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', why:'The definitive guide to cross-cultural professional effectiveness.'});
+      res.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Adichie', why:'Seeing past cultural blind spots.'});
+    }
+    if(S.LAavg<65) {
+      res.push({type:'book', title:'Mindset', author:'Carol Dweck', why:'Stanford research on growth vs. fixed mindset.'});
+      res.push({type:'ted', title:'How to Get Better at Things You Care About', author:'Eduardo Briceno', why:'Learning mode vs performance mode.'});
+    }
+    if(S.EOavg<65) {
+      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', why:'Moral psychology — why people rationalise ethical shortcuts.'});
+      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely', why:'The science of everyday ethical failure.'});
+    }
+    if(res.length===0) {
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', why:'How elite professionals make their strengths productive.'});
+    }
+    return res;
+  };
 
-      {/* Download Button */}
-      <div style={{display:'flex', justifyContent:'flex-end', marginBottom:'20px'}} className="no-print">
-        <button onClick={downloadPDF} style={{
-          padding:'12px 24px', borderRadius:'7px', cursor:'pointer',
-          background:T.c, color:'#fff', border:'none',
-          fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800',
-          boxShadow:`0 8px 16px ${T.cGlow}`, transition:'all 0.2s'
-        }} onMouseOver={(e) => {e.target.style.background='#8B161A'; e.target.style.transform='translateY(-1px)';}} 
-        onMouseOut={(e) => {e.target.style.background=T.c; e.target.style.transform='translateY(0)';}}>
-          Download Action Plan (PDF) ↓
+  const getPrograms = () => {
+    const progs = [];
+    if(S.E<60||S.A<60) progs.push({name:'Communication & Influence Workshop', desc:'Covers assertive communication, active listening, and managing difficult conversations.'});
+    if(S.EOavg<65) progs.push({name:'Professional Ethics & Values Programme', desc:'Ethical decision-making frameworks and integrity under pressure.'});
+    if(S.LAavg<65) progs.push({name:'Learning Agility & Growth Mindset', desc:'Building the specific habits that accelerate professional development.'});
+    if(S.CQavg<65) progs.push({name:'Intercultural Communication Workshop', desc:'Cross-cultural effectiveness for Pakistani multi-institutional contexts.'});
+    if(S.ES<60) progs.push({name:'Resilience & Emotional Intelligence', desc:'Evidence-based resilience frameworks for high-stakes environments.'});
+    if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:'Flagship leadership development pathway.'});
+    return progs.slice(0,4);
+  };
+
+  const getRelapse = () => {
+    const protocols = [];
+    if(S.C<55) protocols.push({trigger:'When you find yourself approaching a deadline without having started', response:'Use the 2-minute rule: if you can do any meaningful piece of this task in 2 minutes right now, start immediately.'});
+    if(S.ES<55) protocols.push({trigger:'When you feel your emotional state affecting your decision-making', response:'Name it to yourself first. Labelling an emotional state reduces its intensity. Delay non-urgent decisions by 20 minutes.'});
+    if(S.EOavg<60) protocols.push({trigger:'When someone you respect asks you to bypass a process', response:'Pause. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?"'});
+    if(protocols.length===0) protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:'Use the clarity test: "What would I tell a junior colleague to do in this situation?" Then do that.'});
+    return protocols;
+  };
+
+  const resources = getResources();
+  const programs = getPrograms();
+  const relapse = getRelapse();
+
+  // ─── RENDER TABS ───
+  return (
+    <div style={{maxWidth:'1000px', margin:'0 auto', padding:'40px 24px'}}>
+      
+      {/* Tab Navigation */}
+      <div className="no-print" style={{display:'flex', gap:'8px', marginBottom:'32px', flexWrap:'wrap'}}>
+        <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='action'?T.c:T.b2}`, background:resTab==='action'?T.c:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
+          🧭 Candidate Action Plan
         </button>
+        <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.c:T.b2}`, background:resTab==='tech'?T.c:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
+          📊 Technical Report
+        </button>
+        <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='player'?T.c:T.b2}`, background:resTab==='player'?T.c:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
+          🎮 Player Report
+        </button>
+        {R.batch && (
+          <>
+            <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.c:T.b2}`, background:resTab==='team'?T.c:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
+              👥 Team Aggregate
+            </button>
+            <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.c:T.b2}`, background:resTab==='comp'?T.c:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
+              🧩 Team Composition
+            </button>
+          </>
+        )}
       </div>
 
-      <div id="action-plan-content" style={{background: T.bg0, padding: '0', borderRadius:'12px'}}>
-        
-        {/* ─── PDF COVER PAGE ─── */}
-        <div id="pdf-cover-page" style={{
-          display: 'none', height: '1122px', width: '100%', background: '#F8F7F5',
-          position: 'relative', overflow: 'hidden', padding: '90px 72px 70px',
-          boxSizing: 'border-box', flexDirection: 'column', justifyContent: 'space-between',
-        }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', background: '#B01C24' }} />
-          <div style={{position:'absolute',top:'-120px',right:'-100px',width:'420px',height:'420px',borderRadius:'50%',background:'radial-gradient(circle, rgba(200,168,75,0.10) 0%, transparent 72%)'}} />
-
-          <div style={{ position: 'relative', zIndex: 2 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '80px' }}>
-              <img src="/logo.png" alt="Carnelian logo" style={{ width: '54px', height: '54px', objectFit: 'contain' }} />
-              <div>
-                <div style={{fontFamily:"'Playfair Display', serif", fontSize:'34px', fontWeight:'700', lineHeight:1, color:'#B8912E', letterSpacing:'0.01em'}}>CORE</div>
-                <div style={{fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:'10px', fontWeight:'800', color:'#B01C24', letterSpacing:'0.22em', textTransform:'uppercase', marginTop:'4px'}}>By Carnelian</div>
-              </div>
-            </div>
-            <div style={{ marginTop: '110px' }}>
-              <div style={{fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:'11px', fontWeight:'800', color:'#B01C24', letterSpacing:'0.18em', textTransform:'uppercase', marginBottom:'18px'}}>Personal Action Plan</div>
-              <h1 style={{fontFamily:"'Playfair Display', serif", fontSize:'52px', lineHeight:1.08, fontWeight:'700', color:'#111111', margin:'0 0 18px', maxWidth:'700px'}}>{R.name}</h1>
-              <div style={{display:'inline-block', padding:'10px 18px', border:'1px solid #D8C9A0', borderRadius:'999px', background:'#FFF9EC', color:'#8D6B15', fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:'12px', fontWeight:'800'}}>{profile?.name || 'Professional Profile'}</div>
-            </div>
-          </div>
-
-          <div style={{position:'relative', zIndex:2, display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginTop:'80px', paddingTop:'24px', borderTop:'1px solid #E6E0D4'}}>
-            <div style={{fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:'11px', color:'#6B7280', fontWeight:'700', letterSpacing:'0.06em'}}>CORE by Carnelian</div>
-            <div style={{textAlign:'right'}}>
-              <div style={{fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:'11px', color:'#6B7280', fontWeight:'700', marginBottom:'6px'}}>{date}</div>
-              <div style={{fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:'10px', color:'#9CA3AF', fontWeight:'700', letterSpacing:'0.08em'}}>{docId}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="page-break"></div>
-
-        {/* ─── PDF INNER CONTENT ─── */}
-        <div id="pdf-inner-content" style={{ padding: '0' }}>
-
-          {/* Welcome Section */}
-          <div className="avoid-break" style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'48px 40px', marginBottom:'24px', position:'relative', overflow:'hidden'}}>
+      {/* ─── TAB 1: ACTION PLAN ─── */}
+      {resTab === 'action' && (
+        <div className="anim-fadeUp">
+          <div style={{background: T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'48px 40px', marginBottom:'24px', position:'relative', overflow:'hidden'}}>
             <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.goldP} 0%,transparent 70%)`}} />
             <div style={{position:'relative',zIndex:1}}>
-              <div className="mono" style={{fontSize:'10px',color:T.gold,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:'12px',fontWeight:'700'}}>Your Personal Blueprint</div>
-              <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Welcome, {R.name?.split(' ')[0] || 'Professional'}.</h1>
-              <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',marginBottom:'16px',fontWeight:'500'}}>
-                Thank you for trusting us with your reflections. We know that taking an assessment can feel vulnerable. Please know that this report is not a judgment, nor a final verdict on who you are. Human beings are beautifully complex, and psychometrics simply capture a snapshot of your current professional habits.
-              </p>
-              <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',marginBottom:'28px',fontWeight:'500'}}>
-                Think of this document as a mirror held up to your professional self—designed to celebrate your natural gifts and gently highlight the spaces where you have the greatest room to grow. You are already equipped with incredible strengths. Let's explore how to amplify them.
-              </p>
-              <div style={{background:`rgba(255,255,255,0.04)`,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'24px', borderLeft:`4px solid ${T.c}`}}>
-                <div className="mono" style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'0.14em',color:T.gold,fontWeight:'700',marginBottom:'8px'}}>Your Natural Work Style</div>
+              <div className="mono" style={{fontSize:'10px',color:T.gold,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:'12px',fontWeight:'700'}}>Your Personal CORE Development Report</div>
+              <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>{R.name}</h1>
+              <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',marginBottom:'16px',fontWeight:'500'}}>This report is written directly to you — not to your manager, not to HR. It translates your assessment results into specific, actionable guidance: what your scores mean, where your genuine strengths are, what to develop, and exactly how. Read it once for the picture. Read it again with a pen.</p>
+              <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px'}}>{date} · {R.exp} · {R.purpose} {R.industry ? `· ${R.industry}` : ''}</div>
+              
+              <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'24px', borderLeft:`4px solid ${T.c}`}}>
+                <div className="mono" style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'0.14em',color:T.gold,fontWeight:'700',marginBottom:'8px'}}>Your Professional Profile</div>
                 <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.8rem',color:T.t0,fontWeight:'700',marginBottom:'10px'}}>{profile?.name || 'Professional Profile'}</div>
                 <div style={{fontSize:'13px',color:T.t2,lineHeight:'1.7',fontWeight:'600'}}>{profile?.desc || 'A reliable and principled professional with strong compliance orientation.'}</div>
+                {profile?.devNote && <div style={{marginTop:'12px', padding:'12px', background:`${T.gold}10`, borderLeft:`3px solid ${T.gold}`, borderRadius:'6px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6'}}>{profile.devNote}</div>}
               </div>
             </div>
           </div>
 
-          {/* Score Landscape */}
-          <div className="avoid-break" style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.35rem',fontWeight:'700',color:'#111827',marginBottom:'24px'}}>Your Score Landscape</h3>
-            <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
-              {bars.map(([l,v],i)=>(
-                <div key={l} style={{display:'flex',alignItems:'center',gap:'16px',paddingBottom:i===0?'16px':'0',marginBottom:i===0?'8px':'0',borderBottom:i===0?'1px solid #F3F4F6':'none'}}>
-                  <div style={{width:'180px',flexShrink:0,fontSize:'13px',color:i===0?'#111827':'#4B5563',fontWeight:i===0?'800':'700'}}>{l}</div>
-                  <div style={{flex:1,background:'#F3F4F6',height:i===0?'10px':'6px',borderRadius:'4px',overflow:'hidden'}}>
-                    <div style={{width:`${Math.max(0, Math.min(100, v))}%`,height:'100%',background:barGrad(v),borderRadius:'4px',transition:'width 1s ease'}} />
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.35rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Score Profile at a Glance</h3>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
+            <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px'}}>
+              {bars.slice(1).map(([l,v],i)=>(
+                <div key={l} style={{marginBottom:'8px'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'4px'}}>
+                    <span style={{fontSize:'13px',color:T.t0,fontWeight:'700'}}>{l}</span>
+                    <span className="mono" style={{fontSize:'11px',color:bCol(v),fontWeight:'800'}}>{v}/100 · {v>=75?'Strong':v>=55?'Developing':'Priority'}</span>
                   </div>
-                  <div className="mono" style={{width:'40px',textAlign:'right',fontSize:'12px',color:bCol(v),fontWeight:'800'}}>{v}</div>
+                  <Bar score={v} w="100%" h={8} />
                 </div>
               ))}
             </div>
+
+            <div style={{background:T.bg2, borderRadius:'10px', padding:'24px', marginTop:'32px'}}>
+              <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'16px'}}>Your 7 Composite Indices — How Dimensions Interact</div>
+              <div style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'10px', textAlign:'center'}}>
+                {[
+                  ['CII','Compliance',CI.CII,70,54],['LRS','Leadership',CI.LRS,72,55],['TVS','Team Value',CI.TVS,68,51],
+                  ['ADS','Adaptability',CI.ADS,67,50],['SES','Stakeholder',CI.SES,68,52],['OPS','Operations',CI.OPS,67,51],['PMS','People Mgmt',CI.PMS,67,51]
+                ].map(([k,l,v,g,a]) => {
+                  const col = v>=g ? T.gn : v>=a ? T.am : T.rd;
+                  const circ = 100.53;
+                  const offset = circ * (1 - v/100);
+                  return (
+                    <div key={k}>
+                      <div style={{position:'relative', width:'52px', height:'52px', margin:'0 auto 8px'}}>
+                        <svg viewBox="0 0 36 36" style={{width:'52px', height:'52px', transform:'rotate(-90deg)'}}>
+                          <circle cx="18" cy="18" r="16" fill="none" stroke={T.b2} strokeWidth="3.5"/>
+                          <circle cx="18" cy="18" r="16" fill="none" stroke={col} strokeWidth="3.5" strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"/>
+                        </svg>
+                        <div className="mono" style={{position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', fontSize:'11px', fontWeight:'800', color:col}}>{v}</div>
+                      </div>
+                      <div style={{fontSize:'11px', fontWeight:'800', color:T.gold}}>{k}</div>
+                      <div style={{fontSize:'9px', color:T.t3, lineHeight:'1.3', marginTop:'2px'}}>{l}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Core Strengths */}
-          <div className="avoid-break" style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:'#111827',marginBottom:'12px'}}>What You Bring to the Table</h3>
-            <p style={{color:'#4B5563', fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>These are your anchor strengths. When things get difficult, these are the natural instincts you rely on. Lean into them—they are what make you uniquely valuable to your team.</p>
-            <div className="grid-2-col">
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>What You Are Good At — And Where To Grow</h3>
+            <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
               {top2.map(d=>(
-                <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:'#F0FDF4',border:'1px solid #BBF7D0',borderLeft:`5px solid ${T.gn}`}}>
-                  <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:'#15803D',marginBottom:'8px'}}>Core Strength</div>
-                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'10px',color:'#166534'}}>{d.l}</h4>
-                  <p style={{fontSize:'13px',color:'#15803D',lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>{d.str}</p>
-                  <span style={{padding:'4px 12px',background:'#DCFCE7',color:'#166534',borderRadius:'4px',fontSize:'11px',fontWeight:'800'}}>{d.v}/100</span>
+                <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:T.gnP,border:`1px solid ${T.gn}40`,borderLeft:`5px solid ${T.gn}`}}>
+                  <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.gn,marginBottom:'8px'}}>✦ Core Strength</div>
+                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'10px',color:T.gn}}>{d.l}</h4>
+                  <p style={{fontSize:'13px',color:T.gn,lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>{d.str}</p>
+                  <div className="mono" style={{fontSize:'10px', color:T.gn, fontWeight:'700'}}>Score: {d.v}/100 · {bd(d.v)} Range</div>
+                </div>
+              ))}
+              {bot2.map(d=>(
+                <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:T.rdP,border:`1px solid ${T.rd}40`,borderLeft:`5px solid ${T.rd}`}}>
+                  <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.rd,marginBottom:'8px'}}>◈ Priority Development Area</div>
+                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'10px',color:T.rd}}>{d.l}</h4>
+                  <p style={{fontSize:'13px',color:T.rd,lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>Your development investment here creates the greatest career impact. Your 10-step action plan below is built around this dimension specifically.</p>
+                  <div className="mono" style={{fontSize:'10px', color:T.rd, fontWeight:'700'}}>Score: {d.v}/100 · {bd(d.v)} Range</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="page-break"></div>
-          
-          {/* Development Roadmap */}
-          <div style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:'#111827',marginBottom:'12px'}}>Your Deep-Dive Development Roadmap</h3>
-            <p style={{color:'#4B5563', fontSize:'13px', lineHeight:'1.7', marginBottom:'32px', fontWeight:'500'}}>We all have blind spots. The dimensions below aren't "weaknesses"—they are simply areas where applying deliberate, mindful effort will yield massive results for your career trajectory. Here is your personalized, step-by-step plan.</p>
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `— ${R.industry}` : ''}</h3>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'16px', fontWeight:'500'}}>Your roadmap is calibrated to your actual scores. Each development area includes a numbered 10-step action plan with specific instructions for each step. Follow the steps in order — each one builds on the previous.</p>
+            {R.industry && <div style={{background:`${T.c}10`, borderLeft:`3px solid ${T.c}`, padding:'10px 14px', borderRadius:'0 8px 8px 0', fontSize:'12px', color:T.c, fontWeight:'600', marginBottom:'24px'}}>Industry lens: <strong>{R.industry}</strong> — all actions are framed for this sector.</div>}
             
-            {devAreas.length > 0 ? devAreas.map((d,i)=>(
-              <div key={i} className="avoid-break" style={{border:'1px solid #E5E7EB',borderRadius:'12px',padding:'32px',marginBottom:'24px',boxShadow:'0 4px 12px rgba(0,0,0,0.03)'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
-                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:'#111827'}}>{d.d}</h4>
-                  <span style={{padding:'6px 14px',background:T.amP,color:T.am,borderRadius:'6px',fontSize:'13px',fontWeight:'800'}}>{d.v}/100</span>
+            {devAreas.length > 0 ? devAreas.map((d,i)=>{
+              const dimCol = d.v<45 ? T.rd : d.v<60 ? T.am : T.gn;
+              const steps = [
+                {n:1, phase:'TODAY', col:T.rd, bg:T.rdP, act:d.now||d.acts[0]||'Review your current approach to this dimension.'},
+                {n:2, phase:'THIS WEEK', col:T.rd, bg:T.rdP, act:d.acts[0]||d.now||'Document one concrete observation about your current behaviour.'},
+                {n:3, phase:'WEEK 2', col:T.am, bg:T.amP, act:d.acts[1]||d.acts[0]||'Ask a trusted colleague for specific, honest feedback.'},
+                {n:4, phase:'WEEK 3', col:T.am, bg:T.amP, act:d.acts.length>1?d.acts[1]:d.soon||'Begin the recommended resource for this dimension.'},
+                {n:5, phase:'WEEK 4', col:T.am, bg:T.amP, act:d.soon||d.acts[0]||'Set up a recurring weekly 15-minute self-review.'},
+                {n:6, phase:'MONTH 2', col:T.gn, bg:T.gnP, act:d.acts.length>2?d.acts[2]:d.soon||'Identify one professional situation where your score has limited you.'},
+                {n:7, phase:'MONTH 2', col:T.gn, bg:T.gnP, act:'Share your development goal in this area with your line manager or a trusted mentor.'},
+                {n:8, phase:'MONTH 3', col:T.gn, bg:T.gnP, act:d.soon||d.acts[1]||'Schedule a formal progress check-in with your line manager.'},
+                {n:9, phase:'MONTHS 4-6', col:T.gn, bg:T.gnP, act:d.fut||'Take on a stretch assignment or project that specifically requires you to demonstrate growth.'},
+                {n:10, phase:'6 MONTHS', col:T.gn, bg:T.gnP, act:`Reassess this dimension — through a CORE retake or a formal coaching debrief. Measure your actual change against your Day 1 baseline of ${d.v}/100.`}
+              ];
+              return (
+              <div key={i} style={{border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px',marginBottom:'24px',background:T.bg2}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0}}>{d.dim}</h4>
+                  <span className="mono" style={{fontSize:'14px',fontWeight:'800',color:dimCol}}>{d.v}/100</span>
                 </div>
-                <div className="mono" style={{fontSize:'10px',color:'#6B7280',marginBottom:'20px',textTransform:'uppercase',letterSpacing:'0.1em',fontWeight:'800'}}>{bd(d.v)} range</div>
-                
-                <p style={{fontSize:'13.5px',color:'#4B5563',lineHeight:'1.8',marginBottom:'28px',fontWeight:'500', padding:'18px', background:'#F9FAFB', borderRadius:'8px', borderLeft:`4px solid ${T.am}`}}>
-                  {d.empathyIntro}
-                </p>
+                <div style={{height:'6px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'16px'}}>
+                  <div style={{height:'100%', width:`${d.v}%`, background:dimCol, borderRadius:'100px'}} />
+                </div>
+                <p style={{fontSize:'13.5px',color:T.t1,lineHeight:'1.8',marginBottom:'24px',fontWeight:'500'}}>{d.why}</p>
 
-                <h5 style={{fontSize:'12px',textTransform:'uppercase',letterSpacing:'0.1em',color:'#6B7280',fontWeight:'800',marginBottom:'16px'}}>Daily Habits to Build:</h5>
-                <ul style={{paddingLeft:0,listStyle:'none',marginBottom:'32px'}}>
-                  {d.habits.map((h,j)=>(
-                    <li key={j} style={{display:'flex',gap:'12px',padding:'8px 0',fontSize:'13.5px',color:'#374151',lineHeight:'1.6',fontWeight:'500'}}>
-                      <span style={{color:T.am,fontWeight:'800',flexShrink:0}}>→</span>
-                      <span><strong style={{color:'#111827'}}>{h.h}</strong> {h.t}</span>
-                    </li>
+                <div className="mono" style={{fontSize:'10px',textTransform:'uppercase',letterSpacing:'0.1em',color:T.t3,fontWeight:'800',marginBottom:'12px'}}>Your 10-Step Action Plan for {d.dim}</div>
+                <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'24px'}}>
+                  {steps.map((s, j) => (
+                    <div key={j} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', background:s.bg, borderRadius:'8px'}}>
+                      <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:s.col, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{s.n}</div>
+                      <div style={{flex:1}}>
+                        <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:s.col, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'4px'}}>{s.phase}</div>
+                        <div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}>{s.act}</div>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
 
-                <h5 style={{fontSize:'12px',textTransform:'uppercase',letterSpacing:'0.1em',color:'#6B7280',fontWeight:'800',marginBottom:'16px'}}>Your Growth Timeline:</h5>
-                <div style={{display:'grid',gap:'12px'}}>
-                  <div className="avoid-break" style={{display:'flex',gap:'20px',background:'#FEF2F2',padding:'18px',borderRadius:'8px',borderLeft:`4px solid ${T.rd}`, alignItems:'center'}}>
-                    <div style={{minWidth:'90px',fontSize:'12px',fontWeight:'800',color:T.rd,textTransform:'uppercase',letterSpacing:'0.05em'}}>Now<br/><span style={{fontSize:'9px',opacity:0.8}}>(0–30 Days)</span></div>
-                    <div style={{fontSize:'13.5px',color:'#7F1D1D',lineHeight:'1.6',fontWeight:'600'}}>{d.day30}</div>
-                  </div>
-                  <div className="avoid-break" style={{display:'flex',gap:'20px',background:'#FFFBEB',padding:'18px',borderRadius:'8px',borderLeft:`4px solid ${T.am}`, alignItems:'center'}}>
-                    <div style={{minWidth:'90px',fontSize:'12px',fontWeight:'800',color:T.am,textTransform:'uppercase',letterSpacing:'0.05em'}}>Soon<br/><span style={{fontSize:'9px',opacity:0.8}}>(30–90 Days)</span></div>
-                    <div style={{fontSize:'13.5px',color:'#92400E',lineHeight:'1.6',fontWeight:'600'}}>{d.day90}</div>
-                  </div>
-                  <div className="avoid-break" style={{display:'flex',gap:'20px',background:'#F0FDF4',padding:'18px',borderRadius:'8px',borderLeft:`4px solid ${T.gn}`, alignItems:'center'}}>
-                    <div style={{minWidth:'90px',fontSize:'12px',fontWeight:'800',color:T.gn,textTransform:'uppercase',letterSpacing:'0.05em'}}>Future<br/><span style={{fontSize:'9px',opacity:0.8}}>(90–180 Days)</span></div>
-                    <div style={{fontSize:'13.5px',color:'#166534',lineHeight:'1.6',fontWeight:'600'}}>{d.day180}</div>
-                  </div>
+                <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                  <span style={{padding:'6px 12px', borderRadius:'100px', fontSize:'11px', fontWeight:'700', background:T.rdP, color:T.rd, border:`1px solid ${T.rd}40`}}>🔴 Days 1–30: {d.now||d.acts[0]}</span>
+                  <span style={{padding:'6px 12px', borderRadius:'100px', fontSize:'11px', fontWeight:'700', background:T.amP, color:T.am, border:`1px solid ${T.am}40`}}>🟡 Days 30–90: {d.soon||d.acts[1]}</span>
+                  <span style={{padding:'6px 12px', borderRadius:'100px', fontSize:'11px', fontWeight:'700', background:T.gnP, color:T.gn, border:`1px solid ${T.gn}40`}}>🟢 Days 90–180: {d.fut}</span>
                 </div>
               </div>
-            )) : (
-              <div className="avoid-break" style={{padding:'24px',background:T.gnP,borderRadius:'12px',fontSize:'14px',color:T.gn,lineHeight:'1.7',fontWeight:'600'}}>
+            )}) : (
+              <div style={{padding:'24px',background:T.gnP,borderRadius:'12px',fontSize:'14px',color:T.gn,lineHeight:'1.7',fontWeight:'600'}}>
                 Your profile is remarkably balanced. No critical development red-flags were detected. Focus on sustaining your current habits and taking on stretch assignments outside your comfort zone to expand your impact.
               </div>
             )}
           </div>
 
-          <div className="page-break"></div>
+          {/* Resources & Protocols */}
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'24px'}}>
+            <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Profile-Matched Development Toolkit</h3>
+              <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Every resource below was selected for your specific psychometric profile and dimension scores — not a generic reading list.</p>
+              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+                {resources.map((r, i) => {
+                  const tCol = r.type==='book'?'#3B82F6':r.type==='ted'?'#EF4444':r.type==='youtube'?'#10B981':'#8B5CF6';
+                  const tBg = r.type==='book'?'#DBEAFE':r.type==='ted'?'#FEE2E2':r.type==='youtube'?'#D1FAE5':'#EDE9FE';
+                  const tLbl = r.type==='book'?'📖 Book':r.type==='ted'?'🎬 TED Talk':r.type==='youtube'?'▶ YouTube':'🔬 Research';
+                  return (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
+                    <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:tCol, background:tBg, padding:'4px 8px', borderRadius:'4px', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap'}}>{tLbl}</div>
+                    <div style={{flex:1}}>
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'4px', flexWrap:'wrap', gap:'8px'}}>
+                        <div style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{r.title}</div>
+                        <div style={{fontSize:'11px', color:T.t3}}>{r.author}</div>
+                      </div>
+                      <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.6', marginBottom:r.url?'8px':'0'}}>{r.why}</div>
+                      {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{fontSize:'11px', fontWeight:'700', color:tCol, textDecoration:'none'}}>→ Watch / Access ↗</a>}
+                    </div>
+                  </div>
+                )})}
+              </div>
+            </div>
 
-          {/* Priority Action Matrix */}
-          <div className="avoid-break" style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:'#111827',marginBottom:'12px'}}>Priority Action Matrix</h3>
-            <p style={{color:'#4B5563', fontSize:'13px', lineHeight:'1.7', marginBottom:'32px', fontWeight:'500'}}>A comprehensive visual guide on how to distribute your energy over the next 6 months for maximum career impact.</p>
+            <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your If-Then Protocol — When Habits Break</h3>
+              <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Research consistently shows relapse risk is highest in the first 30 days. These protocols are decision frameworks for situations you will encounter.</p>
+              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+                {relapse.map((p, i) => (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{display:'flex', gap:'12px', marginBottom:'12px', alignItems:'baseline'}}>
+                      <span className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.rd, background:T.rdP, padding:'4px 8px', borderRadius:'4px'}}>IF →</span>
+                      <span style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{p.trigger}</span>
+                    </div>
+                    <div style={{display:'flex', gap:'12px', alignItems:'baseline'}}>
+                      <span className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gn, background:T.gnP, padding:'4px 8px', borderRadius:'4px'}}>THEN →</span>
+                      <span style={{fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>{p.response}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Carnelian Programs */}
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Training — Carnelian Programmes</h3>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>The following Carnelian programmes are specifically matched to your CORE profile and dimension scores. Your organisation can commission any of these — or you can reach out as an individual.</p>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'24px'}}>
+              {programs.map((p, i) => (
+                <div key={i} style={{background:`linear-gradient(135deg, ${T.bg2} 0%, ${T.bg3} 100%)`, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
+                  <div style={{width:'32px', height:'32px', borderRadius:'50%', background:T.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', fontWeight:'800', flexShrink:0}}>C</div>
+                  <div>
+                    <div style={{fontSize:'14px', fontWeight:'700', color:T.gold, marginBottom:'6px'}}>{p.name}</div>
+                    <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6', marginBottom:'8px'}}>{p.desc}</div>
+                    <div style={{fontSize:'11px', color:T.gn, fontStyle:'italic', fontWeight:'600'}}>{p.match || 'Recommended based on your profile.'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{background:T.c, borderRadius:'10px', padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:'16px'}}>
+              <div>
+                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:'#fff', marginBottom:'4px'}}>Get in touch with Carnelian</div>
+                <div style={{fontSize:'13px', color:'rgba(255,255,255,0.8)', fontWeight:'500'}}>Request programme information, commission in-house delivery, or arrange a personal CORE coaching session.</div>
+              </div>
+              <div style={{fontSize:'14px', fontWeight:'800', color:T.gold}}>hello@carnelianco.com</div>
+            </div>
+          </div>
+
+          {/* Priority Matrix */}
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
             
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))',gap:'16px'}}>
+            <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
+              <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'10px', padding:'20px'}}>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'12px'}}>🔴 Act Now (0–30 Days)</div>
+                <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
+                  {devAreas.filter(d=>d.v<45).map(d=><li key={d.dim}>{d.dim}</li>)}
+                  {devAreas.filter(d=>d.v<45).length===0 && <li>No critical gaps — focus on elevation</li>}
+                </ul>
+              </div>
+              <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'10px', padding:'20px'}}>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'12px'}}>🟡 Build Soon (30–90 Days)</div>
+                <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
+                  {devAreas.filter(d=>d.v>=45&&d.v<60).map(d=><li key={d.dim}>{d.dim}</li>)}
+                  {devAreas.filter(d=>d.v>=45&&d.v<60).length===0 && <li>No short-term gaps identified</li>}
+                </ul>
+              </div>
+              <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, borderRadius:'10px', padding:'20px'}}>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.gn, marginBottom:'12px'}}>🟢 Sustain & Expand</div>
+                <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
+                  {allDims.filter(d=>d.v>=75).map(d=><li key={d.l}>{d.l}</li>)}
+                  {allDims.filter(d=>d.v>=75).length===0 && <li>Continue balanced development</li>}
+                </ul>
+              </div>
+              <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px'}}>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.t2, marginBottom:'12px'}}>🔵 Monitor Progress</div>
+                <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
+                  {allDims.filter(d=>d.v>=60&&d.v<75).map(d=><li key={d.l}>{d.l}</li>)}
+                  {allDims.filter(d=>d.v>=60&&d.v<75).length===0 && <li>Review all dimensions at 6-month CORE retake</li>}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Close Note */}
+          <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>A Note to Close</h3>
+            <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>This report is a starting point, not a verdict. Psychometric scores describe tendencies — they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10-step plans above are specific because vague advice produces no change. Take one action from this report today — not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self-knowledge. You have just demonstrated that.</p>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:`1px solid ${T.b1}`, paddingTop:'20px', flexWrap:'wrap', gap:'12px'}}>
+              <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>CORE · {docId} · Carnelian Pvt Ltd · {date}</div>
+              <div style={{fontSize:'12px', color:T.gn, fontWeight:'700'}}>Questions? hello@carnelianco.com</div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ─── TAB 2: TECHNICAL REPORT ─── */}
+{resTab === 'tech' && (() => {
+        // Table styles to match the HTML exactly
+        const tableStyle = { width: '100%', borderCollapse: 'collapse', marginTop: '14px' };
+        const thStyle = { fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, padding: '0 10px 12px', textAlign: 'left', borderBottom: `2px solid ${T.b2}` };
+        const tdStyle = { padding: '14px 10px', borderBottom: `1px solid ${T.b1}`, fontSize: '13px', verticalAlign: 'middle', color: T.t1, fontWeight: '500' };
+        const lastTdStyle = { ...tdStyle, borderBottom: 'none' };
+        
+        const isDevContext = R.purpose && (R.purpose.includes('Development') || R.purpose.includes('Training') || R.purpose.includes('Personal') || R.purpose.includes('Coaching'));
+
+        return (
+        <div className="anim-fadeUp">
+          {validity.overall === 'red' && (
+            <div style={{background:T.rdP, border:`2px solid ${T.rd}`, borderRadius:'10px', padding:'16px 18px', marginBottom:'20px'}}>
+              <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'6px'}}>⚠ VALIDITY OVERRIDE — RESULTS UNRELIABLE</div>
+              <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.65'}}>This assessment has been flagged as invalid (see Validity Index below). All dimension scores, composite indices, role suitability verdicts, and pattern detections in this report are unreliable and <strong>must not be used for any HR decision or personnel action</strong>. Recommend supervised retake before any results are acted upon.</div>
+            </div>
+          )}
+
+          {/* ── HEADER ── */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px', position:'relative', overflow:'hidden'}}>
+            <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.cGlow} 0%,transparent 70%)`}} />
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px', position:'relative', zIndex:1, flexWrap:'wrap', gap:'12px'}}>
+              <div>
+                <div className="serif" style={{fontSize:'14px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd {R.org ? `× ${R.org}` : ''}</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3}}>Document ID: {docId} · {date} · TECHNICAL REPORT — {R.conf || 'Restricted'}</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3, marginTop:'4px'}}>Completion time: Not recorded</div>
+              </div>
+              <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
+                <div>{R.purpose}</div>
+                {R.batch && <div>{R.batch}</div>}
+                {R.industry && <div>{IND[R.industry]?.icon} {IND[R.industry]?.short}</div>}
+              </div>
+            </div>
+            
+            <div className="serif" style={{fontSize:'2.4rem', fontWeight:'700', color:T.t0, marginBottom:'8px', position:'relative', zIndex:1}}>{R.name}</div>
+            <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.8', position:'relative', zIndex:1}}>
+              {R.role ? R.role : ''}{R.dept ? ` · ${R.dept}` : ''}<br/>
+{R.email ? `${R.email}` : ''}{R.phone ? ` · ${R.phone}` : ''}<br/>
+{R.emp ? `ID: ${R.emp} · ` : ''}Experience: {R.exp}{R.gender && R.gender !== 'Prefer not to say' ? ` · ${R.gender}` : ''}
+            </div>
+            
+            <div style={{display:'inline-block', background:T.c, color:'#fff', fontSize:'12px', fontWeight:'800', padding:'6px 18px', borderRadius:'100px', marginTop:'16px', letterSpacing:'0.04em', position:'relative', zIndex:1}}>
+              Profile: {validity.overall === 'red' && validity.extRatio > 0.85 ? '⚠ SUPPRESSED — Invalid Response Pattern' : profile.name}
+            </div>
+
+            {profile.name === 'Emerging Professional' && !(validity.overall === 'red' && validity.extRatio > 0.85) && (
+              <div style={{background:T.amP, border:`1px solid ${T.am}50`, borderRadius:'8px', padding:'12px 16px', marginTop:'16px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6', position:'relative', zIndex:1}}>
+                <strong style={{color:T.am}}>Note for HR:</strong> Emerging Professional is a differentiated, valid profile result — not a default or low-score category. It identifies a professional with specific strengths and clear targeted development opportunities. The dimensions where this individual scores above threshold are genuine assets. The dimensions below threshold are development priorities, not disqualifiers. This profile responds well to structured coaching and produces measurable score improvements on re-assessment.
+              </div>
+            )}
+
+            {isDevContext && !(validity.overall === 'red' && validity.extRatio > 0.85) && (
+              <div style={{background:'rgba(59, 130, 246, 0.1)', border:'1px solid rgba(59, 130, 246, 0.3)', borderRadius:'8px', padding:'12px 16px', marginTop:'16px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6', position:'relative', zIndex:1}}>
+                <strong style={{color:'#3B82F6'}}>Development Context:</strong> This assessment was commissioned for <em>{R.purpose}</em>. All role suitability and risk language in this report should be read as <strong>development priorities</strong>, not placement restrictions. Phrases such as "do not deploy without intervention" indicate where focused coaching will have the highest impact — they are not disqualification verdicts in a development context. Share the Candidate Action Plan with the individual directly.
+              </div>
+            )}
+
+            <div style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.b0, borderRadius:'10px', padding:'20px', marginTop:'24px', position:'relative', zIndex:1}}>
+              {validity.overall === 'red' && validity.extRatio > 0.85 ? (
+                <div style={{gridColumn:'1/-1', color:T.rd, fontSize:'13px', lineHeight:'1.6'}}>
+                  <strong>⛔ RESULTS UNINTERPRETABLE</strong><br/>
+                  Extreme response pattern detected ({Math.round(validity.extRatio*100)}% extreme responses). Dimension scores and composite indices shown below are statistically invalid and must not be used for any HR decision. See the Validity Index section for full details. A supervised retake is required.
+                </div>
+              ) : (
+                <>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.OCEANavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Personality</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.CQavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Cultural IQ</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.OCBavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Citizenship</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.LAavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Learning</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.EOavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Integrity</div></div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── COMPOSITE INDICES ── */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px', flexWrap:'wrap'}}>
+              <Pill label="Composite" color={T.gold} />
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>Cross-Module Composite Indices</h3>
+              <span className="mono" style={{fontSize:'10px', color:T.t3, marginLeft:'auto'}}>Interlinked scoring across all 5 modules</span>
+            </div>
+            
+            {validity.overall === 'red' && validity.extRatio > 0.85 ? (
+              <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'8px', padding:'16px', fontSize:'13px', color:T.rd, lineHeight:'1.6'}}>
+                <strong>⛔ Composite indices suppressed.</strong> The extreme response pattern detected renders all dimension and composite scores statistically meaningless. Displaying these scores would create a false impression of a valid profile.
+              </div>
+            ) : (
+              <>
+                <p style={{fontSize:'13px', color:T.t2, marginBottom:'14px', lineHeight:'1.6'}}>Each composite index draws from multiple modules simultaneously, weighted by meta-analytic validity evidence per job family. These are the primary decision-making scores for HR leadership — they reflect how dimensions interact, not just how they score individually.</p>
+                <div style={{overflowX:'auto'}}>
+                  <table style={tableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Index</th>
+                        <th style={thStyle}>Score</th>
+                        <th style={{...thStyle, width:'130px'}}>Profile</th>
+                        <th style={thStyle}>Risk Level</th>
+                        <th style={thStyle}>What it measures & why it matters</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        {k:'Compliance & Integrity Index (CII)', f:'EO_RC × 0.32 + EO_AI × 0.32 + EO_T × 0.20 + C × 0.16', v:CI.CII, g:70, a:54, d:'Primary screen for treasury, audit, procurement, and any fiduciary role. CII below 54 is a placement flag regardless of other scores.'},
+                        {k:'Leadership Readiness Score (LRS)', f:'C × 0.22 + E × 0.18 + LAavg × 0.25 + EOavg × 0.20 + ES × 0.15', v:CI.LRS, g:72, a:55, d:'Composite predictor of senior leadership performance. Combines the five dimensions with highest leadership validity. Use for promotion and succession decisions.'},
+                        {k:'Team Value Score (TVS)', f:'A × 0.22 + OCB_A × 0.20 + OCB_S × 0.18 + OCB_CO × 0.18 + OCBavg × 0.22', v:CI.TVS, g:68, a:51, d:'Predicts team cohesion contribution. Low TVS candidates may create friction or free-ride on colleagues. High TVS candidates are informal team anchors.'},
+                        {k:'Adaptability Score (ADS)', f:'LAavg × 0.38 + O × 0.32 + CQavg × 0.30', v:CI.ADS, g:67, a:50, d:'Suitability for change, reform, and innovation roles. Low ADS candidates need stable, structured environments. Do not place in transformation leadership.'},
+                        {k:'Stakeholder Effectiveness Score (SES)', f:'E × 0.28 + A × 0.22 + CQavg × 0.28 + OCB_CO × 0.22', v:CI.SES, g:68, a:52, d:'Effectiveness with clients, donors, regulators, and partners. Combines social confidence, empathy, cultural intelligence, and proactive communication.'},
+                        {k:'Operational Reliability Score (OPS)', f:'C × 0.35 + ES × 0.30 + OCB_Cn × 0.20 + LA_MA × 0.15', v:CI.OPS, g:67, a:51, d:'Sustained delivery and operational reliability under pressure. Primary predictor for technical, specialist, and operations roles.'},
+                      ].map((c, i, arr) => {
+                        const isLast = i === arr.length - 1;
+                        const col = c.v >= c.g ? T.gn : c.v >= c.a ? T.am : T.rd;
+                        const bg = c.v >= c.g ? T.gnP : c.v >= c.a ? T.amP : T.rdP;
+                        const lbl = c.v >= c.g ? 'LOW RISK' : c.v >= c.a ? 'MODERATE' : 'HIGH RISK';
+                        return (
+                          <tr key={i}>
+                            <td style={isLast ? lastTdStyle : tdStyle}>
+                              <strong style={{color:T.t0}}>{c.k}</strong><br/>
+                              <span className="mono" style={{fontSize:'10px', color:T.t3}}>{c.f}</span>
+                            </td>
+                            <td style={isLast ? lastTdStyle : tdStyle}>
+                              <span className="mono" style={{display:'inline-block', padding:'4px 10px', borderRadius:'100px', fontSize:'12px', fontWeight:'800', background:bg, color:col}}>{c.v}/100</span>
+                            </td>
+                            <td style={isLast ? lastTdStyle : tdStyle}>
+                              <Bar score={c.v} w="100%" h={6} />
+                            </td>
+                            <td style={isLast ? lastTdStyle : tdStyle}>
+                              <span style={{fontSize:'11px', fontWeight:'800', color:col}}>{lbl}</span>
+                            </td>
+                            <td style={{...(isLast ? lastTdStyle : tdStyle), fontSize:'12.5px', lineHeight:'1.5'}}>{c.d}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── VALIDITY INDEX ── */}
+          <div style={{background:validity.overall==='green'?T.gnP:validity.overall==='amber'?T.amP:T.rdP, border:`1px solid ${validity.overall==='green'?T.gn:validity.overall==='amber'?T.am:T.rd}40`, borderRadius:'12px', padding:'24px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'12px'}}>
+              <span style={{fontSize:'20px'}}>{validity.overall==='green'?'✅':validity.overall==='amber'?'⚠️':'🚨'}</span>
+              <h4 style={{fontSize:'15px', fontWeight:'700', color:validity.overall==='green'?T.gn:validity.overall==='amber'?T.am:T.rd}}>Response Validity Index: {validity.overallLabel}</h4>
+            </div>
+            <div style={{fontSize:'13px', lineHeight:'1.65', color:T.t1, marginBottom:'16px'}}>
+              {validity.flags.map((f,i) => <div key={i} style={{marginBottom:'4px'}}><strong style={{color:f.type==='red'?T.rd:f.type==='amber'?T.am:T.gn}}>{f.key}:</strong> {f.text}</div>)}
+            </div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginTop:'16px'}}>
+              <div style={{background:T.b0, borderRadius:'8px', padding:'12px', textAlign:'center'}}>
+                <div className="mono" style={{fontSize:'1.4rem', fontWeight:'800', color:T.t0}}>{validity.lAgree}/10</div>
+                <div className="mono" style={{fontSize:'9px', textTransform:'uppercase', letterSpacing:'0.06em', color:T.t3, marginTop:'4px', fontWeight:'700'}}>L-Scale Agrees</div>
+              </div>
+              <div style={{background:T.b0, borderRadius:'8px', padding:'12px', textAlign:'center'}}>
+                <div className="mono" style={{fontSize:'1.4rem', fontWeight:'800', color:T.t0}}>{Math.round(validity.saRatio*100)}%</div>
+                <div className="mono" style={{fontSize:'9px', textTransform:'uppercase', letterSpacing:'0.06em', color:T.t3, marginTop:'4px', fontWeight:'700'}}>Strongly Agree Rate</div>
+              </div>
+              <div style={{background:T.b0, borderRadius:'8px', padding:'12px', textAlign:'center'}}>
+                <div className="mono" style={{fontSize:'1.4rem', fontWeight:'800', color:T.t0}}>{Math.round(validity.extRatio*100)}%</div>
+                <div className="mono" style={{fontSize:'9px', textTransform:'uppercase', letterSpacing:'0.06em', color:T.t3, marginTop:'4px', fontWeight:'700'}}>Extreme Responses</div>
+              </div>
+              <div style={{background:T.b0, borderRadius:'8px', padding:'12px', textAlign:'center'}}>
+                <div className="mono" style={{fontSize:'1.4rem', fontWeight:'800', color:T.t0}}>{validity.conScore}/100</div>
+                <div className="mono" style={{fontSize:'9px', textTransform:'uppercase', letterSpacing:'0.06em', color:T.t3, marginTop:'4px', fontWeight:'700'}}>Consistency Index</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── CROSS-DIMENSIONAL PATTERNS ── */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
+              <Pill label="Patterns" color={T.c} />
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>Cross-Dimensional Pattern Analysis</h3>
+              <span className="mono" style={{fontSize:'10px', color:T.t3, marginLeft:'auto'}}>Interaction effects across modules</span>
+            </div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'20px', lineHeight:'1.6'}}>Individual dimension scores do not tell the whole story. The patterns below identify how dimensions interact — combinations that create specific risks or opportunities that would be invisible from individual scores alone. Red patterns require HR action before deployment.</p>
+            
+            {isDevContext && (
+              <div style={{background:'rgba(59, 130, 246, 0.1)', borderLeft:'3px solid #3B82F6', borderRadius:'0 8px 8px 0', padding:'12px 16px', marginBottom:'20px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6'}}>
+                <strong style={{color:'#3B82F6'}}>Development deployment:</strong> "HR Action" and "Do not place" language in red patterns below indicates high-priority coaching targets in a development context — not disqualification decisions. The candidate-facing Candidate Action Plan addresses these patterns directly and constructively.
+              </div>
+            )}
+
+            {patterns && patterns.length > 0 ? (
+              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+                {patterns.map((p, i) => {
+                  const isRed = p.sev === 'red';
+                  const isAmber = p.sev === 'amber';
+                  const bg = isRed ? T.rdP : isAmber ? T.amP : T.gnP;
+                  const bc = isRed ? T.rd : isAmber ? T.am : T.gn;
+                  const icon = isRed ? '🔴' : isAmber ? '🟡' : '🟢';
+                  return (
+                    <div key={i} style={{background:bg, border:`1px solid ${bc}40`, borderRadius:'10px', padding:'20px'}}>
+                      <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'8px'}}>
+                        <span>{icon}</span>
+                        <span className="mono" style={{fontSize:'11px', fontWeight:'800', color:bc, textTransform:'uppercase', letterSpacing:'0.06em'}}>{p.name}</span>
+                      </div>
+                      <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{p.headline}</div>
+                      <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.65', marginBottom:p.action?'12px':'0'}}>{p.detail}</div>
+                      {p.action && (
+                        <div style={{fontSize:'12.5px', fontWeight:'600', color:T.t0, background:T.b0, padding:'10px 14px', borderRadius:'6px', borderLeft:`3px solid ${bc}`, marginTop:'12px'}}>
+                          <strong>HR Action:</strong> {p.action}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{padding:'20px', background:T.b0, borderRadius:'8px', fontSize:'13px', color:T.t2}}>No significant cross-dimensional patterns detected. Standard onboarding processes apply.</div>
+            )}
+          </div>
+
+          {/* ── THE 5 MODULE TABLES ── */}
+          {[
+            { title: 'Personality at Work — OCEAN Framework', pill: 'Module 1', col: '#3B82F6', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]], note: 'Validity note: OCEAN framework shows mean validity r = .27 for overall job performance (Barrick & Mount, 1991 meta-analysis, N = 12,893). Conscientiousness (r = .22) and Emotional Stability (r = .13) most robust. Scores reflect self-report — triangulate with structured behavioural interview.' },
+            { title: 'Cultural Intelligence (CQ)', pill: 'Module 2', col: T.gn, dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]], note: "CQ demonstrates incremental predictive validity β = .31 for cross-cultural performance over IQ and personality (Ang et al., 2007). Particularly relevant for professionals working across Pakistan's diverse regional, linguistic, and institutional landscape." },
+            { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Module 3', col: T.am, dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]], note: '' },
+            { title: 'Adaptive Thinking & Learning Agility', pill: 'Module 4', col: '#8B5CF6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]], note: 'Learning agility is the single strongest predictor of leadership potential beyond current performance (Lombardo & Eichinger, 2000). In fast-evolving regulatory and market environments, learning agility is the emerging differentiator at senior levels.' },
+            { title: 'Integrity & Ethical Orientation', pill: 'Module 5', col: T.rd, dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]], note: 'Ethical orientation assessments demonstrate strong criterion validity for misconduct prediction (r = −.41, Rest, 1986). Low EO scores — particularly in Authentic Integrity and Transparent Disclosure — should trigger mandatory ethics training before placement in high-discretion roles.' }
+          ].map((mod, i) => (
+            <div key={i} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
+                <Pill label={mod.pill} color={mod.col} bg={`${mod.col}15`} />
+                <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>{mod.title}</h3>
+              </div>
+              <div style={{overflowX:'auto'}}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Dimension</th>
+                      <th style={thStyle}>Score</th>
+                      <th style={{...thStyle, width:'130px'}}>Profile</th>
+                      <th style={thStyle}>Band</th>
+                      <th style={thStyle}>Psychometric Interpretation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mod.dims.map(([k, l, v], j, arr) => {
+                      const isLast = j === arr.length - 1;
+                      const col = bCol(v);
+                      const bg = bBg(v);
+                      return (
+                        <tr key={k}>
+                          <td style={isLast ? lastTdStyle : tdStyle}>
+                            <strong style={{color:T.t0}}>{l}</strong>
+                          </td>
+                          <td style={isLast ? lastTdStyle : tdStyle}>
+                            <span className="mono" style={{display:'inline-block', padding:'4px 10px', borderRadius:'100px', fontSize:'12px', fontWeight:'800', background:bg, color:col}}>{v}/100</span>
+                          </td>
+                          <td style={isLast ? lastTdStyle : tdStyle}>
+                            <Bar score={v} w="100%" h={6} />
+                          </td>
+                          <td style={isLast ? lastTdStyle : tdStyle}>
+                            <span style={{fontSize:'11px', fontWeight:'800', color:col}}>{bd(v)}</span>
+                          </td>
+                          <td style={{...(isLast ? lastTdStyle : tdStyle), fontSize:'12.5px', lineHeight:'1.5'}}>{dimI(k, v)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {mod.note && <div className="mono" style={{marginTop:'16px', fontSize:'10px', color:T.t3, background:T.bg2, padding:'12px', borderRadius:'6px', lineHeight:'1.5'}}>{mod.note}</div>}
+            </div>
+          ))}
+
+          {/* ── ROLE SUITABILITY MATRIX ── */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
+              <Pill label="Suitability" color={T.gold} />
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>Role Suitability Matrix</h3>
+              <span className="mono" style={{fontSize:'10px', color:T.t3, marginLeft:'auto'}}>Composite index-based deployment guide</span>
+            </div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'20px', lineHeight:'1.6'}}>Each rating is derived from the relevant composite index for that role family. 🚫 Not Recommended means the composite score falls below the minimum threshold for safe or effective deployment in that role type — not that the candidate is generally unsuitable. Interview probes are provided for all red-rated role types.</p>
+            
+            <div style={{overflowX:'auto'}}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Role Family</th>
+                    <th style={thStyle}>Score</th>
+                    <th style={{...thStyle, width:'130px'}}>Profile</th>
+                    <th style={thStyle}>Verdict</th>
+                    <th style={thStyle}>Guidance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {roles.map((r, i, arr) => {
+                    const isLast = i === arr.length - 1;
+                    const rat = r.score>=r.g?'green':r.score>=r.a?'amber':'red';
+                    const lbl = rat==='green'?'✅ Suitable':rat==='amber'?'⚠️ Conditional':'🚫 Not Recommended';
+                    const col = rat==='green'?T.gn:rat==='amber'?T.am:T.rd;
+                    const bg = rat==='green'?T.gnP:rat==='amber'?T.amP:T.rdP;
+                    return (
+                      <tr key={i}>
+                        <td style={{...(isLast ? lastTdStyle : tdStyle), fontWeight:'700', color:T.t0}}>{r.name}</td>
+                        <td style={isLast ? lastTdStyle : tdStyle}>
+                          <span className="mono" style={{display:'inline-block', padding:'4px 10px', borderRadius:'100px', fontSize:'12px', fontWeight:'800', background:bg, color:col}}>{r.score}/100</span>
+                        </td>
+                        <td style={isLast ? lastTdStyle : tdStyle}>
+                          <Bar score={r.score} w="100%" h={6} />
+                        </td>
+                        <td style={isLast ? lastTdStyle : tdStyle}>
+                          <span style={{fontSize:'11px', fontWeight:'800', color:col}}>{lbl}</span>
+                        </td>
+                        <td style={{...(isLast ? lastTdStyle : tdStyle), fontSize:'12.5px', lineHeight:'1.5'}}>
+                          {rat==='red' ? (
+                            <>
+                              <div style={{color:T.rd, marginBottom:'8px'}}>{r.redNote}</div>
+                              <div className="mono" style={{fontSize:'9px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'4px', color:T.t0}}>Required Interview Probes:</div>
+                              {r.probeQ.map((q,qi)=><div key={qi} style={{padding:'4px 0', borderBottom:qi<r.probeQ.length-1?`1px solid ${T.b1}`:'none'}}>→ {q}</div>)}
+                            </>
+                          ) : rat==='amber' ? 'Use with structured onboarding and defined performance milestones.' : 'Suitable for deployment. Standard performance management applies.'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {R.industry && IND[R.industry] && (
+              <div style={{background:T.bg2, borderRadius:'10px', padding:'20px', marginTop:'24px', borderLeft:`4px solid ${T.c}`}}>
+                <h4 style={{fontSize:'12px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.08em', color:T.gold, marginBottom:'10px'}}>{IND[R.industry].icon} {IND[R.industry].short} — Industry Lens</h4>
+                <p style={{fontSize:'13px', color:T.t1, lineHeight:'1.65', marginBottom:'12px'}} dangerouslySetInnerHTML={{__html: IND[R.industry].lens}}></p>
+                <p style={{fontSize:'13px', color:T.t1, marginBottom:'8px'}}><strong>High Potential Benchmark:</strong> {IND[R.industry].hiPotential}</p>
+                <p style={{fontSize:'13px', color:T.rd}}><strong>Industry Risk Note:</strong> {IND[R.industry].riskNote}</p>
+              </div>
+            )}
+          </div>
+
+          {/* ── GAME PERFORMANCE ── */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
+              <Pill label="Gamified" color="#8B5CF6" bg="rgba(139, 92, 246, 0.15)" />
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>Performance Challenge Results</h3>
+              <span className="mono" style={{fontSize:'10px', color:T.t3, marginLeft:'auto'}}>Ethical Balance · Situational Judgment × 2</span>
+            </div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'20px', lineHeight:'1.6'}}>These three challenges bypass deliberate self-presentation. Scores are already incorporated into the relevant dimension scores above. The table below shows the raw performance for HR reference and audit purposes.</p>
+            
+            <div style={{overflowX:'auto'}}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Challenge</th>
+                    <th style={thStyle}>Type</th>
+                    <th style={thStyle}>Performance</th>
+                    <th style={thStyle}>Modifier Applied</th>
+                    <th style={thStyle}>Dimensions Affected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    {t:'Values in Balance — Seesaw', sub:'No timer — deliberate position (early, within Part A)', type:'Ethical Values Elicitation', perf:gameSummary.seesaw.label, pts:`${gameSummary.seesaw.bonus>=0?'+':''}${gameSummary.seesaw.bonus} pts · Pos: ${gameSummary.seesaw.val}/100`, dims:'Ethical Reasoning (EO_ER)', col:gameSummary.seesaw.bonus>=0?T.gn:T.rd, bg:gameSummary.seesaw.bonus>=0?T.gnP:T.rdP},
+                    {t:'Quick Decision Challenge', sub:'Timed 45-sec scenario (mid-Part C)', type:'Situational Judgment Test', perf:gameSummary.scenario1.label, pts:`${gameSummary.scenario1.raw>=0?'+':''}${gameSummary.scenario1.raw} pts`, dims:'People Agility (LA_PA), Transparency (EO_T)', col:gameSummary.scenario1.raw>=0?T.gn:T.rd, bg:gameSummary.scenario1.raw>=0?T.gnP:T.rdP},
+                    {t:'Ethics Under Pressure', sub:'Timed 45-sec scenario (after Part E, before Part F)', type:'Situational Judgment Test', perf:gameSummary.scenario2.label, pts:`${gameSummary.scenario2.raw>=0?'+':''}${gameSummary.scenario2.raw} pts`, dims:'Rule Compliance (EO_RC), Authentic Integrity (EO_AI)', col:gameSummary.scenario2.raw>=0?T.gn:T.rd, bg:gameSummary.scenario2.raw>=0?T.gnP:T.rdP},
+                  ].map((g, i, arr) => {
+                    const isLast = i === arr.length - 1;
+                    return (
+                      <tr key={i}>
+                        <td style={isLast ? lastTdStyle : tdStyle}>
+                          <strong style={{color:T.t0}}>{g.t}</strong><br/>
+                          <span style={{fontSize:'11px', color:T.t3}}>{g.sub}</span>
+                        </td>
+                        <td style={{...(isLast ? lastTdStyle : tdStyle), fontSize:'11px', color:T.t2}}>{g.type}</td>
+                        <td style={isLast ? lastTdStyle : tdStyle}>
+                          <span className="mono" style={{display:'inline-block', padding:'4px 10px', borderRadius:'6px', fontSize:'11px', fontWeight:'800', background:g.bg, color:g.col}}>{g.perf}</span>
+                        </td>
+                        <td style={isLast ? lastTdStyle : tdStyle}>
+                          <span className="mono" style={{fontSize:'12px', fontWeight:'800', color:g.col}}>{g.pts}</span>
+                        </td>
+                        <td style={{...(isLast ? lastTdStyle : tdStyle), fontSize:'12px', color:T.t1}}>{g.dims}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="mono" style={{marginTop:'16px', fontSize:'10px', color:T.t3, background:T.bg2, padding:'12px', borderRadius:'6px', lineHeight:'1.5'}}>Performance challenge scores are incorporated into dimension composites at a capped modifier of ±10 points per dimension. Methodology: Situational Judgment Tests (McDaniel et al., 2001); Ethical values elicitation (Rest, 1986); Kohlberg (1969).</div>
+          </div>
+
+          <div className="mono" style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'16px 20px', marginBottom:'24px', fontSize:'10.5px', color:T.t2, lineHeight:'1.7'}}>
+            <strong style={{color:T.t0}}>Assessment Integrity Statement:</strong> PACER v3.0 is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring or promotion decisions. All red-rated patterns and role suitability ratings require triangulation with structured behavioural interview before final HR decision. Composite index weightings are derived from published meta-analytic evidence. Copyright: Carnelian Pvt Ltd. Licensed use only.
+          </div>
+
+        </div>
+      );
+    })()}
+
+{/* ─── TAB 3: PLAYER REPORT (GAMIFIED) ─── */}
+      {resTab === 'player' && (() => {
+        // Game Engine Math
+        const SKILLS = [
+          {k:'C', l:'Delivery Drive', i:'⚡', v:S.C}, {k:'O', l:'Innovation Force', i:'💡', v:S.O},
+          {k:'E', l:'Social Power', i:'🔥', v:S.E}, {k:'A', l:'Alliance Skill', i:'🤝', v:S.A},
+          {k:'ES', l:'Resilience Core', i:'🛡', v:S.ES}, {k:'CQavg', l:'Cultural IQ', i:'🌐', v:S.CQavg},
+          {k:'OCBavg', l:'Team Spirit', i:'👥', v:S.OCBavg}, {k:'LAavg', l:'Learn Speed', i:'📚', v:S.LAavg},
+          {k:'EOavg', l:'Integrity', i:'⚖️', v:S.EOavg}
+        ];
+        const baseXP = Math.round(SKILLS.reduce((a,s)=>a+s.v,0)*10);
+        const compVals = [CI.CII,CI.LRS,CI.TVS,CI.ADS,CI.SES,CI.OPS,CI.PMS];
+        const compBonus = Math.round((compVals.reduce((a,v)=>a+(v||0),0)/compVals.length)*50);
+        const patBonus = (patterns||[]).filter(p=>p.sev==='pos').length * 500;
+        const earnedXP = baseXP + compBonus + patBonus;
+
+        const LEVELS = [
+          {n:1,l:'NOVICE',min:0}, {n:2,l:'APPRENTICE',min:5000}, {n:3,l:'PRACTITIONER',min:8000},
+          {n:4,l:'PROFESSIONAL',min:11000}, {n:5,l:'ADVANCED',min:14000}, {n:6,l:'SENIOR',min:17000},
+          {n:7,l:'EXPERT',min:20000}, {n:8,l:'MASTER',min:23000}, {n:9,l:'ELITE',min:26000}, {n:10,l:'LEGEND',min:29000}
+        ];
+        
+        let verifiedXP = 0;
+        Object.values(evState).forEach(e => verifiedXP += (e.xp || 0));
+        const totalXP = earnedXP + verifiedXP;
+        const currentLevel = [...LEVELS].reverse().find(l => totalXP >= l.min) || LEVELS[0];
+        const nextLevel = LEVELS[currentLevel.n] || currentLevel;
+        const xpToNext = nextLevel.min > totalXP ? nextLevel.min - totalXP : 0;
+        const levelPct = nextLevel.min > currentLevel.min ? Math.round(((totalXP - currentLevel.min)/(nextLevel.min - currentLevel.min))*100) : 100;
+
+        // Calculate max possible XP for the Command Centre
+        const maxQuestXP = devAreas.length * 500;
+        const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='research'?500:r.type==='book'?300:200), 0);
+        const maxBadgeXP = [
+          {cond:S.C>=75, xp:300}, {cond:S.O>=75, xp:300}, {cond:S.E>=75, xp:200}, {cond:S.A>=75, xp:200},
+          {cond:S.ES>=75, xp:300}, {cond:S.CQavg>=75, xp:400}, {cond:S.OCBavg>=75, xp:300}, {cond:S.LAavg>=75, xp:400},
+          {cond:S.EOavg>=75, xp:500}, {cond:CI.CII>=80, xp:400}, {cond:CI.LRS>=75, xp:500}, {cond:patBonus>0, xp:600}
+        ].filter(a=>a.cond).reduce((a,b)=>a+b.xp, 0);
+        const totalPossible = earnedXP + maxBadgeXP + maxQuestXP + maxPowerUpXP;
+        const earnedPct = Math.round((totalXP / Math.max(totalPossible, 1)) * 100);
+
+        return (
+        <div className="anim-fadeUp">
+          {/* Hero Card */}
+          <div style={{background:`linear-gradient(135deg, ${T.bg1} 0%, ${T.bg2} 100%)`, border:`1px solid ${T.c}40`, borderRadius:'16px', padding:'40px', marginBottom:'24px', position:'relative', overflow:'hidden', boxShadow:`0 0 30px ${T.cGlow}`}}>
+            <div style={{position:'absolute', top:'-50%', left:'-50%', width:'200%', height:'200%', background:`radial-gradient(ellipse at center, ${T.cGlow} 0%, transparent 60%)`, pointerEvents:'none'}} />
+            <div style={{display:'flex', alignItems:'flex-start', gap:'24px', flexWrap:'wrap', position:'relative', zIndex:1}}>
+              <div style={{fontSize:'4rem', filter:`drop-shadow(0 0 12px ${T.c})`, animation:'g-float 3s ease-in-out infinite'}}>
+                {profile.tier===1?'👑':profile.tier===2?'⚔️':profile.tier===3?'✨':'🌟'}
+              </div>
+              <div style={{flex:1}}>
+                <div className="mono" style={{fontSize:'10px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', color:T.c, marginBottom:'8px'}}>
+                  {profile.tier===1?'LEGENDARY CLASS':profile.tier===2?'ELITE CLASS':profile.tier===3?'SPECIALIST CLASS':'ADVENTURER CLASS'} · PACER v3.0
+                </div>
+                <div className="serif" style={{fontSize:'2.2rem', fontWeight:'700', color:T.t0, lineHeight:'1.1', marginBottom:'8px'}}>{R.name}</div>
+                <div style={{fontSize:'14px', color:T.t2, marginBottom:'20px', fontWeight:'600'}}>{profile.name}</div>
+                
+                <div style={{display:'flex', alignItems:'center', gap:'16px', marginBottom:'12px'}}>
+                  <div style={{background:`${T.c}20`, color:T.c, border:`1px solid ${T.c}50`, padding:'6px 16px', borderRadius:'100px', fontSize:'11px', fontWeight:'800', letterSpacing:'0.08em', textTransform:'uppercase'}}>
+                    LV {currentLevel.n} {currentLevel.l}
+                  </div>
+                  <div className="mono" style={{fontSize:'13px', color:T.t2}}>
+                    <span style={{color:T.c, fontWeight:'800'}}>{totalXP.toLocaleString()}</span> XP
+                  </div>
+                  {xpToNext > 0 && <div style={{fontSize:'11px', color:T.t3}}>{xpToNext.toLocaleString()} XP to LV {currentLevel.n + 1}</div>}
+                </div>
+                
+                <div style={{width:'100%', maxWidth:'400px', height:'10px', background:T.b1, borderRadius:'100px', overflow:'hidden'}}>
+                  <div style={{width:`${levelPct}%`, height:'100%', background:`linear-gradient(90deg, ${T.c}, ${T.gold})`, borderRadius:'100px', boxShadow:`0 0 8px ${T.c}`}} />
+                </div>
+              </div>
+              
+              <div style={{display:'flex', flexDirection:'column', gap:'12px', minWidth:'100px'}}>
+                <div style={{background:T.b0, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px', textAlign:'center'}}>
+                  <div className="mono" style={{fontSize:'1.6rem', fontWeight:'800', color:T.c}}>{S.overall}</div>
+                  <div style={{fontSize:'10px', color:T.t3, marginTop:'4px', fontWeight:'700'}}>POWER</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Skill Board */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'24px'}}>
+              <span style={{fontSize:'20px'}}>⚔️</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>SKILL BOARD</h3>
+            </div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', gap:'16px'}}>
+              {SKILLS.map((sk, idx) => {
+                const lvl = Math.floor(sk.v/10);
+                const col = sk.v>=75 ? T.gold : sk.v>=55 ? T.c : T.rd;
+                const status = sk.v>=90 ? 'MAXED' : sk.v>=75 ? 'STRONG' : sk.v>=55 ? 'LEVELING' : 'NEEDS XP';
+                return (
+                  <div key={idx} style={{background:T.b0, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'16px'}}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
+                      <span style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{sk.i} {sk.l}</span>
+                      <span className="mono" style={{fontSize:'11px', fontWeight:'700', color:col}}>LV{lvl}</span>
+                    </div>
+                    <div style={{height:'6px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'8px'}}>
+                      <div style={{height:'100%', width:`${sk.v}%`, background:`linear-gradient(90deg, ${col}, ${col}80)`, borderRadius:'100px'}} />
+                    </div>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                      <span style={{fontSize:'10px', fontWeight:'800', color:col}}>{status}</span>
+                      <span className="mono" style={{fontSize:'10px', color:T.t3}}>{sk.v}/100</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Achievements Wall */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'24px'}}>
+              <span style={{fontSize:'20px'}}>🏆</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>ACHIEVEMENTS UNLOCKED</h3>
+            </div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px, 1fr))', gap:'12px'}}>
               {[
-                {bg:'#FEF2F2', border:'#FECACA', color:'#B91C1C', title:'1. Act Now (0-30 Days)', subtitle:'Micro-Habit Formation', text:"Focus purely on the 'Daily Habits' listed in your roadmap. Pick just one dimension to start. Do not attempt a massive overhaul—focus on tiny, 5-minute behavioral shifts that you can sustain daily without burnout."},
-                {bg:'#FFFBEB', border:'#FDE68A', color:'#D97706', title:'2. Build Soon (30-90 Days)', subtitle:'Social Accountability', text:'Involve others. Share your specific development goals with a trusted manager or mentor. This is the phase for enrolling in workshops, restructuring your workflows, and actively asking colleagues for feedback.'},
-                {bg:'#F0FDF4', border:'#BBF7D0', color:'#15803D', title:'3. Sustain (90-180 Days)', subtitle:'Pressure Testing', text:'Transition from learning to leading. Take ownership of a complex project that forces you to use your new skills under pressure. Cement your new brand within the team by delivering consistently.'},
-                {bg:'#F3F4F6', border:'#E5E7EB', color:'#4B5563', title:'4. The Feedback Loop', subtitle:'Measuring Success', text:'Book a recurring 15-minute calendar block on the last Friday of every month. Ask yourself: "Am I reacting out of habit, or responding with intention?" Adjust your approach based on what is working.'},
-                {bg:'#EFF6FF', border:'#BFDBFE', color:'#1D4ED8', title:'5. Anticipating Relapse', subtitle:'Grace Under Fire', text:'When stress hits, you will likely revert to old habits. Expect this. When it happens, do not abandon the plan. Acknowledge the slip, reset your environment, and start fresh the very next morning.'},
-                {bg:'#FAF5FF', border:'#E9D5FF', color:'#7E22CE', title:'6. Expanding Impact', subtitle:'Teaching Others', text:'The ultimate test of mastering a new skill is teaching it. Once you have solidified your new habits, look for a junior colleague struggling with the same issues and gently mentor them through your process.'}
-              ].map((item, idx) => (
-                <div key={idx} className="avoid-break" style={{background:item.bg,border:`1px solid ${item.border}`,borderRadius:'10px',padding:'24px'}}>
-                  <div style={{fontSize:'12px',fontWeight:'800',color:item.color,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'10px'}}>{item.title}</div>
-                  <div style={{fontSize:'14px',fontWeight:'700',color:item.color.replace('1','2').replace('6','7'),marginBottom:'8px'}}>{item.subtitle}</div>
-                  <p style={{fontSize:'12.5px',color:item.color.replace('1','2').replace('6','7'),lineHeight:'1.6',fontWeight:'500'}}>{item.text}</p>
+                {cond:S.C>=75, i:'⚡', n:'IRON WILL', d:'Delivery you can count on.', c:'#FBBF24', xp:300},
+                {cond:S.O>=75, i:'💡', n:'BRIGHT MIND', d:'Rare intellectual curiosity.', c:'#A78BFA', xp:300},
+                {cond:S.E>=75, i:'🔥', n:'SOCIAL FLAME', d:'Natural command presence.', c:'#F472B6', xp:200},
+                {cond:S.A>=75, i:'🤝', n:'ALLIANCE BUILDER', d:'People trust you instinctively.', c:'#4ADE80', xp:200},
+                {cond:S.ES>=75, i:'🛡', n:'UNBREAKABLE', d:'Composure under fire.', c:'#38BDF8', xp:300},
+                {cond:S.CQavg>=75, i:'🌐', n:'CULTURE MASTER', d:'Operating across boundaries.', c:'#38BDF8', xp:400},
+                {cond:S.OCBavg>=75, i:'👥', n:'TEAM ANCHOR', d:'Your presence lifts the team.', c:'#FB7185', xp:300},
+                {cond:S.LAavg>=75, i:'📚', n:'FAST LEARNER', d:'You outgrow roles.', c:'#E879F9', xp:400},
+                {cond:S.EOavg>=75, i:'⚖️', n:'INTEGRITY LOCK', d:'Rare and trusted.', c:'#FBBF24', xp:500},
+                {cond:CI.CII>=80, i:'🏛', n:'COMPLIANCE SHIELD', d:'Trusted in fiduciary roles.', c:'#FBBF24', xp:400},
+                {cond:CI.LRS>=75, i:'👑', n:'LEADERSHIP READY', d:'Senior accountability awaits.', c:'#FBBF24', xp:500},
+                {cond:patBonus>0, i:'🌠', n:'RARE PATTERN', d:'Elite cross-dimensional pattern.', c:'#E879F9', xp:600}
+              ].filter(a=>a.cond).map((a, i) => (
+                <div key={i} style={{background:T.b0, border:`1px solid ${a.c}40`, borderRadius:'10px', padding:'16px', textAlign:'center', boxShadow:`0 0 12px ${a.c}10`}}>
+                  <div style={{fontSize:'28px', marginBottom:'8px', filter:`drop-shadow(0 0 6px ${a.c})`}}>{a.i}</div>
+                  <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:a.c, marginBottom:'4px'}}>{a.n}</div>
+                  <div style={{fontSize:'11px', color:T.t2, marginBottom:'8px'}}>{a.d}</div>
+                  <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gn}}>+{a.xp} XP</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="page-break"></div>
-
-          {/* CTA Section */}
-          <div className="avoid-break" style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'48px 40px', textAlign:'center', marginTop:'24px'}}>
-            <div style={{width:'56px', height:'56px', background:T.goldP, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px'}}>
-              <span style={{fontSize:'24px'}}>🤝</span>
+          {/* Quests */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+              <span style={{fontSize:'20px'}}>🎯</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>ACTIVE QUESTS</h3>
             </div>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.8rem',fontWeight:'700',color:T.gold,marginBottom:'16px'}}>Let's Build Your Path Together</h3>
-            <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',maxWidth:'640px',margin:'0 auto 32px',fontWeight:'500'}}>
-              Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.
-            </p>
-            <a href="mailto:hello@carnelianco.com" target="_blank" rel="noopener noreferrer" style={{
-              display:'inline-block', padding:'14px 32px', borderRadius:'8px',
-              background:'transparent', color:T.t0, border:`2px solid ${T.c}`,
-              fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',
-              textDecoration:'none', transition:'all 0.2s', boxShadow:`0 4px 12px ${T.cGlow}`
-            }} onMouseOver={(e) => {e.target.style.background=T.c; e.target.style.borderColor=T.c;}} 
-            onMouseOut={(e) => {e.target.style.background='transparent'; e.target.style.borderColor=T.c;}}>
-              Reach out at hello@carnelianco.com
-            </a>
-            <div className="mono" style={{marginTop:'40px',fontSize:'9px',color:T.t3,fontWeight:'600'}}>{docId} · CORE by Carnelian · {date}</div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'24px', lineHeight:'1.6'}}>Each quest is a development dimension where your score is below threshold. Complete objectives in the real world to earn XP.</p>
+            
+            <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+              {devAreas.length > 0 ? devAreas.map((d, i) => {
+                const questXpTotal = 500;
+                const stepXp = Math.round(questXpTotal / d.habits.length);
+                let completedCount = 0;
+                
+                d.habits.forEach((h, j) => {
+                  if (evState[`q_${i}_${j}`]) completedCount++;
+                });
+                
+                const questPct = Math.round((completedCount / d.habits.length) * 100);
+                const isComplete = completedCount === d.habits.length;
+
+                return (
+                <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px'}}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}}>
+                    <div style={{fontSize:'14px', fontWeight:'700', color:T.t0}}>{d.dim.toUpperCase()} QUEST</div>
+                    <div style={{textAlign:'right'}}>
+                      <div className="mono" style={{fontSize:'12px', fontWeight:'800', color:isComplete?T.gn:T.c}}>{completedCount}/{d.habits.length}</div>
+                      <div style={{height:'4px', width:'60px', background:T.b1, borderRadius:'100px', marginTop:'4px', overflow:'hidden'}}>
+                        <div style={{height:'100%', width:`${questPct}%`, background:isComplete?T.gn:T.c, borderRadius:'100px', transition:'width 0.3s'}} />
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:'12px', color:T.t2, marginBottom:'16px'}}>Difficulty: <span style={{color:T.gold}}>★★★☆☆</span> · Reward: <span style={{color:T.gn, fontWeight:'700'}}>+{questXpTotal} XP</span></div>
+                  
+                  <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                    {d.habits.map((h, j) => {
+                      const isDone = !!evState[`q_${i}_${j}`];
+                      return (
+                        <div key={j} onClick={() => toggleEvidence(`q_${i}_${j}`, stepXp)} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px', background:isDone?T.gnP:T.bg3, borderRadius:'8px', border:`1px solid ${isDone?T.gn:T.b1}`, cursor:'pointer', transition:'all 0.2s'}}>
+                          <div style={{width:'20px', height:'20px', borderRadius:'50%', border:`2px solid ${isDone?T.gn:T.b2}`, background:isDone?T.gn:'transparent', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                            {isDone && <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>}
+                          </div>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:'10px', fontWeight:'800', color:isDone?T.gn:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'2px'}}>STEP {j+1}</div>
+                            <div style={{fontSize:'12.5px', color:isDone?T.gn:T.t1, lineHeight:'1.5', textDecoration:isDone?'line-through':'none'}}><strong style={{color:isDone?T.gn:T.t0}}>{h.h}</strong> {h.t}</div>
+                          </div>
+                          <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:isDone?T.gn:T.t3}}>+{stepXp} XP</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}) : (
+                <div style={{padding:'24px', background:T.gnP, borderRadius:'10px', color:T.gn, fontSize:'13px', fontWeight:'600'}}>
+                  No active quests! Your profile is highly balanced. Seek out "Guild Missions" (advanced training) to continue leveling up.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Power-Up Armory */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+              <span style={{fontSize:'20px'}}>⚡</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>POWER-UP ARMORY</h3>
+            </div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'24px', lineHeight:'1.6'}}>Click a resource to mark it collected and earn XP. Legendary items yield the highest rewards.</p>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+              {resources.map((r, i) => {
+                const isCollected = !!evState[`pu_${i}`];
+                const xpReward = r.type==='research'?500:r.type==='book'?300:200;
+                return (
+                  <div key={i} onClick={()=>toggleEvidence(`pu_${i}`, xpReward)} style={{background:isCollected?T.gnP:T.bg2, border:`1px solid ${isCollected?T.gn:T.b1}`, borderRadius:'10px', padding:'16px', cursor:'pointer', transition:'all 0.2s', opacity:isCollected?0.6:1}}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                      <div>
+                        <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:isCollected?T.gn:T.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>{r.type} · {r.type==='research'?'LEGENDARY':r.type==='book'?'RARE':'UNCOMMON'}</div>
+                        <div style={{fontSize:'14px', fontWeight:'700', color:isCollected?T.gn:T.t0, marginBottom:'4px'}}>{isCollected?'✅ ':''}{r.title}</div>
+                        <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5'}}>{r.why}</div>
+                      </div>
+                      <div className="mono" style={{fontSize:'12px', fontWeight:'800', color:isCollected?T.gn:T.gold}}>+{xpReward} XP</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Guild Missions */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+              <span style={{fontSize:'20px'}}>🏛</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>CARNELIAN GUILD MISSIONS</h3>
+            </div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'24px', lineHeight:'1.6'}}>Guild Missions are structured training programmes that boost specific skill nodes. Commission one through your organisation.</p>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+              {programs.map((p, i) => (
+                <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <div>
+                    <div style={{fontSize:'14px', fontWeight:'700', color:T.gold, marginBottom:'4px'}}>{p.name}</div>
+                    <div style={{fontSize:'12px', color:T.t1}}>{p.desc}</div>
+                  </div>
+                  <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.t3, background:T.b0, padding:'6px 12px', borderRadius:'6px'}}>GUILD MISSION</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* XP Command Centre */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
+              <span style={{fontSize:'20px'}}>📊</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>XP COMMAND CENTRE</h3>
+            </div>
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'20px'}}>
+              {[
+                ['XP Earned (Scores)', earnedXP, '#60A5FA'],
+                ['XP Earned (Badges)', maxBadgeXP, '#4ADE80'],
+                ['XP Earned (Quests)', Object.keys(evState).filter(k=>k.startsWith('q_')).reduce((a,k)=>a+evState[k].xp,0), '#E879F9'],
+                ['XP Earned (Power-Ups)', Object.keys(evState).filter(k=>k.startsWith('pu_')).reduce((a,k)=>a+evState[k].xp,0), '#FBBF24'],
+                ['TOTAL XP', totalXP, T.c],
+                ['Max Possible XP', totalPossible, T.t3]
+              ].map((r, i) => (
+                <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <span style={{fontSize:'12px', color:T.t2, fontWeight:'600'}}>{r[0]}</span>
+                  <span className="mono" style={{fontSize:'16px', fontWeight:'800', color:r[2]}}>{r[1].toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{marginBottom:'6px',display:'flex',justifyContent:'space-between'}}><span style={{fontSize:'12px',color:T.t2}}>Overall completion</span><span className="mono" style={{fontSize:'12px',color:T.c}}>{earnedPct}%</span></div>
+            <div style={{height:'8px', background:T.b1, borderRadius:'100px', overflow:'hidden'}}>
+              <div style={{height:'100%', width:`${earnedPct}%`, background:`linear-gradient(90deg,${T.c},${T.gold})`, borderRadius:'100px'}} />
+            </div>
+          </div>
+
+          {/* Evidence Wall */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+              <span style={{fontSize:'20px'}}>📝</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>EVIDENCE WALL</h3>
+            </div>
+            {Object.keys(evState).length === 0 ? (
+              <div style={{background:T.amP, border:`1px dashed ${T.am}50`, borderRadius:'10px', padding:'32px', textAlign:'center'}}>
+                <div style={{fontSize:'32px', marginBottom:'12px'}}>🔒</div>
+                <div style={{fontSize:'14px', fontWeight:'700', color:T.am, marginBottom:'8px'}}>No Evidence Submitted Yet</div>
+                <div style={{fontSize:'13px', color:T.t2}}>Your assessment score is locked. To upgrade your level, you must prove you acted on the report by collecting Power-Ups and completing Quests.</div>
+              </div>
+            ) : (
+              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+                {Object.entries(evState).map(([k, e], i) => (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.gn}40`, borderLeft:`4px solid ${T.gn}`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px'}}>
+                      <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gn}}>VERIFIED ACTION</div>
+                      <div className="mono" style={{fontSize:'12px', fontWeight:'800', color:T.gn}}>+{e.xp} XP</div>
+                    </div>
+                    <div style={{fontSize:'13px', color:T.t1}}>Completed on {new Date(e.ts).toLocaleDateString()}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Re-assessment Readiness */}
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+              <span style={{fontSize:'20px'}}>⏰</span>
+              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>RE-ASSESSMENT READINESS</h3>
+            </div>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'20px', lineHeight:'1.6'}}>Retaking too soon produces measurement noise. Retaking too late means your development investment goes unmeasured.</p>
+            <div style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'24px'}}>
+              <div style={{fontSize:'16px', fontWeight:'700', color:T.rd, marginBottom:'12px'}}>⏳ Too Early to Re-assess</div>
+              <div style={{height:'8px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'16px'}}>
+                <div style={{height:'100%', width:'10%', background:T.rd, borderRadius:'100px'}} />
+              </div>
+              <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6'}}>Re-assessment requires a minimum 4-month gap from your original assessment. Re-testing sooner produces noise rather than real change signal. Keep submitting evidence.</div>
+            </div>
           </div>
 
         </div>
-      </div>
+        );
+      })()}
+
+      {/* ─── TAB 4: TEAM AGGREGATE ─── */}
+      {resTab === 'team' && (() => {
+        const valid = batchData.filter(b => b.validityOverall !== 'red' && b.scores);
+        
+        // Archetype Distribution
+        const archCounts = {};
+        batchData.forEach(b => { archCounts[b.profile] = (archCounts[b.profile]||0) + 1; });
+        const archSorted = Object.entries(archCounts).sort((a,b)=>b[1]-a[1]);
+
+        // Risk Pattern Frequency
+        const riskCounts = {
+          'Performance-Ethics Disconnect': valid.filter(b=>b.scores.C>=68 && b.scores.EOavg<=60).length,
+          'Direct Compliance Risk':        valid.filter(b=>b.scores.EO_RC<55).length,
+          'Charismatic Integrity Risk':    valid.filter(b=>b.scores.E>=70 && b.scores.EO_AI<=60).length,
+          'Visible and Volatile':          valid.filter(b=>b.scores.ES<=60 && b.scores.E>=65).length,
+          'Talented Maverick':             valid.filter(b=>b.scores.LAavg>=70 && b.scores.EOavg<=60).length,
+        };
+        const riskEntries = Object.entries(riskCounts).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+
+        return (
+        <div className="anim-fadeUp">
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
+              <div>
+                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM AGGREGATE REPORT · Batch: {R.batch}</div>
+              </div>
+              <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
+                <div>{batchData.length} total responses</div>
+                {R.industry && <div>{IND[R.industry]?.icon} {IND[R.industry]?.short}</div>}
+              </div>
+            </div>
+            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Aggregate Profile</h2>
+            
+            {batchData.length < 2 ? (
+              <div style={{padding:'24px', background:T.amP, borderRadius:'8px', color:T.am, fontSize:'13px', fontWeight:'600'}}>
+                Insufficient data. At least 2 valid responses are required to generate the Team Aggregate Report.
+              </div>
+            ) : (
+              <>
+                <div style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>
+                  {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
+                    const avg = Math.round(batchData.reduce((sum, b) => sum + (b.scores[k] || 0), 0) / batchData.length);
+                    const labels = ['Personality', 'Cultural IQ', 'Citizenship', 'Learning', 'Integrity'];
+                    return (
+                      <div key={i} style={{textAlign:'center'}}>
+                        <div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{avg}</div>
+                        <div style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>{labels[i]}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Team Dimension Averages</h3>
+                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px', marginBottom:'40px'}}>
+                  {['C','O','E','A','ES','CQavg','OCBavg','LAavg','EOavg'].map((k, i) => {
+                    const avg = Math.round(batchData.reduce((sum, b) => sum + (b.scores[k] || 0), 0) / batchData.length);
+                    const labels = ['Conscientiousness','Openness','Social Confidence','Agreeableness','Emotional Resilience','Cultural Intelligence','Team Citizenship','Learning Agility','Ethical Integrity'];
+                    return (
+                      <div key={i} style={{marginBottom:'8px'}}>
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'4px'}}>
+                          <span style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{labels[i]}</span>
+                          <span className="mono" style={{fontSize:'12px', fontWeight:'800', color:bCol(avg)}}>{avg}/100</span>
+                        </div>
+                        <Bar score={avg} w="100%" h={8} />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Archetype Distribution</h3>
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
+                  {archSorted.map(([name, count], i) => {
+                    const pct = Math.round((count / batchData.length) * 100);
+                    return (
+                      <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', borderLeft:`4px solid ${T.c}`}}>
+                        <div style={{fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{name}</div>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                          <div style={{flex:1, height:'6px', background:T.b1, borderRadius:'100px', overflow:'hidden'}}>
+                            <div style={{height:'100%', width:`${pct}%`, background:T.c, borderRadius:'100px'}} />
+                          </div>
+                          <span className="mono" style={{fontSize:'11px', color:T.t2, fontWeight:'700'}}>{count} ({pct}%)</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Risk Pattern Frequency</h3>
+                {riskEntries.length > 0 ? (
+                  <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'40px'}}>
+                    {riskEntries.map(([name, count], i) => {
+                      const pct = Math.round((count / valid.length) * 100);
+                      const isHigh = pct >= 20;
+                      return (
+                        <div key={i} style={{background:isHigh?T.rdP:T.bg2, border:`1px solid ${isHigh?T.rd:T.b1}40`, borderRadius:'8px', padding:'16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                          <div>
+                            <div style={{fontSize:'14px', fontWeight:'700', color:isHigh?T.rd:T.t0}}>{name}</div>
+                            <div style={{fontSize:'12px', color:T.t2}}>{isHigh ? 'Programme-level intervention recommended' : 'Monitor — consider targeted coaching'}</div>
+                          </div>
+                          <div style={{textAlign:'right'}}>
+                            <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:isHigh?T.rd:T.am}}>{count}</div>
+                            <div style={{fontSize:'10px', color:T.t3}}>{pct}% of valid</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{padding:'16px', background:T.gnP, borderRadius:'8px', color:T.gn, fontSize:'13px', fontWeight:'600', marginBottom:'40px'}}>
+                    No risk patterns detected across this batch at alerting frequency.
+                  </div>
+                )}
+
+                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Respondent Summary</h3>
+                <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                  {batchData.sort((a,b)=>(b.scores?.overall||0)-(a.scores?.overall||0)).map((b, i) => (
+                    <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
+                      <div>
+                        <div style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{b.name}</div>
+                        <div style={{fontSize:'11px', color:T.t3}}>{b.profile}</div>
+                      </div>
+                      <div style={{textAlign:'right'}}>
+                        <div className="mono" style={{fontSize:'14px', fontWeight:'800', color:b.validityOverall==='red'?T.rd:T.gold}}>{b.scores?.overall || '—'}</div>
+                        <div style={{fontSize:'10px', fontWeight:'700', color:b.validityOverall==='green'?T.gn:b.validityOverall==='amber'?T.am:T.rd, textTransform:'uppercase'}}>{b.validityOverall}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        );
+      })()}
+
+      {/* ─── TAB 5: TEAM COMPOSITION ─── */}
+      {resTab === 'comp' && (() => {
+        const valid = batchData.filter(b => b.validityOverall !== 'red' && b.scores);
+        if(valid.length < 2) return (
+          <div className="anim-fadeUp" style={{padding:'24px', background:T.amP, borderRadius:'8px', color:T.am, fontSize:'13px', fontWeight:'600'}}>
+            Insufficient data. At least 2 valid responses are required to generate the Team Composition Report.
+          </div>
+        );
+
+        // Averages
+        const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];
+        const dimLabels = {O:'Openness',C:'Conscientiousness',E:'Extraversion',A:'Agreeableness',ES:'Emotional Stability',CQavg:'Cultural Intelligence',OCBavg:'Team Citizenship',LAavg:'Learning Agility',EOavg:'Ethical Orientation'};
+        const teamAvg = {};
+        dimKeys.forEach(k => { teamAvg[k] = Math.round(valid.reduce((a,b)=>a+(b.scores[k]||0),0)/valid.length); });
+
+        // Findings
+        const findings = [];
+        dimKeys.forEach(k => {
+          if(teamAvg[k] < 50) findings.push({sev:'critical', t:`Team ${dimLabels[k]} is critically low (avg ${teamAvg[k]})`, d:`This is a collective gap. The team will struggle with tasks requiring ${dimLabels[k]}.`});
+          else if(teamAvg[k] < 60) findings.push({sev:'watch', t:`Team ${dimLabels[k]} is below optimal (avg ${teamAvg[k]})`, d:`Performance may be adequate today but fragile under pressure or change.`});
+          else if(teamAvg[k] >= 75) findings.push({sev:'strength', t:`Team ${dimLabels[k]} is a collective strength (avg ${teamAvg[k]})`, d:`This is a competitive advantage. Protect and leverage it.`});
+        });
+
+        // Hiring Profile
+        const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-teamAvg[k])})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
+
+        // Promotion Fit
+        const ROLE_TARGETS = [
+          {name:'Senior Manager', targets:{LRS:[65,95],ES:[60,90],C:[60,90],EOavg:[60,90]}},
+          {name:'Team Lead', targets:{OCBavg:[60,95],A:[60,90],C:[55,85],E:[55,85]}},
+          {name:'Compliance Officer', targets:{CII:[70,100],EOavg:[70,95],C:[65,95]}},
+          {name:'Client-Facing Manager', targets:{E:[65,95],CQavg:[60,90],A:[60,90],SES:[60,95]}},
+          {name:'Change Leader', targets:{ADS:[65,95],O:[65,95],LAavg:[65,95]}}
+        ];
+        const targetRole = ROLE_TARGETS[promoRole];
+        
+        const scoredCandidates = valid.map(b => {
+          let match = 0, count = 0;
+          Object.entries(targetRole.targets).forEach(([k, [min, max]]) => {
+            const v = b.scores[k] || (b.composites && b.composites[k]);
+            if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
+          });
+          return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
+        }).sort((a,b) => b.fitPct - a.fitPct);
+
+        return (
+        <div className="anim-fadeUp">
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
+              <div>
+                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM COMPOSITION REPORT · Batch: {R.batch}</div>
+              </div>
+              <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
+                <div>{valid.length} valid responses</div>
+              </div>
+            </div>
+            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Composition & Hiring Intelligence</h2>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'32px', lineHeight:'1.6'}}>HR-only strategic report — composition diagnosis, hiring profile generation, and promotion fit analysis.</p>
+            
+            {/* 1. Diagnostic */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>1. Composition Diagnostic</h3>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'40px'}}>
+              {findings.map((f, i) => {
+                const col = f.sev==='critical'?T.rd:f.sev==='watch'?T.am:T.gn;
+                const bg = f.sev==='critical'?T.rdP:f.sev==='watch'?T.amP:T.gnP;
+                return (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${col}`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px'}}>
+                      <span style={{background:bg, color:col, padding:'2px 8px', borderRadius:'4px', fontSize:'10px', fontWeight:'800', textTransform:'uppercase'}}>{f.sev}</span>
+                      <span style={{fontSize:'14px', fontWeight:'700', color:T.t0}}>{f.t}</span>
+                    </div>
+                    <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.5'}}>{f.d}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. Hiring Profile */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>2. Hiring Profile Specification</h3>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'16px'}}>Target these dimension ranges for your next hire to balance the team's current blind spots.</p>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
+              {dimGaps.map((g, i) => (
+                <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px'}}>
+                  <div style={{fontSize:'12px', fontWeight:'700', color:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>{g.l}</div>
+                  <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:T.t0}}>≥ {Math.min(80, 75 - g.v + 10)} / 100</div>
+                  <div style={{fontSize:'11px', color:T.t2, marginTop:'4px'}}>Current team avg: <span style={{color:T.rd, fontWeight:'700'}}>{g.v}</span></div>
+                </div>
+              ))}
+            </div>
+
+            {/* 2.5 Interview Probes */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Targeted Interview Probes</h3>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'16px'}}>Use these specific questions in your next interview to test for the dimensions this team currently lacks.</p>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'40px'}}>
+              {dimGaps.slice(0,3).map((g, i) => {
+                const probes = {
+                  'Conscientiousness': {q:'Describe a project with multiple stakeholders and a hard deadline where something went wrong. What specifically did you do to keep it on track?', l:'Concrete structural actions, not generic "I worked harder." Look for planning and contingency thinking.'},
+                  'Emotional Stability': {q:'Describe a professional setback that genuinely shook you. What happened, and what did you do in the 30 days after?', l:'Honest acknowledgment of the difficulty paired with concrete recovery actions.'},
+                  'Learning Agility': {q:'Walk me through the most recent significant change in your professional knowledge or skills. What triggered it, and how did you sustain it?', l:'Self-directed learning, not mandatory training. Look for someone who names their own gaps.'},
+                  'Ethical Orientation': {q:'Describe a situation where the easy path and the right path were different, and you chose the right path. What did it cost you?', l:'Real cost, specifically named. Candidates who claim there was no cost are sanitising the story.'},
+                  'Openness': {q:'Tell me about a time you had to adopt an approach you initially disagreed with. What changed your mind?', l:'Evidence of genuine re-evaluation, not just compliance. Listen for intellectual humility.'},
+                  'Extraversion': {q:'Tell me about a time you had to influence a room full of people who were skeptical of your position. What did you do?', l:'Specific techniques used, reading the room, and willingness to engage conflict.'},
+                  'Agreeableness': {q:'Describe a situation where a peer strongly disagreed with a decision you had authority over. How did the disagreement unfold and resolve?', l:'Willingness to hear substance of the disagreement rather than deflecting it.'},
+                  'Cultural Intelligence': {q:'Tell me about a time your assumptions about how a colleague would behave turned out to be wrong.', l:'Genuine recognition of the error, not performed humility. Specific behaviour change that followed.'},
+                  'Team Citizenship': {q:'Tell me about something you did for your team or organisation in the last year that was not part of your formal role.', l:'Discretionary effort with specific examples. Look for initiatives that created lasting value.'}
+                };
+                const p = probes[g.l] || probes['Ethical Orientation'];
+                return (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${T.gold}`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'11px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'8px'}}>Targets: {g.l}</div>
+                    <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>"{p.q}"</div>
+                    <div style={{fontSize:'13px', color:T.t1}}><strong>Listen for:</strong> {p.l}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 3. Promotion Fit */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>3. Promotion Fit Check</h3>
+            <div style={{marginBottom:'16px'}}>
+              <select value={promoRole} onChange={e=>setPromoRole(parseInt(e.target.value))} style={{padding:'10px 16px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg3, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600', outline:'none', cursor:'pointer'}}>
+                {ROLE_TARGETS.map((r, i) => <option key={i} value={i}>{r.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {scoredCandidates.map((c, i) => {
+                const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+                return (
+                  <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
+                    <div>
+                      <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'4px'}}>Respondent #{i+1}</div>
+                      <div style={{fontSize:'12px', color:T.t2}}>{c.profile}</div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:col}}>{c.fitPct}%</div>
+                      <div style={{fontSize:'10px', fontWeight:'700', color:col, textTransform:'uppercase', letterSpacing:'0.05em'}}>Fit Match</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+          </div>
+        </div>
+        );
+      })()}
+
     </div>
   );
 };
@@ -2041,35 +3093,33 @@ const downloadPDF = async () => {
 // ─── PROGRESS PAGE ────────────────────────────────────────────────────────────
 const ProgressPage = () => {
   const [history, setHistory] = useState([]);
-  const [searchCnic, setSearchCnic] = useState('');
-  const [searched, setSearched]       = useState(false);
-  const [results, setResults]         = useState([]);
+const [searchEmail, setSearchEmail] = useState('');
+  const [searched, setSearched] = useState(false);
+  const [results, setResults] = useState([]);
 
   useEffect(()=>{
-    try { setHistory(JSON.parse(localStorage.getItem('core_v1_history')||'[]')); } catch(e){}
+    try { setHistory(JSON.parse(localStorage.getItem('core_v3_history')||'[]')); } catch(e){}
   },[]);
 
-  const handleSearch = () => {
-    setSearched(true);
-    const term = searchCnic.replace(/[^0-9]/g, '');
-    if (!term) { setResults([]); return; }
-    const matches = history.filter(e => e.cnic && e.cnic === term);
-    
-    // group by unique CNIC
-    const byPerson = {};
-    matches.forEach(e => {
-      const pid = e.cnic;
-      if (!byPerson[pid]) byPerson[pid] = [];
-      byPerson[pid].push(e);
-    });
-    setResults(Object.values(byPerson));
-  };
+const handleSearch = () => {
+  setSearched(true);
+  const term = searchEmail.trim().toLowerCase();
+  if (!term) { setResults([]); return; }
+  const matches = history.filter(e => e.email && e.email.toLowerCase() === term);
+  const byPerson = {};
+  matches.forEach(e => {
+    const pid = e.email.toLowerCase();
+    if (!byPerson[pid]) byPerson[pid] = [];
+    byPerson[pid].push(e);
+  });
+  setResults(Object.values(byPerson));
+};
 
-  const del = (pid_cnic) => {
-    if (!window.confirm('Delete all CORE records for this person?')) return;
-    const h = history.filter(e => e.cnic !== pid_cnic);
+  const del = (pid_email) => {
+  if (!window.confirm('Delete all CORE records for this person?')) return;
+  const h = history.filter(e => e.email?.toLowerCase() !== pid_email.toLowerCase());
     setHistory(h);
-    try { localStorage.setItem('core_v1_history', JSON.stringify(h)); } catch(e){}
+    try { localStorage.setItem('core_v3_history', JSON.stringify(h)); } catch(e){}
     const updatedResults = results.map(entries => entries.filter(e => e.cnic !== pid_cnic)).filter(arr => arr.length > 0);
     setResults(updatedResults);
   };
@@ -2087,21 +3137,19 @@ const ProgressPage = () => {
       <Pill label="Progress Tracker" style={{marginBottom:'16px'}} />
       <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'2.4rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>Assessment History</h2>
       <p style={{fontSize:'14px', color:T.t2, fontWeight:'600', marginBottom:'36px', lineHeight:'1.7'}}>
-        Look up a candidate's assessment history using their <strong style={{color:T.t0}}>13-digit CNIC</strong>.
-      </p>
+  Look up a candidate's assessment history using their <strong style={{color:T.t0}}>email address</strong>.
+</p>
 
-      {/* Search box */}
       <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'28px 28px', marginBottom:'32px'}}>
-        <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', fontWeight:'700', color:T.c, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:'16px'}}>Search by CNIC</div>
+<div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', fontWeight:'700', color:T.c, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:'16px'}}>Search by Email</div>
         <div style={{display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'12px'}}>
           <input
-            value={searchCnic}
-            onChange={e=>setSearchCnic(e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="Enter 13-digit CNIC"
-            maxLength="13"
-            style={{...inp, minWidth:'200px'}}
-            onKeyDown={e=>e.key==='Enter'&&handleSearch()}
-          />
+  value={searchEmail}
+  onChange={e=>setSearchEmail(e.target.value)}
+  placeholder="Enter email address"
+  style={{...inp, minWidth:'200px'}}
+  onKeyDown={e=>e.key==='Enter'&&handleSearch()}
+/>
           <button
             onClick={handleSearch}
             style={{
@@ -2119,7 +3167,6 @@ const ProgressPage = () => {
         </div>
       </div>
 
-      {/* Results */}
       {searched && results.length === 0 && (
         <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'40px', textAlign:'center'}}>
           <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>No records found</div>
@@ -2131,12 +3178,11 @@ const ProgressPage = () => {
         const latest = entries[entries.length-1];
         const prev   = entries.length>=2 ? entries[entries.length-2] : null;
         const delta  = prev ? latest.scores.overall - prev.scores.overall : 0;
-        const pid_cnic = latest.cnic||'';
+const pid_email = latest.email||'';
 
         return (
-          <div key={ri} style={{background:'#fff', border:'1px solid #E5E7EB', borderRadius:'12px', marginBottom:'20px', overflow:'hidden'}}>
-            {/* Header */}
-            <div style={{background:T.bg0, padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'12px'}}>
+          <div key={ri} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', marginBottom:'20px', overflow:'hidden'}}>
+            <div style={{background:T.bg2, padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'12px'}}>
               <div>
                 <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', color:T.t0, fontWeight:'700', marginBottom:'4px'}}>{latest.name}</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>
@@ -2152,15 +3198,14 @@ const ProgressPage = () => {
             </div>
 
             <div style={{padding:'22px 24px'}}>
-              {/* Before / After comparison */}
               {prev&&(
                 <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'18px'}}>
-                  <div style={{background:'#F9FAFB', borderRadius:'8px', padding:'14px 16px'}}>
-                    <div className="mono" style={{fontSize:'9px', color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Previous · {prev.date}</div>
-                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', marginBottom:'5px', color:'#111827'}}>{prev.profile}</div>
-                    <div className="mono" style={{fontSize:'1.4rem', color:'#9CA3AF', fontWeight:'700'}}>{prev.scores.overall}/100</div>
+                  <div style={{background:T.bg2, borderRadius:'8px', padding:'14px 16px'}}>
+                    <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Previous · {prev.date}</div>
+                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', marginBottom:'5px', color:T.t0}}>{prev.profile}</div>
+                    <div className="mono" style={{fontSize:'1.4rem', color:T.t3, fontWeight:'700'}}>{prev.scores.overall}/100</div>
                   </div>
-                  <div style={{background:T.bg0, borderRadius:'8px', padding:'14px 16px'}}>
+                  <div style={{background:T.bg3, borderRadius:'8px', padding:'14px 16px'}}>
                     <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Latest · {latest.date}</div>
                     <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', color:T.t0, fontWeight:'700', marginBottom:'5px'}}>{latest.profile}</div>
                     <div className="mono" style={{fontSize:'1.4rem', color:T.gold, fontWeight:'700'}}>{latest.scores.overall}/100 <span style={{fontSize:'11px', color:delta>=0?T.gn:T.rd, fontWeight:'800'}}>({delta>=0?'+':''}{delta})</span></div>
@@ -2168,25 +3213,22 @@ const ProgressPage = () => {
                 </div>
               )}
 
-              {/* Dimension bars */}
               <div style={{display:'flex', flexDirection:'column', gap:'9px', marginBottom:'16px'}}>
                 {compKeys.map(([k,l])=>{
                   const v=latest.scores[k];
                   const d=prev?latest.scores[k]-prev.scores[k]:null;
                   return(
                     <div key={k} style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                      <div style={{width:'160px', fontSize:'11px', color:'#374151', flexShrink:0, fontWeight:'700'}}>{l}</div>
-                      <div style={{flex:1, background:'#F3F4F6', borderRadius:'3px', height:'6px', overflow:'hidden'}}>
-                        <div style={{width:`${v}%`, height:'100%', background:barGrad(v), transition:'width 0.8s ease'}} />
-                      </div>
+                      <div style={{width:'160px', fontSize:'11px', color:T.t1, flexShrink:0, fontWeight:'700'}}>{l}</div>
+                      <Bar score={v} w="100%" />
                       <div className="mono" style={{fontSize:'11px', color:bCol(v), width:'28px', textAlign:'right', fontWeight:'700'}}>{v}</div>
-                      {d!==null&&<div className="mono" style={{fontSize:'10px', fontWeight:'800', color:d>5?T.gn:d<-5?T.rd:'#9CA3AF', width:'48px', textAlign:'right'}}>{d>5?`▲ +${d}`:d<-5?`▼ ${d}`:'—'}</div>}
+                      {d!==null&&<div className="mono" style={{fontSize:'10px', fontWeight:'800', color:d>5?T.gn:d<-5?T.rd:T.t3, width:'48px', textAlign:'right'}}>{d>5?`▲ +${d}`:d<-5?`▼ ${d}`:'—'}</div>}
                     </div>
                   );
                 })}
               </div>
 
-              <button onClick={()=>del(pid_cnic)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
+<button onClick={()=>del(pid_email)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
             </div>
           </div>
         );
@@ -2194,181 +3236,119 @@ const ProgressPage = () => {
     </div>
   );
 };
+
 // ─── METHODOLOGY PAGE ─────────────────────────────────────────────────────────
 const MethodologyPage = () => {
   const refs = [
     {
-      text: "Goldberg, L. R. (1999). A broad-bandwidth, public-domain personality inventory measuring the lower-level facets of several five-factor models. Personality Psychology in Europe, 7, 7–28.",
-      href: "https://ipip.ori.org/A%20broad-bandwidth%20inventory.pdf",
+      text: "Goldberg, L. R. (1999). A broad-bandwidth, public domain personality inventory. Personality Psychology in Europe, 7, 7–28. [IPIP — explicitly public domain, unrestricted commercial use]",
+      href: "https://ipip.ori.org/A%20broad-bandwidth%20inventory.pdf"
     },
     {
-      text: "Barrick, M. R., & Mount, M. K. (1991). The Big Five personality dimensions and job performance: A meta-analysis. Personnel Psychology, 44(1), 1–26.",
-      href: "https://doi.org/10.1111/j.1744-6570.1991.tb00688.x",
+      text: "Barrick, M. R., & Mount, M. K. (1991). The Big Five personality dimensions and job performance. Personnel Psychology, 44(1), 1–26.",
+      href: "https://doi.org/10.1111/j.1744-6570.1991.tb00688.x"
     },
     {
-      text: "Paulhus, D. L. (1991). Measurement and control of response bias. In J. P. Robinson, P. R. Shaver, & L. S. Wrightsman (Eds.), Measures of Personality and Social Psychological Attitudes.",
-      href: "https://doi.org/10.1016/B978-0-12-590241-0.50006-X",
+      text: "Paulhus, D. L. (1991). Measurement and control of response bias. In J. P. Robinson et al. (Eds.), Measures of Personality and Social Psychological Attitudes. [Validity scale methodology]",
+      href: "https://doi.org/10.1016/B978-0-12-590241-0.50006-X"
     },
     {
-      text: "Earley, P. C., & Ang, S. (2003). Cultural intelligence: Individual interactions across cultures. Stanford Business Books.",
-      href: "https://www.sup.org/books/business/cultural-intelligence",
+      text: "Earley, P. C., & Ang, S. (2003). Cultural intelligence: Individual interactions across cultures. Stanford University Press.",
+      href: "https://www.sup.org/books/business/cultural-intelligence"
     },
     {
-      text: "Ang, S., Van Dyne, L., Koh, C., Ng, K. Y., Templer, K. J., Tay, C., & Chandrasekar, N. A. (2007). Cultural intelligence: Its measurement and effects on cultural judgment and decision making, cultural adaptation and task performance. Management and Organization Review, 3(3), 335–371.",
-      href: "https://www.cambridge.org/core/journals/management-and-organization-review/article/abs/cultural-intelligence-its-measurement-and-effects-on-cultural-judgment-and-decision-making-cultural-adaptation-and-task-performance/EEB4216A0F254559FF78DACC4F93762D",
+      text: "Ang, S., Van Dyne, L., et al. (2007). Cultural intelligence: Measurement and effects. Management and Organization Review, 3(3), 335–371.",
+      href: "https://www.cambridge.org/core/journals/management-and-organization-review/article/abs/cultural-intelligence-its-measurement-and-effects-on-cultural-judgment-and-decision-making-cultural-adaptation-and-task-performance/EEB4216A0F254559FF78DACC4F93762D"
     },
     {
       text: "Organ, D. W. (1988). Organizational citizenship behavior: The good soldier syndrome. Lexington Books.",
-      href: "https://psycnet.apa.org/record/1988-97376-000",
+      href: "https://psycnet.apa.org/record/1988-97376-000"
     },
     {
       text: "Lombardo, M. M., & Eichinger, R. W. (2000). High potentials as high learners. Human Resource Management, 39(4), 321–329.",
-      href: "https://doi.org/10.1002/1099-050X(200024)39:4<321::AID-HRM4>3.0.CO;2-1",
+      href: "https://doi.org/10.1002/1099-050X(200024)39:4<321::AID-HRM4>3.0.CO;2-1"
     },
     {
-      text: "Rest, J. R. (1986). Moral development: Advances in research and theory. Praeger.",
-      href: "https://books.google.com/books/about/Moral_Development.html?id=mL9-AAAAMAAJ",
+      text: "Rest, J. R. (1986). Moral development: Advances in research and theory. Praeger. [Ethical orientation framework]",
+      href: "https://books.google.com/books/about/Moral_Development.html?id=mL9-AAAAMAAJ"
     },
     {
-      text: "Crowne, D. P., & Marlowe, D. (1960). A new scale of social desirability independent of psychopathology. Journal of Consulting Psychology, 24(4), 349–354.",
-      href: "https://pubmed.ncbi.nlm.nih.gov/13813058/",
+      text: "Crowne, D. P., & Marlowe, D. (1960). A new scale of social desirability. Journal of Consulting Psychology, 24(4), 349–354. [L-scale methodology]",
+      href: "https://pubmed.ncbi.nlm.nih.gov/13813058/"
     },
     {
-      text: "Khalid, S. A., Jusoff, K., Othman, M., Ismail, M., & Rahman, N. A. (2009). Organizational citizenship behavior as a predictor of student academic achievement. International Journal of Economics and Finance, 1(2).",
-      href: "https://ccsenet.org/journal/index.php/ijef/article/view/4945",
-    },
+      text: "Khalid, S. A., et al. (2009). OCB as a predictor of performance: Pakistani university sample. International Journal of Economics & Finance, 1(2), 139–145.",
+      href: "https://ccsenet.org/journal/index.php/ijef/article/view/4945"
+    }
   ];
 
   return (
-    <div style={{maxWidth:'1000px', margin:'0 auto', padding:'80px 32px'}}>
+    <div style={{maxWidth:'1100px', margin:'0 auto', padding:'80px 32px'}}>
+      
+      {/* ── HEADER ── */}
       <div style={{textAlign:'center', marginBottom:'64px'}}>
         <Reveal delay={0}>
           <Pill label="Scientific Foundation" style={{marginBottom:'16px'}} />
         </Reveal>
         <Reveal delay={0.1}>
-          <h2 style={{
-            fontFamily:"'Playfair Display',serif",
-            fontSize:'clamp(2rem,4vw,2.8rem)',
-            fontWeight:'700',
-            margin:'0 0 8px',
-            color:T.t0
-          }}>
-            Validity Controls & Scientific Basis
+          <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'0 0 12px', color:T.t0}}>
+            Scientific Foundation & Validity Controls
           </h2>
+          <p style={{fontSize:'15px', color:T.t2, fontWeight:'500', maxWidth:'600px', margin:'0 auto'}}>
+            For client credibility presentations and internal validation documentation.
+          </p>
         </Reveal>
         <Reveal delay={0.2}>
           <GoldLine style={{width:'60px', margin:'24px auto 0'}} />
         </Reveal>
       </div>
 
+      {/* ── PEER-REVIEWED REFERENCES ── */}
       <Reveal delay={0.1}>
-        <h3 style={{
-          fontFamily:"'Playfair Display',serif",
-          fontSize:'1.5rem',
-          fontWeight:'700',
-          marginBottom:'20px',
-          color:T.t0
-        }}>
+        <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>
           Peer-Reviewed References
         </h3>
       </Reveal>
-
       <Reveal delay={0.2}>
-        <div style={{
-          background:T.bg1,
-          border:`1px solid ${T.b2}`,
-          borderRadius:'8px',
-          padding:'32px',
-          marginBottom:'64px'
-        }}>
+        <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px', marginBottom:'64px'}}>
           {refs.map((ref, i) => (
-            <a
-              key={i}
-              href={ref.href}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display:'block',
-                padding:'12px 16px',
-                background:T.bg2,
-                borderRadius:'6px',
-                marginBottom:'8px',
-                fontSize:'11px',
-                color:T.t2,
-                lineHeight:'1.7',
-                borderLeft:`4px solid ${i % 2 === 0 ? T.c : T.gold}`,
-                fontWeight:'600',
-                textDecoration:'none',
-                transition:'all 0.2s',
-                cursor:'pointer'
-              }}
-              onMouseOver={e=>{
-                e.currentTarget.style.background = T.bg3;
-                e.currentTarget.style.color = T.t0;
-                e.currentTarget.style.transform = 'translateX(4px)';
-              }}
-              onMouseOut={e=>{
-                e.currentTarget.style.background = T.bg2;
-                e.currentTarget.style.color = T.t2;
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
+            <a key={i} href={ref.href} target="_blank" rel="noreferrer" style={{
+              display:'block', padding:'14px 18px', background:T.bg2, borderRadius:'8px', marginBottom:'10px',
+              fontSize:'12.5px', color:T.t1, lineHeight:'1.6', borderLeft:`4px solid ${i % 2 === 0 ? T.c : T.gold}`,
+              fontWeight:'500', transition:'all 0.2s', cursor:'pointer', textDecoration:'none'
+            }}
+            onMouseOver={e=>{ e.currentTarget.style.background = T.bg3; e.currentTarget.style.transform = 'translateX(4px)'; }}
+            onMouseOut={e=>{ e.currentTarget.style.background = T.bg2; e.currentTarget.style.transform = 'none'; }}>
               {ref.text}
             </a>
           ))}
         </div>
       </Reveal>
 
+      {/* ── HOW CORE DETECTS DISHONEST RESPONSES ── */}
       <Reveal delay={0.1}>
-        <h3 style={{
-          fontFamily:"'Playfair Display',serif",
-          fontSize:'1.5rem',
-          fontWeight:'700',
-          marginBottom:'20px',
-          color:T.t0
-        }}>
+        <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>
           How CORE Detects Dishonest Responses
         </h3>
       </Reveal>
-
       <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
         {[
-          {t:'Reverse Consistency Index',c:T.am,d:'Forward and reverse-scored items per dimension are mathematically compared. Scoring high on contradictory items simultaneously is a logical contradiction that gets caught and scored.'},
-          {t:'Acquiescence Bias Detection',c:T.c,d:'Respondents choosing "Strongly Agree" on more than 55% of all items — regardless of reverse scoring — are detected. This pattern indicates a response style artifact or deliberate inflation.'},
-          {t:'Extreme Response Style Index',c:T.gn,d:'Respondents choosing only extreme responses on more than 70% of items are flagged. Above 85% triggers a hard red. Above 90% triggers a critical override labelling the entire result uninterpretable.'},
-          {t:'L-Scale (Lie Scale) — 12 Items',c:T.rd,d:'Twelve items describing near-impossible behaviours — never procrastinating, always feeling positive about every employer. Honest respondents agree with 0–3. Agreement with 6 or more indicates social desirability inflation. Items are deliberately subtle.'},
+          {t:'L-Scale (Lie Scale) — 10 Items', c:T.rd, d:'10 items describing near-impossible "saintly" behaviours embedded invisibly throughout the assessment. Honest respondents agree with 0–3 of these. Agreement with 5 or more indicates social desirability inflation. Items are deliberately subtle — they feel like ordinary self-assessment questions, not obvious traps.'},
+          {t:'Reverse Consistency Index', c:T.am, d:'For each dimension, forward-scored and reverse-scored items are mathematically compared. Honest respondents are internally consistent. Scoring high on "I always help colleagues" AND "I prefer to focus on my own work" simultaneously is a contradiction that gets caught and scored.'},
+          {t:'Acquiescence Bias Detection', c:T.c, d:'Respondents who click "Strongly Agree" on more than 55% of all items — regardless of reverse scoring — are detected. This pattern indicates either a response style artifact or deliberate inflation. The proportion is calculated and reported in the Technical Report.'},
+          {t:'Extreme Response Style Index', c:T.gn, d:'Respondents who choose only extreme responses (1 or 5) on more than 70% of items are flagged. Above 85% triggers a hard red. Above 90% triggers a critical override that labels the entire result uninterpretable — regardless of what other indices show.'},
         ].map((v,i)=>(
           <Reveal key={i} delay={i * 0.15}>
             <div style={{
-              padding:'32px 28px',
-              background:`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`,
-              border:`1px solid ${v.c}28`,
-              borderRadius:'8px',
-              height:'100%',
-              transition:'all 0.2s',
-              cursor:'default'
+              padding:'32px 28px', background:`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`,
+              border:`1px solid ${v.c}28`, borderRadius:'12px', height:'100%', transition:'all 0.2s', cursor:'default'
             }}
-            onMouseOver={e=>{
-              e.currentTarget.style.background=`linear-gradient(${v.c}16, ${v.c}16), ${T.bg1}`;
-              e.currentTarget.style.transform='translateY(-4px)';
-            }}
-            onMouseOut={e=>{
-              e.currentTarget.style.background=`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`;
-              e.currentTarget.style.transform='none';
-            }}>
-              <div className="mono" style={{
-                fontSize:'10px',
-                fontWeight:'700',
-                color:v.c,
-                textTransform:'uppercase',
-                letterSpacing:'0.12em',
-                marginBottom:'14px',
-                borderBottom:`1px solid ${v.c}28`,
-                paddingBottom:'12px'
-              }}>
+            onMouseOver={e=>{ e.currentTarget.style.background=`linear-gradient(${v.c}16, ${v.c}16), ${T.bg1}`; e.currentTarget.style.transform='translateY(-4px)'; }}
+            onMouseOut={e=>{ e.currentTarget.style.background=`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`; e.currentTarget.style.transform='none'; }}>
+              <div className="mono" style={{fontSize:'11px', fontWeight:'800', color:v.c, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:'14px', borderBottom:`1px solid ${v.c}28`, paddingBottom:'12px'}}>
                 {v.t}
               </div>
-              <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.7',fontWeight:'600'}}>
+              <p style={{fontSize:'13.5px', color:T.t1, lineHeight:'1.7', fontWeight:'500'}}>
                 {v.d}
               </p>
             </div>
@@ -2376,72 +3356,99 @@ const MethodologyPage = () => {
         ))}
       </div>
 
+      {/* ── INSTRUMENT GOVERNANCE ── */}
       <Reveal delay={0.1}>
-        <h3 style={{
-          fontFamily:"'Playfair Display',serif",
-          fontSize:'1.5rem',
-          fontWeight:'700',
-          marginBottom:'20px',
-          color:T.t0
-        }}>
+        <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>
           Instrument Governance
         </h3>
       </Reveal>
-
-      <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
+      <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
         {[
-          {h:'Copyright Status',p:'All five CORE modules are built on theoretical constructs that are not copyrightable. IPIP personality items are explicitly public domain. New items authored for CORE constitute original work owned by Carnelian Pvt Ltd.',c:'IPIP · Goldberg (1999)'},
-          {h:'Validity Methodology',p:'L-scale methodology follows Crowne-Marlowe social desirability principles. Consistency checks are conceptually aligned with established psychometric response-validity logic. All implementation details and items in CORE are original Carnelian work.',c:'Paulhus (1991) · Crowne & Marlowe (1960)'},
-          {h:'Industry Context Engine',p:"Sector-specific dimension weighting and risk thresholds are informed by published evidence on personality-performance relationships, cultural intelligence research, and Carnelian's practitioner knowledge of Pakistan's professional context.",c:'Barrick & Mount (1991) · Ang et al. (2007)'},
-          {h:'Commercial Use',p:'CORE is proprietary to Carnelian Pvt Ltd. Client organisations receive a licence to administer and use results internally. The scoring algorithm, validity methodology, and industry profiles are Carnelian intellectual property.',c:'Carnelian Pvt Ltd'},
+          {h:'Copyright Status', p:'All five CORE modules are built on theoretical constructs that are not copyrightable. IPIP personality items are explicitly public domain. New items authored for CORE constitute original work owned by Carnelian Pvt Ltd.', c:'ipip.ori.org · Goldberg (1999)'},
+          {h:'Validity Methodology', p:'L-scale methodology follows Crowne-Marlowe Social Desirability Scale principles (1960). Consistency index adapted from Minnesota Multiphasic Personality Inventory (MMPI) F-scale methodology. Items are original Carnelian work.', c:'Paulhus (1991) · MMPI principles'},
+          {h:'Industry Context Engine', p:"Sector-specific dimension weighting and risk thresholds are derived from meta-analytic evidence on dimension-outcome correlations per industry, combined with Carnelian's practitioner knowledge of the Pakistani professional context.", c:'Barrick & Mount (1991) · Carnelian (2025)'},
+          {h:'Commercial Use', p:'CORE is proprietary to Carnelian Pvt Ltd. Client organisations receive a license to administer and use results internally. The scoring algorithm, validity methodology, and industry profiles are Carnelian intellectual property.', c:'Carnelian Pvt Ltd'},
         ].map((card,i)=>(
           <Reveal key={i} delay={i * 0.15}>
             <div style={{
-              background:T.bg1,
-              border:`1px solid ${T.b2}`,
-              borderRadius:'8px',
-              borderTop:`4px solid ${i%2===0?T.c:T.gold}`,
-              padding:'32px 28px',
-              display:'flex',
-              flexDirection:'column',
-              height:'100%',
-              transition:'all 0.2s',
+              background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', borderTop:`4px solid ${i%2===0?T.c:T.gold}`,
+              padding:'32px 28px', display:'flex', flexDirection:'column', height:'100%', transition:'all 0.2s',
             }}
-            onMouseOver={e=>{
-              e.currentTarget.style.background=T.bg2;
-              e.currentTarget.style.transform='translateY(-4px)';
-            }}
-            onMouseOut={e=>{
-              e.currentTarget.style.background=T.bg1;
-              e.currentTarget.style.transform='none';
-            }}>
-              <h4 style={{
-                fontFamily:"'Playfair Display',serif",
-                fontSize:'1.25rem',
-                fontWeight:'700',
-                marginBottom:'12px',
-                color:T.t0
-              }}>
+            onMouseOver={e=>{ e.currentTarget.style.background=T.bg2; e.currentTarget.style.transform='translateY(-4px)'; }}
+            onMouseOut={e=>{ e.currentTarget.style.background=T.bg1; e.currentTarget.style.transform='none'; }}>
+              <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', fontWeight:'700', marginBottom:'12px', color:T.t0}}>
                 {card.h}
               </h4>
-              <p style={{
-                fontSize:'13px',
-                color:T.t2,
-                lineHeight:'1.7',
-                flex:1,
-                marginBottom:'20px',
-                fontWeight:'600'
-              }}>
+              <p style={{fontSize:'13.5px', color:T.t2, lineHeight:'1.7', flex:1, marginBottom:'20px', fontWeight:'500'}}>
                 {card.p}
               </p>
               <div style={{height:'1px', background:T.b2, marginBottom:'16px'}} />
-              <div className="mono" style={{fontSize:'10px', color:T.c, fontWeight:'700', letterSpacing:'0.1em'}}>
+              <div className="mono" style={{fontSize:'10px', color:T.c, fontWeight:'800', letterSpacing:'0.1em'}}>
                 {card.c}
               </div>
             </div>
           </Reveal>
         ))}
       </div>
+
+      {/* ── LEGAL FRAMEWORK SUMMARY ── */}
+      <Reveal delay={0.1}>
+        <div style={{borderTop:`2px solid ${T.c}`, paddingTop:'64px'}}>
+          <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', marginBottom:'12px', color:T.t0}}>
+            Legal Framework Summary
+          </h2>
+          <p style={{fontSize:'14px', color:T.t2, fontWeight:'500', marginBottom:'32px', lineHeight:'1.7'}}>
+            A plain-language summary of Carnelian's legal commitments to participants and client organisations. Full agreements are available separately as CORE-ICA-001 (individual) and CORE-ODPA-001 (organisational).
+          </p>
+
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', marginBottom:'24px'}}>
+            
+            {/* To Participants */}
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px', borderTop:`4px solid ${T.c}`}}>
+              <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.c, marginBottom:'20px'}}>
+                To Participants — What Carnelian Commits
+              </div>
+              <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+                <div><strong style={{color:T.t0}}>What we collect:</strong> Name, email, professional details, assessment responses. CNIC is optional and stored encrypted — never used as a primary key.</div>
+                <div><strong style={{color:T.t0}}>What we never do:</strong> Sell data, share identifiable results outside the assessment process, or use CNIC for any purpose other than identity recovery.</div>
+                <div><strong style={{color:T.t0}}>Who sees your results:</strong> The commissioning organisation's HR department receives the Technical Report. The Action Plan is yours personally.</div>
+                <div><strong style={{color:T.t0}}>AI training use:</strong> Anonymised, non-identifiable data only. Never raw responses. Never shared with third parties. Carnelian products only.</div>
+                <div><strong style={{color:T.t0}}>Your rights:</strong> Access, correction, and deletion available at any time by writing to hello@carnelianco.com. Response within 30–45 days.</div>
+                <div><strong style={{color:T.t0}}>Legal protection:</strong> PECA 2016 (Sections 25 & 26) — unauthorised disclosure of personal information is a criminal offence. Contract Act 1872 — this agreement is legally binding. Personal Data Protection Bill 2021 framework applies.</div>
+              </div>
+            </div>
+
+            {/* To Organisations */}
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px', borderTop:`4px solid #3B82F6`}}>
+              <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:'#3B82F6', marginBottom:'20px'}}>
+                To Organisations — What Carnelian Commits
+              </div>
+              <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+                <div><strong style={{color:T.t0}}>Role:</strong> Carnelian is the Data Processor. The client organisation is the Data Controller. Carnelian processes data on the client's behalf according to this agreement.</div>
+                <div><strong style={{color:T.t0}}>Security:</strong> Access-controlled database, encrypted CNIC storage, confidentiality obligations on all Carnelian personnel, 72-hour breach notification.</div>
+                <div><strong style={{color:T.t0}}>Permitted use by organisations:</strong> Informing internal HR decisions, sharing with relevant HR/management personnel, using in structured feedback conversations.</div>
+                <div><strong style={{color:T.t0}}>Prohibited use by organisations:</strong> Sharing reports externally without respondent consent, using CORE results as the sole basis for consequential decisions, reproducing or reselling CORE methodology.</div>
+                <div><strong style={{color:T.t0}}>Liability boundary:</strong> Carnelian's responsibility ends at delivery of reports to the HR contact. The client is responsible for all downstream use.</div>
+                <div><strong style={{color:T.t0}}>Governing law:</strong> Laws of Pakistan. Arbitration: Arbitration Act 1940, seat Lahore. Data retention: 5 years, then deleted or anonymised.</div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Warning Box */}
+          <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'10px', padding:'20px 24px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
+            <div style={{fontSize:'24px'}}>⚠️</div>
+            <div>
+              <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'6px'}}>Administrator Notice</div>
+              <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+                Both legal agreements (CORE-ICA-001 and CORE-ODPA-001) should be reviewed by a qualified Pakistani lawyer before full commercial deployment. The summary above is plain-language guidance only and does not constitute legal advice. Verify that <strong>hello@carnelianco.com</strong> is actively monitored before each deployment — it is the only contact respondents have for data rights and complaints. Review this email every two months.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </Reveal>
+
     </div>
   );
 };
@@ -2586,7 +3593,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      const h = JSON.parse(localStorage.getItem('core_v1_history') || '[]');
+      const h = JSON.parse(localStorage.getItem('core_v3_history') || '[]');
       setHasHistory(h.length > 0);
     } catch(e) {}
   }, []);
@@ -2608,7 +3615,7 @@ export default function App() {
         setMode={setMode}
       />
       <div style={{ 
-        minHeight: 'calc(100vh - 64px - 100px)', // nav height + footer height
+        minHeight: 'calc(100vh - 64px - 100px)',
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -2620,6 +3627,5 @@ export default function App() {
       </div>
       <Footer />
     </>
-
   );
 }

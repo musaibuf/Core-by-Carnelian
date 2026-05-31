@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-
+import React, { useState, useEffect, useRef } from 'react';
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 let T = {};
 
@@ -923,8 +922,9 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
   const [generating, setGenerating] = useState(false);
   const [gameChoice, setGameChoice] = useState(null);
   const [priorFound, setPriorFound] = useState(null);
-  const [consentChecked, setConsentChecked] = useState(false);
-  const timerRef = useRef(null);
+const [consentChecked, setConsentChecked] = useState(false);
+  const [startTime, setStartTime] = useState(null);
+    const timerRef = useRef(null);
 
 useEffect(()=>{
   if(resp.email && resp.email.includes('@')){
@@ -973,12 +973,11 @@ const nextQ=()=>{
   };
 
   const nextSeesaw = () => {
-    // Calculate running average and save
-    const avg = Math.round((ssVals[0]+ssVals[1]+ssVals[2])/3);
+    const newVals = [...ssVals];
+    const avg = ssStep === 2 ? Math.round((newVals[0]+newVals[1]+newVals[2])/3) : gameScores.seesaw;
     setGameScores(g=>({...g,seesaw:avg}));
     setGameStage(null);
     
-    // Resume assessment exactly where we left off
     let resumeIdx = cur;
     if (ssStep === 0) resumeIdx = 8;
     if (ssStep === 1) resumeIdx = 20;
@@ -1036,6 +1035,12 @@ const nextQ=()=>{
     const docId='PACER3-'+Date.now().toString(36).toUpperCase();
     const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
     
+    const elapsedMs = startTime ? Date.now() - startTime : 0;
+    const elapsedMins = Math.floor(elapsedMs / 60000);
+    const elapsedSecs = Math.floor((elapsedMs % 60000) / 1000);
+    const completionTime = elapsedMs > 0 ? `${elapsedMins}m ${elapsedSecs}s` : 'Not recorded';
+    const completionFlag = elapsedMs > 0 && elapsedMs < 420000 ? '⚠ Unusually fast — verify engagement' : elapsedMs > 3600000 ? '⚠ Unusually long — possible interruption' : '✅ Within expected range (10–35 min)';
+    
     const gameSummary={
       seesaw:{val:gs.seesaw,bonus:ssBonus,label:ssBonus>=7?'Principled & Nuanced':ssBonus>=2?'Balanced':ssBonus>=-2?'Relational-leaning':'High relational — process risk'},
       scenario1:{raw:sc1,label:sc1>=7?'Optimal response':sc1>=4?'Good approach':sc1===0?'Timed out':'Below average — poor response'},
@@ -1069,7 +1074,17 @@ const nextQ=()=>{
       {name:'People Management / Team Lead',score:PMS,g:67,a:51,redNote:'PMS below threshold. Interpersonal, ethical, or team cohesion dimensions insufficiently developed for people management.',probeQ:['Tell me about a team member you had difficulty with. How did you manage that relationship?','Describe a time you had to give critical feedback to someone. How did you approach it?']},
     ];
 
-    const reportDataObj = { scores: S, profile, validity, CI, gameSummary, patterns, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles };
+// Generate Programs to save to DB for the Dashboard
+    const progs = [];
+    if(S.E<60||S.A<60) progs.push({name:'Communication & Influence Workshop', desc:'Covers assertive communication, active listening, and managing difficult conversations.'});
+    if(S.EOavg<65) progs.push({name:'Professional Ethics & Values Programme', desc:'Ethical decision-making frameworks and integrity under pressure.'});
+    if(S.LAavg<65) progs.push({name:'Learning Agility & Growth Mindset', desc:'Building the specific habits that accelerate professional development.'});
+    if(S.CQavg<65) progs.push({name:'Intercultural Communication Workshop', desc:'Cross-cultural effectiveness for Pakistani multi-institutional contexts.'});
+    if(S.ES<60) progs.push({name:'Resilience & Emotional Intelligence', desc:'Evidence-based resilience frameworks for high-stakes environments.'});
+    if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:'Flagship leadership development pathway.'});
+    const programs = progs.slice(0,4);
+
+const reportDataObj = { scores: S, profile, validity, CI, gameSummary, patterns, programs, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles, completionTime, completionFlag };
 
     try {
       let h = JSON.parse(localStorage.getItem('core_v3_history') || '[]');
@@ -1329,7 +1344,7 @@ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid e
               </div>
               <div style={{display:'flex',gap:'10px'}}>
                 <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
-                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Begin Assessment →</button>
+<button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Begin Assessment →</button>
               </div>
             </div>
           )}
@@ -1648,12 +1663,34 @@ const ResultsPage = ({reportData}) => {
     }
   }, [reportData]);
 
-  const toggleEvidence = (key, xp) => {
+  const [evModal, setEvModal] = useState(null);
+  const [evInput, setEvInput] = useState({ quote:'', page:'', takeaway:'', timestamp:'', insight:'', ref:'', finding:'', reflection:'', date:'' });
+
+  const openEvidenceModal = (key, xp, type, title, subtitle, objText) => {
+    if (evState[key]) {
+      // If already collected, open in "Review/Revoke" mode
+      setEvModal({ mode: 'review', key, xp, type, title, subtitle, data: evState[key] });
+    } else {
+      setEvModal({ mode: 'submit', key, xp, type, title, subtitle, objText });
+      setEvInput({ quote:'', page:'', takeaway:'', timestamp:'', insight:'', ref:'', finding:'', reflection:'', date:'' });
+    }
+  };
+
+  const submitEvidence = () => {
     const newState = {...evState};
-    if(newState[key]) delete newState[key];
-    else newState[key] = { ts: Date.now(), xp };
+    newState[evModal.key] = { ts: Date.now(), xp: evModal.xp, type: evModal.type, data: evInput };
     setEvState(newState);
     localStorage.setItem(`core_ev_${reportData.docId}`, JSON.stringify(newState));
+    setEvModal(null);
+  };
+
+  const revokeEvidence = () => {
+    if(!window.confirm('Revoke this evidence? The XP will be returned.')) return;
+    const newState = {...evState};
+    delete newState[evModal.key];
+    setEvState(newState);
+    localStorage.setItem(`core_ev_${reportData.docId}`, JSON.stringify(newState));
+    setEvModal(null);
   };
 
   if(!reportData) return (
@@ -1665,8 +1702,8 @@ const ResultsPage = ({reportData}) => {
   const {scores:S, profile, respondent:R, docId, date, CI, validity, roles, gameSummary, patterns} = reportData;
 
   // ─── ACTION PLAN DATA PREP ───
-  const allDims = [
-    {k:'C', l:'Conscientiousness', v:S.C, str:'You are a highly reliable, organised professional. People can depend on you to deliver — even when it is inconvenient.'},
+const allDims = [
+      {k:'C', l:'Conscientiousness', v:S.C, str:'You are a highly reliable, organised professional. People can depend on you to deliver — even when it is inconvenient.'},
     {k:'O', l:'Openness to Ideas', v:S.O, str:'You bring genuine intellectual curiosity and creative problem-solving to your work.'},
     {k:'E', l:'Social Confidence', v:S.E, str:'You communicate with confidence and energy — effective in leadership and stakeholder-facing roles.'},
     {k:'A', l:'Collaborative Spirit', v:S.A, str:'You are empathetic and cooperative — a team builder who creates psychologically safe environments.'},
@@ -1675,8 +1712,8 @@ const ResultsPage = ({reportData}) => {
     {k:'OCBavg', l:'Team Citizenship', v:S.OCBavg, str:'You go well beyond your formal role to support colleagues and the institution.'},
     {k:'LAavg', l:'Learning Agility', v:S.LAavg, str:'You learn fast, reflect honestly, and apply lessons across domains.'},
     {k:'EOavg', l:'Ethical Integrity', v:S.EOavg, str:'Your commitment to transparency and authentic behaviour is rare and highly valued.'},
-  ].filter(d => d.v !== undefined && d.v !== null).sort((a,b) => b.v - a.v);
-  
+].filter(d => d.v !== undefined && d.v !== null).sort((a,b) => b.v - a.v);
+
   const top2 = allDims.slice(0, 2);
   const bot2 = [...allDims].sort((a,b) => a.v - b.v).slice(0, 2);
 
@@ -1699,6 +1736,23 @@ const ResultsPage = ({reportData}) => {
   };
 
   const devAreas = [];
+  const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
+    dim, v, why, now, soon, fut, acts,
+    habits: [
+      { h:'Week 1:', t: now || acts[0] || 'Review your current approach.' },
+      { h:'Week 2:', t: acts[0] || 'Document one observation about your behaviour.' },
+      { h:'Week 3:', t: acts[1] || 'Ask a colleague for specific feedback.' },
+      { h:'Week 4:', t: soon || acts[1] || 'Begin the recommended resource.' },
+      { h:'Month 2:', t: acts[2] || soon || 'Implement one new habit.' },
+      { h:'Month 2:', t: 'Share your development goal with your manager.' },
+      { h:'Month 3:', t: soon || 'Schedule a formal progress check-in.' },
+      { h:'Month 4–6:', t: fut || 'Take on a stretch assignment.' },
+      { h:'6 Months:', t: 'Reassess via CORE retake — measure change from ' + v + '/100.' },
+      { h:'Ongoing:', t: 'Keep a weekly log. Review every Friday.' }
+    ]
+  });
+
+
   if(S.C<55) devAreas.push({dim:'Conscientiousness & Delivery',v:S.C,
     why: ctxAction("Consistent delivery is the foundation of professional credibility. Missed deadlines or incomplete work creates friction that compounds over time.", "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),
     acts:[
@@ -1917,18 +1971,6 @@ const ResultsPage = ({reportData}) => {
             
             {devAreas.length > 0 ? devAreas.map((d,i)=>{
               const dimCol = d.v<45 ? T.rd : d.v<60 ? T.am : T.gn;
-              const steps = [
-                {n:1, phase:'TODAY', col:T.rd, bg:T.rdP, act:d.now||d.acts[0]||'Review your current approach to this dimension.'},
-                {n:2, phase:'THIS WEEK', col:T.rd, bg:T.rdP, act:d.acts[0]||d.now||'Document one concrete observation about your current behaviour.'},
-                {n:3, phase:'WEEK 2', col:T.am, bg:T.amP, act:d.acts[1]||d.acts[0]||'Ask a trusted colleague for specific, honest feedback.'},
-                {n:4, phase:'WEEK 3', col:T.am, bg:T.amP, act:d.acts.length>1?d.acts[1]:d.soon||'Begin the recommended resource for this dimension.'},
-                {n:5, phase:'WEEK 4', col:T.am, bg:T.amP, act:d.soon||d.acts[0]||'Set up a recurring weekly 15-minute self-review.'},
-                {n:6, phase:'MONTH 2', col:T.gn, bg:T.gnP, act:d.acts.length>2?d.acts[2]:d.soon||'Identify one professional situation where your score has limited you.'},
-                {n:7, phase:'MONTH 2', col:T.gn, bg:T.gnP, act:'Share your development goal in this area with your line manager or a trusted mentor.'},
-                {n:8, phase:'MONTH 3', col:T.gn, bg:T.gnP, act:d.soon||d.acts[1]||'Schedule a formal progress check-in with your line manager.'},
-                {n:9, phase:'MONTHS 4-6', col:T.gn, bg:T.gnP, act:d.fut||'Take on a stretch assignment or project that specifically requires you to demonstrate growth.'},
-                {n:10, phase:'6 MONTHS', col:T.gn, bg:T.gnP, act:`Reassess this dimension — through a CORE retake or a formal coaching debrief. Measure your actual change against your Day 1 baseline of ${d.v}/100.`}
-              ];
               return (
               <div key={i} style={{border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px',marginBottom:'24px',background:T.bg2}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
@@ -1942,15 +1984,21 @@ const ResultsPage = ({reportData}) => {
 
                 <div className="mono" style={{fontSize:'10px',textTransform:'uppercase',letterSpacing:'0.1em',color:T.t3,fontWeight:'800',marginBottom:'12px'}}>Your 10-Step Action Plan for {d.dim}</div>
                 <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'24px'}}>
-                  {steps.map((s, j) => (
-                    <div key={j} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', background:s.bg, borderRadius:'8px'}}>
-                      <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:s.col, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{s.n}</div>
-                      <div style={{flex:1}}>
-                        <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:s.col, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'4px'}}>{s.phase}</div>
-                        <div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}>{s.act}</div>
+                  {d.habits.map((s, j) => {
+                    const isRed = j < 2;
+                    const isAm = j >= 2 && j < 5;
+                    const sCol = isRed ? T.rd : isAm ? T.am : T.gn;
+                    const sBg = isRed ? T.rdP : isAm ? T.amP : T.gnP;
+                    return (
+                      <div key={j} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', background:sBg, borderRadius:'8px'}}>
+                        <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:sCol, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{j+1}</div>
+                        <div style={{flex:1}}>
+                          <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'4px'}}>{s.h}</div>
+                          <div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}>{s.t}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
@@ -2083,6 +2131,10 @@ const ResultsPage = ({reportData}) => {
               <div style={{fontSize:'12px', color:T.gn, fontWeight:'700'}}>Questions? hello@carnelianco.com</div>
             </div>
           </div>
+          
+          <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
+            <button onClick={()=>window.print()} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>🖨 Print / Save as PDF</button>
+          </div>
 
         </div>
       )}
@@ -2113,7 +2165,7 @@ const ResultsPage = ({reportData}) => {
               <div>
                 <div className="serif" style={{fontSize:'14px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd {R.org ? `× ${R.org}` : ''}</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3}}>Document ID: {docId} · {date} · TECHNICAL REPORT — {R.conf || 'Restricted'}</div>
-                <div className="mono" style={{fontSize:'10px', color:T.t3, marginTop:'4px'}}>Completion time: Not recorded</div>
+<div className="mono" style={{fontSize:'10px', color:T.t3, marginTop:'4px'}}>Completion time: {reportData.completionTime} · {reportData.completionFlag}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
                 <div>{R.purpose}</div>
@@ -2659,7 +2711,7 @@ const ResultsPage = ({reportData}) => {
                     {d.habits.map((h, j) => {
                       const isDone = !!evState[`q_${i}_${j}`];
                       return (
-                        <div key={j} onClick={() => toggleEvidence(`q_${i}_${j}`, stepXp)} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px', background:isDone?T.gnP:T.bg3, borderRadius:'8px', border:`1px solid ${isDone?T.gn:T.b1}`, cursor:'pointer', transition:'all 0.2s'}}>
+                        <div key={j} onClick={() => openEvidenceModal(`q_${i}_${j}`, stepXp, 'quest', `${d.dim} Quest`, `Step ${j+1} of 10`, h.t)} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px', background:isDone?T.gnP:T.bg3, borderRadius:'8px', border:`1px solid ${isDone?T.gn:T.b1}`, cursor:'pointer', transition:'all 0.2s'}}>
                           <div style={{width:'20px', height:'20px', borderRadius:'50%', border:`2px solid ${isDone?T.gn:T.b2}`, background:isDone?T.gn:'transparent', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center'}}>
                             {isDone && <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>}
                           </div>
@@ -2693,7 +2745,7 @@ const ResultsPage = ({reportData}) => {
                 const isCollected = !!evState[`pu_${i}`];
                 const xpReward = r.type==='research'?500:r.type==='book'?300:200;
                 return (
-                  <div key={i} onClick={()=>toggleEvidence(`pu_${i}`, xpReward)} style={{background:isCollected?T.gnP:T.bg2, border:`1px solid ${isCollected?T.gn:T.b1}`, borderRadius:'10px', padding:'16px', cursor:'pointer', transition:'all 0.2s', opacity:isCollected?0.6:1}}>
+                  <div key={i} onClick={()=>openEvidenceModal(`pu_${i}`, xpReward, r.type, r.title, r.author, r.why)} style={{background:isCollected?T.gnP:T.bg2, border:`1px solid ${isCollected?T.gn:T.b1}`, borderRadius:'10px', padding:'16px', cursor:'pointer', transition:'all 0.2s', opacity:isCollected?0.6:1}}>
                     <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
                       <div>
                         <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:isCollected?T.gn:T.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>{r.type} · {r.type==='research'?'LEGENDARY':r.type==='book'?'RARE':'UNCOMMON'}</div>
@@ -2801,6 +2853,77 @@ const ResultsPage = ({reportData}) => {
         </div>
         );
       })()}
+
+      {/* ── EVIDENCE MODAL ── */}
+      {evModal && (
+        <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', backdropFilter:'blur(4px)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px'}} onClick={()=>setEvModal(null)}>
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', width:'100%', maxWidth:'500px', padding:'24px', boxShadow:`0 20px 40px rgba(0,0,0,0.5)`}} onClick={e=>e.stopPropagation()}>
+            
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'16px'}}>
+              <div>
+                <div className="mono" style={{fontSize:'10px', color:evModal.mode==='review'?T.gn:T.c, fontWeight:'800', letterSpacing:'0.1em', marginBottom:'4px'}}>
+                  {evModal.mode==='review' ? '✅ EVIDENCE VERIFIED' : 'SUBMIT EVIDENCE'} · +{evModal.xp} XP
+                </div>
+                <div className="serif" style={{fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>{evModal.title}</div>
+                <div style={{fontSize:'12px', color:T.t2, marginTop:'4px'}}>{evModal.subtitle}</div>
+              </div>
+              <button onClick={()=>setEvModal(null)} style={{background:'transparent', border:'none', color:T.t3, fontSize:'24px', cursor:'pointer'}}>×</button>
+            </div>
+
+            {evModal.mode === 'submit' ? (
+              <>
+                <div style={{background:T.bg2, padding:'12px', borderRadius:'8px', borderLeft:`3px solid ${T.gold}`, fontSize:'12px', color:T.t1, marginBottom:'20px', lineHeight:'1.5'}}>
+                  {evModal.objText}
+                </div>
+
+                {evModal.type === 'book' && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
+                    <textarea placeholder="Direct quote from the book..." rows={3} value={evInput.quote} onChange={e=>setEvInput({...evInput, quote:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <input placeholder="Page number" value={evInput.page} onChange={e=>setEvInput({...evInput, page:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="Your biggest takeaway..." rows={2} value={evInput.takeaway} onChange={e=>setEvInput({...evInput, takeaway:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                  </div>
+                )}
+                {(evModal.type === 'ted' || evModal.type === 'youtube') && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
+                    <input placeholder="Timestamp (e.g. 08:34)" value={evInput.timestamp} onChange={e=>setEvInput({...evInput, timestamp:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="The key insight in your own words..." rows={3} value={evInput.insight} onChange={e=>setEvInput({...evInput, insight:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                  </div>
+                )}
+                {evModal.type === 'research' && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
+                    <input placeholder="Paper Title or DOI" value={evInput.ref} onChange={e=>setEvInput({...evInput, ref:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="One key finding that changes how you work..." rows={3} value={evInput.finding} onChange={e=>setEvInput({...evInput, finding:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                  </div>
+                )}
+                {evModal.type === 'quest' && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
+                    <textarea placeholder="Your reflection or action log..." rows={4} value={evInput.reflection} onChange={e=>setEvInput({...evInput, reflection:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <input type="date" value={evInput.date} onChange={e=>setEvInput({...evInput, date:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                  </div>
+                )}
+
+                <div style={{display:'flex', gap:'10px', justifyContent:'flex-end'}}>
+                  <button onClick={()=>setEvModal(null)} style={{padding:'10px 16px', borderRadius:'6px', background:'transparent', border:`1px solid ${T.b2}`, color:T.t2, cursor:'pointer', fontWeight:'600'}}>Cancel</button>
+                  <button onClick={submitEvidence} style={{padding:'10px 16px', borderRadius:'6px', background:T.c, border:'none', color:'#fff', cursor:'pointer', fontWeight:'700'}}>Submit & Earn XP</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, padding:'16px', borderRadius:'8px', fontSize:'13px', color:T.t1, lineHeight:'1.6', marginBottom:'20px'}}>
+                  {evModal.type === 'book' && <><p><strong>Quote (p.{evModal.data.page}):</strong><br/>"{evModal.data.quote}"</p><p style={{marginTop:'8px'}}><strong>Takeaway:</strong> {evModal.data.takeaway}</p></>}
+                  {(evModal.type === 'ted' || evModal.type === 'youtube') && <><p><strong>Timestamp:</strong> {evModal.data.timestamp}</p><p style={{marginTop:'8px'}}><strong>Insight:</strong> {evModal.data.insight}</p></>}
+                  {evModal.type === 'research' && <><p><strong>Reference:</strong> {evModal.data.ref}</p><p style={{marginTop:'8px'}}><strong>Finding:</strong> {evModal.data.finding}</p></>}
+                  {evModal.type === 'quest' && <><p><strong>Reflection:</strong> {evModal.data.reflection}</p><p style={{marginTop:'8px'}}><strong>Date:</strong> {evModal.data.date}</p></>}
+                </div>
+                <div style={{display:'flex', gap:'10px', justifyContent:'flex-end'}}>
+                  <button onClick={()=>setEvModal(null)} style={{padding:'10px 16px', borderRadius:'6px', background:'transparent', border:`1px solid ${T.b2}`, color:T.t2, cursor:'pointer', fontWeight:'600'}}>Close</button>
+                  <button onClick={revokeEvidence} style={{padding:'10px 16px', borderRadius:'6px', background:T.rdP, border:`1px solid ${T.rd}40`, color:T.rd, cursor:'pointer', fontWeight:'700'}}>Revoke & Return XP</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ─── TAB 4: TEAM AGGREGATE ─── */}
       {resTab === 'team' && (() => {
@@ -3120,8 +3243,7 @@ const handleSearch = () => {
   const h = history.filter(e => e.email?.toLowerCase() !== pid_email.toLowerCase());
     setHistory(h);
     try { localStorage.setItem('core_v3_history', JSON.stringify(h)); } catch(e){}
-    const updatedResults = results.map(entries => entries.filter(e => e.cnic !== pid_cnic)).filter(arr => arr.length > 0);
-    setResults(updatedResults);
+const updatedResults = results.map(entries => entries.filter(e => e.email?.toLowerCase() !== pid_email.toLowerCase())).filter(arr => arr.length > 0);    setResults(updatedResults);
   };
 
   const compKeys=[['CII','Compliance & Integrity'],['LRS','Leadership Readiness'],['TVS','Team Value'],['ADS','Adaptability'],['SES','Stakeholder'],['OPS','Operational'],['PMS','People Mgmt']];

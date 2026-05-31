@@ -22,12 +22,12 @@ pool.connect()
   .then(async () => {
     console.log('✅ Connected to PostgreSQL database');
     
-    // Auto-create the table with the new v3.0 fields (batch, purpose, level)
+    // Auto-create the table with the new v3.0 fields (added phone)
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS assessments (
         id SERIAL PRIMARY KEY,
         doc_id VARCHAR(255),
-        cnic VARCHAR(255),
+        phone VARCHAR(255),
         name VARCHAR(255),
         email VARCHAR(255),
         department VARCHAR(255),
@@ -44,12 +44,12 @@ pool.connect()
     `;
     await pool.query(createTableQuery);
 
-    // Safely attempt to add new columns in case the table already existed from v1.0
-    // (This prevents errors if you already have data in your database)
+    // Safely attempt to add new columns in case the table already existed from older versions
     try {
       await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS batch VARCHAR(255);`);
       await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS purpose VARCHAR(255);`);
       await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level VARCHAR(255);`);
+      await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS phone VARCHAR(255);`);
     } catch (alterErr) {
       console.log('Columns already exist or alter skipped.');
     }
@@ -66,7 +66,7 @@ pool.connect()
 app.post('/api/assessments', async (req, res) => {
   try {
     const reportData = req.body;
-    // Extract cfg alongside the others (cfg holds batch, purpose, level in the new React code)
+    // Extract cfg alongside the others
     const { respondent, scores, profile, docId, cfg } = reportData;
 
     // Use department Other if selected
@@ -77,17 +77,18 @@ app.post('/api/assessments', async (req, res) => {
     const purpose = cfg?.purpose || respondent?.purpose || '';
     const level = cfg?.level || respondent?.level || '';
     const industry = cfg?.industry || respondent?.industry || '';
+    const phone = respondent?.phone || '';
 
     const query = `
       INSERT INTO assessments 
-      (doc_id, cnic, name, email, department, role, industry, batch, purpose, level, overall_score, profile_name, report_data)
+      (doc_id, phone, name, email, department, role, industry, batch, purpose, level, overall_score, profile_name, report_data)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *;
     `;
 
     const values = [
       docId,
-      respondent.cnic,
+      phone,
       respondent.name,
       respondent.email,
       actualDept,

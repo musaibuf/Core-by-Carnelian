@@ -1984,8 +1984,8 @@ const allDims = [
 
                 <div className="mono" style={{fontSize:'10px',textTransform:'uppercase',letterSpacing:'0.1em',color:T.t3,fontWeight:'800',marginBottom:'12px'}}>Your 10-Step Action Plan for {d.dim}</div>
                 <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'24px'}}>
-                  {d.habits.map((s, j) => {
-                    const isRed = j < 2;
+{habits.map((s, j) => {
+                      const isRed = j < 2;
                     const isAm = j >= 2 && j < 5;
                     const sCol = isRed ? T.rd : isAm ? T.am : T.gn;
                     const sBg = isRed ? T.rdP : isAm ? T.amP : T.gnP;
@@ -2684,15 +2684,16 @@ const allDims = [
             <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
               {devAreas.length > 0 ? devAreas.map((d, i) => {
                 const questXpTotal = 500;
-                const stepXp = Math.round(questXpTotal / d.habits.length);
+const habits = d.habits || [];
+const stepXp = Math.round(questXpTotal / (habits.length || 10));
                 let completedCount = 0;
                 
-                d.habits.forEach((h, j) => {
-                  if (evState[`q_${i}_${j}`]) completedCount++;
-                });
+                habits.forEach((h, j) => {
+  if (evState[`q_${i}_${j}`]) completedCount++;
+});
                 
-                const questPct = Math.round((completedCount / d.habits.length) * 100);
-                const isComplete = completedCount === d.habits.length;
+                const questPct = Math.round((completedCount / (habits.length || 1)) * 100);
+const isComplete = habits.length > 0 && completedCount === habits.length;
 
                 return (
                 <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px'}}>

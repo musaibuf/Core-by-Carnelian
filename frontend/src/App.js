@@ -1906,16 +1906,12 @@ const allDims = [
         <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='player'?T.c:T.b2}`, background:resTab==='player'?T.c:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
           🎮 Player Report
         </button>
-        {R.batch && (
-          <>
-            <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.c:T.b2}`, background:resTab==='team'?T.c:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
-              👥 Team Aggregate
-            </button>
-            <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.c:T.b2}`, background:resTab==='comp'?T.c:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
-              🧩 Team Composition
-            </button>
-          </>
-        )}
+        <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.c:T.b2}`, background:resTab==='team'?T.c:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
+          👥 Team Aggregate
+        </button>
+        <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.c:T.b2}`, background:resTab==='comp'?T.c:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
+          🧩 Team Composition
+        </button>
       </div>
 
       {/* ─── TAB 1: ACTION PLAN ─── */}
@@ -2969,6 +2965,21 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
       {resTab === 'team' && (() => {
         const valid = batchData.filter(b => b.validityOverall !== 'red' && b.scores);
         
+        if (valid.length < 2) {
+          return (
+            <div className="anim-fadeUp">
+              <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
+                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Team Aggregate Profile</h2>
+                <div style={{padding:'24px', background:T.amP, borderRadius:'8px', border:`1px solid ${T.am}40`, color:T.am, fontSize:'14px', fontWeight:'600', lineHeight:'1.6'}}>
+                  <span style={{fontSize:'24px', display:'block', marginBottom:'12px'}}>👥</span>
+                  <strong>Not enough data to generate this report.</strong><br/><br/>
+                  The Team Aggregate Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         // Archetype Distribution
         const archCounts = {};
         batchData.forEach(b => { archCounts[b.profile] = (archCounts[b.profile]||0) + 1; });
@@ -3104,11 +3115,21 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
       {/* ─── TAB 5: TEAM COMPOSITION ─── */}
       {resTab === 'comp' && (() => {
         const valid = batchData.filter(b => b.validityOverall !== 'red' && b.scores);
-        if(valid.length < 2) return (
-          <div className="anim-fadeUp" style={{padding:'24px', background:T.amP, borderRadius:'8px', color:T.am, fontSize:'13px', fontWeight:'600'}}>
-            Insufficient data. At least 2 valid responses are required to generate the Team Composition Report.
-          </div>
-        );
+        
+        if(valid.length < 2) {
+          return (
+            <div className="anim-fadeUp">
+              <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
+                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Team Composition & Hiring Intelligence</h2>
+                <div style={{padding:'24px', background:T.amP, borderRadius:'8px', border:`1px solid ${T.am}40`, color:T.am, fontSize:'14px', fontWeight:'600', lineHeight:'1.6'}}>
+                  <span style={{fontSize:'24px', display:'block', marginBottom:'12px'}}>🧩</span>
+                  <strong>Not enough data to generate this report.</strong><br/><br/>
+                  The Team Composition Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
+                </div>
+              </div>
+            </div>
+          );
+        }
 
         // Averages
         const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];

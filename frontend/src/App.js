@@ -1324,27 +1324,64 @@ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid e
 
           {intakeStage===2&&(
             <div key="stage2" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Before you begin</h2>
-              <div style={{background:T.bg2,borderRadius:'8px',padding:'24px',marginBottom:'20px'}}>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>A Few Things Before You Start</h2>
+              <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>This assessment takes approximately 20 minutes and is designed entirely for <strong style={{color:T.t0}}>your benefit</strong>.</p>
+
+              {/* What you will receive */}
+              <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', marginBottom:'20px'}}>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.2rem',fontWeight:'700',color:T.gold,marginBottom:'16px'}}>What you will receive when you finish</div>
+                <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'16px'}}>
+                  <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Professional Profile</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>A named archetype that describes your dominant working style — how you approach challenges, teams, and decisions.</div>
+                  </div>
+                  <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Dimension Scores</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>Scores across 9 professional dimensions — personality, cultural intelligence, learning agility, and ethical orientation.</div>
+                  </div>
+                  <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Development Roadmap</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>A personalised 30–90–180 day action plan built specifically around your scores — not a generic programme.</div>
+                  </div>
+                  <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Development Toolkit</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>Specific books, methods, and resources selected for your profile — and if-then decision protocols for when habits break.</div>
+                  </div>
+                </div>
+                <div style={{fontSize:'12px',color:T.t2,lineHeight:'1.6',fontWeight:'500'}}>Regardless of why your organisation commissioned this assessment, your personal Action Plan belongs to you. It is designed to help you understand yourself and grow — not to evaluate you against a pass/fail standard.</div>
+              </div>
+
+              {/* Green Box */}
+              <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, borderRadius:'10px', padding:'16px 20px', marginBottom:'20px', fontSize:'13px', color:T.gn, lineHeight:'1.65', fontWeight:'600'}}>
+                <strong style={{color:T.gn, fontWeight:'800'}}>This is not a test. There are almost no wrong answers.</strong> The questions are designed to understand how you naturally think and work — not to judge you. The more honestly you answer, the more specific and useful your personal results will be.
+              </div>
+
+              {/* Bullet Points */}
+              <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'24px'}}>
                 {[
-                  {n:'01',t:'Respond authentically',d:"Answer based on how you actually behave at work — not how you wish you behaved. There are no right or wrong answers."},
-                  {n:'02',t:'Trust your first instinct',d:"Your first instinct is typically the most accurate. Do not deliberate excessively on any item."},
-                  {n:'03',t:'Internal consistency checks apply',d:"The assessment contains validity checks. Inconsistent or implausible response patterns will be flagged in the report."},
-                  {n:'04',t:'Allow approximately 20 minutes',d:"Three embedded challenges will appear between sections. You cannot return to previous sections once moved forward."},
-                ].map((item,i,arr)=>(
-                  <div key={i} style={{display:'flex',gap:'16px',paddingBottom:i<arr.length-1?'18px':'0',marginBottom:i<arr.length-1?'18px':'0',borderBottom:i<arr.length-1?`1px solid ${T.b1}`:'none'}}>
-                    <div className="mono" style={{fontSize:'11px',color:T.c,minWidth:'22px',paddingTop:'2px',fontWeight:'700'}}>{item.n}</div>
-                    <div><div style={{fontSize:'13px',fontWeight:'700',color:T.t0,marginBottom:'3px'}}>{item.t}</div><div style={{fontSize:'12px',color:T.t2,lineHeight:'1.65',fontWeight:'500'}}>{item.d}</div></div>
+                  <>Answer based on how you <strong style={{color:T.t0}}>actually are</strong> at work — not the ideal version of yourself. The assessment works best when it reflects the real you.</>,
+                  <>Go with your <strong style={{color:T.t0}}>first instinct</strong>. Your immediate reaction to a statement is usually the most accurate reflection of your natural style. Don't overthink it.</>,
+                  <>Some questions may feel similar to each other — this is intentional. The assessment measures patterns across your responses, not individual answers in isolation.</>,
+                  <>You will encounter three interactive challenges mid-assessment. The first is a values dilemma with no time limit. The second and third are <strong style={{color:T.t0}}>45-second timed decisions</strong> — the clock starts when you click. Read the instructions on screen before starting each timed section. Approach all three honestly.</>,
+                  <>You can go back and change answers within each section. Once you advance to the next section, you cannot return to the previous one.</>
+                ].map((text, i) => (
+                  <div key={i} style={{display:'flex', alignItems:'flex-start', gap:'12px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+                    <span style={{color:T.c, fontWeight:'800', marginTop:'2px'}}>→</span>
+                    <div>{text}</div>
                   </div>
                 ))}
               </div>
-              <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'7px',padding:'14px 16px',marginBottom:'20px'}}>
-                <div className="mono" style={{fontSize:'9px',fontWeight:'700',color:T.am,textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'5px'}}>Validity Notice</div>
-                <p style={{fontSize:'12px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>This assessment includes checks that detect when responses do not reflect realistic self-perception. Inflated or inconsistent results are noted in the HR report and reduce the usefulness of your profile.</p>
+
+              {/* Blue Info Box */}
+              <div style={{background:'rgba(59, 130, 246, 0.1)', border:'1px solid rgba(59, 130, 246, 0.3)', borderRadius:'10px', padding:'16px 20px', marginBottom:'24px'}}>
+                <div style={{fontSize:'13px', fontWeight:'800', color:'#3B82F6', marginBottom:'6px'}}>💡 Why honest answers give you better results</div>
+                <div style={{fontSize:'12.5px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>Your results generate a personalised development plan built around your actual profile. Presenting an idealised version of yourself produces a generic plan that tells you nothing you do not already know. Honest answers produce specific, actionable guidance that is genuinely useful.</div>
               </div>
+
+              {/* Buttons */}
               <div style={{display:'flex',gap:'10px'}}>
                 <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
-<button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Begin Assessment →</button>
+                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>I'm Ready — Start →</button>
               </div>
             </div>
           )}

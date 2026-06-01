@@ -986,13 +986,13 @@ const nextQ=()=>{
     setCur(resumeIdx);
   };
 
-  const chooseScenario=(quality,gameNum)=>{
+  const chooseScenario=(quality,gameNum,key)=>{
     if(gameLocked) return;
     setTimerActive(false); setGameLocked(true);
     const score=quality==='best'?7:quality==='ok'?4:quality==='timeout'?0:-5;
     if(gameNum===2) setGameScores(g=>({...g,scenario1:score}));
     else setGameScores(g=>({...g,scenario2:score}));
-    setGameChoice({quality,score});
+    setGameChoice({quality,score,key});
   };
 
   const generate = async () => {
@@ -1541,20 +1541,23 @@ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid e
               <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>{scenario}</p>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'16px'}}>
-              {options.map(opt=>(
-                <button key={opt.k} onClick={()=>!gameLocked&&chooseScenario(opt.q,isG2?2:3)} style={{
+              {options.map(opt=>{
+                const isSelected = gameChoice?.key === opt.k;
+                return (
+                <button key={opt.k} onClick={()=>!gameLocked&&chooseScenario(opt.q,isG2?2:3,opt.k)} style={{
                   display:'flex',alignItems:'flex-start',gap:'12px',padding:'13px 16px',
                   borderRadius:'7px',cursor:gameLocked?'default':'pointer',
-                  border:`1px solid ${T.b2}`,background:T.bg2,
+                  border: isSelected ? `2px solid ${T.c}` : `1px solid ${T.b2}`,
+                  background: isSelected ? `${T.c}16` : T.bg2,
                   textAlign:'left',transition:'all 0.18s',width:'100%',
-                  opacity:gameLocked?0.55:1,
+                  opacity: gameLocked ? (isSelected ? 1 : 0.4) : 1,
                 }}
                 onMouseOver={e=>{if(!gameLocked){e.currentTarget.style.borderColor=T.bC;e.currentTarget.style.background=T.bg3;}}}
-                onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2;e.currentTarget.style.background=T.bg2;}}>
+                onMouseOut={e=>{if(!gameLocked){e.currentTarget.style.borderColor=T.b2;e.currentTarget.style.background=T.bg2;}}}>
                   <span className="mono" style={{fontSize:'12px',fontWeight:'700',color:T.c,flexShrink:0,marginTop:'1px'}}>{opt.k}</span>
-                  <span style={{fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'600'}}>{opt.l}</span>
+                  <span style={{fontSize:'13px',color:isSelected?T.t0:T.t1,lineHeight:'1.6',fontWeight:isSelected?'800':'600'}}>{opt.l}</span>
                 </button>
-              ))}
+              )})}
             </div>
             {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section D →':'Continue to Final Section →'}</button>}
           </div>

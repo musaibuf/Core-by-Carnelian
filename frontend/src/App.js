@@ -1556,7 +1556,6 @@ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid e
                 </button>
               ))}
             </div>
-            {fb&&<div style={{background:fb.bg,border:`1px solid ${fb.bc}40`,borderRadius:'8px',padding:'14px 16px',marginBottom:'14px',fontSize:'13px',color:fb.c,lineHeight:'1.65',fontWeight:'600'}}>{fb.msg}</div>}
             {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section D →':'Continue to Final Section →'}</button>}
           </div>
         </div>

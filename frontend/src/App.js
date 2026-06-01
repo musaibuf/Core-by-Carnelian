@@ -2962,8 +2962,10 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
       )}
 
       {/* ─── TAB 4: TEAM AGGREGATE ─── */}
+{/* ─── TAB 4: TEAM AGGREGATE ─── */}
       {resTab === 'team' && (() => {
-        const valid = batchData.filter(b => b.validityOverall !== 'red' && b.scores);
+        const safeBatch = batchData || [];
+        const valid = safeBatch.filter(b => b && b.validityOverall !== 'red' && b.scores) || [];
         
         if (valid.length < 2) {
           return (
@@ -2982,16 +2984,18 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
 
         // Archetype Distribution
         const archCounts = {};
-        batchData.forEach(b => { archCounts[b.profile] = (archCounts[b.profile]||0) + 1; });
+        safeBatch.forEach(b => { 
+          if(b && b.profile) archCounts[b.profile] = (archCounts[b.profile]||0) + 1; 
+        });
         const archSorted = Object.entries(archCounts).sort((a,b)=>b[1]-a[1]);
 
         // Risk Pattern Frequency
         const riskCounts = {
-          'Performance-Ethics Disconnect': valid.filter(b=>b.scores.C>=68 && b.scores.EOavg<=60).length,
-          'Direct Compliance Risk':        valid.filter(b=>b.scores.EO_RC<55).length,
-          'Charismatic Integrity Risk':    valid.filter(b=>b.scores.E>=70 && b.scores.EO_AI<=60).length,
-          'Visible and Volatile':          valid.filter(b=>b.scores.ES<=60 && b.scores.E>=65).length,
-          'Talented Maverick':             valid.filter(b=>b.scores.LAavg>=70 && b.scores.EOavg<=60).length,
+          'Performance-Ethics Disconnect': valid.filter(b=>b.scores?.C>=68 && b.scores?.EOavg<=60).length,
+          'Direct Compliance Risk':        valid.filter(b=>b.scores?.EO_RC<55).length,
+          'Charismatic Integrity Risk':    valid.filter(b=>b.scores?.E>=70 && b.scores?.EO_AI<=60).length,
+          'Visible and Volatile':          valid.filter(b=>b.scores?.ES<=60 && b.scores?.E>=65).length,
+          'Talented Maverick':             valid.filter(b=>b.scores?.LAavg>=70 && b.scores?.EOavg<=60).length,
         };
         const riskEntries = Object.entries(riskCounts).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
 
@@ -3004,109 +3008,260 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
                 <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM AGGREGATE REPORT · Batch: {R.batch}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
-                <div>{batchData.length} total responses</div>
+                <div>{safeBatch.length} total responses</div>
                 {R.industry && <div>{IND[R.industry]?.icon} {IND[R.industry]?.short}</div>}
               </div>
             </div>
             <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Aggregate Profile</h2>
             
-            {batchData.length < 2 ? (
-              <div style={{padding:'24px', background:T.amP, borderRadius:'8px', color:T.am, fontSize:'13px', fontWeight:'600'}}>
-                Insufficient data. At least 2 valid responses are required to generate the Team Aggregate Report.
-              </div>
-            ) : (
-              <>
-                <div style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>
-                  {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
-                    const avg = Math.round(batchData.reduce((sum, b) => sum + (b.scores[k] || 0), 0) / batchData.length);
-                    const labels = ['Personality', 'Cultural IQ', 'Citizenship', 'Learning', 'Integrity'];
-                    return (
-                      <div key={i} style={{textAlign:'center'}}>
-                        <div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{avg}</div>
-                        <div style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>{labels[i]}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Team Dimension Averages</h3>
-                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px', marginBottom:'40px'}}>
-                  {['C','O','E','A','ES','CQavg','OCBavg','LAavg','EOavg'].map((k, i) => {
-                    const avg = Math.round(batchData.reduce((sum, b) => sum + (b.scores[k] || 0), 0) / batchData.length);
-                    const labels = ['Conscientiousness','Openness','Social Confidence','Agreeableness','Emotional Resilience','Cultural Intelligence','Team Citizenship','Learning Agility','Ethical Integrity'];
-                    return (
-                      <div key={i} style={{marginBottom:'8px'}}>
-                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'4px'}}>
-                          <span style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{labels[i]}</span>
-                          <span className="mono" style={{fontSize:'12px', fontWeight:'800', color:bCol(avg)}}>{avg}/100</span>
-                        </div>
-                        <Bar score={avg} w="100%" h={8} />
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Archetype Distribution</h3>
-                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
-                  {archSorted.map(([name, count], i) => {
-                    const pct = Math.round((count / batchData.length) * 100);
-                    return (
-                      <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', borderLeft:`4px solid ${T.c}`}}>
-                        <div style={{fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{name}</div>
-                        <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-                          <div style={{flex:1, height:'6px', background:T.b1, borderRadius:'100px', overflow:'hidden'}}>
-                            <div style={{height:'100%', width:`${pct}%`, background:T.c, borderRadius:'100px'}} />
-                          </div>
-                          <span className="mono" style={{fontSize:'11px', color:T.t2, fontWeight:'700'}}>{count} ({pct}%)</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Risk Pattern Frequency</h3>
-                {riskEntries.length > 0 ? (
-                  <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'40px'}}>
-                    {riskEntries.map(([name, count], i) => {
-                      const pct = Math.round((count / valid.length) * 100);
-                      const isHigh = pct >= 20;
-                      return (
-                        <div key={i} style={{background:isHigh?T.rdP:T.bg2, border:`1px solid ${isHigh?T.rd:T.b1}40`, borderRadius:'8px', padding:'16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                          <div>
-                            <div style={{fontSize:'14px', fontWeight:'700', color:isHigh?T.rd:T.t0}}>{name}</div>
-                            <div style={{fontSize:'12px', color:T.t2}}>{isHigh ? 'Programme-level intervention recommended' : 'Monitor — consider targeted coaching'}</div>
-                          </div>
-                          <div style={{textAlign:'right'}}>
-                            <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:isHigh?T.rd:T.am}}>{count}</div>
-                            <div style={{fontSize:'10px', color:T.t3}}>{pct}% of valid</div>
-                          </div>
-                        </div>
-                      );
-                    })}
+            <div style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>
+              {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
+                const avg = Math.round(safeBatch.reduce((sum, b) => sum + (b?.scores?.[k] || 0), 0) / (safeBatch.length || 1));
+                const labels = ['Personality', 'Cultural IQ', 'Citizenship', 'Learning', 'Integrity'];
+                return (
+                  <div key={i} style={{textAlign:'center'}}>
+                    <div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{avg}</div>
+                    <div style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>{labels[i]}</div>
                   </div>
-                ) : (
-                  <div style={{padding:'16px', background:T.gnP, borderRadius:'8px', color:T.gn, fontSize:'13px', fontWeight:'600', marginBottom:'40px'}}>
-                    No risk patterns detected across this batch at alerting frequency.
-                  </div>
-                )}
+                );
+              })}
+            </div>
 
-                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Respondent Summary</h3>
-                <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                  {batchData.sort((a,b)=>(b.scores?.overall||0)-(a.scores?.overall||0)).map((b, i) => (
-                    <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Team Dimension Averages</h3>
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px', marginBottom:'40px'}}>
+              {['C','O','E','A','ES','CQavg','OCBavg','LAavg','EOavg'].map((k, i) => {
+                const avg = Math.round(safeBatch.reduce((sum, b) => sum + (b?.scores?.[k] || 0), 0) / (safeBatch.length || 1));
+                const labels = ['Conscientiousness','Openness','Social Confidence','Agreeableness','Emotional Resilience','Cultural Intelligence','Team Citizenship','Learning Agility','Ethical Integrity'];
+                return (
+                  <div key={i} style={{marginBottom:'8px'}}>
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'4px'}}>
+                      <span style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{labels[i]}</span>
+                      <span className="mono" style={{fontSize:'12px', fontWeight:'800', color:bCol(avg)}}>{avg}/100</span>
+                    </div>
+                    <Bar score={avg} w="100%" h={8} />
+                  </div>
+                );
+              })}
+            </div>
+
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Archetype Distribution</h3>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
+              {archSorted.map(([name, count], i) => {
+                const pct = Math.round((count / (safeBatch.length || 1)) * 100);
+                return (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', borderLeft:`4px solid ${T.c}`}}>
+                    <div style={{fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{name}</div>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                      <div style={{flex:1, height:'6px', background:T.b1, borderRadius:'100px', overflow:'hidden'}}>
+                        <div style={{height:'100%', width:`${pct}%`, background:T.c, borderRadius:'100px'}} />
+                      </div>
+                      <span className="mono" style={{fontSize:'11px', color:T.t2, fontWeight:'700'}}>{count} ({pct}%)</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Risk Pattern Frequency</h3>
+            {riskEntries.length > 0 ? (
+              <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'40px'}}>
+                {riskEntries.map(([name, count], i) => {
+                  const pct = Math.round((count / (valid.length || 1)) * 100);
+                  const isHigh = pct >= 20;
+                  return (
+                    <div key={i} style={{background:isHigh?T.rdP:T.bg2, border:`1px solid ${isHigh?T.rd:T.b1}40`, borderRadius:'8px', padding:'16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                       <div>
-                        <div style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{b.name}</div>
-                        <div style={{fontSize:'11px', color:T.t3}}>{b.profile}</div>
+                        <div style={{fontSize:'14px', fontWeight:'700', color:isHigh?T.rd:T.t0}}>{name}</div>
+                        <div style={{fontSize:'12px', color:T.t2}}>{isHigh ? 'Programme-level intervention recommended' : 'Monitor — consider targeted coaching'}</div>
                       </div>
                       <div style={{textAlign:'right'}}>
-                        <div className="mono" style={{fontSize:'14px', fontWeight:'800', color:b.validityOverall==='red'?T.rd:T.gold}}>{b.scores?.overall || '—'}</div>
-                        <div style={{fontSize:'10px', fontWeight:'700', color:b.validityOverall==='green'?T.gn:b.validityOverall==='amber'?T.am:T.rd, textTransform:'uppercase'}}>{b.validityOverall}</div>
+                        <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:isHigh?T.rd:T.am}}>{count}</div>
+                        <div style={{fontSize:'10px', color:T.t3}}>{pct}% of valid</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{padding:'16px', background:T.gnP, borderRadius:'8px', color:T.gn, fontSize:'13px', fontWeight:'600', marginBottom:'40px'}}>
+                No risk patterns detected across this batch at alerting frequency.
+              </div>
             )}
+
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Respondent Summary</h3>
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {[...safeBatch].sort((a,b)=>(b?.scores?.overall||0)-(a?.scores?.overall||0)).map((b, i) => (
+                <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
+                  <div>
+                    <div style={{fontSize:'13px', fontWeight:'700', color:T.t0}}>{b?.name || 'Unknown'}</div>
+                    <div style={{fontSize:'11px', color:T.t3}}>{b?.profile || 'No Profile'}</div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div className="mono" style={{fontSize:'14px', fontWeight:'800', color:b?.validityOverall==='red'?T.rd:T.gold}}>{b?.scores?.overall || '—'}</div>
+                    <div style={{fontSize:'10px', fontWeight:'700', color:b?.validityOverall==='green'?T.gn:b?.validityOverall==='amber'?T.am:T.rd, textTransform:'uppercase'}}>{b?.validityOverall || 'UNKNOWN'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        );
+      })()}
+
+      {/* ─── TAB 5: TEAM COMPOSITION ─── */}
+      {resTab === 'comp' && (() => {
+        const safeBatch = batchData || [];
+        const valid = safeBatch.filter(b => b && b.validityOverall !== 'red' && b.scores) || [];
+        
+        if(valid.length < 2) {
+          return (
+            <div className="anim-fadeUp">
+              <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
+                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Team Composition & Hiring Intelligence</h2>
+                <div style={{padding:'24px', background:T.amP, borderRadius:'8px', border:`1px solid ${T.am}40`, color:T.am, fontSize:'14px', fontWeight:'600', lineHeight:'1.6'}}>
+                  <span style={{fontSize:'24px', display:'block', marginBottom:'12px'}}>🧩</span>
+                  <strong>Not enough data to generate this report.</strong><br/><br/>
+                  The Team Composition Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // Averages
+        const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];
+        const dimLabels = {O:'Openness',C:'Conscientiousness',E:'Extraversion',A:'Agreeableness',ES:'Emotional Stability',CQavg:'Cultural Intelligence',OCBavg:'Team Citizenship',LAavg:'Learning Agility',EOavg:'Ethical Orientation'};
+        const teamAvg = {};
+        dimKeys.forEach(k => { teamAvg[k] = Math.round(valid.reduce((a,b)=>a+(b?.scores?.[k]||0),0)/(valid.length || 1)); });
+
+        // Findings
+        const findings = [];
+        dimKeys.forEach(k => {
+          if(teamAvg[k] < 50) findings.push({sev:'critical', t:`Team ${dimLabels[k]} is critically low (avg ${teamAvg[k]})`, d:`This is a collective gap. The team will struggle with tasks requiring ${dimLabels[k]}.`});
+          else if(teamAvg[k] < 60) findings.push({sev:'watch', t:`Team ${dimLabels[k]} is below optimal (avg ${teamAvg[k]})`, d:`Performance may be adequate today but fragile under pressure or change.`});
+          else if(teamAvg[k] >= 75) findings.push({sev:'strength', t:`Team ${dimLabels[k]} is a collective strength (avg ${teamAvg[k]})`, d:`This is a competitive advantage. Protect and leverage it.`});
+        });
+
+        // Hiring Profile
+        const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-(teamAvg[k]||0))})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
+
+        // Promotion Fit
+        const ROLE_TARGETS = [
+          {name:'Senior Manager', targets:{LRS:[65,95],ES:[60,90],C:[60,90],EOavg:[60,90]}},
+          {name:'Team Lead', targets:{OCBavg:[60,95],A:[60,90],C:[55,85],E:[55,85]}},
+          {name:'Compliance Officer', targets:{CII:[70,100],EOavg:[70,95],C:[65,95]}},
+          {name:'Client-Facing Manager', targets:{E:[65,95],CQavg:[60,90],A:[60,90],SES:[60,95]}},
+          {name:'Change Leader', targets:{ADS:[65,95],O:[65,95],LAavg:[65,95]}}
+        ];
+        const targetRole = ROLE_TARGETS[promoRole] || ROLE_TARGETS[0];
+        
+        const scoredCandidates = valid.map(b => {
+          let match = 0, count = 0;
+          Object.entries(targetRole.targets).forEach(([k, [min, max]]) => {
+            const v = b?.scores?.[k] || (b?.composites && b?.composites?.[k]);
+            if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
+          });
+          return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
+        }).sort((a,b) => b.fitPct - a.fitPct);
+
+        return (
+        <div className="anim-fadeUp">
+          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
+              <div>
+                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM COMPOSITION REPORT · Batch: {R.batch}</div>
+              </div>
+              <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
+                <div>{valid.length} valid responses</div>
+              </div>
+            </div>
+            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Composition & Hiring Intelligence</h2>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'32px', lineHeight:'1.6'}}>HR-only strategic report — composition diagnosis, hiring profile generation, and promotion fit analysis.</p>
+            
+            {/* 1. Diagnostic */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>1. Composition Diagnostic</h3>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'40px'}}>
+              {findings.map((f, i) => {
+                const col = f.sev==='critical'?T.rd:f.sev==='watch'?T.am:T.gn;
+                const bg = f.sev==='critical'?T.rdP:f.sev==='watch'?T.amP:T.gnP;
+                return (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${col}`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px'}}>
+                      <span style={{background:bg, color:col, padding:'2px 8px', borderRadius:'4px', fontSize:'10px', fontWeight:'800', textTransform:'uppercase'}}>{f.sev}</span>
+                      <span style={{fontSize:'14px', fontWeight:'700', color:T.t0}}>{f.t}</span>
+                    </div>
+                    <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.5'}}>{f.d}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. Hiring Profile */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>2. Hiring Profile Specification</h3>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'16px'}}>Target these dimension ranges for your next hire to balance the team's current blind spots.</p>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
+              {dimGaps.map((g, i) => (
+                <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px'}}>
+                  <div style={{fontSize:'12px', fontWeight:'700', color:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>{g.l}</div>
+                  <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:T.t0}}>≥ {Math.min(80, 75 - g.v + 10)} / 100</div>
+                  <div style={{fontSize:'11px', color:T.t2, marginTop:'4px'}}>Current team avg: <span style={{color:T.rd, fontWeight:'700'}}>{g.v}</span></div>
+                </div>
+              ))}
+            </div>
+
+            {/* 2.5 Interview Probes */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Targeted Interview Probes</h3>
+            <p style={{fontSize:'13px', color:T.t2, marginBottom:'16px'}}>Use these specific questions in your next interview to test for the dimensions this team currently lacks.</p>
+            <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'40px'}}>
+              {dimGaps.slice(0,3).map((g, i) => {
+                const probes = {
+                  'Conscientiousness': {q:'Describe a project with multiple stakeholders and a hard deadline where something went wrong. What specifically did you do to keep it on track?', l:'Concrete structural actions, not generic "I worked harder." Look for planning and contingency thinking.'},
+                  'Emotional Stability': {q:'Describe a professional setback that genuinely shook you. What happened, and what did you do in the 30 days after?', l:'Honest acknowledgment of the difficulty paired with concrete recovery actions.'},
+                  'Learning Agility': {q:'Walk me through the most recent significant change in your professional knowledge or skills. What triggered it, and how did you sustain it?', l:'Self-directed learning, not mandatory training. Look for someone who names their own gaps.'},
+                  'Ethical Orientation': {q:'Describe a situation where the easy path and the right path were different, and you chose the right path. What did it cost you?', l:'Real cost, specifically named. Candidates who claim there was no cost are sanitising the story.'},
+                  'Openness': {q:'Tell me about a time you had to adopt an approach you initially disagreed with. What changed your mind?', l:'Evidence of genuine re-evaluation, not just compliance. Listen for intellectual humility.'},
+                  'Extraversion': {q:'Tell me about a time you had to influence a room full of people who were skeptical of your position. What did you do?', l:'Specific techniques used, reading the room, and willingness to engage conflict.'},
+                  'Agreeableness': {q:'Describe a situation where a peer strongly disagreed with a decision you had authority over. How did the disagreement unfold and resolve?', l:'Willingness to hear substance of the disagreement rather than deflecting it.'},
+                  'Cultural Intelligence': {q:'Tell me about a time your assumptions about how a colleague would behave turned out to be wrong.', l:'Genuine recognition of the error, not performed humility. Specific behaviour change that followed.'},
+                  'Team Citizenship': {q:'Tell me about something you did for your team or organisation in the last year that was not part of your formal role.', l:'Discretionary effort with specific examples. Look for initiatives that created lasting value.'}
+                };
+                const p = probes[g.l] || probes['Ethical Orientation'];
+                return (
+                  <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${T.gold}`, borderRadius:'8px', padding:'16px'}}>
+                    <div style={{fontSize:'11px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'8px'}}>Targets: {g.l}</div>
+                    <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>"{p.q}"</div>
+                    <div style={{fontSize:'13px', color:T.t1}}><strong>Listen for:</strong> {p.l}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 3. Promotion Fit */}
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>3. Promotion Fit Check</h3>
+            <div style={{marginBottom:'16px'}}>
+              <select value={promoRole} onChange={e=>setPromoRole(parseInt(e.target.value))} style={{padding:'10px 16px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg3, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600', outline:'none', cursor:'pointer'}}>
+                {ROLE_TARGETS.map((r, i) => <option key={i} value={i}>{r.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {scoredCandidates.map((c, i) => {
+                const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+                return (
+                  <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
+                    <div>
+                      <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'4px'}}>Respondent #{i+1}</div>
+                      <div style={{fontSize:'12px', color:T.t2}}>{c?.profile || 'Unknown Profile'}</div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:col}}>{c.fitPct}%</div>
+                      <div style={{fontSize:'10px', fontWeight:'700', color:col, textTransform:'uppercase', letterSpacing:'0.05em'}}>Fit Match</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
         </div>
         );

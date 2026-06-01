@@ -1984,8 +1984,8 @@ const allDims = [
 
                 <div className="mono" style={{fontSize:'10px',textTransform:'uppercase',letterSpacing:'0.1em',color:T.t3,fontWeight:'800',marginBottom:'12px'}}>Your 10-Step Action Plan for {d.dim}</div>
                 <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'24px'}}>
-{habits.map((s, j) => {
-                      const isRed = j < 2;
+{(d.habits||[]).map((h, j) => {
+                        const isRed = j < 2;
                     const isAm = j >= 2 && j < 5;
                     const sCol = isRed ? T.rd : isAm ? T.am : T.gn;
                     const sBg = isRed ? T.rdP : isAm ? T.amP : T.gnP;
@@ -1993,9 +1993,9 @@ const allDims = [
                       <div key={j} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', background:sBg, borderRadius:'8px'}}>
                         <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:sCol, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{j+1}</div>
                         <div style={{flex:1}}>
-                          <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'4px'}}>{s.h}</div>
-                          <div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}>{s.t}</div>
-                        </div>
+                          <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'4px'}}>{h.h}</div>
+<div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}><strong style={{color:T.t0}}>{h.h}</strong> {h.t}</div>
+</div>
                       </div>
                     );
                   })}

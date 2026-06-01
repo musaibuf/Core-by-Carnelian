@@ -1832,12 +1832,30 @@ const allDims = [
     fut:ctxAction("Volunteer to lead a process improvement initiative — channelling frustration into change is the most effective long-term strategy","Volunteer to lead a process improvement workstream in your institution","Apply to join a civil service reform working group or departmental improvement committee","Apply to lead a programme process improvement review")
   });
 
-  const bars = [
-    ['Overall Match', S.overall], ['Personality & Drive', S.OCEANavg], ['Cultural Agility', S.CQavg],
-    ['Team Citizenship', S.OCBavg], ['Learning Agility', S.LAavg], ['Ethical Integrity', S.EOavg],
-    ['Conscientiousness', S.C], ['Emotional Resilience', S.ES]
-  ].filter(([_,v]) => v !== undefined && v !== null);
+  // Safely add habits to any devArea that is missing them
+      devAreas.forEach(d => {
+        if (!d.habits) {
+          const safeActs = d.acts || [];
+          d.habits = [
+            { h:'Week 1:', t: d.now || safeActs[0] || 'Review your current approach.' },
+            { h:'Week 2:', t: safeActs[0] || 'Document one observation about your behaviour.' },
+            { h:'Week 3:', t: safeActs[1] || 'Ask a colleague for specific feedback.' },
+            { h:'Week 4:', t: d.soon || safeActs[1] || 'Begin the recommended resource.' },
+            { h:'Month 2:', t: safeActs[2] || d.soon || 'Implement one new habit.' },
+            { h:'Month 2:', t: 'Share your development goal with your manager.' },
+            { h:'Month 3:', t: d.soon || 'Schedule a formal progress check-in.' },
+            { h:'Month 4–6:', t: d.fut || 'Take on a stretch assignment.' },
+            { h:'6 Months:', t: 'Reassess via CORE retake — measure change from ' + d.v + '/100.' },
+            { h:'Ongoing:', t: 'Keep a weekly log. Review every Friday.' }
+          ];
+        }
+      });
 
+      const bars = [
+        ['Overall Match', S.overall], ['Personality & Drive', S.OCEANavg], ['Cultural Agility', S.CQavg],
+        ['Team Citizenship', S.OCBavg], ['Learning Agility', S.LAavg], ['Ethical Integrity', S.EOavg],
+        ['Conscientiousness', S.C], ['Emotional Resilience', S.ES]
+      ].filter(([_,v]) => v !== undefined && v !== null);
   // ── RESOURCES & PROTOCOLS ──
   const getResources = () => {
     const res = [];
@@ -2719,23 +2737,23 @@ const allDims = [
             <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
               {devAreas.length > 0 ? devAreas.map((d, i) => {
                 const questXpTotal = 500;
-const habits = d.habits || [];
-const stepXp = Math.round(questXpTotal / (habits.length || 10));
+                const habits = d.habits || [];
+                const stepXp = Math.round(questXpTotal / (habits.length || 10));
                 let completedCount = 0;
                 
                 habits.forEach((h, j) => {
-  if (evState[`q_${i}_${j}`]) completedCount++;
-});
+                  if (evState[`q_${i}_${j}`]) completedCount++;
+                });
                 
                 const questPct = Math.round((completedCount / (habits.length || 1)) * 100);
-const isComplete = habits.length > 0 && completedCount === habits.length;
+                const isComplete = habits.length > 0 && completedCount === habits.length;
 
                 return (
                 <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px'}}>
                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}}>
                     <div style={{fontSize:'14px', fontWeight:'700', color:T.t0}}>{d.dim.toUpperCase()} QUEST</div>
                     <div style={{textAlign:'right'}}>
-                      <div className="mono" style={{fontSize:'12px', fontWeight:'800', color:isComplete?T.gn:T.c}}>{completedCount}/{d.habits.length}</div>
+                      <div className="mono" style={{fontSize:'12px', fontWeight:'800', color:isComplete?T.gn:T.c}}>{completedCount}/{habits.length}</div>
                       <div style={{height:'4px', width:'60px', background:T.b1, borderRadius:'100px', marginTop:'4px', overflow:'hidden'}}>
                         <div style={{height:'100%', width:`${questPct}%`, background:isComplete?T.gn:T.c, borderRadius:'100px', transition:'width 0.3s'}} />
                       </div>
@@ -2744,7 +2762,8 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
                   <div style={{fontSize:'12px', color:T.t2, marginBottom:'16px'}}>Difficulty: <span style={{color:T.gold}}>★★★☆☆</span> · Reward: <span style={{color:T.gn, fontWeight:'700'}}>+{questXpTotal} XP</span></div>
                   
                   <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                    {d.habits.map((h, j) => {
+                    {habits.map((h, j) => {
+                      
                       const isDone = !!evState[`q_${i}_${j}`];
                       return (
                         <div key={j} onClick={() => openEvidenceModal(`q_${i}_${j}`, stepXp, 'quest', `${d.dim} Quest`, `Step ${j+1} of 10`, h.t)} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px', background:isDone?T.gnP:T.bg3, borderRadius:'8px', border:`1px solid ${isDone?T.gn:T.b1}`, cursor:'pointer', transition:'all 0.2s'}}>
@@ -3269,7 +3288,8 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
 
       {/* ─── TAB 5: TEAM COMPOSITION ─── */}
       {resTab === 'comp' && (() => {
-        const valid = batchData.filter(b => b.validityOverall !== 'red' && b.scores);
+        const safeBatch = batchData || [];
+        const valid = safeBatch.filter(b => b && b.validityOverall !== 'red' && b.scores) || [];
         
         if(valid.length < 2) {
           return (
@@ -3290,7 +3310,7 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
         const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];
         const dimLabels = {O:'Openness',C:'Conscientiousness',E:'Extraversion',A:'Agreeableness',ES:'Emotional Stability',CQavg:'Cultural Intelligence',OCBavg:'Team Citizenship',LAavg:'Learning Agility',EOavg:'Ethical Orientation'};
         const teamAvg = {};
-        dimKeys.forEach(k => { teamAvg[k] = Math.round(valid.reduce((a,b)=>a+(b.scores[k]||0),0)/valid.length); });
+        dimKeys.forEach(k => { teamAvg[k] = Math.round(valid.reduce((a,b)=>a+(b?.scores?.[k]||0),0)/(valid.length || 1)); });
 
         // Findings
         const findings = [];
@@ -3301,7 +3321,7 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
         });
 
         // Hiring Profile
-        const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-teamAvg[k])})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
+        const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-(teamAvg[k]||0))})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
 
         // Promotion Fit
         const ROLE_TARGETS = [
@@ -3311,12 +3331,12 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
           {name:'Client-Facing Manager', targets:{E:[65,95],CQavg:[60,90],A:[60,90],SES:[60,95]}},
           {name:'Change Leader', targets:{ADS:[65,95],O:[65,95],LAavg:[65,95]}}
         ];
-        const targetRole = ROLE_TARGETS[promoRole];
+        const targetRole = ROLE_TARGETS[promoRole] || ROLE_TARGETS[0];
         
         const scoredCandidates = valid.map(b => {
           let match = 0, count = 0;
           Object.entries(targetRole.targets).forEach(([k, [min, max]]) => {
-            const v = b.scores[k] || (b.composites && b.composites[k]);
+            const v = b?.scores?.[k] || (b?.composites && b?.composites?.[k]);
             if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
           });
           return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
@@ -3409,7 +3429,7 @@ const isComplete = habits.length > 0 && completedCount === habits.length;
                   <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
                     <div>
                       <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'4px'}}>Respondent #{i+1}</div>
-                      <div style={{fontSize:'12px', color:T.t2}}>{c.profile}</div>
+                      <div style={{fontSize:'12px', color:T.t2}}>{c?.profile || 'Unknown Profile'}</div>
                     </div>
                     <div style={{textAlign:'right'}}>
                       <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:col}}>{c.fitPct}%</div>

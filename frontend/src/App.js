@@ -1084,7 +1084,10 @@ const nextQ=()=>{
     if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:'Flagship leadership development pathway.'});
     const programs = progs.slice(0,4);
 
-// --- SEND DATA TO BACKEND DATABASE ---
+    // Define reportDataObj FIRST so the database payload can use it
+    const reportDataObj = { scores: S, profile, validity, CI, gameSummary, patterns, programs, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles, completionTime, completionFlag };
+
+    // --- SEND DATA TO BACKEND DATABASE ---
     const actualDept = resp.dept === 'Other' ? resp.deptOther : resp.dept;
     const dbPayload = {
       name: resp.name,
@@ -1115,16 +1118,15 @@ const nextQ=()=>{
     
     try {
       let h = JSON.parse(localStorage.getItem('core_v3_history') || '[]');
-      const actualDept = resp.dept === 'Other' ? resp.deptOther : resp.dept;
       const entry = {
         docId, date, timestamp: Date.now(),
-name: resp.name, email: resp.email || '', phone: resp.phone || '', emp: resp.emp || '',
+        name: resp.name, email: resp.email || '', phone: resp.phone || '', emp: resp.emp || '',
         role: resp.role || '', dept: actualDept || '', exp: resp.exp || '',
         org: resp.org || '', industry: resp.industry || '', purpose: resp.purpose || '', batch: resp.batch || '',
         profile: profile.name, validityOverall: validity.overall,
         scores: { O: S.O, C: S.C, E: S.E, A: S.A, ES: S.ES, CQavg: S.CQavg, OCBavg: S.OCBavg, LAavg: S.LAavg, EOavg: S.EOavg, OCEANavg: S.OCEANavg, overall: S.overall, CII, LRS, TVS, ADS, SES, OPS, PMS }
       };
-const isSamePerson = (e) => (entry.email && e.email && entry.email.toLowerCase() === e.email.toLowerCase());
+      const isSamePerson = (e) => (entry.email && e.email && entry.email.toLowerCase() === e.email.toLowerCase());
       const others = h.filter(e => !isSamePerson(e));
       const samePersonHistory = h.filter(isSamePerson).slice(-4);
       h = [...others, ...samePersonHistory, entry].slice(-200);
@@ -1134,7 +1136,7 @@ const isSamePerson = (e) => (entry.email && e.email && entry.email.toLowerCase()
       if (resp.batch) {
         const batchKey = 'core_batch_' + resp.batch.replace(/\s+/g, '_');
         let batchData = JSON.parse(localStorage.getItem(batchKey) || '[]');
-        batchData = batchData.filter(b => b.docId !== docId && !(b.cnic === entry.cnic));
+        batchData = batchData.filter(b => b.docId !== docId && !(b.email === entry.email));
         batchData.push({...entry, composites: CI});
         localStorage.setItem(batchKey, JSON.stringify(batchData.slice(-500)));
       }

@@ -65,19 +65,7 @@ pool.connect()
 // POST: Save a new assessment
 app.post('/api/assessments', async (req, res) => {
   try {
-    const reportData = req.body;
-    // Extract cfg alongside the others
-    const { respondent, scores, profile, docId, cfg } = reportData;
-
-    // Use department Other if selected
-    const actualDept = respondent.dept === 'Other' ? respondent.deptOther : respondent.dept;
-
-    // Extract the new context fields (fallback to respondent if they are there)
-    const batch = cfg?.batch || respondent?.batch || '';
-    const purpose = cfg?.purpose || respondent?.purpose || '';
-    const level = cfg?.level || respondent?.level || '';
-    const industry = cfg?.industry || respondent?.industry || '';
-    const phone = respondent?.phone || '';
+    const payload = req.body; // This is the dbPayload sent from the frontend
 
     const query = `
       INSERT INTO assessments 
@@ -87,19 +75,19 @@ app.post('/api/assessments', async (req, res) => {
     `;
 
     const values = [
-      docId,
-      phone,
-      respondent.name,
-      respondent.email,
-      actualDept,
-      respondent.role,
-      industry,
-      batch,
-      purpose,
-      level,
-      scores.overall,
-      profile.name,
-      reportData // The entire JSON object goes into the JSONB column
+      payload.doc_id,
+      payload.phone,
+      payload.name,
+      payload.email,
+      payload.department,
+      payload.role,
+      payload.industry,
+      payload.batch,
+      payload.purpose,
+      payload.level,
+      payload.overall_score,
+      payload.profile_name,
+      payload.report_data // The entire JSON object goes into the JSONB column
     ];
 
     const result = await pool.query(query, values);

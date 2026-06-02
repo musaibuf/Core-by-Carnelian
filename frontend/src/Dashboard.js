@@ -1238,14 +1238,179 @@ const TeamReport = ({ candidate, allData, T }) => {
   );
 };
 
+// ─── TEAM COMPOSITION REPORT ──────────────────────────────────
+const TeamCompositionReport = ({ candidate, allData, T }) => {
+  const [promoRole, setPromoRole] = useState(0);
+  const batch = candidate.batch;
+  
+  if (!batch) {
+    return (
+      <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
+        <div style={{ fontSize:'2rem', marginBottom:'12px' }}>🧩</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', color:T.t2, marginBottom:'8px' }}>No Batch Assigned</div>
+        <div style={{ fontSize:'12px' }}>This candidate was not assessed as part of a named batch. The Team Composition Report requires a batch.</div>
+      </div>
+    );
+  }
+
+  const batchData = allData.filter(r => r.batch === batch && r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  if (batchData.length < 2) {
+    return (
+      <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
+        <div style={{ fontSize:'2rem', marginBottom:'12px' }}>⏳</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', color:T.t2, marginBottom:'8px' }}>Batch: {batch}</div>
+        <div style={{ fontSize:'12px' }}>Only {batchData.length} valid response{batchData.length!==1?'s':''} in this batch. The Team Composition Report requires at least 2.</div>
+      </div>
+    );
+  }
+
+  const n = batchData.length;
+  const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];
+  const dimLabels = {O:'Openness',C:'Conscientiousness',E:'Extraversion',A:'Agreeableness',ES:'Emotional Stability',CQavg:'Cultural Intelligence',OCBavg:'Team Citizenship',LAavg:'Learning Agility',EOavg:'Ethical Orientation'};
+  
+  const teamAvg = {};
+  dimKeys.forEach(k => { teamAvg[k] = Math.round(batchData.reduce((a,b)=>a+(b.report_data?.scores?.[k]||0),0)/n); });
+
+  const findings = [];
+  dimKeys.forEach(k => {
+    if(teamAvg[k] < 50) findings.push({sev:'critical', t:`Team ${dimLabels[k]} is critically low (avg ${teamAvg[k]})`, d:`This is a collective gap. The team will struggle with tasks requiring ${dimLabels[k]}.`});
+    else if(teamAvg[k] < 60) findings.push({sev:'watch', t:`Team ${dimLabels[k]} is below optimal (avg ${teamAvg[k]})`, d:`Performance may be adequate today but fragile under pressure or change.`});
+    else if(teamAvg[k] >= 75) findings.push({sev:'strength', t:`Team ${dimLabels[k]} is a collective strength (avg ${teamAvg[k]})`, d:`This is a competitive advantage. Protect and leverage it.`});
+  });
+
+  const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-teamAvg[k])})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
+
+  const ROLE_TARGETS = [
+    {name:'Senior Manager', targets:{LRS:[65,95],ES:[60,90],C:[60,90],EOavg:[60,90]}},
+    {name:'Team Lead', targets:{OCBavg:[60,95],A:[60,90],C:[55,85],E:[55,85]}},
+    {name:'Compliance Officer', targets:{CII:[70,100],EOavg:[70,95],C:[65,95]}},
+    {name:'Client-Facing Manager', targets:{E:[65,95],CQavg:[60,90],A:[60,90],SES:[60,95]}},
+    {name:'Change Leader', targets:{ADS:[65,95],O:[65,95],LAavg:[65,95]}}
+  ];
+  const targetRole = ROLE_TARGETS[promoRole];
+  
+  const scoredCandidates = batchData.map(b => {
+    let match = 0, count = 0;
+    Object.entries(targetRole.targets).forEach(([k, [min, max]]) => {
+      const v = b.report_data?.scores?.[k] || b.report_data?.CI?.[k];
+      if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
+    });
+    return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
+  }).sort((a,b) => b.fitPct - a.fitPct);
+
+  const card = (children, style={}) => (
+    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>{children}</div>
+  );
+
+  return (
+    <div>
+      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}` }}>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Composition Report · Batch: {batch}</div>
+        <div style={{ fontSize:'12px', color:T.t2 }}>{n} valid responses analyzed for HR Strategy.</div>
+      </div>
+
+      {card(
+        <>
+          <SectionHead label="1. Composition Diagnostic" T={T} />
+          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            {findings.map((f, i) => {
+              const col = f.sev==='critical'?T.rd:f.sev==='watch'?T.am:T.gn;
+              const bg = f.sev==='critical'?T.rdP:f.sev==='watch'?T.amP:T.gnP;
+              return (
+                <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${col}`, borderRadius:'8px', padding:'14px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
+                    <span style={{ background:bg, color:col, padding:'2px 8px', borderRadius:'4px', fontSize:'9px', fontWeight:'800', textTransform:'uppercase' }}>{f.sev}</span>
+                    <span style={{ fontSize:'13px', fontWeight:'700', color:T.t0 }}>{f.t}</span>
+                  </div>
+                  <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5' }}>{f.d}</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {card(
+        <>
+          <SectionHead label="2. Hiring Profile Specification" T={T} />
+          <p style={{ fontSize:'12px', color:T.t2, marginBottom:'16px' }}>Target these dimension ranges for your next hire to balance the team's current blind spots.</p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:'10px', marginBottom:'24px' }}>
+            {dimGaps.map((g, i) => (
+              <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px' }}>
+                <div style={{ fontSize:'11px', fontWeight:'700', color:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px' }}>{g.l}</div>
+                <div className="mono" style={{ fontSize:'16px', fontWeight:'800', color:T.t0 }}>≥ {Math.min(80, 75 - g.v + 10)} / 100</div>
+                <div style={{ fontSize:'10px', color:T.t2, marginTop:'4px' }}>Current team avg: <span style={{ color:T.rd, fontWeight:'700' }}>{g.v}</span></div>
+              </div>
+            ))}
+          </div>
+
+          <SectionHead label="Targeted Interview Probes" T={T} />
+          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            {dimGaps.slice(0,3).map((g, i) => {
+              const probes = {
+                'Conscientiousness': {q:'Describe a project with multiple stakeholders and a hard deadline where something went wrong. What specifically did you do to keep it on track?', l:'Concrete structural actions, not generic "I worked harder."'},
+                'Emotional Stability': {q:'Describe a professional setback that genuinely shook you. What happened, and what did you do in the 30 days after?', l:'Honest acknowledgment of the difficulty paired with concrete recovery actions.'},
+                'Learning Agility': {q:'Walk me through the most recent significant change in your professional knowledge or skills. What triggered it, and how did you sustain it?', l:'Self-directed learning, not mandatory training.'},
+                'Ethical Orientation': {q:'Describe a situation where the easy path and the right path were different, and you chose the right path. What did it cost you?', l:'Real cost, specifically named. Candidates who claim there was no cost are sanitising the story.'},
+                'Openness': {q:'Tell me about a time you had to adopt an approach you initially disagreed with. What changed your mind?', l:'Evidence of genuine re-evaluation, not just compliance.'},
+                'Extraversion': {q:'Tell me about a time you had to influence a room full of people who were skeptical of your position. What did you do?', l:'Specific techniques used, reading the room, and willingness to engage conflict.'},
+                'Agreeableness': {q:'Describe a situation where a peer strongly disagreed with a decision you had authority over. How did the disagreement unfold and resolve?', l:'Willingness to hear substance of the disagreement rather than deflecting it.'},
+                'Cultural Intelligence': {q:'Tell me about a time your assumptions about how a colleague would behave turned out to be wrong.', l:'Genuine recognition of the error, not performed humility.'},
+                'Team Citizenship': {q:'Tell me about something you did for your team or organisation in the last year that was not part of your formal role.', l:'Discretionary effort with specific examples.'}
+              };
+              const p = probes[g.l] || probes['Ethical Orientation'];
+              return (
+                <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${T.gold}`, borderRadius:'8px', padding:'14px' }}>
+                  <div style={{ fontSize:'10px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'6px' }}>Targets: {g.l}</div>
+                  <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>"{p.q}"</div>
+                  <div style={{ fontSize:'12px', color:T.t1 }}><strong>Listen for:</strong> {p.l}</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {card(
+        <>
+          <SectionHead label="3. Promotion Fit Check" T={T} />
+          <div style={{ marginBottom:'16px' }}>
+            <select value={promoRole} onChange={e=>setPromoRole(parseInt(e.target.value))} style={{ padding:'10px 14px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg3, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'12px', fontWeight:'600', outline:'none', cursor:'pointer' }}>
+              {ROLE_TARGETS.map((r, i) => <option key={i} value={i}>{r.name}</option>)}
+            </select>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+            {scoredCandidates.map((c, i) => {
+              const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+              return (
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px', background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px' }}>
+                  <div>
+                    <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{c.name}</div>
+                    <div style={{ fontSize:'11px', color:T.t2 }}>{c.profile_name}</div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <div className="mono" style={{ fontSize:'16px', fontWeight:'800', color:col }}>{c.fitPct}%</div>
+                    <div style={{ fontSize:'9px', fontWeight:'700', color:col, textTransform:'uppercase', letterSpacing:'0.05em' }}>Fit Match</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════
-// CANDIDATE DETAIL MODAL — all 4 reports
+// CANDIDATE DETAIL MODAL — all 5 reports
 // ═══════════════════════════════════════════════════════════════
 const REPORT_TABS = [
   { id:'tech',    label:'📊 Technical Report',      sub:'HR & Leadership' },
   { id:'action',  label:'🧭 Action Plan',            sub:'Individual' },
   { id:'player',  label:'🎮 Player Report',          sub:'Gamified' },
   { id:'team',    label:'👥 Team Aggregate',         sub:'Batch-Level' },
+  { id:'comp',    label:'🧩 Team Composition',       sub:'HR Strategy' },
 ];
 
 const CandidateModal = ({ candidate, onClose, T, allData }) => {
@@ -1319,6 +1484,7 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
           {reportTab === 'action' && <ActionPlanReport candidate={candidate} T={T} />}
           {reportTab === 'player' && <PlayerReport     candidate={candidate} T={T} />}
           {reportTab === 'team'   && <TeamReport       candidate={candidate} allData={allData} T={T} />}
+          {reportTab === 'comp'   && <TeamCompositionReport candidate={candidate} allData={allData} T={T} />}
         </div>
       </div>
     </div>

@@ -1084,8 +1084,35 @@ const nextQ=()=>{
     if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:'Flagship leadership development pathway.'});
     const programs = progs.slice(0,4);
 
-const reportDataObj = { scores: S, profile, validity, CI, gameSummary, patterns, programs, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles, completionTime, completionFlag };
+// --- SEND DATA TO BACKEND DATABASE ---
+    const actualDept = resp.dept === 'Other' ? resp.deptOther : resp.dept;
+    const dbPayload = {
+      name: resp.name,
+      email: resp.email,
+      phone: resp.phone,
+      emp_id: resp.emp,
+      role: resp.role,
+      department: actualDept,
+      experience: resp.exp,
+      gender: resp.gender,
+      org: resp.org,
+      industry: resp.industry,
+      batch: resp.batch,
+      purpose: resp.purpose,
+      level: resp.level,
+      overall_score: S.overall,
+      profile_name: profile.name,
+      doc_id: docId,
+      report_data: reportDataObj
+    };
 
+    fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dbPayload)
+    }).catch(err => console.error("Failed to save to DB:", err));
+    // -------------------------------------
+    
     try {
       let h = JSON.parse(localStorage.getItem('core_v3_history') || '[]');
       const actualDept = resp.dept === 'Other' ? resp.deptOther : resp.dept;

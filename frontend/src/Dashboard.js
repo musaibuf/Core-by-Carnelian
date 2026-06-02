@@ -320,7 +320,7 @@ const TechnicalReport = ({ candidate, T }) => {
       {/* HEADER */}
       {card(
         <>
-          <SectionHead label="PACER v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
+          <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
             <div>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name}</div>
@@ -822,7 +822,7 @@ const ActionPlanReport = ({ candidate, T }) => {
       )}
 
       <div style={{ background:T.bg3, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'16px 18px', fontSize:'12px', color:T.t2, lineHeight:'1.7', fontWeight:'600', marginBottom:'14px' }}>
-        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, fontWeight:'700', marginBottom:'6px' }}>PACER v3.0 · Carnelian Pvt Ltd · {candidate.doc_id} · {new Date(candidate.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, fontWeight:'700', marginBottom:'6px' }}>CORE v3.0 · Carnelian Pvt Ltd · {candidate.doc_id} · {new Date(candidate.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div>
         This report is written for {candidate.name}. It contains no HR risk language. Questions: hello@carnelianco.com
       </div>
     </div>
@@ -899,7 +899,7 @@ const PlayerReport = ({ candidate, T }) => {
         <div style={{ display:'flex', alignItems:'flex-start', gap:'16px', flexWrap:'wrap' }}>
           <div style={{ fontSize:'3rem', animation:'g-float 3s ease-in-out infinite', filter:`drop-shadow(0 0 12px ${accentCol})` }}>{classIcon}</div>
           <div style={{ flex:1 }}>
-            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', color:accentCol, marginBottom:'4px' }}>GAME CLASS · PACER v3.0</div>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', color:accentCol, marginBottom:'4px' }}>GAME CLASS · CORE</div>
             <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:'#f1f5f9', marginBottom:'4px' }}>{candidate.name}</div>
             <div style={{ fontSize:'12px', color:'#64748b', marginBottom:'14px' }}>{profile.name || candidate.profile_name}</div>
             <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'8px', flexWrap:'wrap' }}>
@@ -994,7 +994,7 @@ const PlayerReport = ({ candidate, T }) => {
       </div>
 
       <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:'#1e2a3a', textAlign:'center', padding:'12px 0' }}>
-        PACER v3.0 · {candidate.doc_id} · Carnelian Pvt Ltd
+        CORE· {candidate.doc_id} · Carnelian Pvt Ltd
       </div>
     </div>
   );

@@ -1032,7 +1032,7 @@ const nextQ=()=>{
     
     const profile=getProfile(S);
     const validity=computeValidity(answers);
-    const docId='PACER3-'+Date.now().toString(36).toUpperCase();
+    const docId='CORE-'+Date.now().toString(36).toUpperCase();
     const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
     
     const elapsedMs = startTime ? Date.now() - startTime : 0;
@@ -2245,7 +2245,7 @@ const allDims = [
             <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.cGlow} 0%,transparent 70%)`}} />
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px', position:'relative', zIndex:1, flexWrap:'wrap', gap:'12px'}}>
               <div>
-                <div className="serif" style={{fontSize:'14px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd {R.org ? `× ${R.org}` : ''}</div>
+                <div className="serif" style={{fontSize:'14px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>CORE · Carnelian Pvt Ltd {R.org ? `× ${R.org}` : ''}</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3}}>Document ID: {docId} · {date} · TECHNICAL REPORT — {R.conf || 'Restricted'}</div>
 <div className="mono" style={{fontSize:'10px', color:T.t3, marginTop:'4px'}}>Completion time: {reportData.completionTime} · {reportData.completionFlag}</div>
               </div>
@@ -2606,7 +2606,7 @@ const allDims = [
           </div>
 
           <div className="mono" style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'16px 20px', marginBottom:'24px', fontSize:'10.5px', color:T.t2, lineHeight:'1.7'}}>
-            <strong style={{color:T.t0}}>Assessment Integrity Statement:</strong> PACER v3.0 is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring or promotion decisions. All red-rated patterns and role suitability ratings require triangulation with structured behavioural interview before final HR decision. Composite index weightings are derived from published meta-analytic evidence. Copyright: Carnelian Pvt Ltd. Licensed use only.
+            <strong style={{color:T.t0}}>Assessment Integrity Statement:</strong> CORE is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring or promotion decisions. All red-rated patterns and role suitability ratings require triangulation with structured behavioural interview before final HR decision. Composite index weightings are derived from published meta-analytic evidence. Copyright: Carnelian Pvt Ltd. Licensed use only.
           </div>
 
         </div>
@@ -2665,7 +2665,7 @@ const allDims = [
               </div>
               <div style={{flex:1}}>
                 <div className="mono" style={{fontSize:'10px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', color:T.c, marginBottom:'8px'}}>
-                  {profile.tier===1?'LEGENDARY CLASS':profile.tier===2?'ELITE CLASS':profile.tier===3?'SPECIALIST CLASS':'ADVENTURER CLASS'} · PACER v3.0
+                  {profile.tier===1?'LEGENDARY CLASS':profile.tier===2?'ELITE CLASS':profile.tier===3?'SPECIALIST CLASS':'ADVENTURER CLASS'} · CORE
                 </div>
                 <div className="serif" style={{fontSize:'2.2rem', fontWeight:'700', color:T.t0, lineHeight:'1.1', marginBottom:'8px'}}>{R.name}</div>
                 <div style={{fontSize:'14px', color:T.t2, marginBottom:'20px', fontWeight:'600'}}>{profile.name}</div>
@@ -3052,7 +3052,7 @@ const allDims = [
           <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
               <div>
-                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd</div>
+                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>CORE · Carnelian Pvt Ltd</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM AGGREGATE REPORT · Batch: {R.batch}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
@@ -3219,7 +3219,7 @@ const allDims = [
           <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
               <div>
-                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd</div>
+                <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>CORE · Carnelian Pvt Ltd</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM COMPOSITION REPORT · Batch: {R.batch}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>

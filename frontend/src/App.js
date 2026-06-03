@@ -1321,7 +1321,7 @@ const nextQ=()=>{
               <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
   <div><label style={lbl}>Full Name *</label><input value={resp.name} onChange={e=>setResp(r=>({...r,name:e.target.value}))} placeholder="e.g. Ayesha Raza" style={inp(focused.name)} onFocus={()=>setFocused(f=>({...f,name:true}))} onBlur={()=>setFocused(f=>({...f,name:false}))} /></div>
   <div><label style={lbl}>Email Address *</label><input value={resp.email} onChange={e=>setResp(r=>({...r,email:e.target.value}))} placeholder="ayesha@company.com" style={inp(focused.email)} onFocus={()=>setFocused(f=>({...f,email:true}))} onBlur={()=>setFocused(f=>({...f,email:false}))} /></div>
-  <div><label style={lbl}>Phone Number *</label><input value={resp.phone||''} onChange={e=>setResp(r=>({...r,phone:e.target.value.replace(/[^0-9+\-\s]/g,'')}))} placeholder="e.g. 03001234567" style={inp(focused.phone)} onFocus={()=>setFocused(f=>({...f,phone:true}))} onBlur={()=>setFocused(f=>({...f,phone:false}))} /></div>
+<div><label style={lbl}>Phone Number *</label><input value={resp.phone||''} onChange={e=>{ let val = e.target.value.replace(/\D/g, ''); if (val.length > 4) val = val.substring(0, 4) + '-' + val.substring(4, 11); setResp(r=>({...r,phone:val})); }} placeholder="e.g. 0300-1234567" maxLength="12" style={inp(focused.phone)} onFocus={()=>setFocused(f=>({...f,phone:true}))} onBlur={()=>setFocused(f=>({...f,phone:false}))} /></div>
   <div><label style={lbl}>Employee / Roll No. (Optional)</label><input value={resp.emp} onChange={e=>setResp(r=>({...r,emp:e.target.value}))} placeholder="Optional" style={inp(focused.emp)} onFocus={()=>setFocused(f=>({...f,emp:true}))} onBlur={()=>setFocused(f=>({...f,emp:false}))} /></div>
 
                 <div><label style={lbl}>Current Role</label><input value={resp.role} onChange={e=>setResp(r=>({...r,role:e.target.value}))} placeholder="e.g. Deputy Manager" style={inp(focused.role)} onFocus={()=>setFocused(f=>({...f,role:true}))} onBlur={()=>setFocused(f=>({...f,role:false}))} /></div>
@@ -1344,8 +1344,12 @@ const nextQ=()=>{
               <div style={{background:`${T.gold}10`,border:`1px solid ${T.gold}25`,borderRadius:'7px',padding:'12px 16px',marginBottom:'20px',fontSize:'12px',color:T.t1,fontWeight:'600'}}>
   <span style={{color:T.gold,fontWeight:'700'}}>→ Progress Tracking:</span> Your email is used to link your results across retakes and generate progress comparisons.
 </div>
-              <button onClick={()=>{if(!resp.name||!resp.email||!resp.phone||!resp.exp){alert('Please enter your Full Name, Email Address, Phone Number, and Years of Experience.');return;}
-if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address.');return;} setIntakeStage(2);}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+              <button onClick={()=>{
+                if(!resp.name||!resp.email||!resp.phone||!resp.exp){alert('Please enter your Full Name, Email Address, Phone Number, and Years of Experience.');return;}
+                if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address containing an @ symbol.');return;} 
+                if(!/^\d{4}-\d{7}$/.test(resp.phone)){alert('Please enter a valid phone number in the format 0000-0000000.');return;}
+                setIntakeStage(2);
+              }} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
                 Continue →
               </button>
             </div>

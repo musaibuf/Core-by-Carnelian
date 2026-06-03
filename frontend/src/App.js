@@ -1885,52 +1885,259 @@ const allDims = [
         ['Team Citizenship', S.OCBavg], ['Learning Agility', S.LAavg], ['Ethical Integrity', S.EOavg],
         ['Conscientiousness', S.C], ['Emotional Resilience', S.ES]
       ].filter(([_,v]) => v !== undefined && v !== null);
+
+      // ─── PDF DOWNLOAD (Action Plan) ───
+  const downloadPDF = async () => {
+    const loadScript = (src) => new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.body.appendChild(s);
+    });
+
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const A4_W = 210, A4_H = 297;
+    const firstName = R.name?.split(' ')[0] || 'Professional';
+    const logoURL = `${window.location.origin}/logo.png`;
+
+    const addPageFromHTML = async (htmlContent, bgColor = '#F8F7F5') => {
+      const container = document.createElement('div');
+      container.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:794px; min-height:1122px; background:${bgColor}; font-family:'Plus Jakarta Sans',sans-serif; -webkit-print-color-adjust:exact;`;
+      container.innerHTML = htmlContent;
+      document.body.appendChild(container);
+      await new Promise(r => setTimeout(r, 400));
+      const canvas = await window.html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: bgColor, width: 794, windowWidth: 794 });
+      document.body.removeChild(container);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const canvasH = canvas.height;
+      const canvasW = canvas.width;
+      const pageHeightPx = (canvasW / A4_W) * A4_H;
+      const totalPages = Math.ceil(canvasH / pageHeightPx);
+      for (let pg = 0; pg < totalPages; pg++) {
+        if (pg > 0 || pdf.internal.pages.length > 1) pdf.addPage();
+        const srcY = pg * pageHeightPx;
+        const srcH = Math.min(pageHeightPx, canvasH - srcY);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvasW; sliceCanvas.height = pageHeightPx;
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvasW, pageHeightPx);
+        ctx.drawImage(canvas, 0, srcY, canvasW, srcH, 0, 0, canvasW, srcH);
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(sliceData, 'JPEG', 0, 0, A4_W, A4_H);
+      }
+    };
+
+    const fontLink = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>`;
+    const baseStyles = `${fontLink}<style>* { margin:0; padding:0; box-sizing:border-box; } body, div, p, span, h1, h2, h3, h4, h5 { font-family:'Plus Jakarta Sans',sans-serif; } .serif { font-family:'Playfair Display',serif !important; } .mono { font-family:'Courier New',monospace !important; }</style>`;
+    const wrap = (content, bg = '#F8F7F5', pad = '56px 64px') => `${baseStyles}<div style="width:794px;min-height:1122px;background:${bg};padding:${pad};box-sizing:border-box;display:flex;flex-direction:column;">${content}</div>`;
+
+    // Page 1: Cover
+    await addPageFromHTML(wrap(`
+      <div style="position:absolute;top:0;left:0;right:0;height:6px;background:#B01C24;"></div>
+      <div style="position:absolute;top:-100px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.09) 0%,transparent 72%);"></div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:auto;position:relative;z-index:2;">
+        <img src="${logoURL}" style="width:52px;height:52px;object-fit:contain;" crossorigin="anonymous"/>
+        <div><div class="serif" style="font-size:32px;font-weight:700;line-height:1;color:#B8912E;letter-spacing:0.01em;">CORE</div><div class="mono" style="font-size:9px;font-weight:800;color:#B01C24;letter-spacing:0.22em;text-transform:uppercase;margin-top:3px;">By Carnelian</div></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 0 40px;position:relative;z-index:2;">
+        <div class="mono" style="font-size:10px;font-weight:800;color:#B01C24;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;">Personal Action Plan</div>
+        <h1 class="serif" style="font-size:58px;line-height:1.06;font-weight:700;color:#111111;margin:0 0 22px;max-width:650px;">${R.name}</h1>
+        <div style="display:inline-block;padding:10px 20px;border:1px solid #D8C9A0;border-radius:999px;background:#FFF9EC;color:#8D6B15;font-size:12px;font-weight:800;width:fit-content;">${profile?.name || 'Professional Profile'}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:22px;border-top:1px solid #E6E0D4;position:relative;z-index:2;">
+        <div style="font-size:11px;color:#6B7280;font-weight:700;letter-spacing:0.06em;">CORE by Carnelian</div>
+        <div style="text-align:right;"><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:5px;">${date}</div><div class="mono" style="font-size:10px;color:#9CA3AF;font-weight:700;letter-spacing:0.08em;">${docId}</div></div>
+      </div>
+    `, '#F8F7F5', '56px 64px'), '#F8F7F5');
+
+    // Page 2: Welcome + Scores
+    const barsHTML = bars.map(([l, v], i) => {
+      const color = v >= 70 ? '#16A34A' : v >= 50 ? '#D97706' : '#DC2626';
+      const grad = v >= 70 ? 'linear-gradient(90deg,#16A34A,#22C55E)' : v >= 50 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#DC2626,#EF4444)';
+      return `<div style="display:flex;align-items:center;gap:14px;padding-bottom:${i===0?'14px':'0'};margin-bottom:${i===0?'6px':'0'};border-bottom:${i===0?'1px solid #F3F4F6':'none'}"><div style="width:170px;flex-shrink:0;font-size:12px;color:${i===0?'#111827':'#4B5563'};font-weight:${i===0?'800':'700'};">${l}</div><div style="flex:1;background:#F3F4F6;height:${i===0?'9px':'5px'};border-radius:4px;overflow:hidden;"><div style="width:${Math.max(0,Math.min(100,v))}%;height:100%;background:${grad};border-radius:4px;"></div></div><div class="mono" style="width:36px;text-align:right;font-size:11px;color:${color};font-weight:800;">${v}</div></div>`;
+    }).join('');
+    await addPageFromHTML(wrap(`
+      <div style="background:#1A1A1A;border-radius:12px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(184,145,46,0.12) 0%,transparent 70%);"></div>
+        <div style="position:relative;z-index:1;">
+          <div class="mono" style="font-size:9px;color:#B8912E;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;font-weight:700;">Your Personal Blueprint</div>
+          <h2 class="serif" style="font-size:2rem;font-weight:700;color:#fff;margin-bottom:14px;">Welcome, ${firstName}.</h2>
+          <p style="color:#E5E7EB;font-size:13px;line-height:1.75;margin-bottom:12px;font-weight:500;">Thank you for trusting us with your reflections. We know that taking an assessment can feel vulnerable. Please know that this report is not a judgment, nor a final verdict on who you are. Human beings are beautifully complex, and psychometrics simply capture a snapshot of your current professional habits.</p>
+          <p style="color:#E5E7EB;font-size:13px;line-height:1.75;margin-bottom:22px;font-weight:500;">Think of this document as a mirror held up to your professional self—designed to celebrate your natural gifts and gently highlight the spaces where you have the greatest room to grow.</p>
+          <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:20px;border-left:4px solid #B01C24;">
+            <div class="mono" style="font-size:8px;text-transform:uppercase;letter-spacing:0.14em;color:#B8912E;font-weight:700;margin-bottom:7px;">Your Natural Work Style</div>
+            <div class="serif" style="font-size:1.5rem;color:#fff;font-weight:700;margin-bottom:8px;">${profile?.name || 'Professional Profile'}</div>
+            <div style="font-size:12px;color:#9CA3AF;line-height:1.6;font-weight:600;">${profile?.desc || 'A reliable and principled professional with strong compliance orientation.'}</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 32px;">
+        <h3 class="serif" style="font-size:1.25rem;font-weight:700;color:#111827;margin-bottom:20px;">Your Score Landscape</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">${barsHTML}</div>
+      </div>
+    `));
+
+    // Page 3: Strengths
+    const strengthsHTML = top2.map(d => `<div style="padding:22px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">Core Strength</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4><p style="font-size:12px;color:#15803D;line-height:1.65;font-weight:500;margin-bottom:14px;">${d.str}</p><span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">${d.v}/100</span></div>`).join('');
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
+        <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;">What You Bring to the Table</h3>
+        <p style="color:#4B5563;font-size:12px;line-height:1.7;margin-bottom:22px;font-weight:500;">These are your anchor strengths. When things get difficult, these are the natural instincts you rely on. Lean into them—they are what make you uniquely valuable to your team.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">${strengthsHTML}</div>
+      </div>
+    `));
+
+    // Pages 4+: Development Roadmap
+    for (const d of devAreas) {
+      const habitsHTML = d.habits.map(h => `<li style="display:flex;gap:10px;padding:7px 0;font-size:12px;color:#374151;line-height:1.55;font-weight:500;"><span style="color:#D97706;font-weight:800;flex-shrink:0;">→</span><span><strong style="color:#111827;">${h.h}</strong> ${h.t}</span></li>`).join('');
+      await addPageFromHTML(wrap(`
+        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><h4 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;">${d.dim}</h4><span style="padding:5px 12px;background:rgba(217,119,6,0.1);color:#D97706;border-radius:6px;font-size:12px;font-weight:800;">${d.v}/100</span></div>
+          <div class="mono" style="font-size:9px;color:#6B7280;margin-bottom:18px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;">${d.v >= 70 ? 'HIGH' : d.v >= 50 ? 'MID' : 'LOW'} range</div>
+          <p style="font-size:12.5px;color:#4B5563;line-height:1.75;margin-bottom:24px;font-weight:500;padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid #D97706;">${d.why}</p>
+          <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Daily Habits to Build:</h5>
+          <ul style="padding-left:0;list-style:none;margin-bottom:28px;">${habitsHTML}</ul>
+          <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Your Growth Timeline:</h5>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:18px;background:#FEF2F2;padding:16px;border-radius:8px;border-left:4px solid #DC2626;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:0.04em;">Now<br/><span style="font-size:8px;opacity:0.8">(0–30 Days)</span></div><div style="font-size:12.5px;color:#7F1D1D;line-height:1.55;font-weight:600;">${d.now || d.acts[0]}</div></div>
+            <div style="display:flex;gap:18px;background:#FFFBEB;padding:16px;border-radius:8px;border-left:4px solid #D97706;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;letter-spacing:0.04em;">Soon<br/><span style="font-size:8px;opacity:0.8">(30–90 Days)</span></div><div style="font-size:12.5px;color:#92400E;line-height:1.55;font-weight:600;">${d.soon || d.acts[1]}</div></div>
+            <div style="display:flex;gap:18px;background:#F0FDF4;padding:16px;border-radius:8px;border-left:4px solid #16A34A;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:0.04em;">Future<br/><span style="font-size:8px;opacity:0.8">(90–180 Days)</span></div><div style="font-size:12.5px;color:#166534;line-height:1.55;font-weight:600;">${d.fut}</div></div>
+          </div>
+        </div>
+      `));
+    }
+
+    // Priority Action Matrix
+    const matrixCards = [
+      {bg:'#FEF2F2',border:'#FECACA',color:'#B91C1C',title:'1. Act Now (0–30 Days)',sub:'Micro-Habit Formation',text:"Focus purely on the 'Daily Habits' listed in your roadmap. Pick just one dimension to start. Do not attempt a massive overhaul—focus on tiny, 5-minute behavioral shifts that you can sustain daily without burnout."},
+      {bg:'#FFFBEB',border:'#FDE68A',color:'#D97706',title:'2. Build Soon (30–90 Days)',sub:'Social Accountability',text:'Involve others. Share your specific development goals with a trusted manager or mentor. This is the phase for enrolling in workshops, restructuring your workflows, and actively asking colleagues for feedback.'},
+      {bg:'#F0FDF4',border:'#BBF7D0',color:'#15803D',title:'3. Sustain (90–180 Days)',sub:'Pressure Testing',text:'Transition from learning to leading. Take ownership of a complex project that forces you to use your new skills under pressure. Cement your new brand within the team by delivering consistently.'},
+      {bg:'#F3F4F6',border:'#E5E7EB',color:'#4B5563',title:'4. The Feedback Loop',sub:'Measuring Success',text:'Book a recurring 15-minute calendar block on the last Friday of every month. Ask yourself: "Am I reacting out of habit, or responding with intention?" Adjust your approach based on what is working.'},
+      {bg:'#EFF6FF',border:'#BFDBFE',color:'#1D4ED8',title:'5. Anticipating Relapse',sub:'Grace Under Fire',text:'When stress hits, you will likely revert to old habits. Expect this. When it happens, do not abandon the plan. Acknowledge the slip, reset your environment, and start fresh the very next morning.'},
+      {bg:'#FAF5FF',border:'#E9D5FF',color:'#7E22CE',title:'6. Expanding Impact',sub:'Teaching Others',text:'The ultimate test of mastering a new skill is teaching it. Once you have solidified your new habits, look for a junior colleague struggling with the same issues and gently mentor them through your process.'}
+    ].map(item => `<div style="background:${item.bg};border:1px solid ${item.border};border-radius:10px;padding:20px;"><div style="font-size:11px;font-weight:800;color:${item.color};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">${item.title}</div><div style="font-size:13px;font-weight:700;color:${item.color};margin-bottom:7px;">${item.sub}</div><p style="font-size:11.5px;color:${item.color};line-height:1.55;font-weight:500;opacity:0.85;">${item.text}</p></div>`).join('');
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
+        <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;">Priority Action Matrix</h3>
+        <p style="color:#4B5563;font-size:12px;line-height:1.7;margin-bottom:28px;font-weight:500;">A comprehensive visual guide on how to distribute your energy over the next 6 months for maximum career impact.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">${matrixCards}</div>
+      </div>
+    `));
+
+    // CTA
+    await addPageFromHTML(wrap(`
+      <div style="background:#1A1A1A;border-radius:12px;padding:56px 48px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;">🤝</div>
+        <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
+        <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
+        <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">Reach out at hello@carnelianco.com</div>
+        <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
+      </div>
+    `));
+
+    pdf.deletePage(1);
+    pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
+  };
+
   // ── RESOURCES & PROTOCOLS ──
   const getResources = () => {
     const res = [];
-    if(S.C<65) {
-      res.push({type:'book', title:'Atomic Habits', author:'James Clear', why:'The most evidence-grounded system for building reliable delivery habits.'});
-      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', why:'Explains the psychology of task-avoidance and deadline-dependency.'});
+    if(S.C<65){
+      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran & Michael Lennington', url:'', why:'Sprint-based system designed for high-idea, lower-routine professionals. Replaces annual goals with 12-week cycles — each with a single concrete deliverable. Works with your natural rhythm, not against it.'});
+      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:'The most evidence-grounded system for building reliable delivery habits through small compounding commitments. 15+ million copies sold.'});
+      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban · TED2016', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'19 million views. Explains the psychology of task-avoidance and deadline-dependency with disarming honesty. Watch this before starting your 30-day delivery log.'});
+      res.push({type:'research', title:'Conscientiousness and Performance: A Meta-Analytic Review', author:'Barrick & Mount (1991) — Journal of Applied Psychology', url:'', why:'85-year meta-analysis showing conscientiousness (r=.22) is the single most consistent personality predictor of job performance across all occupations. Read the abstract — understanding why this matters will change how you see this dimension.'});
     }
-    if(S.ES<65) {
-      res.push({type:'book', title:'Chatter', author:'Ethan Kross', why:'Evidence-based techniques for managing the inner critical voice under pressure.'});
-      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', why:'Reframe stress as a tool for performance.'});
+    if(S.ES<65){
+      res.push({type:'book', title:'Chatter: The Voice in Our Head, Why It Matters, and How to Harness It', author:'Ethan Kross', url:'', why:"Evidence-based techniques for managing the inner critical voice under pressure. Kross's research at University of Michigan directly addresses the cognitive mechanism behind emotional instability. More practical than general resilience books."});
+      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal · TEDGlobal 2013', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'21 million views. Stanford psychologist explains research showing the relationship with stress — not stress itself — predicts health and performance. One of the most directly applicable TED talks to your profile.'});
+      res.push({type:'youtube', title:'How to Process Emotions — Dr. Marc Brackett (Yale)', author:'Huberman Lab Podcast', url:'https://www.youtube.com/watch?v=WBWOP9asMCg', why:'Yale Center for Emotional Intelligence. Practical framework for processing emotions under professional pressure. Free, evidence-grounded. Watch in segments.'});
+      res.push({type:'research', title:'Emotional Regulation and Job Performance: A Meta-Analysis', author:'Mesmer-Magnus et al. (2012) — Journal of Applied Psychology', url:'', why:'Meta-analysis of 245 studies demonstrating that emotional regulation — not emotional absence — predicts both individual performance and team outcomes.'});
     }
-    if(S.CQavg<65) {
-      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', why:'The definitive guide to cross-cultural professional effectiveness.'});
-      res.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Adichie', why:'Seeing past cultural blind spots.'});
+    if(S.CQavg<65){
+      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:"The most practically applicable cultural intelligence book for Pakistani professionals. Meyer's eight-dimension framework directly covers communication, trust, and hierarchy styles you encounter across Pakistan's diverse institutional landscape."});
+      res.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Ngozi Adichie · TEDGlobal 2009', url:'https://www.youtube.com/watch?v=D9Ihs241zeg', why:"31 million views. The most-watched talk on cultural assumption and narrative bias. Directly addresses the CQ-Knowledge gap — how limited exposure creates incomplete mental models of people from other backgrounds."});
+      res.push({type:'youtube', title:'Cultural Intelligence: The Competitive Edge for Leaders', author:'David Livermore · TEDxMSU', url:'https://www.youtube.com/watch?v=cAsJOE1HExk', why:"Livermore — one of the world's leading CQ researchers — explains why cultural intelligence outperforms IQ in cross-cultural effectiveness. 20 minutes. Free."});
+      res.push({type:'research', title:'Cultural Intelligence: Its Measurement and Effects on Cultural Judgment', author:'Ang, Van Dyne et al. (2007) — Management and Organization Review', url:'', why:"Foundational academic paper establishing CQ's predictive validity for cross-cultural performance (β=.31) beyond personality and IQ. Cited 3,000+ times."});
     }
-    if(S.LAavg<65) {
-      res.push({type:'book', title:'Mindset', author:'Carol Dweck', why:'Stanford research on growth vs. fixed mindset.'});
-      res.push({type:'ted', title:'How to Get Better at Things You Care About', author:'Eduardo Briceno', why:'Learning mode vs performance mode.'});
+    if(S.LAavg<65){
+      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:"Stanford psychologist Carol Dweck's research on fixed vs. growth mindset — the belief system that determines whether challenges are threats or opportunities. Directly addresses the cognitive roots of low learning agility."});
+      res.push({type:'ted', title:'How to Get Better at the Things You Care About', author:'Eduardo Briceno · TEDxManhattanBeach 2016', url:'https://www.youtube.com/watch?v=YKACzIrog24', why:"Briceno's distinction between learning mode and performance mode is directly applicable to low learning agility profiles. Explains why professionals who are always performing never improve. 12 minutes."});
+      res.push({type:'youtube', title:'Learning Agility: The Key to Leader Potential', author:'Robert Eichinger · Korn Ferry Institute', url:'https://www.youtube.com/watch?v=3WbMSyCOtmg', why:"Co-creator of the learning agility framework your assessment uses explains the research and what developing each dimension actually looks like in practice."});
+      res.push({type:'research', title:'Exploring the Construct Validity of Learning Agility', author:'DeRue, Ashford & Myers (2012) — Human Resource Management', url:'', why:"Peer-reviewed validation showing learning agility predicts leadership effectiveness beyond established personality and cognitive measures. The scientific basis for why this is the strongest predictor of leadership potential."});
     }
-    if(S.EOavg<65) {
-      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', why:'Moral psychology — why people rationalise ethical shortcuts.'});
-      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely', why:'The science of everyday ethical failure.'});
+    if(S.EOavg<65 || (gameSummary?.seesaw?.val > 65)){
+      res.push({type:'book', title:'The Righteous Mind: Why Good People Are Divided', author:'Jonathan Haidt', url:'', why:"Haidt's moral psychology research explains why people who make ethical lapses are not usually dishonest by nature — they are following intuitions that feel justified. Understanding your own moral intuition is the first step to building conscious ethical guardrails."});
+      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely · TED2009', url:'https://www.youtube.com/watch?v=MxiT42BFWOA', why:"Ariely's behavioural economics research on how good people consistently make small unethical decisions — and why. Directly mapped to what the seesaw and ethics challenge in your assessment measured. 16 minutes."});
+      res.push({type:'youtube', title:'Justice: What\'s the Right Thing to Do? — Episode 1', author:'Michael Sandel, Harvard Open Course', url:'https://www.youtube.com/watch?v=kBdfcR-8hEY', why:"Harvard's most popular course, now free. Episodes 1-3 introduce the ethical reasoning frameworks your EO score engages. Watch them as a professional development investment."});
+      res.push({type:'research', title:'A Meta-Analysis of Integrity Test Validities', author:'Ones, Viswesvaran & Schmidt (1993) — Journal of Applied Psychology', url:'', why:"Meta-analysis of 665 studies demonstrating integrity assessment predicts not only counterproductive work behaviour but overall job performance (rho=.41). The most-cited paper in integrity measurement."});
     }
-    if(res.length===0) {
-      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', why:'How elite professionals make their strengths productive.'});
+    if(S.OCB_S<55){
+      res.push({type:'book', title:'Radical Candor: Be a Kick-Ass Boss Without Losing Your Humanity', author:'Kim Scott', url:'', why:"Kim Scott's framework for channelling honest frustration into constructive feedback. Directly applicable to professionals who struggle to manage workplace frustrations without affecting team morale."});
+      res.push({type:'ted', title:'Why Good Leaders Make You Feel Safe', author:'Simon Sinek · TED2014', url:'https://www.youtube.com/watch?v=lmyZMtPVodo', why:"Sinek's talk on how leaders who channel difficulty constructively create team environments where people perform better. Reframes constructive attitude as a leadership superpower."});
+    }
+    if(S.LA_PA<55){
+      res.push({type:'book', title:'Thanks for the Feedback: The Science and Art of Receiving Feedback Well', author:'Douglas Stone & Sheila Heen', url:'', why:"Harvard Negotiation Project research explaining why people resist feedback even when they want to improve — and specific tools to receive it accurately."});
+      res.push({type:'ted', title:'Increase Your Self-Awareness with One Simple Fix', author:'Tasha Eurich · TEDxMileHigh 2017', url:'https://www.youtube.com/watch?v=tGdsOXZpyWE', why:"Eurich's research on self-awareness shows most people who think they are self-aware are not — and which introspection habits actually work. Directly targeted at People Agility."});
+    }
+    if(S.A<60){
+      res.push({type:'book', title:'Getting to Yes: Negotiating Agreement Without Giving In', author:'Fisher, Ury & Patton', url:'', why:"The foundational text on principled negotiation — relevant because low Agreeableness often manifests as positional rather than interest-based conflict. Fisher and Ury's framework helps you disagree and influence without damaging relationships."});
+      res.push({type:'ted', title:'10 Ways to Have a Better Conversation', author:'Celeste Headlee · TEDxCreativeCoast 2015', url:'https://www.youtube.com/watch?v=R1vskiVDwl4', why:"21 million views. Headlee's talk targets the specific habits that prevent genuine listening — the same mechanisms that drive low Agreeableness scores. Practical, behavioural, immediately applicable."});
+      res.push({type:'research', title:'Agreeableness and Job Performance: A Meta-Analytic Review', author:'Mount, Barrick & Stewart (1998) — Personnel Psychology', url:'', why:"Meta-analysis demonstrating Agreeableness (r=.34) is the strongest personality predictor of performance in team-based and interpersonal jobs. Directly relevant to your dimension score and its career implications."});
+    }
+    if(S.O<60){
+      res.push({type:'book', title:'A Whole New Mind: Why Right-Brainers Will Rule the Future', author:'Daniel H. Pink', url:'', why:"Pink's accessible argument for why creative, design, and conceptual thinking is increasingly critical in professional roles — directly targeted at professionals who have built strong careers on technical and procedural competence and now need to expand their range."});
+      res.push({type:'ted', title:'Do Schools Kill Creativity?', author:'Sir Ken Robinson · TED2006', url:'https://www.youtube.com/watch?v=iG9CE55wbtY', why:"The most-watched TED talk of all time (75+ million views). Robinson's argument about why creative thinking gets suppressed — and how to recover it — is directly relevant to low Openness profiles. Starting point for understanding why your natural instinct is to refine rather than reinvent."});
+    }
+    if(S.E<50){
+      res.push({type:'book', title:"Quiet: The Power of Introverts in a World That Can't Stop Talking", author:'Susan Cain', url:'', why:"Susan Cain's research-backed argument that introversion is a professional asset — not a deficit — when deployed deliberately. Directly relevant to low Extraversion profiles who work in visible or client-facing roles."});
+      res.push({type:'ted', title:'The Power of Introverts', author:'Susan Cain · TED2012', url:'https://www.youtube.com/watch?v=c0KYU2j0TM4', why:"28 million views. Cain's argument for why introverts make exceptional leaders and contributors when they understand and leverage their natural working style rather than performing extroversion."});
+    }
+    if(S.C>=75&&S.EOavg>=75&&S.LAavg>=70){
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:"Drucker's foundational text on how high-performing professionals make their strengths productive and time purposeful. For your profile the work is not fixing gaps — it is deploying strengths deliberately."});
+      res.push({type:'ted', title:'The Puzzle of Motivation', author:'Dan Pink · TED2009', url:'https://www.youtube.com/watch?v=rrkrvAUbU9Y', why:"Pink's talk on what drives sustained high performance at the mastery level — autonomy, mastery, and purpose. Directly applicable to your profile stage."});
+    }
+    if(profile.name==='Visionary Sprinter'){
+      res.push({type:'method', title:'6-Week Sprint Cycle (Carnelian Recommendation)', author:'', url:'', why:'Do not attempt daily habit systems. Structure your work in 6-week intensive cycles with one concrete deliverable at the end of each. Reset fully between cycles. Novelty drives your best work — routine kills it.'});
+    }
+    if(res.length===0){
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:'Foundational text on professional effectiveness. Useful for consolidating a balanced, multi-dimensional profile.'});
+      res.push({type:'ted', title:'How Great Leaders Inspire Action', author:'Simon Sinek · TEDxPugetSound 2009', url:'https://www.youtube.com/watch?v=qp0HIF3SfI4', why:"The most-watched leadership TED talk. Sinek's Golden Circle framework is applicable to how you communicate your professional value."});
     }
     return res;
   };
 
   const getPrograms = () => {
     const progs = [];
-    if(S.E<60||S.A<60) progs.push({name:'Communication & Influence Workshop', desc:'Covers assertive communication, active listening, and managing difficult conversations.'});
-    if(S.EOavg<65) progs.push({name:'Professional Ethics & Values Programme', desc:'Ethical decision-making frameworks and integrity under pressure.'});
-    if(S.LAavg<65) progs.push({name:'Learning Agility & Growth Mindset', desc:'Building the specific habits that accelerate professional development.'});
-    if(S.CQavg<65) progs.push({name:'Intercultural Communication Workshop', desc:'Cross-cultural effectiveness for Pakistani multi-institutional contexts.'});
-    if(S.ES<60) progs.push({name:'Resilience & Emotional Intelligence', desc:'Evidence-based resilience frameworks for high-stakes environments.'});
-    if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:'Flagship leadership development pathway.'});
-    return progs.slice(0,4);
+    if(S.E<60||S.A<60||S.OCBavg<60) progs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging. Covers assertive communication, active listening, and managing difficult conversations.", match:'Recommended based on your Social Confidence and Agreeableness scores.'});
+    if(S.EOavg<65||(gameSummary?.seesaw?.val>60)) progs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency. Uses real Pakistani workplace case studies.", match:'Recommended based on your Ethical Orientation scores and Values Seesaw responses.'});
+    if(S.LAavg<65||S.O<60) progs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits — feedback-seeking, reflection, cross-domain application — that accelerate professional development. Grounded in Dweck, Eichinger, and DeRue's frameworks.", match:'Recommended based on your Learning Agility profile.'});
+    if(S.CQavg<65) progs.push({name:'Intercultural Communication & Collaboration Workshop', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional and cross-provincial professional contexts. Covers all three CQ dimensions in practical workplace scenarios.", match:'Recommended based on your Cultural Intelligence scores.'});
+    if(S.ES<60) progs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools for high-stakes Pakistani professional environments.", match:'Recommended based on your Emotional Stability score.'});
+    if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:"Carnelian's flagship leadership development pathway — covering strategic thinking, stakeholder management, team leadership, and executive presence. Modular delivery over 3–6 months.", match:'Your Leadership Readiness Score suggests readiness for structured leadership investment.'});
+    if(S.C<60||CI.OPS<60) progs.push({name:'Personal Effectiveness & Productivity Workshop', desc:"A Carnelian half-day programme built around sprint planning, priority management, and delivery accountability. Uses PACER dimension scores as the diagnostic foundation.", match:'Recommended based on your Conscientiousness and Operational Reliability scores.'});
+    progs.push({name:'PACER Coaching Session — 1:1 Debrief with Carnelian Consultant', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full PACER profile, clarify your development priorities, and co-design a personalised 90-day action plan. Online or in-person.", match:'Recommended for all PACER participants who want expert guidance on their results.'});
+    if(profile.tier<=2) progs.push({name:'Train the Trainer (TTT) Programme', desc:"Carnelian's TTT certification programme for professionals developing their facilitation, coaching, and knowledge transfer skills. Particularly valuable for mid-to-senior professionals building internal capability.", match:'Your profile suggests capacity for peer learning and knowledge transfer roles.'});
+    if(S.A<60||CI.SES<60) progs.push({name:'Negotiation & Stakeholder Management Workshop', desc:"A practical one-day Carnelian programme covering principled negotiation, stakeholder mapping, managing resistance, and building influence without formal authority. Real Pakistani sectoral case studies.", match:'Recommended based on your Stakeholder Effectiveness and Agreeableness scores.'});
+    return progs.slice(0,5);
   };
 
   const getRelapse = () => {
     const protocols = [];
-    if(S.C<55) protocols.push({trigger:'When you find yourself approaching a deadline without having started', response:'Use the 2-minute rule: if you can do any meaningful piece of this task in 2 minutes right now, start immediately.'});
-    if(S.ES<55) protocols.push({trigger:'When you feel your emotional state affecting your decision-making', response:'Name it to yourself first. Labelling an emotional state reduces its intensity. Delay non-urgent decisions by 20 minutes.'});
-    if(S.EOavg<60) protocols.push({trigger:'When someone you respect asks you to bypass a process', response:'Pause. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?"'});
-    if(protocols.length===0) protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:'Use the clarity test: "What would I tell a junior colleague to do in this situation?" Then do that.'});
+    const ssVal = gameSummary?.seesaw?.val || 50;
+    const sc1 = gameSummary?.scenario1?.raw || 0;
+    const sc2 = gameSummary?.scenario2?.raw || 0;
+    
+    if(ssVal>65) protocols.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?" If you are explaining rather than defending, say no — or ask for it in writing first.'});
+    if(sc1<=0) protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:"Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure. Information withheld under pressure is almost always discovered — and the delay compounds the problem."});
+    if(sc2<0) protocols.push({trigger:"When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right", response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?' This gives the relationship a chance before escalation — and it documents your position."});
+    if(S.C<55) protocols.push({trigger:'When you find yourself approaching a deadline without having started', response:"Use the 2-minute rule: if you can do any meaningful piece of this task in 2 minutes right now, start immediately. Momentum from even a tiny start breaks the avoidance cycle more reliably than any motivational technique."});
+    if(S.ES<55) protocols.push({trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:"Name it to yourself first: 'I am currently [stressed / frustrated / overwhelmed].' Research shows labelling an emotional state reduces its intensity significantly. Then delay any non-urgent decision by at least 20 minutes."});
+    if(protocols.length===0) protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
     return protocols;
   };
 
@@ -2213,17 +2420,16 @@ const allDims = [
               <div style={{fontSize:'12px', color:T.gn, fontWeight:'700'}}>Questions? hello@carnelianco.com</div>
             </div>
           </div>
-          
+
           <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
-            <button onClick={()=>window.print()} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>🖨 Print / Save as PDF</button>
+            <button onClick={downloadPDF} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>⬇ Download Action Plan (PDF)</button>
           </div>
 
         </div>
       )}
 
-      {/* ─── TAB 2: TECHNICAL REPORT ─── */}
-{resTab === 'tech' && (() => {
-        // Table styles to match the HTML exactly
+{/* ─── TAB 2: TECHNICAL REPORT ─── */}
+      {resTab === 'tech' && (() => {
         const tableStyle = { width: '100%', borderCollapse: 'collapse', marginTop: '14px' };
         const thStyle = { fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, padding: '0 10px 12px', textAlign: 'left', borderBottom: `2px solid ${T.b2}` };
         const tdStyle = { padding: '14px 10px', borderBottom: `1px solid ${T.b1}`, fontSize: '13px', verticalAlign: 'middle', color: T.t1, fontWeight: '500' };
@@ -2245,9 +2451,9 @@ const allDims = [
             <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.cGlow} 0%,transparent 70%)`}} />
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px', position:'relative', zIndex:1, flexWrap:'wrap', gap:'12px'}}>
               <div>
-                <div className="serif" style={{fontSize:'14px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>CORE · Carnelian Pvt Ltd {R.org ? `× ${R.org}` : ''}</div>
+                <div className="serif" style={{fontSize:'14px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>PACER v3.0 · Carnelian Pvt Ltd {R.org ? `× ${R.org}` : ''}</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3}}>Document ID: {docId} · {date} · TECHNICAL REPORT — {R.conf || 'Restricted'}</div>
-<div className="mono" style={{fontSize:'10px', color:T.t3, marginTop:'4px'}}>Completion time: {reportData.completionTime} · {reportData.completionFlag}</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3, marginTop:'4px'}}>Completion time: {reportData.completionTime} · {reportData.completionFlag}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
                 <div>{R.purpose}</div>
@@ -2259,8 +2465,8 @@ const allDims = [
             <div className="serif" style={{fontSize:'2.4rem', fontWeight:'700', color:T.t0, marginBottom:'8px', position:'relative', zIndex:1}}>{R.name}</div>
             <div style={{fontSize:'13px', color:T.t2, lineHeight:'1.8', position:'relative', zIndex:1}}>
               {R.role ? R.role : ''}{R.dept ? ` · ${R.dept}` : ''}<br/>
-{R.email ? `${R.email}` : ''}{R.phone ? ` · ${R.phone}` : ''}<br/>
-{R.emp ? `ID: ${R.emp} · ` : ''}Experience: {R.exp}{R.gender && R.gender !== 'Prefer not to say' ? ` · ${R.gender}` : ''}
+              {R.email ? `${R.email}` : ''}{R.phone ? ` · ${R.phone}` : ''}<br/>
+              {R.emp ? `ID: ${R.emp} · ` : ''}Experience: {R.exp}{R.gender && R.gender !== 'Prefer not to say' ? ` · ${R.gender}` : ''}
             </div>
             
             <div style={{display:'inline-block', background:T.c, color:'#fff', fontSize:'12px', fontWeight:'800', padding:'6px 18px', borderRadius:'100px', marginTop:'16px', letterSpacing:'0.04em', position:'relative', zIndex:1}}>
@@ -2463,8 +2669,8 @@ const allDims = [
                   <tbody>
                     {mod.dims.map(([k, l, v], j, arr) => {
                       const isLast = j === arr.length - 1;
-                      const col = bCol(v);
-                      const bg = bBg(v);
+                      const col = bCol(v, T);
+                      const bg = bBg(v, T);
                       return (
                         <tr key={k}>
                           <td style={isLast ? lastTdStyle : tdStyle}>
@@ -2606,7 +2812,11 @@ const allDims = [
           </div>
 
           <div className="mono" style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'16px 20px', marginBottom:'24px', fontSize:'10.5px', color:T.t2, lineHeight:'1.7'}}>
-            <strong style={{color:T.t0}}>Assessment Integrity Statement:</strong> CORE is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring or promotion decisions. All red-rated patterns and role suitability ratings require triangulation with structured behavioural interview before final HR decision. Composite index weightings are derived from published meta-analytic evidence. Copyright: Carnelian Pvt Ltd. Licensed use only.
+            <strong style={{color:T.t0}}>Assessment Integrity Statement:</strong> PACER v3.0 is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring or promotion decisions. All red-rated patterns and role suitability ratings require triangulation with structured behavioural interview before final HR decision. Composite index weightings are derived from published meta-analytic evidence. Copyright: Carnelian Pvt Ltd. Licensed use only.
+          </div>
+
+          <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
+            <button onClick={()=>window.print()} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>🖨 Print / Save as PDF</button>
           </div>
 
         </div>

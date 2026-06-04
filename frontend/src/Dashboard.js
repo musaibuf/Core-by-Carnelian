@@ -831,6 +831,12 @@ const ActionPlanReport = ({ candidate, T }) => {
 
 // ─── PLAYER REPORT (gamified view) ───────────────────────────
 const PlayerReport = ({ candidate, T }) => {
+  const [evState, setEvState] = useState({});
+  
+  useEffect(() => {
+    try { setEvState(JSON.parse(localStorage.getItem(`core_ev_${candidate.doc_id}`) || '{}')); } catch(e) {}
+  }, [candidate.doc_id]);
+
   const rd      = candidate.report_data || {};
   const S       = rd.scores   || {};
   const CI      = rd.CI       || {};
@@ -974,6 +980,51 @@ const PlayerReport = ({ candidate, T }) => {
           </div>
         </div>
       )}
+
+      {/* EVIDENCE WALL (ADMIN VIEW) */}
+      <div className="g-card-inner">
+        <div className="g-section-hd-inner">📝 SUBMITTED EVIDENCE (ADMIN REVIEW)</div>
+        {Object.keys(evState).length === 0 ? (
+          <div style={{fontSize:'12px', color:'#64748b', textAlign:'center', padding:'10px'}}>No evidence submitted by candidate yet.</div>
+        ) : (
+          <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+            {Object.entries(evState).map(([k, e], i) => (
+              <div key={i} style={{background:'rgba(255,255,255,.02)', border:`1px solid ${T.gn}40`, borderLeft:`4px solid ${T.gn}`, borderRadius:'8px', padding:'16px'}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px'}}>
+                  <div>
+                    <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gn, marginBottom:'4px'}}>VERIFIED ACTION · +{e.xp} XP</div>
+                    <div style={{fontSize:'11px', color:'#94a3b8'}}>Submitted: {new Date(e.ts).toLocaleDateString()}</div>
+                  </div>
+                  <button onClick={() => {
+                    if(!window.confirm('Reject this evidence? This will revoke the XP from the candidate.')) return;
+                    const newState = {...evState};
+                    delete newState[k];
+                    setEvState(newState);
+                    localStorage.setItem(`core_ev_${candidate.doc_id}`, JSON.stringify(newState));
+                  }} style={{background:T.rdP, color:T.rd, border:`1px solid ${T.rd}40`, padding:'6px 12px', borderRadius:'6px', fontSize:'10px', fontWeight:'700', cursor:'pointer'}}>
+                    Reject & Revoke XP
+                  </button>
+                </div>
+                
+                <div style={{background:'rgba(0,0,0,0.2)', padding:'12px', borderRadius:'6px', fontSize:'12px', color:'#e2e8f0', lineHeight:'1.5', marginTop:'10px'}}>
+                  {e.type === 'book' && <><p><strong>Quote:</strong> "{e.data.quote}"</p><p><strong>Takeaway:</strong> {e.data.takeaway}</p></>}
+                  {(e.type === 'ted' || e.type === 'youtube') && <><p><strong>Timestamp:</strong> {e.data.timestamp}</p><p><strong>Insight:</strong> {e.data.insight}</p></>}
+                  {e.type === 'research' && <><p><strong>Ref:</strong> {e.data.ref}</p><p><strong>Finding:</strong> {e.data.finding}</p></>}
+                  {e.type === 'quest' && <><p><strong>Reflection:</strong> {e.data.reflection}</p></>}
+                  
+                  {e.data.fileBase64 && (
+                    <div style={{marginTop:'12px', paddingTop:'12px', borderTop:'1px solid rgba(255,255,255,0.1)'}}>
+                      <a href={e.data.fileBase64} download={e.data.fileName} style={{display:'inline-flex', alignItems:'center', gap:'6px', color:'#38bdf8', textDecoration:'none', fontSize:'11px', fontWeight:'700', background:'rgba(56,189,248,0.1)', padding:'6px 12px', borderRadius:'4px', border:'1px solid rgba(56,189,248,0.3)'}}>
+                        📎 Download Attached Proof ({e.data.fileName})
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* COMPOSITE SCORES in game style */}
       <div className="g-card-inner">

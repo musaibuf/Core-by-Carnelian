@@ -95,8 +95,32 @@ const Fonts = ({ mode }) => {
       .anim-fadeUp { animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
       .anim-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
       .anim-slideUp { animation: slideUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
-      @media (max-width: 900px) { .grid-5-col, .grid-6-col { grid-template-columns: repeat(3,1fr) !important; } .grid-3-col, .grid-4-col { grid-template-columns: 1fr 1fr !important; } .grid-2-col { grid-template-columns: 1fr !important; } .hide-mobile { display: none !important; } }
-      @media (max-width: 600px) { .grid-5-col, .grid-6-col { grid-template-columns: repeat(2,1fr) !important; } .grid-3-col, .grid-4-col { grid-template-columns: 1fr !important; } .section-pad { padding: 48px 20px !important; } .card-pad { padding: 24px 20px !important; } .q-card-pad { padding: 32px 24px !important; } .nav-wrap { padding: 0 16px !important; } .report-wrap { padding: 32px 16px !important; } }
+      @media (max-width: 1024px) { .grid-7-col { grid-template-columns: repeat(4,1fr) !important; } }
+      @media (max-width: 1024px) { .grid-7-col { grid-template-columns: repeat(4,1fr) !important; } }
+      @media (max-width: 900px) { 
+        .grid-7-col, .grid-5-col, .grid-6-col { grid-template-columns: repeat(3,1fr) !important; } 
+        .grid-3-col, .grid-4-col { grid-template-columns: 1fr 1fr !important; } 
+        .grid-2-col { grid-template-columns: 1fr !important; } 
+        .hide-mobile { display: none !important; } 
+      }
+      @media (max-width: 600px) { 
+        .grid-7-col, .grid-5-col, .grid-6-col { grid-template-columns: repeat(2,1fr) !important; } 
+        .grid-3-col, .grid-4-col, .grid-2-col { grid-template-columns: 1fr !important; } 
+        .section-container { padding: 40px 16px !important; }
+        .nav-wrap { padding: 0 12px !important; } 
+        table { display: block; overflow-x: auto; white-space: nowrap; }
+        
+        /* Slideshow Mobile Fixes */
+        .slideshow-layout { grid-template-columns: 1fr !important; }
+        .slideshow-tabs { border-right: none !important; border-bottom: 1px solid ${TT.b2} !important; flex-direction: row !important; overflow-x: auto !important; padding: 12px 16px !important; }
+        .slideshow-tabs button { flex-shrink: 0; width: auto !important; }
+        .slideshow-content { padding: 32px 16px !important; min-height: auto !important; }
+        
+        /* Typography Scaling */
+        h1 { font-size: 2.6rem !important; }
+        h2 { font-size: 1.8rem !important; }
+      }
+      @media (max-width: 400px) { .grid-7-col, .grid-5-col, .grid-6-col { grid-template-columns: 1fr !important; } }
     `}</style>
   );
 };
@@ -461,7 +485,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
       padding:'0 32px', height:'64px',
     }}>
       <div style={{display:'flex', alignItems:'center', gap:'12px', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
-        <img src="/logo.png" alt="Carnelian" style={{height:'30px', objectFit:'contain'}}
+<img src="/logo.png" alt="Carnelian" style={{height:'30px', minWidth:'30px', objectFit:'contain'}}
           onError={e=>{e.target.style.display='none'; e.target.nextSibling.style.display='flex';}} />
         <div style={{display:'none', width:'30px', height:'30px', background:T.c, borderRadius:'6px', alignItems:'center', justifyContent:'center', fontFamily:"'Playfair Display',serif", fontWeight:'700', color:'#fff', fontSize:'15px'}}>C</div>
         <div>
@@ -471,8 +495,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
       </div>
 
       <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-        <div style={{display:'flex', gap:'2px', overflowX:'auto', scrollbarWidth:'none'}}>
-          {[
+<div style={{display:'flex', gap:'2px', overflowX:'auto', scrollbarWidth:'none', maxWidth:'calc(100vw - 140px)'}}>          {[
             {id:'home', l:'Overview'},
             {id:'assess', l:'Assessment'},
             ...(hasResults?[{id:'results', l:'Reports'}]:[]),
@@ -509,231 +532,188 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
   </nav>
 );
 
+// ─── HOME PAGE SUB-COMPONENTS ─────────────────────────────────────────────────
+
+const StatsStrip = () => {
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+  const stats = [
+    {n:'63',l:'Diagnostic Items'},{n:'14',l:'Dimensions Scored'},
+    {n:'4', l:'Validity Indices'},{n:'10',l:'Lie-Detection Items'},
+    {n:'12',l:'Industry Contexts'},{n:'4', l:'Distinct Reports'},
+  ];
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if(e.isIntersecting){ setVis(true); obs.disconnect(); } },
+      { threshold: 0.2 }
+    );
+    if(ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="grid-6-col" style={{
+      display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:'1px',
+      background:T.b2, border:`1px solid ${T.b2}`,
+      borderRadius:'10px', overflow:'hidden', marginTop:'80px',
+    }}>
+      {stats.map((s,i) => (
+        <div key={i} style={{
+          background:T.bg1, textAlign:'center', padding:'28px 12px',
+          opacity: vis ? 1 : 0,
+          transform: vis ? 'translateY(0)' : 'translateY(24px)',
+          transition:`opacity .65s ease ${i*.09}s, transform .65s cubic-bezier(.16,1,.3,1) ${i*.09}s, background .2s`,
+        }}
+        onMouseOver={e => e.currentTarget.style.background = T.bg2}
+        onMouseOut={e  => e.currentTarget.style.background = T.bg1}
+        >
+          <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:'1'}}>
+            {vis ? <AnimatedNumber value={s.n} /> : '0'}
+          </div>
+          <div className="mono" style={{fontSize:'9px', color:T.t2, textTransform:'uppercase', letterSpacing:'0.12em', marginTop:'8px', fontWeight:'600'}}>{s.l}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const HomePage = ({setTab}) => {
-  // Colors array for lists and accents
   const listColors = [T.c, T.gold, T.gn, T.am, '#8B5CF6', '#38BDF8', '#F472B6', '#A78BFA'];
 
   return (
     <div>
-      {/* ── HERO SECTION ── */}
-      <section style={{
-        background:'transparent', minHeight:'100vh', display:'flex', flexDirection:'column',
-        justifyContent:'center', position:'relative', overflow:'hidden', padding:'100px 32px',
+
+      {/* ── HERO ── */}
+      <section className="section-container" style={{
+        background:'transparent', display:'flex', flexDirection:'column',
+        justifyContent:'center', position:'relative', overflow:'hidden',
+        padding:'100px 32px 64px',
       }}>
         {/* Ambient glows */}
-        <div style={{position:'absolute', top:'-15%', right:'-8%', width:'65vw', height:'65vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.cGlow} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 8s ease-in-out infinite', zIndex:0}} />
-        <div style={{position:'absolute', bottom:'-12%', left:'-4%', width:'45vw', height:'45vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.goldP} 0%, transparent 65%)`, pointerEvents:'none', animation:'glow 10s ease-in-out infinite', animationDelay:'-4s', zIndex:0}} />
+        <div style={{position:'absolute', top:'-15%', right:'-8%', width:'65vw', height:'65vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.cGlow} 0%, transparent 65%)`, pointerEvents:'none', animation:'glowPulse 8s ease-in-out infinite', zIndex:0}} />
+        <div style={{position:'absolute', bottom:'-12%', left:'-4%', width:'45vw', height:'45vw', borderRadius:'50%', background:`radial-gradient(circle, ${T.goldP} 0%, transparent 65%)`, pointerEvents:'none', animation:'glowPulse 10s ease-in-out infinite', animationDelay:'-4s', zIndex:0}} />
 
         <div style={{maxWidth:'1100px', margin:'0 auto', position:'relative', zIndex:1, width:'100%'}}>
-          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Reveal delay={0}>
-              <Pill 
-                label={<span style={{display:'inline-flex', alignItems:'center'}}>🇵🇰 Built for Pakistan's Professional Landscape</span>} 
-                color={T.t0} 
-                style={{marginBottom:'32px', fontSize:'11px', padding:'8px 20px', fontWeight:'800'}} 
-              />
-            </Reveal>
+          <div style={{textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center'}}>
 
-            <Reveal delay={0.1}>
+            {/* Badge */}
+            <div className="anim-fadeUp" style={{marginBottom:'32px'}}>
+              <Pill
+                label={<span style={{display:'inline-flex', alignItems:'center'}}>🇵🇰 Built for Pakistan's Professional Landscape</span>}
+                color={T.t0}
+                style={{fontSize:'11px', padding:'8px 20px', fontWeight:'800'}}
+              />
+            </div>
+
+            {/* Headline */}
+            <div className="anim-fadeUp" style={{animationDelay:'0.12s'}}>
               <h1 style={{
-                fontFamily:"'Playfair Display',serif", fontWeight:'700', fontSize:'clamp(2.8rem,6vw,5rem)',
-                color:T.t0, lineHeight:'1.05', margin:'0 0 16px', letterSpacing:'-0.03em',
-              }} className="hero-title">
+                fontFamily:"'Playfair Display',serif", fontWeight:'700',
+                fontSize:'clamp(2.8rem,6vw,5rem)', color:T.t0,
+                lineHeight:'1.05', margin:'0 0 16px', letterSpacing:'-0.03em',
+              }}>
                 Assess the whole professional.<br/>
                 <em style={{color:T.c, fontStyle:'italic'}}>Not just the performance review.</em>
               </h1>
-            </Reveal>
-
-            <Reveal delay={0.2}>
-              <GoldLine style={{width:'80px', margin:'28px auto'}} />
-            </Reveal>
-
-            <Reveal delay={0.3}>
-              <p style={{color:T.t1, fontSize:'16px', maxWidth:'700px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'500'}}>
-                CORE is a validated, 63-item psychometric battery with built-in validity controls, social desirability screening, and an industry context engine for 12 Pakistani sectors. Four distinct reports — Technical (HR), Candidate Action Plan, Team Aggregate, and a gamified Player Report. Instant, scientifically grounded results.
-              </p>
-            </Reveal>
-
-            <Reveal delay={0.4}>
-              <div style={{display:'flex', gap:'14px', flexWrap:'wrap', justifyContent:'center'}}>
-                <button onClick={()=>setTab('assess')} style={{
-                  padding:'15px 36px', borderRadius:'7px', border:'none', cursor:'pointer',
-                  background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'800',
-                  letterSpacing:'0.04em', transition:'all 0.2s', boxShadow:`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`,
-                }}
-                onMouseOver={e=>{ e.target.style.background=T.cDark; e.target.style.transform='translateY(-2px)'; e.target.style.boxShadow=`0 0 56px ${T.cGlow}, 0 8px 28px rgba(0,0,0,0.4)`; }}
-                onMouseOut={e=>{ e.target.style.background=T.c; e.target.style.transform='none'; e.target.style.boxShadow=`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`; }}>
-                  Begin Assessment →
-                </button>
-                <button onClick={()=>setTab('method')} style={{
-                  padding:'15px 36px', borderRadius:'7px', cursor:'pointer', background:'transparent', border:`2px solid ${T.b2}`,
-                  color:T.t1, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'700', transition:'all 0.2s',
-                }}
-                onMouseOver={e=>{ e.target.style.borderColor=T.gold; e.target.style.color=T.gold; e.target.style.transform='translateY(-2px)'; }}
-                onMouseOut={e=>{ e.target.style.borderColor=T.b2; e.target.style.color=T.t1; e.target.style.transform='none'; }}>
-                  View the Science
-                </button>
-              </div>
-            </Reveal>
-          </div>
-
-          {/* Stats strip */}
-          <Reveal delay={0.6}>
-            <div className="grid-6-col" style={{
-              display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:'1px',
-              background:T.b2, border:`1px solid ${T.b2}`, borderRadius:'10px',
-              overflow:'hidden', marginTop:'80px',
-            }}>
-              {[
-                {n:'63',l:'Diagnostic Items'},{n:'14',l:'Dimensions Scored'},{n:'4',l:'Validity Indices'},
-                {n:'10',l:'Lie-Detection Items'},{n:'12',l:'Industry Contexts'},{n:'4',l:'Distinct Reports'}
-              ].map((s,i)=>(
-                <div key={i} style={{background:T.bg1, textAlign:'center', padding:'28px 12px', transition:'background 0.2s'}}
-                  onMouseOver={e=>e.currentTarget.style.background=T.bg2} onMouseOut={e=>e.currentTarget.style.background=T.bg1}>
-                  <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:'1'}}>
-                    <AnimatedNumber value={s.n} />
-                  </div>
-                  <div className="mono" style={{fontSize:'9px', color:T.t2, textTransform:'uppercase', letterSpacing:'0.12em', marginTop:'8px', fontWeight:'600'}}>{s.l}</div>
-                </div>
-              ))}
             </div>
-          </Reveal>
+
+            {/* Divider */}
+            <div className="anim-fadeUp" style={{animationDelay:'0.22s'}}>
+              <GoldLine style={{width:'80px', margin:'28px auto'}} />
+            </div>
+
+            {/* Subtitle */}
+            <div className="anim-fadeUp" style={{animationDelay:'0.32s'}}>
+              <p style={{color:T.t1, fontSize:'16px', maxWidth:'700px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'500'}}>
+                CORE is a validated, 63-item psychometric battery with built-in validity controls, social desirability
+                screening, and an industry context engine for 12 Pakistani sectors. Four distinct reports — Technical
+                (HR), Candidate Action Plan, Team Aggregate, and a gamified Player Report. Instant, scientifically
+                grounded results.
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div className="anim-fadeUp" style={{
+              animationDelay:'0.42s',
+              display:'flex', gap:'14px', flexWrap:'wrap', justifyContent:'center',
+            }}>
+              <button onClick={()=>setTab('assess')} style={{
+                padding:'15px 36px', borderRadius:'7px', border:'none', cursor:'pointer',
+                background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif",
+                fontSize:'14px', fontWeight:'800', letterSpacing:'0.04em', transition:'all 0.2s',
+                boxShadow:`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`,
+              }}
+              onMouseOver={e=>{ e.target.style.background=T.cDark; e.target.style.transform='translateY(-2px)'; e.target.style.boxShadow=`0 0 56px ${T.cGlow}, 0 8px 28px rgba(0,0,0,0.4)`; }}
+              onMouseOut={e=>{ e.target.style.background=T.c; e.target.style.transform='none'; e.target.style.boxShadow=`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`; }}>
+                Begin Assessment →
+              </button>
+              <button onClick={()=>setTab('method')} style={{
+                padding:'15px 36px', borderRadius:'7px', cursor:'pointer',
+                background:'transparent', border:`2px solid ${T.b2}`,
+                color:T.t1, fontFamily:"'Plus Jakarta Sans',sans-serif",
+                fontSize:'14px', fontWeight:'700', transition:'all 0.2s',
+              }}
+              onMouseOver={e=>{ e.target.style.borderColor=T.gold; e.target.style.color=T.gold; e.target.style.transform='translateY(-2px)'; }}
+              onMouseOut={e=>{ e.target.style.borderColor=T.b2; e.target.style.color=T.t1; e.target.style.transform='none'; }}>
+                View the Science
+              </button>
+            </div>
+
+            {/* Stats Strip — counts up when scrolled into view */}
+            <div className="anim-fadeUp" style={{animationDelay:'0.52s', width:'100%'}}>
+              <StatsStrip />
+            </div>
+          </div>
         </div>
       </section>
 
-      <div style={{maxWidth:'1100px', margin:'0 auto', padding:'0 32px'}}>
-        
-        {/* ── FOUR REPORTS ── */}
-        <Reveal delay={0}>
-          <div style={{background:`linear-gradient(135deg, ${T.bg1} 0%, ${T.bg2} 100%)`, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'48px', marginBottom:'32px'}}>
-            <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'12px'}}>📊 Four Reports from One Assessment</h2>
-            <p style={{fontSize:'15px', color:T.t2, lineHeight:'1.7', marginBottom:'32px', fontWeight:'500'}}>
-              Every CORE assessment produces four complete, purpose-built reports — each one written for a specific reader. HR gets technical detail. The individual gets a development roadmap. The organisation gets team-level insights. And the individual gets a gamified experience designed to make development feel achievable.
-            </p>
-            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px'}}>
-              {[
-                {i:'📊', c:'#60A5FA', t:'Technical Report', s:'(HR & Leadership)', d:'Full psychometric breakdown. 7 composite indices, validity analysis, cross-dimensional risk patterns, role suitability matrix with interview probes, industry lens, completion time tracking.'},
-                {i:'🧭', c:'#4ADE80', t:'Candidate Action Plan', s:'(Individual)', d:'Personal development roadmap. Visual score dashboard, numbered 10-step action plans per gap, profile-matched books, TED talks, YouTube resources, peer-reviewed research.'},
-                {i:'👥', c:'#FBBF24', t:'Team Aggregate Report', s:'(Batch-level)', d:'Appears automatically when you run 2+ assessments in a batch. Team dimension averages, composite benchmarks, archetype distribution, collective risk pattern frequency, validity summary.'},
-                {i:'🎮', c:'#E879F9', t:'Player Report', s:'(Gamified)', d:'Dark RPG aesthetic. Game class, XP, levels 1–10, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.'}
-              ].map((r,i)=>(
-                <div key={i} style={{background:T.b0, border:`1px solid ${T.b1}`, borderRadius:'12px', padding:'24px', transition:'transform 0.2s'}} onMouseOver={e=>e.currentTarget.style.transform='translateY(-4px)'} onMouseOut={e=>e.currentTarget.style.transform='none'}>
-                  <div style={{fontSize:'2rem', marginBottom:'12px'}}>{r.i}</div>
-                  <div style={{fontSize:'14px', fontWeight:'700', color:r.c, marginBottom:'4px'}}>{r.t}</div>
-                  <div style={{fontSize:'11px', color:T.t3, marginBottom:'12px', fontWeight:'600'}}>{r.s}</div>
-                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>{r.d}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Reveal>
-
-        {/* ── INDIVIDUAL VS ORG (TWO COLUMNS) ── */}
-        <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'32px'}}>
-          
-          {/* Individual */}
-          <Reveal delay={0.1}>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', height:'100%'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:T.t0, marginBottom:'12px'}}>✨ What You Walk Away With — As an Individual</h3>
-              <p style={{fontSize:'14px', color:T.t2, lineHeight:'1.6', marginBottom:'24px', fontWeight:'500'}}>CORE is not an evaluation of your worth. It is a mirror — one most professionals never get access to. Here is exactly what you receive.</p>
-              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
-                {[
-                  {t:'🧭 Your Professional Identity', d:'A named archetype explaining how you work — your natural strengths, decision-making style, and the contexts where you perform best.'},
-                  {t:'📊 Real Scores Across 9 Dimensions', d:'Personality, cultural intelligence, team citizenship, learning agility, ethical orientation — with plain-language interpretation.'},
-                  {t:'🎯 A 10-Step Plan Built Around You', d:'Numbered, specific 10-step action plans per development area. Not generic advice — actions designed for your profile and industry.'},
-                  {t:'📚 Curated Books, TED Talks, YouTube & Research', d:'Matched to your specific lowest-scoring dimensions. Books like Atomic Habits, TED talks with YouTube links, peer-reviewed research papers.'},
-                  {t:'💡 Pattern Insights & If-Then Protocols', d:'How your dimensions interact — combinations that create hidden strengths or risks. Plus decision frameworks for situations you will actually encounter.'},
-                  {t:'🔒 Your Data Stays Yours', d:'Your personal Action Plan belongs to you. Carnelian never sells your data. You can request deletion any time.'}
-                ].map((item,i)=>(
-                  <div key={i} style={{background:`${T.gold}10`, border:`1px solid ${T.gold}25`, borderRadius:'8px', padding:'16px'}}>
-                    <div style={{fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'4px'}}>{item.t}</div>
-                    <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>{item.d}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-
-          {/* Organisation */}
-          <Reveal delay={0.2}>
-            <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', height:'100%'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:T.t0, marginBottom:'12px'}}>📈 What Your Organisation Gets — The Business Case</h3>
-              <p style={{fontSize:'14px', color:T.t2, lineHeight:'1.6', marginBottom:'24px', fontWeight:'500'}}>Psychometric assessment is not a cost. The peer-reviewed evidence consistently shows it is one of the highest-return investments in people. Here is what the research says.</p>
-              <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
-                {[
-                  {c:'#4ADE80', t:'💰 Cost of a Bad Hire', n:'50–200%', d:'of annual salary per bad hire. Structured psychometric screening reduces mis-hire rates by 30–40%.', s:'SHRM (2022); Cascio (2000)'},
-                  {c:'#60A5FA', t:'🎯 Predictive Validity', n:'r = 0.51', d:'Personality + integrity combined — one of the strongest job performance predictors in the literature. Beats unstructured interviews.', s:'Schmidt & Hunter (1998)'},
-                  {c:'#FBBF24', t:'⚠ Compliance & Fraud Risk', n:'67%', d:'of institutional fraud cases involve no prior criminal record. Integrity assessments have ρ=.41 predictive validity for counterproductive behaviour.', s:'ACFE (2022); Ones et al. (1993)'},
-                  {c:'#A78BFA', t:'📚 L&D Return', n:'4× higher', d:'ROI on targeted training vs. generic programmes. CORE tells you exactly which dimensions to develop per individual.', s:'Salas et al. (2012)'},
-                  {c:'#38BDF8', t:'🌍 Cultural Intelligence Impact', n:'+35%', d:"revenue from cross-cultural teams with high CQ. In Pakistan's cross-provincial and donor-facing sectors, CQ is a direct revenue driver.", s:'Earley & Ang (2003); HBR (2018)'},
-                  {c:'#FB7185', t:'👥 Leadership Succession', n:'40%', d:"of new senior leaders fail within 18 months — at enormous cost. CORE's LRS and pattern engine detect these risks before placement.", s:'CEB Corporate Leadership Council (2014)'}
-                ].map((item,i)=>(
-                  <div key={i} style={{background:`${item.c}10`, border:`1px solid ${item.c}25`, borderRadius:'8px', padding:'16px'}}>
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'4px'}}>
-                      <div style={{fontSize:'13px', fontWeight:'700', color:item.c}}>{item.t}</div>
-                      <div className="mono" style={{fontSize:'14px', fontWeight:'800', color:item.c}}>{item.n}</div>
-                    </div>
-                    <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500', marginBottom:'6px'}}>{item.d}</div>
-                    <div style={{fontSize:'10px', color:T.t3, fontStyle:'italic', fontWeight:'600'}}>{item.s}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* ── HORIZON ── */}
-        <Reveal delay={0}>
-          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'32px', marginBottom:'64px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.gold, marginBottom:'20px'}}>📅 What This Means for Your Organisation</h3>
-            <div className="grid-3-col" style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'16px'}}>
-              {[
-                {t:'Short Term (0–6 months)', d:'Better hiring decisions. Reduced interview time through pre-screening. Immediate identification of compliance risks before placement in sensitive roles.'},
-                {t:'Medium Term (6–18 months)', d:'Targeted L&D investment producing measurable score improvements. Reduction in conduct incidents. Stronger succession pipeline with data-backed promotion decisions.'},
-                {t:'Long Term (18+ months)', d:'A normative dataset specific to your organisation. Longitudinal tracking that proves which interventions work. Auditable, defensible basis for all promotion and placement decisions.'}
-              ].map((h,i)=>(
-                <div key={i} style={{background:T.b0, borderRadius:'8px', padding:'20px'}}>
-                  <div style={{fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'8px'}}>{h.t}</div>
-                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>{h.d}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Reveal>
-
-      </div>
-
-      {/* ── DEEP DIVE ARCHITECTURE ── */}
-      <section className="section-pad" style={{padding:'64px 32px', maxWidth:'1100px', margin:'0 auto'}}>
+      {/* ── DEEP DIVE ── */}
+<section className="section-container" style={{padding:'32px 32px 64px', maxWidth:'1100px', margin:'0 auto'}}>
+        {/* Section header */}
         <Reveal delay={0}>
           <div style={{marginBottom:'48px', textAlign:'center'}}>
-            <Pill label="Platform Deep Dive" />
-            <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'16px 0 12px', color:T.t0, letterSpacing:'-0.02em'}}>
+            <Pill label="Platform Deep Dive" color={T.c} />
+            <h2 style={{
+              fontFamily:"'Playfair Display',serif",
+              fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700',
+              margin:'16px 0 12px', color:T.t0, letterSpacing:'-0.02em',
+            }}>
               What makes CORE the tool for you
             </h2>
             <p style={{fontSize:'15px', color:T.t2, maxWidth:'700px', margin:'0 auto', fontWeight:'500'}}>
-              A complete picture of everything CORE does — built for HR leaders, L&D professionals, and organisational decision-makers across Pakistan.
+              A complete picture of everything CORE does — built for HR leaders, L&D professionals,
+              and organisational decision-makers across Pakistan.
             </p>
           </div>
         </Reveal>
 
-        {/* Modules */}
+        {/* ── MODULES ── */}
         <div style={{marginBottom:'40px'}}>
-          <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
-            <span style={{fontSize:'24px'}}>🧠</span>
-            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>Five Validated Assessment Modules — 63 Items Total</h3>
-          </div>
+          <Reveal delay={0}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
+              <span style={{fontSize:'24px'}}>🧠</span>
+              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
+                Five Validated Assessment Modules — 63 Items Total
+              </h3>
+            </div>
+          </Reveal>
           <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'12px'}}>
             {[
-              {n:'1', t:'Personality at Work', d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit. Public domain items (IPIP).', c:T.c},
-              {n:'2', t:'Cultural Intelligence', d:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:T.gold},
-              {n:'3', t:'Workplace Initiative', d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals who sustains your institution.', c:T.gn},
-              {n:'4', t:'Learning Agility', d:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:T.am},
-              {n:'5', t:'Integrity & Ethics', d:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#8B5CF6'},
-            ].map((m,i)=>(
-              <Reveal key={i} delay={i * 0.1}>
-                <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', height:'100%'}}>
+              {n:'1', t:'Personality at Work',   d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit. Public domain items (IPIP).', c:T.c},
+              {n:'2', t:'Cultural Intelligence',  d:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:T.gold},
+              {n:'3', t:'Workplace Initiative',   d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals who sustains your institution.', c:T.gn},
+              {n:'4', t:'Learning Agility',       d:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:T.am},
+              {n:'5', t:'Integrity & Ethics',     d:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#8B5CF6'},
+            ].map((m,i) => (
+              <Reveal key={i} delay={i * 0.08}>
+                <div style={{
+                  background:T.bg1, border:`1px solid ${T.b2}`,
+                  borderTop:`3px solid ${m.c}`, borderRadius:'10px',
+                  padding:'20px', height:'100%', cursor:'default',
+                  transition:'transform .28s ease, box-shadow .28s ease',
+                }}
+                onMouseOver={e => { e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.boxShadow=`0 10px 30px rgba(0,0,0,.5), 0 0 0 1px ${m.c}40`; }}
+                onMouseOut={e  => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
                   <div className="mono" style={{fontSize:'10px', fontWeight:'700', color:m.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'8px'}}>Module {m.n}</div>
                   <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{m.t}</div>
                   <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{m.d}</div>
@@ -743,152 +723,89 @@ const HomePage = ({setTab}) => {
           </div>
         </div>
 
-        {/* Challenges */}
+        {/* ── CHALLENGES ── */}
         <div style={{marginBottom:'40px'}}>
-          <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-            <span style={{fontSize:'24px'}}>🎯</span>
-            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>Three Gamified Challenges — Behaviour Under Pressure</h3>
-          </div>
-          <p style={{fontSize:'14px', color:T.t2, marginBottom:'20px', fontWeight:'500'}}>Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive behaviour that deliberate self-presentation cannot easily fake. All three contribute to scored dimension outputs.</p>
-          <div className="grid-3-col" style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px'}}>
+          <Reveal delay={0}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
+              <span style={{fontSize:'24px'}}>🎯</span>
+              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
+                Gamified Challenges — Behaviour Under Pressure
+              </h3>
+            </div>
+            <p style={{fontSize:'14px', color:T.t2, marginBottom:'20px', fontWeight:'500', lineHeight:'1.7'}}>
+              Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive
+              behaviour that deliberate self-presentation cannot easily fake. They contribute directly to scored dimension outputs.
+            </p>
+          </Reveal>
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px'}}>
             {[
-              {t:'⚖️ Values Seesaw × 3 dilemmas', d:'Three sequential workplace ethical dilemmas, each presented as a live seesaw the candidate physically positions using a slider. No timer — requires genuine reflection. Results averaged across all three scenarios. Contributes to Ethical Reasoning score.'},
-              {t:'⏱ Timed Scenario 1', d:'A 45-second presentation crisis: the candidate must choose under time pressure. Tests transparency and adaptive decision-making. Contributes to People Agility and Transparency scores.'},
-              {t:'⏱ Timed Scenario 2', d:'A 45-second ethics dilemma involving relationship pressure and procurement bypass. Tests integrity under social influence. Contributes to Rule Compliance and Authentic Integrity scores.'}
-            ].map((c,i)=>(
+              { t:'⚖️ Values Seesaw × 3 Dilemmas',
+                d:'Three sequential workplace ethical dilemmas, each presented as a live seesaw the candidate physically positions using a slider. No timer — requires genuine reflection. Contributes to Ethical Reasoning score.',
+                badge:'Ethical Reasoning', bc:T.am },
+              { t:'⏱ Timed Scenarios × 2',
+                d:'Two 45-second crisis scenarios testing transparency, adaptive decision-making, and integrity under social influence. Contributes to Agility and Compliance scores.',
+                badge:'45 sec', bc:T.c },
+            ].map((ch,i) => (
               <Reveal key={i} delay={i * 0.1}>
-                <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', height:'100%'}}>
-                  <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{c.t}</div>
-                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{c.d}</div>
+                <div style={{
+                  background:T.bg1, border:`1px solid ${T.b2}`,
+                  borderRadius:'10px', padding:'20px', height:'100%',
+                  position:'relative', overflow:'hidden', cursor:'default',
+                  transition:'transform .28s ease, border-color .28s ease, box-shadow .28s ease',
+                }}
+                onMouseOver={e => { e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.borderColor=ch.bc; e.currentTarget.style.boxShadow='0 10px 30px rgba(0,0,0,.4)'; }}
+                onMouseOut={e  => { e.currentTarget.style.transform=''; e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.boxShadow=''; }}>
+                  {/* badge top-right */}
+                  <span style={{
+                    position:'absolute', top:0, right:0,
+                    padding:'5px 12px',
+                    background:`${ch.bc}18`, border:`1px solid ${ch.bc}35`,
+                    borderRadius:'0 10px 0 8px',
+                    fontSize:'9px', color:ch.bc,
+                    fontFamily:"'JetBrains Mono',monospace",
+                    fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.08em',
+                  }}>{ch.badge}</span>
+                  <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px', marginTop:'16px'}}>{ch.t}</div>
+                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{ch.d}</div>
                 </div>
               </Reveal>
             ))}
           </div>
         </div>
 
-        {/* ROW 3: Lie Detection + Scoring */}
-        <Reveal delay={0.1}>
-          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px'}}>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-                <span style={{fontSize:'24px'}}>🎭</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Four-Layer Lie Detection</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>10 invisible L-Scale items catch social desirability inflation. Reverse-scored consistency traps detect contradictions. Acquiescence detection flags candidates who click Agree on everything. Extreme response detection catches rushed or careless responding. All four combine into a single Validity Index — with hard overrides for catastrophic combinations.</p>
-            </div>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-                <span style={{fontSize:'24px'}}>📊</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Seven Composite Indices — Interlinked Scoring</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>14 individual dimensions combine into 7 composite indices weighted by published meta-analytic validity evidence: Compliance & Integrity, Leadership Readiness, Team Value, Adaptability, Stakeholder Effectiveness, Operational Reliability, and People Management. No single dimension determines an outcome — the composites reflect how dimensions interact.</p>
-            </div>
-          </div>
+        {/* ── REPORTS SLIDESHOW ── */}
+        <Reveal delay={0}>
+          <ReportsSlideshow />
         </Reveal>
 
-        {/* ROW 4: Pattern Analysis + Role Matrix */}
-        <Reveal delay={0.2}>
-          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px'}}>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-                <span style={{fontSize:'24px'}}>🔍</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Cross-Dimensional Pattern Analysis</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Ten named patterns detect dangerous or valuable combinations that individual scores miss entirely. The Performance-Ethics Disconnect, the Charismatic Integrity Risk, the Talented Maverick — patterns research consistently links to institutional misconduct — are flagged automatically. Four positive patterns identify rare high-value profiles for succession planning.</p>
-            </div>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-                <span style={{fontSize:'24px'}}>🎯</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Role Suitability Matrix + Interview Probes</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Six role families rated Suitable, Conditional, or Not Recommended — each driven by the relevant composite index. Every Not Recommended verdict generates specific behavioural interview probe questions embedded directly in the HR report. HR walks into the interview knowing exactly what to test.</p>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* ROW 5: Four Reports + Industry Engine (The specific UI from your screenshot) */}
-        <Reveal delay={0.3}>
-          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px'}}>
-            
-            {/* Left Card: Four Reports */}
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
-                <span style={{fontSize:'24px'}}>📋</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Four Complete, Purpose-Built Reports</h4>
-              </div>
-              <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid ${T.c}`}}>
-                  <div style={{fontSize:'12px', fontWeight:'700', color:T.c, marginBottom:'4px'}}>📊 Technical Report — HR & Leadership</div>
-                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>All composite indices, validity breakdown, cross-dimensional patterns, role suitability matrix with interview probes, industry lens, completion time. Restricted to HR.</div>
-                </div>
-                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid ${T.gn}`}}>
-                  <div style={{fontSize:'12px', fontWeight:'700', color:T.gn, marginBottom:'4px'}}>🧭 Candidate Action Plan — The Individual</div>
-                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>Visual dashboard. 10-step action plans per gap. Profile-matched books, TED talks, YouTube, and peer-reviewed research. Carnelian programme recommendations. Zero HR risk language.</div>
-                </div>
-                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid ${T.am}`}}>
-                  <div style={{fontSize:'12px', fontWeight:'700', color:T.am, marginBottom:'4px'}}>👥 Team Aggregate Report — Batch-Level</div>
-                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>Auto-generated when batch has 2+ respondents. Team dimension averages, composite benchmarks, archetype distribution, collective risk patterns, validity summary, respondent ranking.</div>
-                </div>
-                <div style={{background:T.bg2, borderRadius:'8px', padding:'12px 16px', borderLeft:`4px solid #A78BFA`}}>
-                  <div style={{fontSize:'12px', fontWeight:'700', color:'#A78BFA', marginBottom:'4px'}}>🎮 Player Report — Gamified Development</div>
-                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for resources, Web Audio feedback, mobile haptics.</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Card: Industry Engine */}
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
-                <span style={{fontSize:'24px'}}>🏭</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>12-Industry Context Engine + Context-Aware Actions</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', marginBottom:'12px', fontWeight:'500'}}>
-                Configure once for your client before assessment begins. The engine adapts the Technical Report's industry lens, risk thresholds, and high-potential benchmarks for 12 Pakistani sectors — banking, government, development, FMCG, telecom, energy, healthcare, manufacturing, education, real estate, and retail.
-              </p>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>
-                The Candidate Action Plan adapts too — a junior banking officer and a senior civil servant with the same gap score receive genuinely different, contextualised development actions rather than identical generic advice.
-              </p>
-            </div>
-
-          </div>
-        </Reveal>
-
-        {/* ROW 6: Longitudinal + Engagement */}
-        <Reveal delay={0.4}>
-          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-                <span style={{fontSize:'24px'}}>📈</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Longitudinal Re-Assessment Tracker</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Save any candidate's results to the device after their assessment. When they retake CORE — after a development programme, promotion cycle, or 6-month interval — a side-by-side progress comparison is generated automatically. Every dimension and composite index shows its delta. This is how you prove L&D impact with data.</p>
-            </div>
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', height:'100%'}}>
-              <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-                <span style={{fontSize:'24px'}}>✅</span>
-                <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:T.t0}}>Engagement-Optimised Assessment Experience</h4>
-              </div>
-              <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.6', fontWeight:'500'}}>Positive reinforcement messages appear after every question — keeping candidates engaged and discouraging careless responding. Clear timed challenge warnings mean no candidate is surprised by a clock. The seesaw provides a visual, tactile break from the Likert format. Runs in any browser on any device. Typically completed in 20 minutes.</p>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* Use Cases */}
+        {/* ── USE CASES ── */}
         <Reveal delay={0}>
           <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>What organisations can use CORE for</h3>
+            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
+              What organisations can use CORE for
+            </h3>
+            <p className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'24px'}}>
+              Eight high-impact applications
+            </p>
             <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px'}}>
               {[
-                {t:'Pre-Hiring Screening', d:'Reduce the cost of bad hires. Interview probe questions are already generated for every at-risk role.'},
-                {t:'Succession Planning', d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss — and the ones they should not promote.'},
-                {t:'L&D Targeting', d:'Map specific development investments to specific individual gaps. Stop sending everyone to the same programme.'},
-                {t:'Compliance Risk Management', d:'The Compliance & Integrity Index gives risk committees a psychometric data point before placing staff in fiduciary roles.'},
-                {t:'Team Composition', d:'Run a cohort and compare Team Value Scores across the group. Identify gaps and redundancies before a project launches.'},
-                {t:'Post-Training Evaluation', d:'Re-assess after a development programme. The progress tracker shows exactly which scores moved — and proves ROI to leadership.'},
-                {t:'Donor Accountability', d:'Development sector organisations can show donors peer-reviewed evidence behind their staff selection and capacity building investments.'},
-                {t:'Civil Service Promotion', d:'Objective, legally defensible data for BPS promotion decisions — merit-based, standardised, and auditable.'}
-              ].map((u,i)=>(
-                <div key={i} style={{background:T.b0, borderRadius:'8px', padding:'16px', borderTop:`3px solid ${listColors[i % listColors.length]}`}}>
+                {t:'Pre-Hiring Screening',        d:'Reduce the cost of bad hires. Interview probe questions are already generated for every at-risk role.'},
+                {t:'Succession Planning',         d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss — and the ones they should not promote.'},
+                {t:'L&D Targeting',               d:'Map specific development investments to specific individual gaps. Stop sending everyone to the same programme.'},
+                {t:'Compliance Risk Management',  d:'The Compliance & Integrity Index gives risk committees a psychometric data point before placing staff in fiduciary roles.'},
+                {t:'Team Composition',            d:'Run a cohort and compare Team Value Scores across the group. Identify gaps and redundancies before a project launches.'},
+                {t:'Post-Training Evaluation',    d:'Re-assess after a development programme. The progress tracker shows exactly which scores moved — and proves ROI to leadership.'},
+                {t:'Donor Accountability',        d:'Development sector organisations can show donors peer-reviewed evidence behind their staff selection and capacity building investments.'},
+                {t:'Civil Service Promotion',     d:'Objective, legally defensible data for BPS promotion decisions — merit-based, standardised, and auditable.'},
+              ].map((u,i) => (
+                <div key={i} style={{
+                  background:T.b0, borderRadius:'8px', padding:'16px',
+                  borderLeft:`3px solid ${listColors[i % listColors.length]}`,
+                  cursor:'default',
+                  transition:'background .2s, transform .28s ease, box-shadow .28s ease',
+                }}
+                onMouseOver={e => { e.currentTarget.style.background=T.b1; e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.3)'; }}
+                onMouseOut={e  => { e.currentTarget.style.background=T.b0; e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
                   <div style={{fontSize:'13px', fontWeight:'700', color:listColors[i % listColors.length], marginBottom:'6px'}}>{u.t}</div>
                   <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>{u.d}</div>
                 </div>
@@ -898,6 +815,170 @@ const HomePage = ({setTab}) => {
         </Reveal>
 
       </section>
+    </div>
+  );
+};
+
+const ReportsSlideshow = () => {
+  const [active, setActive] = useState(0);
+  const [prog,   setProg]   = useState(0);
+  const [fade,   setFade]   = useState(true);
+  const INTERVAL = 5200;
+
+  const reports = [
+    { i:'📊', c:'#60A5FA', t:'Technical Report',       s:'HR & Leadership',
+      d:'Full psychometric breakdown. 7 composite indices, validity analysis, cross-dimensional risk patterns, role suitability matrix with interview probes, industry lens, completion time tracking.',
+      tags:['7 Composite Indices','Risk Patterns','Interview Probes','Industry Lens'] },
+    { i:'🧭', c:'#4ADE80', t:'Candidate Action Plan',  s:'Individual',
+      d:'Personal development roadmap. Visual score dashboard, numbered 10-step action plans per gap, profile-matched books, TED talks, YouTube resources, peer-reviewed research.',
+      tags:['10-Step Plans','Curated Resources','Score Dashboard','Research-Backed'] },
+    { i:'👥', c:'#FBBF24', t:'Team Aggregate Report',  s:'Batch-level',
+      d:'Appears automatically when you run 2+ assessments in a batch. Team dimension averages, composite benchmarks, archetype distribution, collective risk pattern frequency, validity summary.',
+      tags:['Team Averages','Archetype Distribution','Risk Frequency','Auto-Generated'] },
+    { i:'🎮', c:'#E879F9', t:'Player Report',           s:'Gamified',
+      d:'Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.',
+      tags:['10 Levels','Achievement Badges','Quest Objectives','Power-Up Armory'] },
+  ];
+
+  const goTo = i => {
+    if(i === active) return;
+    setFade(false);
+    setTimeout(() => { setActive(i); setProg(0); setFade(true); }, 320);
+  };
+
+  useEffect(() => {
+    setProg(0); setFade(true);
+    const tick = setInterval(() => setProg(p => Math.min(p + (100 / (INTERVAL / 80)), 100)), 80);
+    const adv  = setTimeout(() => {
+      setFade(false);
+      setTimeout(() => { setActive(a => (a + 1) % reports.length); setProg(0); setFade(true); }, 320);
+    }, INTERVAL);
+    return () => { clearInterval(tick); clearTimeout(adv); };
+  }, [active]);
+
+  const r = reports[active];
+
+  return (
+    <div style={{
+      background:`linear-gradient(135deg, ${T.bg1} 0%, ${T.bg2} 100%)`,
+      border:`1px solid ${T.b2}`, borderRadius:'16px',
+      overflow:'hidden', marginBottom:'24px',
+    }}>
+      {/* ── Header ── */}
+      <div style={{
+        padding:'40px 48px 32px', borderBottom:`1px solid ${T.b2}`,
+        display:'flex', alignItems:'flex-start', justifyContent:'space-between',
+        flexWrap:'wrap', gap:'16px',
+      }}>
+        <div>
+          <Pill label="Four Reports · One Assessment" color={T.c} />
+          <h2 style={{
+            fontFamily:"'Playfair Display',serif",
+            fontSize:'clamp(1.6rem,3vw,2.2rem)', fontWeight:'700',
+            color:T.t0, marginTop:'16px', marginBottom:'10px', letterSpacing:'-0.02em',
+          }}>
+            Every assessment generates four<br/>
+            <em style={{color:T.gold, fontStyle:'italic'}}>purpose-built reports</em>
+          </h2>
+          <p style={{fontSize:'13px', color:T.t2, maxWidth:'560px', lineHeight:1.7, fontWeight:'500'}}>
+            Each report is written for a specific reader — HR gets technical depth, individuals get a roadmap,
+            teams get aggregate insights, candidates get a gamified experience.
+          </p>
+        </div>
+        {/* dot indicators */}
+        <div style={{display:'flex', gap:'6px', alignItems:'center', flexShrink:0, paddingTop:'4px'}}>
+          {reports.map((_,i) => (
+            <button key={i} onClick={() => goTo(i)} style={{
+              width: active===i ? '28px' : '8px', height:'8px',
+              borderRadius:'4px', border:'none', cursor:'pointer', padding:0,
+              background: active===i ? reports[i].c : T.b2,
+              transition:'all .4s ease',
+            }} />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Body ── */}
+<div className="slideshow-layout" style={{display:'grid', gridTemplateColumns:'260px 1fr'}}>
+        {/* Tab list */}
+<div className="slideshow-tabs" style={{borderRight:`1px solid ${T.b2}`, padding:'20px 16px', display:'flex', flexDirection:'column', gap:'6px'}}>
+            {reports.map((rep, i) => (
+            <button key={i} onClick={() => goTo(i)} style={{
+              display:'flex', alignItems:'center', gap:'12px',
+              padding:'14px 16px', borderRadius:'8px',
+              border:`1px solid ${active===i ? `${rep.c}50` : 'transparent'}`,
+              background: active===i ? `${rep.c}12` : 'transparent',
+              cursor:'pointer', textAlign:'left', position:'relative', overflow:'hidden',
+              transition:'all .3s ease',
+            }}
+            onMouseOver={e => { if(active!==i) e.currentTarget.style.background=T.b0; }}
+            onMouseOut ={e => { if(active!==i) e.currentTarget.style.background='transparent'; }}>
+              {/* active indicator stripe */}
+              <div style={{
+                position:'absolute', left:0, top:'12%', bottom:'12%', width:'3px',
+                background:rep.c, borderRadius:'0 2px 2px 0',
+                opacity: active===i ? 1 : 0, transition:'opacity .3s',
+              }} />
+              <span style={{
+                fontSize:'20px', flexShrink:0,
+                filter: active===i ? `drop-shadow(0 0 8px ${rep.c})` : 'none',
+                transition:'filter .3s',
+              }}>{rep.i}</span>
+              <div>
+                <div style={{fontSize:'12px', fontWeight:'700', color:active===i?rep.c:T.t1, transition:'color .3s', marginBottom:'2px'}}>{rep.t}</div>
+                <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em'}}>{rep.s}</div>
+              </div>
+              {/* progress bar */}
+              {active===i && (
+                <div style={{position:'absolute', bottom:0, left:0, right:0, height:'2px', background:`${rep.c}28`}}>
+                  <div style={{height:'100%', background:rep.c, width:`${prog}%`, transition:'width .08s linear'}} />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Content panel */}
+        <div className="slideshow-content" style={{
+          padding:'48px', minHeight:'300px', position:'relative',
+          overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center',
+        }}>
+          {/* ambient glow that shifts with active report */}
+          <div style={{
+            position:'absolute', top:'-20%', right:'-10%',
+            width:'400px', height:'400px', borderRadius:'50%',
+            background:`radial-gradient(circle, ${r.c}18 0%, transparent 68%)`,
+            pointerEvents:'none', transition:'background .5s ease',
+          }} />
+          <div style={{
+            opacity: fade ? 1 : 0,
+            transform: fade ? 'translateY(0)' : 'translateY(12px)',
+            transition:'opacity .32s ease, transform .32s ease',
+            position:'relative', zIndex:1,
+          }}>
+            <div style={{fontSize:'3.2rem', marginBottom:'18px', lineHeight:1}}>{r.i}</div>
+            <h3 style={{
+              fontFamily:"'Playfair Display',serif", fontSize:'1.9rem',
+              fontWeight:'700', color:r.c, marginBottom:'4px',
+              textShadow:`0 0 30px ${r.c}55`,
+            }}>{r.t}</h3>
+            <div className="mono" style={{
+              fontSize:'9px', color:T.t3, textTransform:'uppercase',
+              letterSpacing:'0.14em', marginBottom:'18px', fontWeight:'600',
+            }}>{r.s}</div>
+            <p style={{fontSize:'14px', color:T.t1, lineHeight:1.8, marginBottom:'24px', maxWidth:'500px'}}>{r.d}</p>
+            <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+              {r.tags.map((tag,i) => (
+                <span key={i} className="mono" style={{
+                  padding:'5px 12px', borderRadius:'4px', fontSize:'10px', fontWeight:'700',
+                  background:`${r.c}14`, color:r.c, border:`1px solid ${r.c}30`,
+                  letterSpacing:'0.05em',
+                }}>{tag}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -918,6 +999,28 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
   
   const [timer, setTimer] = useState(45);
   const [timerActive, setTimerActive] = useState(false);
+  const [cheer, setCheer] = useState(null);
+  const CHEERS = [
+  "Well done, nicely done.",
+  "Excellent effort, appreciated.",
+  "Nice response, thank you.",
+  "Solid thinking, well done.",
+  "Thoughtful answer, thanks.",
+  "Clear response, much appreciated.",
+  "Good effort, well recorded.",
+  "Strong reflection, thank you.",
+  "Helpful input, noted.",
+  "Well considered, thank you.",
+  "Good clarity, appreciated.",
+  "Nice insight, well noted.",
+  "Thoughtful choice, recorded.",
+  "Meaningful response, thanks.",
+  "Valuable input, thank you.",
+  "Good reasoning, noted.",
+  "Careful reflection, appreciated.",
+  "Concise answer, well done.",
+  "Thank you for sharing."
+  ];
   const [gameLocked, setGameLocked] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [gameChoice, setGameChoice] = useState(null);
@@ -946,9 +1049,12 @@ useEffect(()=>{
 
   const handleAnswer=(val)=>{
     const a=[...answers]; a[cur]=val; setAnswers(a);
+        setCheer(CHEERS[Math.floor(Math.random() * CHEERS.length)]);
+
   };
 
 const nextQ=()=>{
+  setCheer(null);
     if(cur===QS.length-1){ generate(); return; }
     const curCh=QS[cur].ch, nextCh=QS[cur+1].ch, nextIdx=cur+1;
     
@@ -964,7 +1070,7 @@ const nextQ=()=>{
     else setBreaker(null);
   };
 
-  const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null);} };
+const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
   const updateSeesaw = (val) => {
     const newVals = [...ssVals];
@@ -1124,7 +1230,8 @@ const nextQ=()=>{
         role: resp.role || '', dept: actualDept || '', exp: resp.exp || '',
         org: resp.org || '', industry: resp.industry || '', purpose: resp.purpose || '', batch: resp.batch || '',
         profile: profile.name, validityOverall: validity.overall,
-        scores: { O: S.O, C: S.C, E: S.E, A: S.A, ES: S.ES, CQavg: S.CQavg, OCBavg: S.OCBavg, LAavg: S.LAavg, EOavg: S.EOavg, OCEANavg: S.OCEANavg, overall: S.overall, CII, LRS, TVS, ADS, SES, OPS, PMS }
+        scores: { O: S.O, C: S.C, E: S.E, A: S.A, ES: S.ES, CQavg: S.CQavg, OCBavg: S.OCBavg, LAavg: S.LAavg, EOavg: S.EOavg, OCEANavg: S.OCEANavg, overall: S.overall, CII, LRS, TVS, ADS, SES, OPS, PMS },
+        report_data: reportDataObj // Saves the full report so it can be viewed later
       };
       const isSamePerson = (e) => (entry.email && e.email && entry.email.toLowerCase() === e.email.toLowerCase());
       const others = h.filter(e => !isSamePerson(e));
@@ -1264,7 +1371,7 @@ const nextQ=()=>{
           <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'500'}}>
             <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your name, email, phone number, and professional details — to generate your personalised report.</span>
             <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your assessment responses — scored by our engine to produce dimension profiles.</span>
-            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Anonymised data — used internally by Carnelian to improve future assessment products.</span>
+            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Aggregated, anonymised data may be used solely to improve the accuracy and quality of future assessments.</span>
           </div>
         </div>
 
@@ -1485,13 +1592,13 @@ const nextQ=()=>{
               <g style={{transformOrigin:'250px 100px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
                 <rect x="60" y="96" width="380" height="8" rx="4" fill={T.t0}/>
                 <rect x="52" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="76" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.gn} fontWeight="700">{sc.lLabel}</text>
+                <text x="76" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.t1} fontWeight="700">{sc.lLabel}</text>
                 <rect x="400" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.rd} fontWeight="700">{sc.rLabel}</text>
+                <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.t1} fontWeight="700">{sc.rLabel}</text>
               </g>
             </svg>
             <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.c,cursor:'pointer'}} /></div>
-            <div style={{textAlign:'center',padding:'10px 14px',background:`${zone.c}14`,border:`1px solid ${zone.c}35`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:zone.c,marginBottom:'20px'}}>{zone.label}</div>
+            <div style={{textAlign:'center',padding:'10px 14px',background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:T.t1,marginBottom:'20px'}}>{zone.label}</div>
             <button onClick={nextSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
           </div>
         </div>
@@ -1679,6 +1786,16 @@ const nextQ=()=>{
               })}
             </div>
 
+            <div style={{minHeight:'24px', display:'flex', justifyContent:'center', alignItems:'center', marginBottom:'16px'}}>
+              {cheer && (
+                <span key={cheer} className="mono" style={{
+                  fontSize:'10px', fontWeight:'700', color:T.gold, textTransform:'uppercase', letterSpacing:'0.15em',
+                  animation:'fadeIn 0.6s ease-out forwards'
+                }}>
+                  ✦ {cheer}
+                </span>
+              )}
+            </div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <button onClick={prevQ} disabled={cur===0} style={{
                 padding:'9px 18px',borderRadius:'6px',border:`1px solid ${T.b2}`,
@@ -1736,15 +1853,23 @@ const ResultsPage = ({reportData}) => {
   }, [reportData]);
 
   const [evModal, setEvModal] = useState(null);
-  const [evInput, setEvInput] = useState({ quote:'', page:'', takeaway:'', timestamp:'', insight:'', ref:'', finding:'', reflection:'', date:'' });
+  const [evInput, setEvInput] = useState({ quote:'', page:'', takeaway:'', timestamp:'', insight:'', ref:'', finding:'', reflection:'', date:'', fileBase64:'', fileName:'' });
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2500000) { alert('File is too large. Maximum size is 2.5MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => setEvInput({...evInput, fileBase64: ev.target.result, fileName: file.name});
+    reader.readAsDataURL(file);
+  };
 
   const openEvidenceModal = (key, xp, type, title, subtitle, objText) => {
     if (evState[key]) {
-      // If already collected, open in "Review/Revoke" mode
       setEvModal({ mode: 'review', key, xp, type, title, subtitle, data: evState[key] });
     } else {
       setEvModal({ mode: 'submit', key, xp, type, title, subtitle, objText });
-      setEvInput({ quote:'', page:'', takeaway:'', timestamp:'', insight:'', ref:'', finding:'', reflection:'', date:'' });
+      setEvInput({ quote:'', page:'', takeaway:'', timestamp:'', insight:'', ref:'', finding:'', reflection:'', date:'', fileBase64:'', fileName:'' });
     }
   };
 
@@ -2209,8 +2334,7 @@ const allDims = [
 
             <div style={{background:T.bg2, borderRadius:'10px', padding:'24px', marginTop:'32px'}}>
               <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'16px'}}>Your 7 Composite Indices — How Dimensions Interact</div>
-              <div style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'10px', textAlign:'center'}}>
-                {[
+<div className="grid-7-col" style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'10px', textAlign:'center'}}>                {[
                   ['CII','Compliance',CI.CII,70,54],['LRS','Leadership',CI.LRS,72,55],['TVS','Team Value',CI.TVS,68,51],
                   ['ADS','Adaptability',CI.ADS,67,50],['SES','Stakeholder',CI.SES,68,52],['OPS','Operations',CI.OPS,67,51],['PMS','People Mgmt',CI.PMS,67,51]
                 ].map(([k,l,v,g,a]) => {
@@ -2489,8 +2613,7 @@ const allDims = [
               </div>
             )}
 
-            <div style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.b0, borderRadius:'10px', padding:'20px', marginTop:'24px', position:'relative', zIndex:1}}>
-              {validity.overall === 'red' && validity.extRatio > 0.85 ? (
+<div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.b0, borderRadius:'10px', padding:'20px', marginTop:'24px', position:'relative', zIndex:1}}>              {validity.overall === 'red' && validity.extRatio > 0.85 ? (
                 <div style={{gridColumn:'1/-1', color:T.rd, fontSize:'13px', lineHeight:'1.6'}}>
                   <strong>⛔ RESULTS UNINTERPRETABLE</strong><br/>
                   Extreme response pattern detected ({Math.round(validity.extRatio*100)}% extreme responses). Dimension scores and composite indices shown below are statistically invalid and must not be used for any HR decision. See the Validity Index section for full details. A supervised retake is required.
@@ -3084,8 +3207,7 @@ const allDims = [
               <span style={{fontSize:'20px'}}>📊</span>
               <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>XP COMMAND CENTRE</h3>
             </div>
-            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'20px'}}>
-              {[
+<div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'20px'}}>              {[
                 ['XP Earned (Scores)', earnedXP, '#60A5FA'],
                 ['XP Earned (Badges)', maxBadgeXP, '#4ADE80'],
                 ['XP Earned (Quests)', Object.keys(evState).filter(k=>k.startsWith('q_')).reduce((a,k)=>a+evState[k].xp,0), '#E879F9'],
@@ -3200,6 +3322,13 @@ const allDims = [
                   </div>
                 )}
 
+                {/* File Upload Input */}
+                <div style={{marginBottom:'24px'}}>
+                  <label style={{fontSize:'12px', color:T.t1, fontWeight:'600', display:'block', marginBottom:'8px'}}>Upload Proof (Image/PDF, max 2.5MB)</label>
+                  <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} style={{width:'100%', padding:'10px', background:T.bg3, color:T.t0, borderRadius:'6px', border:`1px solid ${T.b2}`, fontSize:'12px'}} />
+                  {evInput.fileName && <div style={{fontSize:'11px', color:T.gn, marginTop:'6px', fontWeight:'700'}}>Attached: {evInput.fileName}</div>}
+                </div>
+
                 <div style={{display:'flex', gap:'10px', justifyContent:'flex-end'}}>
                   <button onClick={()=>setEvModal(null)} style={{padding:'10px 16px', borderRadius:'6px', background:'transparent', border:`1px solid ${T.b2}`, color:T.t2, cursor:'pointer', fontWeight:'600'}}>Cancel</button>
                   <button onClick={submitEvidence} style={{padding:'10px 16px', borderRadius:'6px', background:T.c, border:'none', color:'#fff', cursor:'pointer', fontWeight:'700'}}>Submit & Earn XP</button>
@@ -3276,8 +3405,7 @@ const allDims = [
             </div>
             <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Aggregate Profile</h2>
             
-            <div style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>
-              {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
+<div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>              {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
                 const avg = Math.round(safeBatch.reduce((sum, b) => sum + (b?.scores?.[k] || 0), 0) / (safeBatch.length || 1));
                 const labels = ['Personality', 'Cultural IQ', 'Citizenship', 'Learning', 'Integrity'];
                 return (
@@ -3536,7 +3664,7 @@ const allDims = [
 };
 
 // ─── PROGRESS PAGE ────────────────────────────────────────────────────────────
-const ProgressPage = () => {
+const ProgressPage = ({ setTab, setReportData }) => {
   const [history, setHistory] = useState([]);
 const [searchEmail, setSearchEmail] = useState('');
   const [searched, setSearched] = useState(false);
@@ -3672,7 +3800,17 @@ const pid_email = latest.email||'';
                 })}
               </div>
 
-<button onClick={()=>del(pid_email)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
+<div style={{display:'flex', gap:'10px'}}>
+                <button onClick={()=>{
+                  if(latest.report_data) {
+                    setReportData(latest.report_data);
+                    setTab('results');
+                  } else {
+                    alert('Full report data is not available for this older record.');
+                  }
+                }} style={{padding:'7px 14px', borderRadius:'5px', border:'none', background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>View Full Report →</button>
+                <button onClick={()=>del(pid_email)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
+              </div>
             </div>
           </div>
         );
@@ -4066,7 +4204,7 @@ export default function App() {
       {tab==='home'    && <HomePage    setTab={handleSetTab} />}
       {tab==='assess'  && <AssessmentPage setTab={handleSetTab} setReportData={setReportData} setHistoryFlag={setHasHistory} />}
       {tab==='results' && <ResultsPage reportData={reportData} />}
-      {tab==='progress'&& <ProgressPage />}
+      {tab==='progress'&& <ProgressPage setTab={handleSetTab} setReportData={setReportData} />}
       {tab==='method'  && <MethodologyPage />}
       </div>
       <Footer />

@@ -123,6 +123,78 @@ const DashStyles = ({ T }) => (
   `}</style>
 );
 
+
+// ─── PDF UTILITY ─────────────────────────────────────────────
+const downloadAsPDF = async (elementId, filename, T) => {
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.body.appendChild(s);
+  });
+
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    // Temporarily adjust styles for full capture
+    const originalHeight = element.style.height;
+    const originalOverflow = element.style.overflow;
+    element.style.height = 'auto';
+    element.style.overflow = 'visible';
+
+    const canvas = await window.html2canvas(element, { 
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: T.bg1 
+    });
+
+    element.style.height = originalHeight;
+    element.style.overflow = originalOverflow;
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    
+    let heightLeft = pdfHeight;
+    let position = 0;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(filename);
+  } catch (err) {
+    console.error("PDF Generation failed", err);
+    alert("Failed to generate PDF. Please try again.");
+  }
+};
+
+const DownloadBtn = ({ elementId, filename, T }) => (
+  <button onClick={() => downloadAsPDF(elementId, filename, T)} style={{
+    marginTop:'24px', padding:'14px 24px', borderRadius:'8px', background:T.gold, color:T.bg0, 
+    border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", 
+    fontSize:'13px', fontWeight:'800', width:'100%', transition:'all 0.2s',
+    display:'flex', justifyContent:'center', alignItems:'center', gap:'8px'
+  }} onMouseOver={e=>{e.target.style.background=T.goldD; e.target.style.color='#fff';}} onMouseOut={e=>{e.target.style.background=T.gold; e.target.style.color=T.bg0;}}>
+    ⬇ Download Report as PDF
+  </button>
+);
+
 // ─── MINI COMPONENTS ─────────────────────────────────────────
 const Pill = ({ label, color, bg, style = {} }) => (
   <span style={{
@@ -317,9 +389,10 @@ const TechnicalReport = ({ candidate, T }) => {
 
   return (
     <div>
+      <div id={`tech-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
       {/* HEADER */}
       {card(
-        <>
+               <>
           <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
             <div>
@@ -644,13 +717,15 @@ const TechnicalReport = ({ candidate, T }) => {
         </>
       )}
 
-      {/* INDUSTRY LENS */}
+     {/* INDUSTRY LENS */}
       {candidate.industry && rd.cfg?.industry && (
         <div style={{ background:T.bg3, borderRadius:'10px', padding:'16px 18px', border:`1px solid ${T.b2}`, marginBottom:'14px' }}>
           <SectionHead label={`Industry Lens — ${candidate.industry}`} T={T} />
           {rd.cfg?.industryLens && <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.65' }} dangerouslySetInnerHTML={{ __html: rd.cfg.industryLens }} />}
         </div>
       )}
+      </div>
+      <DownloadBtn elementId={`tech-report-${candidate.doc_id}`} filename={`${candidate.name}_Technical_Report.pdf`} T={T} />
     </div>
   );
 };
@@ -661,21 +736,142 @@ const ActionPlanReport = ({ candidate, T }) => {
   const S       = rd.scores   || {};
   const CI      = rd.CI       || {};
   const profile = rd.profile  || {};
+  const gs      = rd.gameSummary || {};
 
   const allDims = [
-    { k:'C',      l:'Conscientiousness',   v:S.C      },
-    { k:'O',      l:'Openness to Ideas',   v:S.O      },
-    { k:'E',      l:'Social Confidence',   v:S.E      },
-    { k:'A',      l:'Collaborative Spirit',v:S.A      },
-    { k:'ES',     l:'Emotional Resilience',v:S.ES     },
-    { k:'CQavg',  l:'Cultural Intelligence',v:S.CQavg },
-    { k:'OCBavg', l:'Team Citizenship',    v:S.OCBavg },
-    { k:'LAavg',  l:'Learning Agility',    v:S.LAavg  },
-    { k:'EOavg',  l:'Ethical Integrity',   v:S.EOavg  },
+    { k:'C',      l:'Conscientiousness',   v:S.C, str:'You are a highly reliable, organised professional. People can depend on you to deliver.' },
+    { k:'O',      l:'Openness to Ideas',   v:S.O, str:'You bring genuine intellectual curiosity and creative problem-solving to your work.' },
+    { k:'E',      l:'Social Confidence',   v:S.E, str:'You communicate with confidence and energy — effective in leadership.' },
+    { k:'A',      l:'Collaborative Spirit',v:S.A, str:'You are empathetic and cooperative — a team builder who creates safe environments.' },
+    { k:'ES',     l:'Emotional Resilience',v:S.ES, str:'You stay grounded under pressure — invaluable in high-stakes situations.' },
+    { k:'CQavg',  l:'Cultural Intelligence',v:S.CQavg, str:"You navigate diverse professional landscapes with skill and genuine interest." },
+    { k:'OCBavg', l:'Team Citizenship',    v:S.OCBavg, str:'You go well beyond your formal role to support colleagues and the institution.' },
+    { k:'LAavg',  l:'Learning Agility',    v:S.LAavg, str:'You learn fast, reflect honestly, and apply lessons across domains.' },
+    { k:'EOavg',  l:'Ethical Integrity',   v:S.EOavg, str:'Your commitment to transparency and authentic behaviour is rare and highly valued.' },
   ].filter(d => d.v != null).sort((a,b) => b.v-a.v);
 
   const top2 = allDims.slice(0,2);
   const bot2 = [...allDims].sort((a,b)=>a.v-b.v).slice(0,2);
+
+  const ind = candidate.industry || '';
+  const lvl = candidate.level || candidate.experience || '';
+  const isBanking = ind.includes('Banking')||ind.includes('Insurance')||ind.includes('Takaful');
+  const isGovt = ind.includes('Government')||ind.includes('Civil');
+  const isDev = ind.includes('Development')||ind.includes('NGO');
+  const isJunior = lvl.includes('Entry')||lvl.includes('Junior')||lvl.includes('0–2')||lvl.includes('3–5');
+  const isSenior = lvl.includes('Senior')||lvl.includes('Executive')||lvl.includes('Director')||lvl.includes('C-Suite')||lvl.includes('16+');
+
+  const ctxAction = (generic, bankAlt, govtAlt, devAlt, seniorAlt, juniorAlt) => {
+    if(isSenior&&seniorAlt) return seniorAlt;
+    if(isJunior&&juniorAlt) return juniorAlt;
+    if(isBanking&&bankAlt) return bankAlt;
+    if(isGovt&&govtAlt) return govtAlt;
+    if(isDev&&devAlt) return devAlt;
+    return generic;
+  };
+
+  const devAreas = [];
+  const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
+    dim, v, why, now, soon, fut, acts,
+    habits: [
+      { h:'Week 1:', t: now || acts[0] || 'Review your current approach.' },
+      { h:'Week 2:', t: acts[0] || 'Document one observation about your behaviour.' },
+      { h:'Week 3:', t: acts[1] || 'Ask a colleague for specific feedback.' },
+      { h:'Week 4:', t: soon || acts[1] || 'Begin the recommended resource.' },
+      { h:'Month 2:', t: acts[2] || soon || 'Implement one new habit.' },
+      { h:'Month 2:', t: 'Share your development goal with your manager.' },
+      { h:'Month 3:', t: soon || 'Schedule a formal progress check-in.' },
+      { h:'Month 4–6:', t: fut || 'Take on a stretch assignment.' },
+      { h:'6 Months:', t: 'Reassess via CORE retake — measure change from ' + v + '/100.' },
+      { h:'Ongoing:', t: 'Keep a weekly log. Review every Friday.' }
+    ]
+  });
+
+  if(S.C<55) add('Conscientiousness & Delivery',S.C,
+    ctxAction("Consistent delivery is the foundation of professional credibility. Missed deadlines or incomplete work creates friction that compounds over time.", "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),
+    [
+      ctxAction("Use a weekly priority matrix every Monday: list your top 3 deliverables and set personal deadlines 2 days ahead of official ones","Review your open regulatory or compliance deliverables every Monday and set internal deadlines 2 days ahead","Map your weekly deliverables against departmental KPIs every Monday morning","Review your programme milestones against donor reporting timelines every Monday","Implement a weekly leadership accountability check-in","Every Monday, identify your 3 most important deliverables for the week"),
+      "Break large projects into milestone check-ins with your line manager every two weeks — make progress visible before problems become surprises",
+      ctxAction("Track one commitment per week that you made and actually completed","Keep a simple log of every regulatory or compliance commitment you make","Document your completed commitments in writing","Track your programme deliverables against donor commitments in a shared log","Your team is watching how you follow through. Document your own commitments publicly","Keep a weekly log of three things you committed to and whether you completed them")
+    ],
+    ctxAction("Agree a weekly check-in with your supervisor on 3 explicit priority deliverables","Book a 30-minute weekly slot with your line manager to review your open regulatory deliverables","Schedule a weekly meeting with your supervisor to review your progress against departmental KPIs","Set up a shared milestone tracker with your programme coordinator this week","Send your team a written commitment list every Monday","Have an honest conversation with your line manager this week about which current commitments you are most at risk of missing"),
+    ctxAction("Enrol in a personal productivity workshop or study one methodology (GTD, Agile personal planning)","Complete a structured time management or professional effectiveness programme","Attend a civil service effectiveness workshop through your Training Institute","Enrol in a project management short course","Commission a team productivity audit to understand where delivery bottlenecks are systemic","Attend a productivity and professional effectiveness workshop"),
+    ctxAction("Lead a project end-to-end within 6 months to build delivery confidence with structured accountability","Take ownership of an end-to-end compliance or regulatory project","Lead a cross-departmental working group to demonstrate sustained delivery over a 6-month period","Lead a full programme cycle from design to donor reporting","Commission an organisational review of how delivery accountability is structured across your team","Ask to lead a complete project or initiative end-to-end")
+  );
+
+  if(S.ES<55) add('Emotional Resilience',S.ES,
+    ctxAction("High-stakes professional environments involve pressure cycles. Your ability to remain clear-headed under pressure is not a soft skill — it is career-determining.", "Banking environments are characterised by regulatory cycles, audit periods, and market pressure.", "Civil service reform creates sustained pressure on officers at all levels.", "Development sector professionals work in environments of resource constraints, community pressure, and donor scrutiny simultaneously.", "At senior level, your emotional state sets the emotional tone for the entire team.", "Early career is when pressure tolerance is built."),
+    ["Build a 10-minute daily decompression practice — journalling, walking, or structured reflection — so daily stress does not accumulate","After difficult professional situations, write three sentences: what happened, how I responded, and what I would do differently","Identify 2–3 trusted colleagues who can provide a grounded sounding board when you are under pressure — and use them proactively"],
+    ctxAction("Speak to your HR team about access to an employee assistance programme or wellbeing resources","Ask your institution's HR team this week about EAP access and stress management resources","Contact your Training Institute about resilience coaching resources available to civil service officers","Speak to your programme director about workload distribution","Identify one specific pressure source in your current role and have a direct conversation with your leadership about managing it structurally","Talk to your line manager this week about one specific pressure point in your role and what support is available"),
+    ctxAction("Attend a resilience or emotional intelligence workshop this quarter","Attend a professional resilience workshop — specifically one designed for high-accountability financial environments","Attend a public sector leadership and resilience programme through your Provincial or Federal Training Institute","Attend an NGO or development sector leadership workshop","Commission an executive coaching engagement for yourself","Attend an emotional intelligence or resilience workshop and keep a personal learning journal throughout"),
+    ctxAction("Seek a role with progressively increasing accountability to build resilience through real-world exposure","Seek out a role rotation that includes a high-pressure function","Pursue a secondment or cross-posting to a reform-facing role","Accept an assignment in a resource-constrained or high-stakes programme context","Build a senior leadership resilience programme for your team","Ask to be included in high-stakes projects or client-facing situations where you will be stretched")
+  );
+
+  if(S.LAavg<55) add('Learning Agility',S.LAavg,
+    ctxAction("In every Pakistani sector, the professionals who rise are those who learn and adapt fastest. Current knowledge has a shelf life. Learning agility is how you extend yours.", "Pakistan's banking sector is changing faster than almost any other.", "Pakistan's civil service is in active reform.", "The development sector's evidence base, tools, and best practices evolve continuously.", "At your seniority level, your learning agility determines whether you remain strategically relevant as your sector evolves.", "The first decade of a career is where learning habits are formed."),
+    [
+      ctxAction("Dedicate 30 minutes per week to reading one regulation, industry report, or domain publication outside your normal scope","Set a standing 30-minute weekly appointment with SBP's regulatory circulars","Set a standing 30-minute weekly appointment with relevant NCGR documents","Subscribe to OECD Development Co-operation Reports"),
+      "After completing any significant task, ask: 'What did I learn from this, and how could I apply it somewhere completely different?'",
+      ctxAction("Request feedback from at least 2 colleagues or supervisors per quarter, write down what you will change, and follow through","After every significant banking transaction, write a brief reflection","After every major policy implementation, conduct a personal After-Action Review","After every programme cycle, conduct a personal learning review")
+    ],
+    ctxAction("Subscribe to one sector publication or regulatory update you do not currently follow","Subscribe today to SBP's official regulatory updates","Subscribe today to at least one international public administration publication","Subscribe today to one international development sector publication"),
+    ctxAction("Build a 90-day self-directed learning plan on one topic outside your current expertise","Build a 90-day learning plan on one banking domain outside your current specialty","Build a 90-day learning plan on one reform area directly relevant to your department","Build a 90-day learning plan on one methodology outside your current programme toolkit"),
+    ctxAction("Apply to facilitate or co-design a training or knowledge-sharing session — teaching is the fastest way to deepen learning agility","Apply to co-design or facilitate an internal knowledge-sharing session at your institution","Apply to deliver a session at your Training Institute","Apply to design or facilitate a staff capacity building session for your programme team")
+  );
+
+  if(S.OCB_S<50) add('Constructive Attitude & Sportsmanship',S.OCB_S,
+    ctxAction("How we respond to institutional frustration shapes the morale of everyone around us. In Pakistani professional culture, sustained negativity has a compounding cost to your standing.", "Banking environments involve significant process constraints, regulatory pressure, and institutional bureaucracy.", "The civil service has structural inefficiencies that frustrate virtually everyone who works within it.", "Development sector environments involve resource constraints, bureaucratic donor requirements, and community expectations.", "At senior level, your attitude toward institutional frustration is magnified across your team.", "Early career frustrations are real and often valid. The professional habit of channelling them constructively is critical."),
+    ["Adopt the 'solution before complaint' rule — before voicing any frustration, have at least one concrete improvement suggestion ready","Create a private written log for institutional frustrations — getting them out of your head and onto paper reduces the emotional pressure to share them with colleagues","Identify one institutional frustration you currently hold, and make a deliberate decision: either act on it through the right channel, or consciously let it go"],
+    ctxAction("Identify one frustration you have recently shared with colleagues and commit to a more constructive approach","Identify one operational or regulatory constraint you have recently complained about — write down what a constructive improvement proposal would look like","Identify one civil service process you have recently complained about — draft a one-page improvement proposal","Identify one donor requirement or programme constraint you have recently expressed frustration about — write down what a constructive alternative would look like"),
+    ctxAction("Discuss with your line manager the most effective channel for improvement ideas in your organisation","Schedule a conversation with your line manager about the most effective channels for raising process improvement ideas","Identify and use your department's formal suggestion and reform proposal mechanisms","Map your organisation's internal feedback and improvement channels and commit to routing your frustrations through them"),
+    ctxAction("Volunteer to lead a process improvement initiative — channelling frustration into change is the most effective long-term strategy","Volunteer to lead a process improvement workstream in your institution","Apply to join a civil service reform working group or departmental improvement committee","Apply to lead a programme process improvement review")
+  );
+
+  const resources = [];
+  if(S.C<65){
+    if(S.O>=65) resources.push({type:'book', title:'The 12 Week Year', author:'Brian Moran & Michael Lennington', url:'', why:'Sprint-based system designed for high-idea, lower-routine professionals. Replaces annual goals with 12-week cycles — each with a single concrete deliverable.'});
+    else resources.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:'The most evidence-grounded system for building reliable delivery habits through small compounding commitments.'});
+    resources.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban · TED2016', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Explains the psychology of task-avoidance and deadline-dependency with disarming honesty.'});
+  }
+  if(S.ES<65){
+    resources.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'', why:"Evidence-based techniques for managing the inner critical voice under pressure."});
+    resources.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal · TEDGlobal 2013', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'Stanford psychologist explains research showing the relationship with stress predicts health and performance.'});
+  }
+  if(S.CQavg<65){
+    resources.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:"The most practically applicable cultural intelligence book for Pakistani professionals."});
+    resources.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Ngozi Adichie · TEDGlobal 2009', url:'https://www.youtube.com/watch?v=D9Ihs241zeg', why:"Directly addresses the CQ-Knowledge gap — how limited exposure creates incomplete mental models."});
+  }
+  if(S.LAavg<65){
+    resources.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:"Research on fixed vs. growth mindset — the belief system that determines whether challenges are threats or opportunities."});
+    resources.push({type:'ted', title:'How to Get Better at the Things You Care About', author:'Eduardo Briceno', url:'https://www.youtube.com/watch?v=YKACzIrog24', why:"Explains why professionals who are always performing never improve."});
+  }
+  if(S.EOavg<65 || (gs?.seesaw?.val > 65)){
+    resources.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'', why:"Explains why people who make ethical lapses are not usually dishonest by nature — they are following intuitions that feel justified."});
+    resources.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely · TED2009', url:'https://www.youtube.com/watch?v=MxiT42BFWOA', why:"Behavioural economics research on how good people consistently make small unethical decisions."});
+  }
+  if(resources.length===0){
+    resources.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:'Foundational text on professional effectiveness.'});
+    resources.push({type:'ted', title:'How Great Leaders Inspire Action', author:'Simon Sinek', url:'https://www.youtube.com/watch?v=qp0HIF3SfI4', why:"The Golden Circle framework is applicable to how you communicate your professional value."});
+  }
+
+  const programs = [];
+  if(S.E<60||S.A<60||S.OCBavg<60) programs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging."});
+  if(S.EOavg<65||(gs?.seesaw?.val>60)) programs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency."});
+  if(S.LAavg<65||S.O<60) programs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits that accelerate professional development."});
+  if(S.CQavg<65) programs.push({name:'Intercultural Communication & Collaboration', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional contexts."});
+  if(S.ES<60) programs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools."});
+  if(programs.length===0) programs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile."});
+
+  const relapse = [];
+  const ssVal = gs?.seesaw?.val || 50;
+  const sc1 = gs?.scenario1?.raw || 0;
+  const sc2 = gs?.scenario2?.raw || 0;
+  if(ssVal>65) relapse.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?" If you are explaining rather than defending, say no — or ask for it in writing first.'});
+  if(sc1<=0) relapse.push({trigger:'When you feel the urge to delay or withhold information that others need', response:"Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure."});
+  if(sc2<0) relapse.push({trigger:"When someone you respect asks you to approve something that does not feel right", response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"});
+  if(S.C<55) relapse.push({trigger:'When you find yourself approaching a deadline without having started', response:"Use the 2-minute rule: if you can do any meaningful piece of this task in 2 minutes right now, start immediately. Momentum from even a tiny start breaks the avoidance cycle."});
+  if(S.ES<55) relapse.push({trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:"Name it to yourself first: 'I am currently [stressed / frustrated / overwhelmed].' Research shows labelling an emotional state reduces its intensity significantly. Then delay any non-urgent decision by at least 20 minutes."});
+  if(relapse.length===0) relapse.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
 
   const card = (children, style={}) => (
     <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
@@ -685,6 +881,7 @@ const ActionPlanReport = ({ candidate, T }) => {
 
   return (
     <div>
+      <div id={`action-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
       {/* HEADER */}
       {card(
         <>
@@ -750,6 +947,7 @@ const ActionPlanReport = ({ candidate, T }) => {
               <div key={d.k} style={{ padding:'18px', borderRadius:'10px', background:T.gnP, border:`1px solid ${T.gn}40`, borderLeft:`5px solid ${T.gn}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.gn, marginBottom:'6px' }}>✦ Core Strength</div>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', marginBottom:'6px', color:T.gn }}>{d.l}</div>
+                <div style={{ fontSize:'12px', color:T.gn, lineHeight:'1.6', marginBottom:'10px' }}>{d.str}</div>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:T.gn, fontWeight:'700' }}>{d.v}/100</div>
               </div>
             ))}
@@ -757,7 +955,114 @@ const ActionPlanReport = ({ candidate, T }) => {
               <div key={d.k} style={{ padding:'18px', borderRadius:'10px', background:T.rdP, border:`1px solid ${T.rd}40`, borderLeft:`5px solid ${T.rd}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.rd, marginBottom:'6px' }}>◈ Priority Development</div>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', marginBottom:'6px', color:T.rd }}>{d.l}</div>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:T.rd, fontWeight:'700' }}>{d.v}/100 — highest-impact development area</div>
+                <div style={{ fontSize:'12px', color:T.rd, lineHeight:'1.6', marginBottom:'10px' }}>Your development investment here creates the greatest career impact.</div>
+                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:T.rd, fontWeight:'700' }}>{d.v}/100</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* DEVELOPMENT ROADMAP */}
+      {devAreas.length > 0 && card(
+        <>
+          <SectionHead label={`Development Roadmap${candidate.industry ? ` — ${candidate.industry}` : ''}`} T={T} />
+          {devAreas.map((d, i) => {
+            const dimCol = d.v < 45 ? T.rd : d.v < 60 ? T.am : T.gn;
+            return (
+              <div key={i} style={{ border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', marginBottom:'12px', background:T.bg3 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', color:T.t0 }}>{d.dim}</div>
+                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:'800', color:dimCol }}>{d.v}/100</div>
+                </div>
+                <div style={{ height:'5px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'12px' }}>
+                  <div style={{ height:'100%', width:`${d.v}%`, background:dimCol, borderRadius:'100px' }} />
+                </div>
+                <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.7', marginBottom:'16px', fontWeight:'600' }}>{d.why}</div>
+                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontWeight:'800', marginBottom:'10px' }}>Your 10-Step Action Plan</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:'6px', marginBottom:'16px' }}>
+                  {(d.habits||[]).map((h, j) => {
+                    const isRed = j < 2; const isAm = j >= 2 && j < 5;
+                    const sCol = isRed ? T.rd : isAm ? T.am : T.gn;
+                    const sBg = isRed ? T.rdP : isAm ? T.amP : T.gnP;
+                    return (
+                      <div key={j} style={{ display:'flex', alignItems:'flex-start', gap:'10px', padding:'10px 14px', background:sBg, borderRadius:'6px' }}>
+                        <div style={{ minWidth:'20px', height:'20px', borderRadius:'50%', background:sCol, color:'#fff', fontSize:'10px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{j+1}</div>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'2px' }}>{h.h}</div>
+                          <div style={{ fontSize:'12px', color:T.t0, lineHeight:'1.5', fontWeight:'500' }}>{h.t}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
+                  <span style={{ padding:'4px 10px', borderRadius:'100px', fontSize:'10px', fontWeight:'700', background:T.rdP, color:T.rd, border:`1px solid ${T.rd}40` }}>🔴 Days 1–30: {d.now||d.acts[0]}</span>
+                  <span style={{ padding:'4px 10px', borderRadius:'100px', fontSize:'10px', fontWeight:'700', background:T.amP, color:T.am, border:`1px solid ${T.am}40` }}>🟡 Days 30–90: {d.soon||d.acts[1]}</span>
+                  <span style={{ padding:'4px 10px', borderRadius:'100px', fontSize:'10px', fontWeight:'700', background:T.gnP, color:T.gn, border:`1px solid ${T.gn}40` }}>🟢 Days 90–180: {d.fut}</span>
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* RESOURCES & PROTOCOLS */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px' }}>
+        {card(
+          <>
+            <SectionHead label="Profile-Matched Toolkit" T={T} />
+            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+              {resources.map((r, i) => {
+                const tCol = r.type==='book'?'#3B82F6':r.type==='ted'?'#EF4444':r.type==='youtube'?'#10B981':'#8B5CF6';
+                const tBg = r.type==='book'?'rgba(59,130,246,0.15)':r.type==='ted'?'rgba(239,68,68,0.15)':r.type==='youtube'?'rgba(16,185,129,0.15)':'rgba(139,92,246,0.15)';
+                return (
+                  <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                    <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', color:tCol, background:tBg, padding:'4px 6px', borderRadius:'4px', textTransform:'uppercase', whiteSpace:'nowrap' }}>{r.type}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{r.title}</div>
+                      <div style={{ fontSize:'11px', color:T.t1, lineHeight:'1.5', marginBottom:r.url?'6px':'0' }}>{r.why}</div>
+                      {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', fontWeight:'700', color:tCol, textDecoration:'none' }}>→ Watch / Access ↗</a>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+        {card(
+          <>
+            <SectionHead label="If-Then Protocol — When Habits Break" T={T} />
+            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+              {relapse.map((p, i) => (
+                <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px' }}>
+                  <div style={{ display:'flex', gap:'8px', marginBottom:'8px', alignItems:'baseline' }}>
+                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', color:T.rd, background:T.rdP, padding:'2px 6px', borderRadius:'4px' }}>IF →</span>
+                    <span style={{ fontSize:'12px', fontWeight:'700', color:T.t0 }}>{p.trigger}</span>
+                  </div>
+                  <div style={{ display:'flex', gap:'8px', alignItems:'baseline' }}>
+                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', color:T.gn, background:T.gnP, padding:'2px 6px', borderRadius:'4px' }}>THEN →</span>
+                    <span style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500' }}>{p.response}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* PROGRAMS */}
+      {card(
+        <>
+          <SectionHead label="Recommended Training — Carnelian Programmes" T={T} />
+          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            {programs.map((p, i) => (
+              <div key={i} style={{ background:`linear-gradient(135deg, ${T.bg2} 0%, ${T.bg3} 100%)`, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background:T.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'800', flexShrink:0 }}>C</div>
+                <div>
+                  <div style={{ fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'4px' }}>{p.name}</div>
+                  <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5' }}>{p.desc}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -786,46 +1091,12 @@ const ActionPlanReport = ({ candidate, T }) => {
         </>
       )}
 
-      {/* DEVELOPMENT ROADMAP — stored actions from assessment */}
-      {rd.devAreas && rd.devAreas.length > 0 && card(
-        <>
-          <SectionHead label={`Development Roadmap${candidate.industry ? ` — ${candidate.industry}` : ''}`} T={T} />
-          {rd.devAreas.map((d, i) => {
-            const dimCol = d.v < 45 ? T.rd : d.v < 60 ? T.am : T.gn;
-            return (
-              <div key={i} style={{ border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', marginBottom:'12px', background:T.bg3 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', color:T.t0 }}>{d.dim}</div>
-                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:'800', color:dimCol }}>{d.v}/100</div>
-                </div>
-                <div style={{ height:'5px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'12px' }}>
-                  <div style={{ height:'100%', width:`${d.v}%`, background:dimCol, borderRadius:'100px' }} />
-                </div>
-                <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.7', marginBottom:'12px', fontWeight:'600' }}>{d.why}</div>
-                {d.acts && (
-                  <div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
-                    {d.acts.map((act, ai) => (
-                      <div key={ai} style={{ display:'flex', gap:'8px', alignItems:'flex-start', fontSize:'12px', color:T.t2, padding:'6px 0', borderTop:ai>0?`1px solid ${T.b1}`:'none' }}>
-                        <span style={{ color:T.c, flexShrink:0 }}>→</span>{act}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div style={{ display:'flex', gap:'6px', marginTop:'10px', flexWrap:'wrap' }}>
-                  {d.now  && <span style={{ padding:'4px 10px', borderRadius:'100px', fontSize:'10px', fontWeight:'700', background:T.rdP, color:T.rd, border:`1px solid ${T.rd}40` }}>🔴 Now: {d.now}</span>}
-                  {d.soon && <span style={{ padding:'4px 10px', borderRadius:'100px', fontSize:'10px', fontWeight:'700', background:T.amP, color:T.am, border:`1px solid ${T.am}40` }}>🟡 Soon: {d.soon}</span>}
-                  {d.fut  && <span style={{ padding:'4px 10px', borderRadius:'100px', fontSize:'10px', fontWeight:'700', background:T.gnP, color:T.gn, border:`1px solid ${T.gn}40` }}>🟢 Future: {d.fut}</span>}
-                </div>
-              </div>
-            );
-          })}
-        </>
-      )}
-
       <div style={{ background:T.bg3, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'16px 18px', fontSize:'12px', color:T.t2, lineHeight:'1.7', fontWeight:'600', marginBottom:'14px' }}>
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, fontWeight:'700', marginBottom:'6px' }}>CORE v3.0 · Carnelian Pvt Ltd · {candidate.doc_id} · {new Date(candidate.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div>
         This report is written for {candidate.name}. It contains no HR risk language. Questions: hello@carnelianco.com
       </div>
+      </div>
+      <DownloadBtn elementId={`action-report-${candidate.doc_id}`} filename={`${candidate.name}_Action_Plan.pdf`} T={T} />
     </div>
   );
 };
@@ -893,7 +1164,8 @@ const PlayerReport = ({ candidate, T }) => {
   ].filter(a => a.cond);
 
   return (
-    <div style={{ background:'#07091a', borderRadius:'12px', padding:'20px', minHeight:'400px' }}>
+    <div>
+      <div id={`player-report-${candidate.doc_id}`} style={{ background:'#07091a', borderRadius:'12px', padding:'20px', minHeight:'400px' }}>
       <style>{`
         @keyframes g-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
         .g-card-inner { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:18px 20px; margin-bottom:12px; }
@@ -1048,6 +1320,8 @@ const PlayerReport = ({ candidate, T }) => {
       <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:'#1e2a3a', textAlign:'center', padding:'12px 0' }}>
         CORE· {candidate.doc_id} · Carnelian Pvt Ltd
       </div>
+      </div>
+      <DownloadBtn elementId={`player-report-${candidate.doc_id}`} filename={`${candidate.name}_Player_Report.pdf`} T={T} />
     </div>
   );
 };
@@ -1109,6 +1383,7 @@ const TeamReport = ({ candidate, allData, T }) => {
 
   return (
     <div>
+      <div id={`team-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
       {/* HEADER */}
       <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}` }}>
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Aggregate Report · Batch: {batch}</div>
@@ -1168,7 +1443,6 @@ const TeamReport = ({ candidate, allData, T }) => {
               <tbody>
                 {COMPOSITE_KEYS.map(({ k, l, green, amber }) => {
                   const v = compAvgs[k] || 0;
-                  const col = bCol(v,T);
                   const pctBelow = Math.round((batchData.filter(b=>(b.report_data?.CI?.[k]||b.report_data?.scores?.[k]||0)<amber).length/n)*100);
                   return (
                     <tr key={k} style={{ borderBottom:`1px solid ${T.b1}` }}>
@@ -1286,6 +1560,8 @@ const TeamReport = ({ candidate, allData, T }) => {
           </div>
         </>
       )}
+      </div>
+      <DownloadBtn elementId={`team-report-${candidate.doc_id}`} filename={`${batch}_Team_Aggregate.pdf`} T={T} />
     </div>
   );
 };
@@ -1356,6 +1632,7 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
 
   return (
     <div>
+      <div id={`comp-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
       <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}` }}>
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Composition Report · Batch: {batch}</div>
         <div style={{ fontSize:'12px', color:T.t2 }}>{n} valid responses analyzed for HR Strategy.</div>
@@ -1450,6 +1727,8 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
           </div>
         </>
       )}
+      </div>
+      <DownloadBtn elementId={`comp-report-${candidate.doc_id}`} filename={`${batch}_Team_Composition.pdf`} T={T} />
     </div>
   );
 };

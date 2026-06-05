@@ -2767,23 +2767,6 @@ const allDims = [
 
 {/* ─── TAB 2: TECHNICAL REPORT ─── */}
       {resTab === 'tech' && (() => {
-        if (R.purpose === 'Personal Development Planning') {
-          return (
-            <div className="anim-fadeUp">
-              <div style={{ padding:'80px 20px', textAlign:'center', background:T.bg1, borderRadius:'12px', border:`1px solid ${T.b2}` }}>
-                <div style={{ fontSize:'48px', marginBottom:'16px' }}>🔒</div>
-                <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'2rem', color:T.t0, marginBottom:'12px', fontWeight:'700' }}>Technical Report Locked</h2>
-                <p style={{ fontSize:'14px', color:T.t2, maxWidth:'500px', margin:'0 auto 24px', lineHeight:'1.6' }}>
-                  The Technical Report contains advanced HR analytics, cross-dimensional risk patterns, and role suitability metrics. Upgrade to a Premium Individual account to unlock this data.
-                </p>
-                <button style={{ padding:'12px 24px', background:T.gold, color:T.bg0, border:'none', borderRadius:'8px', fontWeight:'800', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }} onMouseOver={e=>e.target.style.background=T.goldD} onMouseOut={e=>e.target.style.background=T.gold}>
-                  Unlock Premium Report
-                </button>
-              </div>
-            </div>
-          );
-        }
-
         const tableStyle = { width: '100%', borderCollapse: 'collapse', marginTop: '14px' };
         const thStyle = { fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, padding: '0 10px 12px', textAlign: 'left', borderBottom: `2px solid ${T.b2}` };
         const tdStyle = { padding: '14px 10px', borderBottom: `1px solid ${T.b1}`, fontSize: '13px', verticalAlign: 'middle', color: T.t1, fontWeight: '500' };
@@ -3178,23 +3161,6 @@ const allDims = [
 
 {/* ─── TAB 3: PLAYER REPORT (GAMIFIED) ─── */}
       {resTab === 'player' && (() => {
-        if (R.purpose === 'Personal Development Planning') {
-          return (
-            <div className="anim-fadeUp">
-              <div style={{ padding:'80px 20px', textAlign:'center', background:'#07091a', borderRadius:'12px', border:`1px solid ${T.c}40` }}>
-                <div style={{ fontSize:'48px', marginBottom:'16px' }}>🎮</div>
-                <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'2rem', color:'#f1f5f9', marginBottom:'12px', fontWeight:'700' }}>Player Report Locked</h2>
-                <p style={{ fontSize:'14px', color:'#94a3b8', maxWidth:'500px', margin:'0 auto 24px', lineHeight:'1.6' }}>
-                  The gamified Player Report tracks your XP, skill levels, and achievements over time. Upgrade to a Premium Individual account to unlock your RPG profile.
-                </p>
-                <button style={{ padding:'12px 24px', background:T.c, color:'#fff', border:'none', borderRadius:'8px', fontWeight:'800', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
-                  Unlock Player Report
-                </button>
-              </div>
-            </div>
-          );
-        }
-
         // Game Engine Math
         const SKILLS = [
           {k:'C', l:'Delivery Drive', i:'⚡', v:S.C}, {k:'O', l:'Innovation Force', i:'💡', v:S.O},

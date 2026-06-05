@@ -1579,6 +1579,13 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           </p>
         </div>
 
+        <div style={{background:`${T.c}10`,border:`1px solid ${T.c}30`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
+  <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
+  <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
+    For the most accurate results, please complete the assessment in one uninterrupted session — this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths — which is what makes the feedback genuinely useful.
+  </p>
+</div>
+
         <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'16px 20px',marginBottom:'24px',display:'flex',alignItems:'flex-start',gap:'12px'}}>
           <input type="checkbox" checked={consentChecked} onChange={e=>setConsentChecked(e.target.checked)} style={{marginTop:'4px',accentColor:T.c,width:'18px',height:'18px',flexShrink:0,cursor:'pointer'}} />
           <label onClick={()=>setConsentChecked(!consentChecked)} style={{fontSize:'13px',color:T.t1,lineHeight:'1.6',cursor:'pointer',fontWeight:'500'}}>
@@ -2354,12 +2361,14 @@ const allDims = [
     // CTA
     await addPageFromHTML(wrap(`
       <div style="background:#1A1A1A;border-radius:12px;padding:56px 48px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;">🤝</div>
-        <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
-        <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
-        <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">Reach out at hello@carnelianco.com</div>
-        <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
-      </div>
+  <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;">🤝</div>
+  <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
+  <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
+  <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">
+    <a href="mailto:hello@carnelianco.com" style="color:#fff;text-decoration:none;">Reach out at hello@carnelianco.com</a>
+  </div>
+  <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
+</div>
     `));
 
     pdf.deletePage(1);
@@ -2472,7 +2481,7 @@ const allDims = [
   return (
     <div style={{maxWidth:'1000px', margin:'0 auto', padding:'40px 24px'}}>
       
-      {/* Tab Navigation */}
+     {/* Tab Navigation */}
       <div className="no-print" style={{display:'flex', gap:'8px', marginBottom:'32px', flexWrap:'wrap'}}>
         <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='action'?T.gold:T.b2}`, background:resTab==='action'?T.gold:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
           🧭 Candidate Action Plan
@@ -2483,14 +2492,18 @@ const allDims = [
         <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
           🎮 Player Report
         </button>
-        <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.gold:T.b2}`, background:resTab==='team'?T.gold:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
-          👥 Team Aggregate
-        </button>
-        <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.gold:T.b2}`, background:resTab==='comp'?T.gold:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
-          🧩 Team Composition
-        </button>
+        {R.purpose !== 'Personal Development Planning' && (
+          <>
+            <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.gold:T.b2}`, background:resTab==='team'?T.gold:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
+              👥 Team Aggregate
+            </button>
+            <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.gold:T.b2}`, background:resTab==='comp'?T.gold:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
+              🧩 Team Composition
+            </button>
+          </>
+        )}
       </div>
-      
+
       {/* ─── TAB 1: ACTION PLAN ─── */}
       {resTab === 'action' && (
         <div className="anim-fadeUp">
@@ -2692,7 +2705,9 @@ const allDims = [
                 <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:'#fff', marginBottom:'4px'}}>Get in touch with Carnelian</div>
                 <div style={{fontSize:'13px', color:'rgba(255,255,255,0.8)', fontWeight:'500'}}>Request programme information, commission in-house delivery, or arrange a personal CORE coaching session.</div>
               </div>
-              <div style={{fontSize:'14px', fontWeight:'800', color:T.gold}}>hello@carnelianco.com</div>
+              <div style={{fontSize:'14px', fontWeight:'800', color:T.gold}}><a href="mailto:hello@carnelianco.com" style={{fontSize:'14px', fontWeight:'800', color:T.gold, textDecoration:'none'}}>
+  hello@carnelianco.com
+</a></div>
             </div>
           </div>
 
@@ -2752,6 +2767,23 @@ const allDims = [
 
 {/* ─── TAB 2: TECHNICAL REPORT ─── */}
       {resTab === 'tech' && (() => {
+        if (R.purpose === 'Personal Development Planning') {
+          return (
+            <div className="anim-fadeUp">
+              <div style={{ padding:'80px 20px', textAlign:'center', background:T.bg1, borderRadius:'12px', border:`1px solid ${T.b2}` }}>
+                <div style={{ fontSize:'48px', marginBottom:'16px' }}>🔒</div>
+                <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'2rem', color:T.t0, marginBottom:'12px', fontWeight:'700' }}>Technical Report Locked</h2>
+                <p style={{ fontSize:'14px', color:T.t2, maxWidth:'500px', margin:'0 auto 24px', lineHeight:'1.6' }}>
+                  The Technical Report contains advanced HR analytics, cross-dimensional risk patterns, and role suitability metrics. Upgrade to a Premium Individual account to unlock this data.
+                </p>
+                <button style={{ padding:'12px 24px', background:T.gold, color:T.bg0, border:'none', borderRadius:'8px', fontWeight:'800', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }} onMouseOver={e=>e.target.style.background=T.goldD} onMouseOut={e=>e.target.style.background=T.gold}>
+                  Unlock Premium Report
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         const tableStyle = { width: '100%', borderCollapse: 'collapse', marginTop: '14px' };
         const thStyle = { fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, padding: '0 10px 12px', textAlign: 'left', borderBottom: `2px solid ${T.b2}` };
         const tdStyle = { padding: '14px 10px', borderBottom: `1px solid ${T.b1}`, fontSize: '13px', verticalAlign: 'middle', color: T.t1, fontWeight: '500' };
@@ -3146,6 +3178,23 @@ const allDims = [
 
 {/* ─── TAB 3: PLAYER REPORT (GAMIFIED) ─── */}
       {resTab === 'player' && (() => {
+        if (R.purpose === 'Personal Development Planning') {
+          return (
+            <div className="anim-fadeUp">
+              <div style={{ padding:'80px 20px', textAlign:'center', background:'#07091a', borderRadius:'12px', border:`1px solid ${T.c}40` }}>
+                <div style={{ fontSize:'48px', marginBottom:'16px' }}>🎮</div>
+                <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'2rem', color:'#f1f5f9', marginBottom:'12px', fontWeight:'700' }}>Player Report Locked</h2>
+                <p style={{ fontSize:'14px', color:'#94a3b8', maxWidth:'500px', margin:'0 auto 24px', lineHeight:'1.6' }}>
+                  The gamified Player Report tracks your XP, skill levels, and achievements over time. Upgrade to a Premium Individual account to unlock your RPG profile.
+                </p>
+                <button style={{ padding:'12px 24px', background:T.c, color:'#fff', border:'none', borderRadius:'8px', fontWeight:'800', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+                  Unlock Player Report
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         // Game Engine Math
         const SKILLS = [
           {k:'C', l:'Delivery Drive', i:'⚡', v:S.C}, {k:'O', l:'Innovation Force', i:'💡', v:S.O},
@@ -4061,16 +4110,6 @@ const LegalPage = () => {
 
           </div>
 
-          {/* Warning Box */}
-          <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'12px', padding:'24px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
-            <div style={{fontSize:'28px'}}>⚠️</div>
-            <div>
-              <div style={{fontSize:'14px', fontWeight:'800', color:T.am, marginBottom:'8px'}}>Administrator Notice</div>
-              <div style={{fontSize:'13.5px', color:T.t1, lineHeight:'1.65', fontWeight:'500'}}>
-                Both legal agreements (CORE-ICA-001 and CORE-ODPA-001) should be reviewed by a qualified Pakistani lawyer before full commercial deployment. The summary above is plain-language guidance only and does not constitute legal advice. Verify that <strong>hello@carnelianco.com</strong> is actively monitored before each deployment — it is the only contact respondents have for data rights and complaints. Review this email every two months.
-              </div>
-            </div>
-          </div>
 
         </div>
       </Reveal>

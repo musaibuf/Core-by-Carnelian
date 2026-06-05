@@ -23,10 +23,11 @@ pool.connect()
     console.log('✅ Connected to PostgreSQL database');
     
     // Auto-create the table with the new v3.0 fields (added phone)
-    const createTableQuery = `
+     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS assessments (
         id SERIAL PRIMARY KEY,
         doc_id VARCHAR(255),
+        assessment_type VARCHAR(50),
         phone VARCHAR(255),
         name VARCHAR(255),
         email VARCHAR(255),
@@ -50,6 +51,7 @@ pool.connect()
       await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS purpose VARCHAR(255);`);
       await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level VARCHAR(255);`);
       await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS phone VARCHAR(255);`);
+      await pool.query(`ALTER TABLE assessments ADD COLUMN IF NOT EXISTS assessment_type VARCHAR(50);`);
     } catch (alterErr) {
       console.log('Columns already exist or alter skipped.');
     }
@@ -69,13 +71,14 @@ app.post('/api/assessments', async (req, res) => {
 
     const query = `
       INSERT INTO assessments 
-      (doc_id, phone, name, email, department, role, industry, batch, purpose, level, overall_score, profile_name, report_data)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      (doc_id, assessment_type, phone, name, email, department, role, industry, batch, purpose, level, overall_score, profile_name, report_data)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *;
     `;
 
     const values = [
       payload.doc_id,
+      payload.assessment_type,
       payload.phone,
       payload.name,
       payload.email,

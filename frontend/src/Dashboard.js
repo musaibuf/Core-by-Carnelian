@@ -323,8 +323,9 @@ const TechnicalReport = ({ candidate, T }) => {
           <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
             <div>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name}</div>
-              <div style={{ fontSize:'12px', color:T.t2, fontWeight:'600', marginBottom:'8px' }}>
+             <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name}</div>
+              <div style={{ fontSize:'12px', color:T.t2, fontWeight:'600', marginBottom:'8px', lineHeight:'1.6' }}>
+                <span style={{color:T.gold}}>{candidate.assessment_type === 'org' ? '🏢 Assigned by Organization' : candidate.assessment_type === 'ind' ? '👤 Individual' : 'Assessment Type Unspecified'}</span><br/>
                 {candidate.role}{candidate.department ? ` · ${candidate.department}` : ''}<br/>
                 {candidate.email && <span>{candidate.email}</span>}
                 {candidate.phone && <span> · {candidate.phone}</span>}<br/>
@@ -1640,8 +1641,8 @@ const OverviewTab = ({ data, T, onSelect }) => {
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <thead>
-              <tr style={{ borderBottom:`1px solid ${T.b2}` }}>
-                {['Name','Role / Dept','Score','Profile','Validity','Date'].map(h => (
+                <tr style={{ borderBottom:`1px solid ${T.b2}` }}>
+                {['Name','Type','Role / Dept','Score','Profile','Validity','Date'].map(h => (
                   <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.12em', color:T.t3, fontFamily:"'JetBrains Mono',monospace" }}>{h}</th>
                 ))}
               </tr>
@@ -1650,6 +1651,7 @@ const OverviewTab = ({ data, T, onSelect }) => {
               {[...data].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).map((r,i) => (
                 <tr key={r.id||i} className="row-hover" onClick={()=>onSelect(r)} style={{ borderBottom:`1px solid ${T.b1}` }}>
                   <td style={{ padding:'12px 14px', fontSize:'13px', fontWeight:'700', color:T.t0 }}>{r.name}</td>
+                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.assessment_type === 'org' ? '🏢 Org' : r.assessment_type === 'ind' ? '👤 Ind' : '—'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.role}{r.department?` · ${r.department}`:''}</td>
                   <td style={{ padding:'12px 14px' }}><ScoreBadge score={r.overall_score} T={T} /></td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.c, fontWeight:'700' }}>{r.profile_name}</td>
@@ -1724,11 +1726,12 @@ const ProfilesTab = ({ data, T, onSelect }) => {
       <div style={{ background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', overflow:'hidden' }}>
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:'700px' }}>
-            <thead>
+           <thead>
               <tr style={{ borderBottom:`2px solid ${T.b2}` }}>
                 {[
-                  { l:'Name', k:'name' }, { l:'Email', k:'email' },
-                  { l:'Department', k:'department' }, { l:'Role', k:'role' },
+                  { l:'Name', k:'name' }, { l:'Type', k:'assessment_type' },
+                  { l:'Email', k:'email' }, { l:'Phone', k:'phone' },
+                  { l:'Batch', k:'batch' }, { l:'Role', k:'role' },
                   { l:'Score', k:'overall_score' }, { l:'Profile', k:'profile_name' },
                   { l:'Validity', k:null }, { l:'Date', k:'created_at' }, { l:'', k:null },
                 ].map(({ l, k }) => (
@@ -1743,8 +1746,10 @@ const ProfilesTab = ({ data, T, onSelect }) => {
               {filtered.map((r,i) => (
                 <tr key={r.id||i} className="row-hover" onClick={()=>onSelect(r)} style={{ borderBottom:`1px solid ${T.b1}` }}>
                   <td style={{ padding:'12px 14px', fontSize:'13px', fontWeight:'700', color:T.t0, whiteSpace:'nowrap' }}>{r.name}</td>
+                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.assessment_type === 'org' ? '🏢 Org' : r.assessment_type === 'ind' ? '👤 Ind' : '—'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.email}</td>
-                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.department}</td>
+                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.phone || '—'}</td>
+                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.batch || '—'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.role}</td>
                   <td style={{ padding:'12px 14px' }}><ScoreBadge score={r.overall_score} T={T} /></td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.c, fontWeight:'700', maxWidth:'160px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.profile_name}</td>

@@ -500,14 +500,14 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
             {id:'assess', l:'Assessment'},
             ...(hasResults?[{id:'results', l:'Reports'}]:[]),
             ...(hasHistory?[{id:'progress', l:'Progress'}]:[]),
-            {id:'method', l:'Methodology'},
+            {id:'legal', l:'Legal & Privacy'},
           ].map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)} style={{
               padding:'8px 16px', borderRadius:'6px', border:'none', cursor:'pointer',
               fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'700',
               transition:'all 0.18s', whiteSpace:'nowrap',
-              background: tab===t.id ? `${T.c}20` : 'transparent',
-              color: tab===t.id ? T.c : T.t2,
+                background: tab===t.id ? `${T.gold}20` : 'transparent',
+              color: tab===t.id ? T.gold : T.t2,
             }}
             onMouseOver={e=>{if(tab!==t.id){e.target.style.color=T.t0; e.target.style.background=T.b1;}}}
             onMouseOut={e=>{if(tab!==t.id){e.target.style.color=T.t2; e.target.style.background='transparent';}}}
@@ -533,6 +533,78 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
 );
 
 // ─── HOME PAGE SUB-COMPONENTS ─────────────────────────────────────────────────
+// ─── TYPEWRITER ───────────────────────────────────────────────────────────────
+const TypewriterText = ({ texts, speed = 72, deletingSpeed = 38, pause = 2400 }) => {
+  const [displayed, setDisplayed] = useState('');
+  const [idx, setIdx]             = useState(0);
+  const [charIdx, setCharIdx]     = useState(0);
+  const [deleting, setDeleting]   = useState(false);
+
+  useEffect(() => {
+    const current = texts[idx];
+    if (!deleting && charIdx < current.length) {
+      const t = setTimeout(() => { setDisplayed(current.slice(0, charIdx + 1)); setCharIdx(c => c + 1); }, speed);
+      return () => clearTimeout(t);
+    }
+    if (!deleting && charIdx === current.length) {
+      const t = setTimeout(() => setDeleting(true), pause);
+      return () => clearTimeout(t);
+    }
+    if (deleting && charIdx > 0) {
+      const t = setTimeout(() => { setDisplayed(current.slice(0, charIdx - 1)); setCharIdx(c => c - 1); }, deletingSpeed);
+      return () => clearTimeout(t);
+    }
+    if (deleting && charIdx === 0) { setDeleting(false); setIdx(i => (i + 1) % texts.length); }
+  }, [charIdx, deleting, idx, texts, speed, deletingSpeed, pause]);
+
+  return (
+    <span style={{ color: T.c, fontStyle: 'italic' }}>
+      {displayed}
+      <span style={{ borderRight: `3px solid ${T.c}`, marginLeft: '2px', animation: 'blink 0.75s step-end infinite' }} />
+    </span>
+  );
+};
+
+
+// ─── INDUSTRY MARQUEE ─────────────────────────────────────────────────────────
+const IndustryMarquee = () => {
+  const industries = [
+    '🏦 Banking & Finance', '📋 Insurance & Takaful', '🏛 Government & Civil Service',
+    '🛒 FMCG & Consumer Goods', '📡 Telecom & Technology', '⚡ Energy & Utilities',
+    '🏥 Healthcare & Pharma', '🏭 Manufacturing', '🌍 Development & NGOs',
+    '🎓 Education & Academia', '🏗 Real Estate', '🛍 Retail & Distribution',
+  ];
+  return (
+    <div style={{
+      margin: '0 0 40px',
+      overflow: 'hidden',
+      maskImage: 'linear-gradient(90deg, transparent, black 6%, black 94%, transparent)',
+      WebkitMaskImage: 'linear-gradient(90deg, transparent, black 6%, black 94%, transparent)',
+    }}>
+      <style>{`
+        @keyframes marqueeScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        .marquee-inner { display:flex; width:max-content; animation:marqueeScroll 30s linear infinite; }
+        .marquee-inner:hover { animation-play-state:paused; }
+      `}</style>
+      <div className="marquee-inner">
+        {[...industries, ...industries].map((ind, i) => (
+          <span key={i} style={{
+            display: 'inline-flex', alignItems: 'center',
+            padding: '8px 18px', margin: '0 5px',
+            background: T.bg2, border: `1px solid ${T.b2}`,
+            borderRadius: '100px', fontSize: '12px', fontWeight: '600',
+            color: T.t2, whiteSpace: 'nowrap', cursor: 'default',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; e.currentTarget.style.background = T.goldP; }}
+          onMouseOut={e  => { e.currentTarget.style.borderColor = T.b2; e.currentTarget.style.color = T.t2; e.currentTarget.style.background = T.bg2; }}>
+            {ind}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const StatsStrip = () => {
   const ref = useRef(null);
@@ -578,10 +650,46 @@ const StatsStrip = () => {
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const HomePage = ({setTab}) => {
+  const [scrollPct, setScrollPct] = useState(0);
   const listColors = [T.c, T.gold, T.gn, T.am, '#8B5CF6', '#38BDF8', '#F472B6', '#A78BFA'];
+  
+  const [activeOrgCase, setActiveOrgCase] = useState(null);
+  const [activeIndCase, setActiveIndCase] = useState(null);
+
+  const orgUseCases = [
+    { t:'Pre-Hiring Screening',       d:'Reduce the cost of bad hires. Interview probe questions are generated for every at-risk role placement.', stat:'30–40%', statLabel:'mis-hire reduction', src:'SHRM 2022' },
+    { t:'Succession Planning',        d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss.', stat:'40%', statLabel:'new leaders fail within 18 months', src:'CEB 2014' },
+    { t:'L&D Targeting',              d:'Map specific development investments to specific individual gaps. Stop sending everyone to the same programme.', stat:'4×', statLabel:'higher ROI vs generic training', src:'Salas et al 2012' },
+    { t:'Compliance Risk',            d:'The Compliance & Integrity Index gives risk committees a psychometric data point before placing staff in fiduciary roles.', stat:'67%', statLabel:'of fraud cases had no prior record', src:'ACFE 2022' },
+    { t:'Team Composition',           d:'Run a cohort and compare Team Value Scores across the group. Identify gaps and redundancies early.', stat:'+35%', statLabel:'revenue from high-CQ teams', src:'HBR 2018' },
+    { t:'Post-Training Evaluation',   d:'Re-assess after a development programme. The progress tracker proves exactly which scores moved.', stat:'r=.51', statLabel:'personality + integrity validity', src:'Schmidt & Hunter 1998' },
+    { t:'Donor Accountability',       d:'Development sector organisations can show donors peer-reviewed evidence behind staff selection.', stat:'ρ=.41', statLabel:'integrity → conduct prediction', src:'Ones et al 1993' },
+    { t:'Civil Service Promotion',    d:'Objective, legally defensible data for BPS promotion decisions — merit-based and auditable.', stat:'200%', statLabel:'cost of a bad hire (% salary)', src:'Cascio 2000' },
+  ];
+
+  const indUseCases = [
+    { t:'Career Positioning',         d:'Discover your unique professional archetype to seek roles that align with your natural strengths.', stat:'+43%', statLabel:'higher productivity in aligned roles', src:'Gallup 2021' },
+    { t:'Targeted Growth',            d:'Stop guessing what to improve. Focus your energy on the 2-3 specific gaps that will actually move the needle.', stat:'3×', statLabel:'faster growth via targeted feedback', src:'Ericsson 2006' },
+    { t:'Burnout Prevention',         d:'Identify when your delivery drive is outpacing your emotional resilience before it becomes a crisis.', stat:'60%', statLabel:'drop in burnout with self-awareness', src:'Maslach 2016' },
+    { t:'Interview Mastery',          d:'Walk into interviews armed with objective data about your working style, strengths, and adaptability.', stat:'2.5×', statLabel:'higher callback rates with self-insight', src:'HBR 2019' },
+    { t:'Navigating Culture',         d:'Use your Cultural Intelligence scores to better decode unspoken workplace dynamics and build alliances.', stat:'+40%', statLabel:'trust increase in diverse teams', src:'Livermore 2015' },
+    { t:'Promotion Readiness',        d:'Understand exactly how leadership evaluates readiness and close the behavioural gaps holding you back.', stat:'82%', statLabel:'of promotions hinge on behavioural skills', src:'CCL 2018' },
+    { t:'Feedback Resilience',        d:'Transform how you handle criticism by understanding your People Agility and defensive triggers.', stat:'+30%', statLabel:'performance boost from feedback agility', src:'DeRue 2012' },
+    { t:'Ethical Confidence',         d:'Clarify your own boundaries so you can confidently navigate high-pressure requests without compromising values.', stat:'50%', statLabel:'less stress when values are defined', src:'Haidt 2012' },
+  ];
+
+  useEffect(() => {
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      setScrollPct((scrollTop / (scrollHeight - clientHeight)) * 100);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <div>
+    <div className="core-root">
+      <div className="page-progress" style={{ height: `${scrollPct}%` }} />
 
       {/* ── HERO ── */}
       <section className="section-container" style={{
@@ -605,7 +713,7 @@ const HomePage = ({setTab}) => {
               />
             </div>
 
-            {/* Headline */}
+            {/* Headline — second line uses typewriter */}
             <div className="anim-fadeUp" style={{animationDelay:'0.12s'}}>
               <h1 style={{
                 fontFamily:"'Playfair Display',serif", fontWeight:'700',
@@ -613,7 +721,13 @@ const HomePage = ({setTab}) => {
                 lineHeight:'1.05', margin:'0 0 16px', letterSpacing:'-0.03em',
               }}>
                 Assess the whole professional.<br/>
-                <em style={{color:T.c, fontStyle:'italic'}}>Not just the performance review.</em>
+                <TypewriterText texts={[
+                  'Not just the performance review.',
+                  'Not just the interview.',
+                  'Not just the annual appraisal.',
+                  'Not just the reference check.',
+                  'Not just the CV.',
+                ]} />
               </h1>
             </div>
 
@@ -626,40 +740,27 @@ const HomePage = ({setTab}) => {
             <div className="anim-fadeUp" style={{animationDelay:'0.32s'}}>
               <p style={{color:T.t1, fontSize:'16px', maxWidth:'700px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'500'}}>
                 CORE is a validated, 63-item psychometric battery with built-in validity controls, social desirability
-                screening, and an industry context engine for 12 Pakistani sectors. Four distinct reports — Technical
-                (HR), Candidate Action Plan, Team Aggregate, and a gamified Player Report. Instant, scientifically
+                screening, and an industry context engine for 12 Pakistani sectors. Instant, scientifically
                 grounded results.
               </p>
             </div>
 
-            {/* CTAs */}
-            <div className="anim-fadeUp" style={{
-              animationDelay:'0.42s',
-              display:'flex', gap:'14px', flexWrap:'wrap', justifyContent:'center',
-            }}>
+            {/* CTA */}
+            <div className="anim-fadeUp" style={{animationDelay:'0.42s', display:'flex', justifyContent:'center', marginTop:'10px'}}>
               <button onClick={()=>setTab('assess')} style={{
-                padding:'15px 36px', borderRadius:'7px', border:'none', cursor:'pointer',
+                padding:'18px 48px', borderRadius:'100px', border:'none', cursor:'pointer',
                 background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif",
-                fontSize:'14px', fontWeight:'800', letterSpacing:'0.04em', transition:'all 0.2s',
-                boxShadow:`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`,
+                fontSize:'15px', fontWeight:'800', letterSpacing:'0.06em', textTransform:'uppercase',
+                animation:'btnPulse 2s infinite',
+                transition:'all 0.3s ease',
               }}
-              onMouseOver={e=>{ e.target.style.background=T.cDark; e.target.style.transform='translateY(-2px)'; e.target.style.boxShadow=`0 0 56px ${T.cGlow}, 0 8px 28px rgba(0,0,0,0.4)`; }}
-              onMouseOut={e=>{ e.target.style.background=T.c; e.target.style.transform='none'; e.target.style.boxShadow=`0 0 40px ${T.cGlow}, 0 4px 20px rgba(0,0,0,0.3)`; }}>
+              onMouseOver={e=>{ e.target.style.transform='translateY(-4px) scale(1.02)'; e.target.style.background=T.cDark; }}
+              onMouseOut={e=>{ e.target.style.transform='none'; e.target.style.background=T.c; }}>
                 Begin Assessment →
-              </button>
-              <button onClick={()=>setTab('method')} style={{
-                padding:'15px 36px', borderRadius:'7px', cursor:'pointer',
-                background:'transparent', border:`2px solid ${T.b2}`,
-                color:T.t1, fontFamily:"'Plus Jakarta Sans',sans-serif",
-                fontSize:'14px', fontWeight:'700', transition:'all 0.2s',
-              }}
-              onMouseOver={e=>{ e.target.style.borderColor=T.gold; e.target.style.color=T.gold; e.target.style.transform='translateY(-2px)'; }}
-              onMouseOut={e=>{ e.target.style.borderColor=T.b2; e.target.style.color=T.t1; e.target.style.transform='none'; }}>
-                View the Science
               </button>
             </div>
 
-            {/* Stats Strip — counts up when scrolled into view */}
+            {/* Stats Strip */}
             <div className="anim-fadeUp" style={{animationDelay:'0.52s', width:'100%'}}>
               <StatsStrip />
             </div>
@@ -668,7 +769,8 @@ const HomePage = ({setTab}) => {
       </section>
 
       {/* ── DEEP DIVE ── */}
-<section className="section-container" style={{padding:'32px 32px 64px', maxWidth:'1100px', margin:'0 auto'}}>
+      <section className="section-container" style={{padding:'32px 32px 64px', maxWidth:'1100px', margin:'0 auto'}}>
+
         {/* Section header */}
         <Reveal delay={0}>
           <div style={{marginBottom:'48px', textAlign:'center'}}>
@@ -688,7 +790,7 @@ const HomePage = ({setTab}) => {
         </Reveal>
 
         {/* ── MODULES ── */}
-        <div style={{marginBottom:'40px'}}>
+        <div style={{marginBottom:'16px'}}>
           <Reveal delay={0}>
             <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
               <span style={{fontSize:'24px'}}>🧠</span>
@@ -723,97 +825,139 @@ const HomePage = ({setTab}) => {
           </div>
         </div>
 
-        {/* ── CHALLENGES ── */}
-        <div style={{marginBottom:'40px'}}>
-          <Reveal delay={0}>
-            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px'}}>
-              <span style={{fontSize:'24px'}}>🎯</span>
-              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
-                Gamified Challenges — Behaviour Under Pressure
-              </h3>
+        {/* ── INDUSTRY MARQUEE ── */}
+        <Reveal delay={0}>
+          <div style={{marginBottom:'8px'}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'10px', textAlign:'center'}}>
+              Context engine covers 12 Pakistani sectors — hover to pause
             </div>
-            <p style={{fontSize:'14px', color:T.t2, marginBottom:'20px', fontWeight:'500', lineHeight:'1.7'}}>
-              Embedded between sections — not announced as tests, not skippable. Each challenge surfaces instinctive
-              behaviour that deliberate self-presentation cannot easily fake. They contribute directly to scored dimension outputs.
-            </p>
-          </Reveal>
-          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px'}}>
-            {[
-              { t:'⚖️ Values Seesaw × 3 Dilemmas',
-                d:'Three sequential workplace ethical dilemmas, each presented as a live seesaw the candidate physically positions using a slider. No timer — requires genuine reflection. Contributes to Ethical Reasoning score.',
-                badge:'Ethical Reasoning', bc:T.am },
-              { t:'⏱ Timed Scenarios × 2',
-                d:'Two 45-second crisis scenarios testing transparency, adaptive decision-making, and integrity under social influence. Contributes to Agility and Compliance scores.',
-                badge:'45 sec', bc:T.c },
-            ].map((ch,i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div style={{
-                  background:T.bg1, border:`1px solid ${T.b2}`,
-                  borderRadius:'10px', padding:'20px', height:'100%',
-                  position:'relative', overflow:'hidden', cursor:'default',
-                  transition:'transform .28s ease, border-color .28s ease, box-shadow .28s ease',
-                }}
-                onMouseOver={e => { e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.borderColor=ch.bc; e.currentTarget.style.boxShadow='0 10px 30px rgba(0,0,0,.4)'; }}
-                onMouseOut={e  => { e.currentTarget.style.transform=''; e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.boxShadow=''; }}>
-                  {/* badge top-right */}
-                  <span style={{
-                    position:'absolute', top:0, right:0,
-                    padding:'5px 12px',
-                    background:`${ch.bc}18`, border:`1px solid ${ch.bc}35`,
-                    borderRadius:'0 10px 0 8px',
-                    fontSize:'9px', color:ch.bc,
-                    fontFamily:"'JetBrains Mono',monospace",
-                    fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.08em',
-                  }}>{ch.badge}</span>
-                  <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px', marginTop:'16px'}}>{ch.t}</div>
-                  <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{ch.d}</div>
-                </div>
-              </Reveal>
-            ))}
+            <IndustryMarquee />
           </div>
-        </div>
+        </Reveal>
 
         {/* ── REPORTS SLIDESHOW ── */}
         <Reveal delay={0}>
           <ReportsSlideshow />
         </Reveal>
 
-        {/* ── USE CASES ── */}
-        <Reveal delay={0}>
-          <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
-              What organisations can use CORE for
-            </h3>
-            <p className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'24px'}}>
-              Eight high-impact applications
-            </p>
-            <div className="grid-4-col" style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px'}}>
-              {[
-                {t:'Pre-Hiring Screening',        d:'Reduce the cost of bad hires. Interview probe questions are already generated for every at-risk role.'},
-                {t:'Succession Planning',         d:'Leadership Readiness Score and pattern analysis surface the candidates traditional systems miss — and the ones they should not promote.'},
-                {t:'L&D Targeting',               d:'Map specific development investments to specific individual gaps. Stop sending everyone to the same programme.'},
-                {t:'Compliance Risk Management',  d:'The Compliance & Integrity Index gives risk committees a psychometric data point before placing staff in fiduciary roles.'},
-                {t:'Team Composition',            d:'Run a cohort and compare Team Value Scores across the group. Identify gaps and redundancies before a project launches.'},
-                {t:'Post-Training Evaluation',    d:'Re-assess after a development programme. The progress tracker shows exactly which scores moved — and proves ROI to leadership.'},
-                {t:'Donor Accountability',        d:'Development sector organisations can show donors peer-reviewed evidence behind their staff selection and capacity building investments.'},
-                {t:'Civil Service Promotion',     d:'Objective, legally defensible data for BPS promotion decisions — merit-based, standardised, and auditable.'},
-              ].map((u,i) => (
-                <div key={i} style={{
-                  background:T.b0, borderRadius:'8px', padding:'16px',
-                  borderLeft:`3px solid ${listColors[i % listColors.length]}`,
-                  cursor:'default',
-                  transition:'background .2s, transform .28s ease, box-shadow .28s ease',
-                }}
-                onMouseOver={e => { e.currentTarget.style.background=T.b1; e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.3)'; }}
-                onMouseOut={e  => { e.currentTarget.style.background=T.b0; e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
-                  <div style={{fontSize:'13px', fontWeight:'700', color:listColors[i % listColors.length], marginBottom:'6px'}}>{u.t}</div>
-                  <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500'}}>{u.d}</div>
-                </div>
-              ))}
+        {/* ── USE CASES — ORGS & INDIVIDUALS SIDE-BY-SIDE ── */}
+        <div style={{ marginBottom: '64px' }}>
+          <Reveal delay={0}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <Pill label="Strategic Value" color={T.c} />
+              <h2 style={{
+                fontFamily: "'Playfair Display',serif",
+                fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: '700',
+                margin: '16px 0 12px', color: T.t0, letterSpacing: '-0.02em',
+              }}>
+                Impact at Every Level
+              </h2>
+              <p style={{ fontSize: '15px', color: T.t2, maxWidth: '700px', margin: '0 auto', fontWeight: '500' }}>
+                Whether you are building a high-performing organisation or navigating your own career trajectory, CORE provides the exact data you need to move forward.
+              </p>
             </div>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px'}}>
+            
+            {/* For Organisations */}
+            <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
+              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
+                For Organisations
+              </h3>
+              <p className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'24px'}}>
+                Click any card for the research behind it
+              </p>
+              <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px'}}>
+                {orgUseCases.map((u,i) => {
+                  const isActive = activeOrgCase === i;
+                  const col = listColors[i % listColors.length];
+                  return (
+                    <div key={i}
+                      onClick={() => setActiveOrgCase(isActive ? null : i)}
+                      style={{
+                        background: isActive ? `${col}12` : T.b0,
+                        borderRadius:'10px', padding:'16px',
+                        border: isActive ? `1px solid ${col}40` : `1px solid transparent`,
+                        borderLeft:`3px solid ${isActive ? col : col + '60'}`,
+                        cursor:'pointer', transition:'all 0.25s ease',
+                        transform: isActive ? 'translateY(-4px)' : '',
+                        boxShadow: isActive ? `0 8px 24px rgba(0,0,0,.3), 0 0 0 1px ${col}20` : '',
+                      }}
+                      onMouseOver={e => { if(!isActive){ e.currentTarget.style.background=T.b1; e.currentTarget.style.transform='translateY(-3px)'; }}}
+                      onMouseOut={e  => { if(!isActive){ e.currentTarget.style.background=T.b0; e.currentTarget.style.transform=''; }}}
+                    >
+                      <div style={{fontSize:'12px', fontWeight:'700', color: isActive ? col : col, marginBottom:'6px'}}>{u.t}</div>
+                      <div style={{fontSize:'11.5px', color:T.t1, lineHeight:'1.5', fontWeight:'500', marginBottom: isActive ? '14px' : '0'}}>{u.d}</div>
+
+                      <div style={{ overflow:'hidden', maxHeight: isActive ? '80px' : '0', opacity: isActive ? 1 : 0, transition:'max-height 0.32s ease, opacity 0.24s ease' }}>
+                        <div style={{ background: T.b0, borderRadius:'7px', padding:'10px 12px', display:'flex', alignItems:'center', gap:'10px' }}>
+                          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color: col, flexShrink:0, lineHeight:1 }}>{u.stat}</div>
+                          <div>
+                            <div style={{fontSize:'10px', fontWeight:'700', color:T.t1, lineHeight:'1.3'}}>{u.statLabel}</div>
+                            <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, fontWeight:'600', marginTop:'2px'}}>{u.src}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {!isActive && <div style={{fontSize:'9px', color:T.t3, marginTop:'8px', fontWeight:'600'}}>→ see the research</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* For Individuals */}
+            <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
+              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
+                For Individuals
+              </h3>
+              <p className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'24px'}}>
+                Click any card for the research behind it
+              </p>
+              <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px'}}>
+                {indUseCases.map((u,i) => {
+                  const isActive = activeIndCase === i;
+                  const col = listColors[(i+4) % listColors.length]; // Stagger colors so it looks diverse
+                  return (
+                    <div key={i}
+                      onClick={() => setActiveIndCase(isActive ? null : i)}
+                      style={{
+                        background: isActive ? `${col}12` : T.b0,
+                        borderRadius:'10px', padding:'16px',
+                        border: isActive ? `1px solid ${col}40` : `1px solid transparent`,
+                        borderLeft:`3px solid ${isActive ? col : col + '60'}`,
+                        cursor:'pointer', transition:'all 0.25s ease',
+                        transform: isActive ? 'translateY(-4px)' : '',
+                        boxShadow: isActive ? `0 8px 24px rgba(0,0,0,.3), 0 0 0 1px ${col}20` : '',
+                      }}
+                      onMouseOver={e => { if(!isActive){ e.currentTarget.style.background=T.b1; e.currentTarget.style.transform='translateY(-3px)'; }}}
+                      onMouseOut={e  => { if(!isActive){ e.currentTarget.style.background=T.b0; e.currentTarget.style.transform=''; }}}
+                    >
+                      <div style={{fontSize:'12px', fontWeight:'700', color: isActive ? col : col, marginBottom:'6px'}}>{u.t}</div>
+                      <div style={{fontSize:'11.5px', color:T.t1, lineHeight:'1.5', fontWeight:'500', marginBottom: isActive ? '14px' : '0'}}>{u.d}</div>
+
+                      <div style={{ overflow:'hidden', maxHeight: isActive ? '80px' : '0', opacity: isActive ? 1 : 0, transition:'max-height 0.32s ease, opacity 0.24s ease' }}>
+                        <div style={{ background: T.b0, borderRadius:'7px', padding:'10px 12px', display:'flex', alignItems:'center', gap:'10px' }}>
+                          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color: col, flexShrink:0, lineHeight:1 }}>{u.stat}</div>
+                          <div>
+                            <div style={{fontSize:'10px', fontWeight:'700', color:T.t1, lineHeight:'1.3'}}>{u.statLabel}</div>
+                            <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, fontWeight:'600', marginTop:'2px'}}>{u.src}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {!isActive && <div style={{fontSize:'9px', color:T.t3, marginTop:'8px', fontWeight:'600'}}>→ see the research</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </Reveal>
-
+        </div>
       </section>
     </div>
   );
@@ -986,6 +1130,7 @@ const ReportsSlideshow = () => {
 // ─── ASSESSMENT PAGE ──────────────────────────────────────────────────────────
 const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
   const [step, setStep] = useState('admin'); // Starts at Admin now
+  const [assessmentType, setAssessmentType] = useState(null);
   const [intakeStage, setIntakeStage] = useState(1);
 const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptOther:'',role:'',exp:'',gender:'',org:'',industry:'', batch:'', purpose:'', level:'', conf:'Restricted — HR Leadership Only'});  const [answers, setAnswers] = useState(Array(QS.length).fill(null));
   const [cur, setCur] = useState(0);
@@ -1256,108 +1401,151 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
     setTab('results');
   };
 
-  const inp=(focused)=>({
-    width:'100%', padding:'12px 16px', border:`1px solid ${focused?T.c:T.b2}`, borderRadius:'6px',
+ const inp=(focused)=>({
+    width:'100%', padding:'12px 16px', border:`1px solid ${focused?T.gold:T.b2}`, borderRadius:'6px',
     fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
     background:T.bg3, color:T.t0, outline:'none', transition:'all 0.2s',
-    boxShadow:focused?`0 0 0 3px ${T.cGlow}`:'none',
+    boxShadow:focused?`0 0 0 3px ${T.goldP}`:'none',
   });
   const [focused,setFocused]=useState({});
   const lbl={display:'block',fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.t2,marginBottom:'7px',fontFamily:"'JetBrains Mono',monospace"};
   const selStyle={width:'100%',padding:'12px 16px',border:`1px solid ${T.b2}`,borderRadius:'6px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'600',background:T.bg3,color:T.t0,outline:'none',cursor:'pointer'};
 
-  // ── ASSESSMENT CONTEXT (Formerly Admin Setup) ──
-  if(step==='admin') return (
-    <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px'}}>
-      <div style={{maxWidth:'700px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
-        <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'24px'}}>
-          <span style={{fontSize:'28px'}}>🏢</span>
-          <div>
-            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0}}>Assessment Context</h2>
-            <p style={{fontSize:'13px',color:T.t2,fontWeight:'500'}}>Please provide your organizational details to calibrate your results.</p>
+ // ── ASSESSMENT CONTEXT (Formerly Admin Setup) ──
+  if(step==='admin') {
+    if(!assessmentType) return (
+      <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px', display:'flex', alignItems:'center', justifyContent:'center'}}>
+        <div style={{maxWidth:'800px', width:'100%', animation:'fadeUp 0.6s ease forwards'}}>
+          <div style={{textAlign:'center', marginBottom:'40px'}}>
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0}}>How are you taking this assessment?</h2>
+            <p style={{fontSize:'15px',color:T.t2,fontWeight:'500'}}>Select your path to calibrate the assessment context.</p>
           </div>
-        </div>
-
-        <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
-          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Industry & Role Details</h3>
-          <p style={{fontSize:'13px',color:T.t2,marginBottom:'24px',fontWeight:'500'}}>Select your sector and assessment purpose. Your development plan will adapt automatically to this context.</p>
-
-          <div style={{marginBottom:'20px'}}>
-            <label style={lbl}>Organisation Name</label>
-            <input value={resp.org} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="e.g. Allied Bank Limited" style={inp(focused.org)} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} />
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px'}}>
+            <button onClick={() => { setAssessmentType('org'); setResp(r=>({...r, conf:'Restricted — HR Leadership Only'})); }} style={{background:T.bg1, border:`2px solid ${T.b2}`, borderRadius:'16px', padding:'48px 32px', cursor:'pointer', transition:'all 0.2s', textAlign:'center'}} onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.transform='translateY(-4px)';}} onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.transform='none';}}>
+              <div style={{fontSize:'48px', marginBottom:'16px'}}>🏢</div>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Assigned by Organization</h3>
+              <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.6'}}>I was asked to complete this by my employer, HR, or a hiring manager.</p>
+            </button>
+            <button onClick={() => { setAssessmentType('ind'); setResp(r=>({...r, purpose:'Personal Development Planning', conf:'Candidate-Visible — Both Reports'})); }} style={{background:T.bg1, border:`2px solid ${T.b2}`, borderRadius:'16px', padding:'48px 32px', cursor:'pointer', transition:'all 0.2s', textAlign:'center'}} onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.transform='translateY(-4px)';}} onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.transform='none';}}>
+              <div style={{fontSize:'48px', marginBottom:'16px'}}>👤</div>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Taking Individually</h3>
+              <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.6'}}>I am taking this for my own personal and professional development.</p>
+            </button>
           </div>
-
-          <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
-            <div>
-              <label style={lbl}>Assessment Batch Name</label>
-              <input value={resp.batch} onChange={e=>setResp(r=>({...r,batch:e.target.value}))} placeholder="e.g. Q2 2026 Leadership Cohort" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>setFocused(f=>({...f,batch:false}))} />
-            </div>
-            <div>
-              <label style={lbl}>Primary Assessment Purpose</label>
-              <select value={resp.purpose} onChange={e=>setResp(r=>({...r,purpose:e.target.value}))} style={selStyle}>
-                <option value="">Select…</option>
-                <option>Pre-Hiring Screening</option>
-                <option>Leadership Pipeline Assessment</option>
-                <option>Succession Planning</option>
-                <option>Post-Training Evaluation</option>
-                <option>Team Composition Analysis</option>
-                <option>Personal Development Planning</option>
-              </select>
-            </div>
-          </div>
-
-          <label style={{...lbl,marginBottom:'12px'}}>Select Industry Sector *</label>
-          <div className="grid-3-col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'6px',marginBottom:'24px'}}>
-            {Object.entries(IND).map(([key,val])=>(
-              <button key={key} onClick={()=>setResp(r=>({...r,industry:key}))} style={{
-                padding:'11px 8px',borderRadius:'6px',cursor:'pointer',textAlign:'center',
-                background:resp.industry===key?`${T.c}20`:T.bg3,
-                border:`2px solid ${resp.industry===key?T.c:T.b1}`,
-                color:resp.industry===key?T.c:T.t2,
-                fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'11px',fontWeight:'700',
-                transition:'all 0.18s',lineHeight:'1.3',
-              }}>
-                <div style={{fontSize:'18px', marginBottom:'4px'}}>{val.icon}</div>
-                <div>{val.short}</div>
-              </button>
-            ))}
-          </div>
-
-          <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
-            <div>
-              <label style={lbl}>Role Level Being Assessed</label>
-              <select value={resp.level} onChange={e=>setResp(r=>({...r,level:e.target.value}))} style={selStyle}>
-                <option value="">All Levels</option>
-                <option>Entry Level (0–3 years)</option>
-                <option>Junior Officer (3–7 years)</option>
-                <option>Mid-Level Manager (7–12 years)</option>
-                <option>Senior Manager / Head</option>
-                <option>Executive / Director+</option>
-              </select>
-            </div>
-            <div>
-              <label style={lbl}>Confidentiality Level</label>
-              <select value={resp.conf} onChange={e=>setResp(r=>({...r,conf:e.target.value}))} style={selStyle}>
-                <option>Restricted — HR Leadership Only</option>
-                <option>Internal — Management & Candidate</option>
-                <option>Candidate-Visible — Both Reports</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'7px',padding:'14px 16px',marginBottom:'24px'}}>
-            <p style={{fontSize:'12px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>
-              <strong style={{color:T.am}}>Validity Alert System is always active.</strong> Ten L-scale items and four validity indices run automatically for every assessment regardless of configuration. Candidates are never informed of validity checks. The Validity Index appears only in the Technical Report.
-            </p>
-          </div>
-
-          <button onClick={()=>{if(!resp.industry){alert('Please select an industry sector.');return;} setStep('consent');}} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
-            Continue to Consent →
-          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+
+    return (
+      <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px'}}>
+        <div style={{maxWidth:'700px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
+          <button onClick={() => setAssessmentType(null)} style={{background:'transparent', border:'none', color:T.t2, cursor:'pointer', fontSize:'13px', fontWeight:'700', marginBottom:'24px', padding:0}}>← Back to selection</button>
+          <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'24px'}}>
+            <span style={{fontSize:'28px'}}>{assessmentType === 'org' ? '🏢' : '👤'}</span>
+            <div>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0}}>Assessment Context</h2>
+              <p style={{fontSize:'13px',color:T.t2,fontWeight:'500'}}>Please provide your details to calibrate your results.</p>
+            </div>
+          </div>
+
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Industry & Role Details</h3>
+            <p style={{fontSize:'13px',color:T.t2,marginBottom:'24px',fontWeight:'500'}}>Select your sector and assessment purpose. Your development plan will adapt automatically to this context.</p>
+
+            {assessmentType === 'org' ? (
+              <>
+                <div style={{marginBottom:'20px'}}>
+                  <label style={lbl}>Organisation Name</label>
+                  <input value={resp.org} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="e.g. Allied Bank Limited" style={inp(focused.org)} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} />
+                </div>
+
+                <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
+                  <div>
+                    <label style={lbl}>Assessment Batch Name</label>
+                    <input value={resp.batch} onChange={e=>setResp(r=>({...r,batch:e.target.value}))} placeholder="e.g. Q2 2026 Leadership Cohort" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>setFocused(f=>({...f,batch:false}))} />
+                  </div>
+                  <div>
+                    <label style={lbl}>Primary Assessment Purpose</label>
+                    <select value={resp.purpose} onChange={e=>setResp(r=>({...r,purpose:e.target.value}))} style={selStyle}>
+                      <option value="">Select…</option>
+                      <option>Pre-Hiring Screening</option>
+                      <option>Leadership Pipeline Assessment</option>
+                      <option>Succession Planning</option>
+                      <option>Post-Training Evaluation</option>
+                      <option>Team Composition Analysis</option>
+                      <option>Personal Development Planning</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{marginBottom:'20px'}}>
+                  <label style={lbl}>Full Name *</label>
+                  <input value={resp.name} onChange={e=>setResp(r=>({...r,name:e.target.value}))} placeholder="e.g. Ayesha Raza" style={inp(focused.name)} onFocus={()=>setFocused(f=>({...f,name:true}))} onBlur={()=>setFocused(f=>({...f,name:false}))} />
+                </div>
+                <div style={{marginBottom:'20px'}}>
+                  <label style={lbl}>Primary Assessment Purpose</label>
+                  <input value="Personal Development Planning" disabled style={{...inp(false), opacity:0.6, cursor:'not-allowed'}} />
+                </div>
+              </>
+            )}
+
+            <label style={{...lbl,marginBottom:'12px'}}>
+              {assessmentType === 'org' ? 'Select Industry Sector *' : 'Industry you are in or target industry *'}
+            </label>
+            <div className="grid-3-col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'6px',marginBottom:'24px'}}>
+              {Object.entries(IND).map(([key,val])=>(
+                <button key={key} onClick={()=>setResp(r=>({...r,industry:key}))} style={{
+                  padding:'11px 8px',borderRadius:'6px',cursor:'pointer',textAlign:'center',
+                  background:resp.industry===key?`${T.gold}20`:T.bg3,
+                  border:`2px solid ${resp.industry===key?T.gold:T.b1}`,
+                  color:resp.industry===key?T.gold:T.t2,
+                  fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'11px',fontWeight:'700',
+                  transition:'all 0.18s',lineHeight:'1.3',
+                }}>
+                  <div style={{fontSize:'18px', marginBottom:'4px'}}>{val.icon}</div>
+                  <div>{val.short}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
+              <div>
+                <label style={lbl}>Role Level Being Assessed</label>
+                <select value={resp.level} onChange={e=>setResp(r=>({...r,level:e.target.value}))} style={selStyle}>
+                  <option value="">All Levels</option>
+                  <option>Entry Level (0–3 years)</option>
+                  <option>Junior Officer (3–7 years)</option>
+                  <option>Mid-Level Manager (7–12 years)</option>
+                  <option>Senior Manager / Head</option>
+                  <option>Executive / Director+</option>
+                </select>
+              </div>
+              {assessmentType === 'org' && (
+                <div>
+                  <label style={lbl}>Confidentiality Level</label>
+                  <select value={resp.conf} onChange={e=>setResp(r=>({...r,conf:e.target.value}))} style={selStyle}>
+                    <option>Restricted — HR Leadership Only</option>
+                    <option>Internal — Management & Candidate</option>
+                    <option>Candidate-Visible — Both Reports</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <button onClick={()=>{
+              if(assessmentType === 'ind' && !resp.name){alert('Please enter your Full Name.');return;}
+              if(!resp.industry){alert('Please select an industry sector.');return;} 
+              setStep('consent');
+            }} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+              Continue to Consent →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── CONSENT ──
   if(step==='consent') return (
@@ -1385,6 +1573,12 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           </div>
         </div>
 
+        <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
+          <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>
+            <strong style={{color:T.am}}>Validity Alert System is always active.</strong> Ten L-scale items and four validity indices run automatically for every assessment regardless of configuration. Candidates are never informed of validity checks. The Validity Index appears only in the Technical Report.
+          </p>
+        </div>
+
         <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'16px 20px',marginBottom:'24px',display:'flex',alignItems:'flex-start',gap:'12px'}}>
           <input type="checkbox" checked={consentChecked} onChange={e=>setConsentChecked(e.target.checked)} style={{marginTop:'4px',accentColor:T.c,width:'18px',height:'18px',flexShrink:0,cursor:'pointer'}} />
           <label onClick={()=>setConsentChecked(!consentChecked)} style={{fontSize:'13px',color:T.t1,lineHeight:'1.6',cursor:'pointer',fontWeight:'500'}}>
@@ -1398,6 +1592,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
       </div>
     </div>
   );
+
 
   // ── INTAKE ──
   if(step==='intake') return (
@@ -1597,8 +1792,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.t1} fontWeight="700">{sc.rLabel}</text>
               </g>
             </svg>
-            <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.c,cursor:'pointer'}} /></div>
-            <div style={{textAlign:'center',padding:'10px 14px',background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:T.t1,marginBottom:'20px'}}>{zone.label}</div>
+   <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.gold,cursor:'pointer'}} /></div>            <div style={{textAlign:'center',padding:'10px 14px',background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:T.t1,marginBottom:'20px'}}>{zone.label}</div>
             <button onClick={nextSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
           </div>
         </div>
@@ -1684,17 +1878,17 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               {options.map(opt=>{
                 const isSelected = gameChoice?.key === opt.k;
                 return (
-                <button key={opt.k} onClick={()=>!gameLocked&&chooseScenario(opt.q,isG2?2:3,opt.k)} style={{
+                   <button key={opt.k} onClick={()=>!gameLocked&&chooseScenario(opt.q,isG2?2:3,opt.k)} style={{
                   display:'flex',alignItems:'flex-start',gap:'12px',padding:'13px 16px',
                   borderRadius:'7px',cursor:gameLocked?'default':'pointer',
-                  border: isSelected ? `2px solid ${T.c}` : `1px solid ${T.b2}`,
-                  background: isSelected ? `${T.c}16` : T.bg2,
+                  border: isSelected ? `2px solid ${T.gold}` : `1px solid ${T.b2}`,
+                  background: isSelected ? `${T.gold}16` : T.bg2,
                   textAlign:'left',transition:'all 0.18s',width:'100%',
                   opacity: gameLocked ? (isSelected ? 1 : 0.4) : 1,
                 }}
-                onMouseOver={e=>{if(!gameLocked){e.currentTarget.style.borderColor=T.bC;e.currentTarget.style.background=T.bg3;}}}
+                onMouseOver={e=>{if(!gameLocked){e.currentTarget.style.borderColor=T.gold;e.currentTarget.style.background=T.bg3;}}}
                 onMouseOut={e=>{if(!gameLocked){e.currentTarget.style.borderColor=T.b2;e.currentTarget.style.background=T.bg2;}}}>
-                  <span className="mono" style={{fontSize:'12px',fontWeight:'700',color:T.c,flexShrink:0,marginTop:'1px'}}>{opt.k}</span>
+                  <span className="mono" style={{fontSize:'12px',fontWeight:'700',color:T.gold,flexShrink:0,marginTop:'1px'}}>{opt.k}</span>
                   <span style={{fontSize:'13px',color:isSelected?T.t0:T.t1,lineHeight:'1.6',fontWeight:isSelected?'800':'600'}}>{opt.l}</span>
                 </button>
               )})}
@@ -1765,16 +1959,16 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                   <button key={val} onClick={()=>handleAnswer(val)} style={{
                     display:'flex',alignItems:'center',gap:'14px',
                     padding:'12px 18px',borderRadius:'7px',cursor:'pointer',
-                    border:`${sel?2:1}px solid ${sel?T.c:T.b1}`,
-                    background:sel?`${T.c}16`:T.bg2,
+                    border:`${sel?2:1}px solid ${sel?T.gold:T.b1}`,
+                    background:sel?`${T.gold}16`:T.bg2,
                     textAlign:'left',transition:'all 0.18s',width:'100%',
                   }}
-                  onMouseOver={e=>{if(!sel){e.currentTarget.style.borderColor=T.bC;e.currentTarget.style.background=T.bg3;}}}
+                  onMouseOver={e=>{if(!sel){e.currentTarget.style.borderColor=T.gold;e.currentTarget.style.background=T.bg3;}}}
                   onMouseOut={e=>{if(!sel){e.currentTarget.style.borderColor=T.b1;e.currentTarget.style.background=T.bg2;}}}>
                     <div style={{
                       width:'18px',height:'18px',borderRadius:'50%',flexShrink:0,
-                      border:`2px solid ${sel?T.c:T.b2}`,
-                      background:sel?T.c:'transparent',
+                      border:`2px solid ${sel?T.gold:T.b2}`,
+                      background:sel?T.gold:'transparent',
                       display:'flex',alignItems:'center',justifyContent:'center',
                       transition:'all 0.18s',
                     }}>
@@ -2280,23 +2474,23 @@ const allDims = [
       
       {/* Tab Navigation */}
       <div className="no-print" style={{display:'flex', gap:'8px', marginBottom:'32px', flexWrap:'wrap'}}>
-        <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='action'?T.c:T.b2}`, background:resTab==='action'?T.c:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='action'?T.gold:T.b2}`, background:resTab==='action'?T.gold:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
           🧭 Candidate Action Plan
         </button>
-        <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.c:T.b2}`, background:resTab==='tech'?T.c:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.gold:T.b2}`, background:resTab==='tech'?T.gold:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
           📊 Technical Report
         </button>
-        <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='player'?T.c:T.b2}`, background:resTab==='player'?T.c:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
           🎮 Player Report
         </button>
-        <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.c:T.b2}`, background:resTab==='team'?T.c:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.gold:T.b2}`, background:resTab==='team'?T.gold:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
           👥 Team Aggregate
         </button>
-        <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.c:T.b2}`, background:resTab==='comp'?T.c:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.gold:T.b2}`, background:resTab==='comp'?T.gold:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
           🧩 Team Composition
         </button>
       </div>
-
+      
       {/* ─── TAB 1: ACTION PLAN ─── */}
       {resTab === 'action' && (
         <div className="anim-fadeUp">
@@ -3819,196 +4013,46 @@ const pid_email = latest.email||'';
   );
 };
 
-// ─── METHODOLOGY PAGE ─────────────────────────────────────────────────────────
-const MethodologyPage = () => {
-  const refs = [
-    {
-      text: "Goldberg, L. R. (1999). A broad-bandwidth, public domain personality inventory. Personality Psychology in Europe, 7, 7–28. [IPIP — explicitly public domain, unrestricted commercial use]",
-      href: "https://ipip.ori.org/A%20broad-bandwidth%20inventory.pdf"
-    },
-    {
-      text: "Barrick, M. R., & Mount, M. K. (1991). The Big Five personality dimensions and job performance. Personnel Psychology, 44(1), 1–26.",
-      href: "https://doi.org/10.1111/j.1744-6570.1991.tb00688.x"
-    },
-    {
-      text: "Paulhus, D. L. (1991). Measurement and control of response bias. In J. P. Robinson et al. (Eds.), Measures of Personality and Social Psychological Attitudes. [Validity scale methodology]",
-      href: "https://doi.org/10.1016/B978-0-12-590241-0.50006-X"
-    },
-    {
-      text: "Earley, P. C., & Ang, S. (2003). Cultural intelligence: Individual interactions across cultures. Stanford University Press.",
-      href: "https://www.sup.org/books/business/cultural-intelligence"
-    },
-    {
-      text: "Ang, S., Van Dyne, L., et al. (2007). Cultural intelligence: Measurement and effects. Management and Organization Review, 3(3), 335–371.",
-      href: "https://www.cambridge.org/core/journals/management-and-organization-review/article/abs/cultural-intelligence-its-measurement-and-effects-on-cultural-judgment-and-decision-making-cultural-adaptation-and-task-performance/EEB4216A0F254559FF78DACC4F93762D"
-    },
-    {
-      text: "Organ, D. W. (1988). Organizational citizenship behavior: The good soldier syndrome. Lexington Books.",
-      href: "https://psycnet.apa.org/record/1988-97376-000"
-    },
-    {
-      text: "Lombardo, M. M., & Eichinger, R. W. (2000). High potentials as high learners. Human Resource Management, 39(4), 321–329.",
-      href: "https://doi.org/10.1002/1099-050X(200024)39:4<321::AID-HRM4>3.0.CO;2-1"
-    },
-    {
-      text: "Rest, J. R. (1986). Moral development: Advances in research and theory. Praeger. [Ethical orientation framework]",
-      href: "https://books.google.com/books/about/Moral_Development.html?id=mL9-AAAAMAAJ"
-    },
-    {
-      text: "Crowne, D. P., & Marlowe, D. (1960). A new scale of social desirability. Journal of Consulting Psychology, 24(4), 349–354. [L-scale methodology]",
-      href: "https://pubmed.ncbi.nlm.nih.gov/13813058/"
-    },
-    {
-      text: "Khalid, S. A., et al. (2009). OCB as a predictor of performance: Pakistani university sample. International Journal of Economics & Finance, 1(2), 139–145.",
-      href: "https://ccsenet.org/journal/index.php/ijef/article/view/4945"
-    }
-  ];
-
+// ─── LEGAL & PRIVACY PAGE ─────────────────────────────────────────────────────
+const LegalPage = () => {
   return (
     <div style={{maxWidth:'1100px', margin:'0 auto', padding:'80px 32px'}}>
-      
-      {/* ── HEADER ── */}
-      <div style={{textAlign:'center', marginBottom:'64px'}}>
-        <Reveal delay={0}>
-          <Pill label="Scientific Foundation" style={{marginBottom:'16px'}} />
-        </Reveal>
-        <Reveal delay={0.1}>
-          <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', margin:'0 0 12px', color:T.t0}}>
-            Scientific Foundation & Validity Controls
-          </h2>
-          <p style={{fontSize:'15px', color:T.t2, fontWeight:'500', maxWidth:'600px', margin:'0 auto'}}>
-            For client credibility presentations and internal validation documentation.
-          </p>
-        </Reveal>
-        <Reveal delay={0.2}>
-          <GoldLine style={{width:'60px', margin:'24px auto 0'}} />
-        </Reveal>
-      </div>
-
-      {/* ── PEER-REVIEWED REFERENCES ── */}
       <Reveal delay={0.1}>
-        <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>
-          Peer-Reviewed References
-        </h3>
-      </Reveal>
-      <Reveal delay={0.2}>
-        <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px', marginBottom:'64px'}}>
-          {refs.map((ref, i) => (
-            <a key={i} href={ref.href} target="_blank" rel="noreferrer" style={{
-              display:'block', padding:'14px 18px', background:T.bg2, borderRadius:'8px', marginBottom:'10px',
-              fontSize:'12.5px', color:T.t1, lineHeight:'1.6', borderLeft:`4px solid ${i % 2 === 0 ? T.c : T.gold}`,
-              fontWeight:'500', transition:'all 0.2s', cursor:'pointer', textDecoration:'none'
-            }}
-            onMouseOver={e=>{ e.currentTarget.style.background = T.bg3; e.currentTarget.style.transform = 'translateX(4px)'; }}
-            onMouseOut={e=>{ e.currentTarget.style.background = T.bg2; e.currentTarget.style.transform = 'none'; }}>
-              {ref.text}
-            </a>
-          ))}
-        </div>
-      </Reveal>
-
-      {/* ── HOW CORE DETECTS DISHONEST RESPONSES ── */}
-      <Reveal delay={0.1}>
-        <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>
-          How CORE Detects Dishonest Responses
-        </h3>
-      </Reveal>
-      <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
-        {[
-          {t:'L-Scale (Lie Scale) — 10 Items', c:T.rd, d:'10 items describing near-impossible "saintly" behaviours embedded invisibly throughout the assessment. Honest respondents agree with 0–3 of these. Agreement with 5 or more indicates social desirability inflation. Items are deliberately subtle — they feel like ordinary self-assessment questions, not obvious traps.'},
-          {t:'Reverse Consistency Index', c:T.am, d:'For each dimension, forward-scored and reverse-scored items are mathematically compared. Honest respondents are internally consistent. Scoring high on "I always help colleagues" AND "I prefer to focus on my own work" simultaneously is a contradiction that gets caught and scored.'},
-          {t:'Acquiescence Bias Detection', c:T.c, d:'Respondents who click "Strongly Agree" on more than 55% of all items — regardless of reverse scoring — are detected. This pattern indicates either a response style artifact or deliberate inflation. The proportion is calculated and reported in the Technical Report.'},
-          {t:'Extreme Response Style Index', c:T.gn, d:'Respondents who choose only extreme responses (1 or 5) on more than 70% of items are flagged. Above 85% triggers a hard red. Above 90% triggers a critical override that labels the entire result uninterpretable — regardless of what other indices show.'},
-        ].map((v,i)=>(
-          <Reveal key={i} delay={i * 0.15}>
-            <div style={{
-              padding:'32px 28px', background:`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`,
-              border:`1px solid ${v.c}28`, borderRadius:'12px', height:'100%', transition:'all 0.2s', cursor:'default'
-            }}
-            onMouseOver={e=>{ e.currentTarget.style.background=`linear-gradient(${v.c}16, ${v.c}16), ${T.bg1}`; e.currentTarget.style.transform='translateY(-4px)'; }}
-            onMouseOut={e=>{ e.currentTarget.style.background=`linear-gradient(${v.c}08, ${v.c}08), ${T.bg1}`; e.currentTarget.style.transform='none'; }}>
-              <div className="mono" style={{fontSize:'11px', fontWeight:'800', color:v.c, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:'14px', borderBottom:`1px solid ${v.c}28`, paddingBottom:'12px'}}>
-                {v.t}
-              </div>
-              <p style={{fontSize:'13.5px', color:T.t1, lineHeight:'1.7', fontWeight:'500'}}>
-                {v.d}
-              </p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-
-      {/* ── INSTRUMENT GOVERNANCE ── */}
-      <Reveal delay={0.1}>
-        <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', marginBottom:'20px', color:T.t0}}>
-          Instrument Governance
-        </h3>
-      </Reveal>
-      <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'64px'}}>
-        {[
-          {h:'Copyright Status', p:'All five CORE modules are built on theoretical constructs that are not copyrightable. IPIP personality items are explicitly public domain. New items authored for CORE constitute original work owned by Carnelian Pvt Ltd.', c:'ipip.ori.org · Goldberg (1999)'},
-          {h:'Validity Methodology', p:'L-scale methodology follows Crowne-Marlowe Social Desirability Scale principles (1960). Consistency index adapted from Minnesota Multiphasic Personality Inventory (MMPI) F-scale methodology. Items are original Carnelian work.', c:'Paulhus (1991) · MMPI principles'},
-          {h:'Industry Context Engine', p:"Sector-specific dimension weighting and risk thresholds are derived from meta-analytic evidence on dimension-outcome correlations per industry, combined with Carnelian's practitioner knowledge of the Pakistani professional context.", c:'Barrick & Mount (1991) · Carnelian (2025)'},
-          {h:'Commercial Use', p:'CORE is proprietary to Carnelian Pvt Ltd. Client organisations receive a license to administer and use results internally. The scoring algorithm, validity methodology, and industry profiles are Carnelian intellectual property.', c:'Carnelian Pvt Ltd'},
-        ].map((card,i)=>(
-          <Reveal key={i} delay={i * 0.15}>
-            <div style={{
-              background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', borderTop:`4px solid ${i%2===0?T.c:T.gold}`,
-              padding:'32px 28px', display:'flex', flexDirection:'column', height:'100%', transition:'all 0.2s',
-            }}
-            onMouseOver={e=>{ e.currentTarget.style.background=T.bg2; e.currentTarget.style.transform='translateY(-4px)'; }}
-            onMouseOut={e=>{ e.currentTarget.style.background=T.bg1; e.currentTarget.style.transform='none'; }}>
-              <h4 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', fontWeight:'700', marginBottom:'12px', color:T.t0}}>
-                {card.h}
-              </h4>
-              <p style={{fontSize:'13.5px', color:T.t2, lineHeight:'1.7', flex:1, marginBottom:'20px', fontWeight:'500'}}>
-                {card.p}
-              </p>
-              <div style={{height:'1px', background:T.b2, marginBottom:'16px'}} />
-              <div className="mono" style={{fontSize:'10px', color:T.c, fontWeight:'800', letterSpacing:'0.1em'}}>
-                {card.c}
-              </div>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-
-      {/* ── LEGAL FRAMEWORK SUMMARY ── */}
-      <Reveal delay={0.1}>
-        <div style={{borderTop:`2px solid ${T.c}`, paddingTop:'64px'}}>
-          <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', marginBottom:'12px', color:T.t0}}>
+        <div>
+          <Pill label="Legal & Privacy" style={{marginBottom:'16px'}} />
+          <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', marginBottom:'16px', color:T.t0}}>
             Legal Framework Summary
           </h2>
-          <p style={{fontSize:'14px', color:T.t2, fontWeight:'500', marginBottom:'32px', lineHeight:'1.7'}}>
+          <p style={{fontSize:'15px', color:T.t2, fontWeight:'500', marginBottom:'48px', lineHeight:'1.7', maxWidth:'750px'}}>
             A plain-language summary of Carnelian's legal commitments to participants and client organisations. Full agreements are available separately as CORE-ICA-001 (individual) and CORE-ODPA-001 (organisational).
           </p>
 
-          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', marginBottom:'24px'}}>
+          <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'32px'}}>
             
             {/* To Participants */}
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px', borderTop:`4px solid ${T.c}`}}>
-              <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.c, marginBottom:'20px'}}>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', borderTop:`4px solid ${T.c}`}}>
+              <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.c, marginBottom:'24px'}}>
                 To Participants — What Carnelian Commits
               </div>
-              <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
-                <div><strong style={{color:T.t0}}>What we collect:</strong> Name, email, professional details, assessment responses. CNIC is optional and stored encrypted — never used as a primary key.</div>
-                <div><strong style={{color:T.t0}}>What we never do:</strong> Sell data, share identifiable results outside the assessment process, or use CNIC for any purpose other than identity recovery.</div>
-                <div><strong style={{color:T.t0}}>Who sees your results:</strong> The commissioning organisation's HR department receives the Technical Report. The Action Plan is yours personally.</div>
-                <div><strong style={{color:T.t0}}>AI training use:</strong> Anonymised, non-identifiable data only. Never raw responses. Never shared with third parties. Carnelian products only.</div>
-                <div><strong style={{color:T.t0}}>Your rights:</strong> Access, correction, and deletion available at any time by writing to hello@carnelianco.com. Response within 30–45 days.</div>
-                <div><strong style={{color:T.t0}}>Legal protection:</strong> PECA 2016 (Sections 25 & 26) — unauthorised disclosure of personal information is a criminal offence. Contract Act 1872 — this agreement is legally binding. Personal Data Protection Bill 2021 framework applies.</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13.5px', color:T.t1, lineHeight:'1.65', fontWeight:'500'}}>
+                <div><strong style={{color:T.t0}}>What we collect:</strong> Your full name, email address, phone number, and professional details (role, department, experience, organisation) — to generate your personalised report and link your results across retakes.</div>
+<div><strong style={{color:T.t0}}>Why we use your email:</strong> Your email address is your unique assessment identifier. It is used solely to link your results if you retake CORE and to generate progress comparisons. It is never used for marketing.</div>
+<div><strong style={{color:T.t0}}>What we never do:</strong> Sell your data. Share your identifiable results with anyone outside your assessment process. Use your email or phone number for any purpose other than assessment delivery, progress tracking, and responding to your data rights requests.</div>
+<div><strong style={{color:T.t0}}>Who sees your results:</strong> The commissioning organisation's HR leadership receives the Technical Report under their confidentiality level setting. The Action Plan is written for you personally and contains no HR risk language.</div>
+<div><strong style={{color:T.t0}}>AI training use:</strong> Anonymised, non-identifiable aggregated data only. Never raw responses. Never your name, email, or phone. Carnelian internal use only — never shared with third-party AI providers.</div>
+<div><strong style={{color:T.t0}}>Your rights:</strong> You may request access to, correction of, or deletion of your personal data at any time by writing to hello@carnelianco.com. We will respond within 30 days. Deletion requests are processed within 45 days.</div>
+<div><strong style={{color:T.t0}}>Legal protection:</strong> PECA 2016 (Sections 25 & 26) — unauthorised disclosure of personal information is a criminal offence under Pakistani law. Contract Act 1872 — this agreement is legally binding. Personal Data Protection Act 2023 applies to all data collection, processing, and retention under this assessment.</div>
               </div>
             </div>
 
             {/* To Organisations */}
-            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px', borderTop:`4px solid #3B82F6`}}>
-              <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:'#3B82F6', marginBottom:'20px'}}>
+            <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', borderTop:`4px solid #3B82F6`}}>
+              <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:'#3B82F6', marginBottom:'24px'}}>
                 To Organisations — What Carnelian Commits
               </div>
-              <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+              <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13.5px', color:T.t1, lineHeight:'1.65', fontWeight:'500'}}>
                 <div><strong style={{color:T.t0}}>Role:</strong> Carnelian is the Data Processor. The client organisation is the Data Controller. Carnelian processes data on the client's behalf according to this agreement.</div>
-                <div><strong style={{color:T.t0}}>Security:</strong> Access-controlled database, encrypted CNIC storage, confidentiality obligations on all Carnelian personnel, 72-hour breach notification.</div>
-                <div><strong style={{color:T.t0}}>Permitted use by organisations:</strong> Informing internal HR decisions, sharing with relevant HR/management personnel, using in structured feedback conversations.</div>
+<div><strong style={{color:T.t0}}>Security:</strong> Access-controlled database, email addresses stored as unique identifiers, confidentiality obligations on all Carnelian personnel, 72-hour breach notification to the commissioning organisation and affected individuals.</div>                <div><strong style={{color:T.t0}}>Permitted use by organisations:</strong> Informing internal HR decisions, sharing with relevant HR/management personnel, using in structured feedback conversations.</div>
                 <div><strong style={{color:T.t0}}>Prohibited use by organisations:</strong> Sharing reports externally without respondent consent, using CORE results as the sole basis for consequential decisions, reproducing or reselling CORE methodology.</div>
                 <div><strong style={{color:T.t0}}>Liability boundary:</strong> Carnelian's responsibility ends at delivery of reports to the HR contact. The client is responsible for all downstream use.</div>
                 <div><strong style={{color:T.t0}}>Governing law:</strong> Laws of Pakistan. Arbitration: Arbitration Act 1940, seat Lahore. Data retention: 5 years, then deleted or anonymised.</div>
@@ -4018,11 +4062,11 @@ const MethodologyPage = () => {
           </div>
 
           {/* Warning Box */}
-          <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'10px', padding:'20px 24px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
-            <div style={{fontSize:'24px'}}>⚠️</div>
+          <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'12px', padding:'24px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
+            <div style={{fontSize:'28px'}}>⚠️</div>
             <div>
-              <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'6px'}}>Administrator Notice</div>
-              <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+              <div style={{fontSize:'14px', fontWeight:'800', color:T.am, marginBottom:'8px'}}>Administrator Notice</div>
+              <div style={{fontSize:'13.5px', color:T.t1, lineHeight:'1.65', fontWeight:'500'}}>
                 Both legal agreements (CORE-ICA-001 and CORE-ODPA-001) should be reviewed by a qualified Pakistani lawyer before full commercial deployment. The summary above is plain-language guidance only and does not constitute legal advice. Verify that <strong>hello@carnelianco.com</strong> is actively monitored before each deployment — it is the only contact respondents have for data rights and complaints. Review this email every two months.
               </div>
             </div>
@@ -4030,7 +4074,6 @@ const MethodologyPage = () => {
 
         </div>
       </Reveal>
-
     </div>
   );
 };
@@ -4067,7 +4110,7 @@ const Footer = () => {
     },
     {
       name: 'WhatsApp',
-      url: 'https://wa.me/923462828884',
+      url: 'https://wa.me/923462828886',
       icon: (
         <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -4205,7 +4248,7 @@ export default function App() {
       {tab==='assess'  && <AssessmentPage setTab={handleSetTab} setReportData={setReportData} setHistoryFlag={setHasHistory} />}
       {tab==='results' && <ResultsPage reportData={reportData} />}
       {tab==='progress'&& <ProgressPage setTab={handleSetTab} setReportData={setReportData} />}
-      {tab==='method'  && <MethodologyPage />}
+      {tab==='legal'   && <LegalPage />}
       </div>
       <Footer />
     </>

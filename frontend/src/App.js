@@ -1778,29 +1778,50 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           <div style={{background:`${T.c}12`,border:`1px solid ${T.bC}`,borderRadius:'7px',padding:'10px 16px',marginBottom:'20px'}}>
             <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>Values in Balance — {ssStep+1} of 3</span>
           </div>
-          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.7rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{sc.title}</h3>
-            <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>{sc.intro}</p>
-            <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',marginBottom:'24px',borderLeft:`4px solid #8B5CF6`}}>
-              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>{sc.text}</p>
+          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'clamp(20px, 5vw, 36px)'}}>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(1.4rem, 5vw, 1.8rem)',fontWeight:'700',color:T.gold,marginBottom:'10px'}}>{sc.title}</h3>
+            <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>{sc.intro}</p>
+            
+            <div style={{background:`${T.c}10`,borderRadius:'8px',padding:'20px',marginBottom:'24px',borderLeft:`4px solid ${T.c}`}}>
+              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(15px, 4vw, 17px)',color:T.t0,lineHeight:'1.7',fontWeight:'600'}}>{sc.text}</p>
             </div>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px',gap:'16px'}}>
-              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',lineHeight:'1.4',fontWeight:'600'}}>{sc.left}</span>
-              <span style={{fontSize:'11px',color:T.t2,maxWidth:'220px',textAlign:'right',lineHeight:'1.4',fontWeight:'600'}}>{sc.right}</span>
+            
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'16px',gap:'12px'}}>
+              {/* LEFT BOX - BLUE */}
+              <div style={{flex:1, background:'rgba(59, 130, 246, 0.08)', padding:'12px 16px', borderRadius:'8px', border:`1px solid rgba(59, 130, 246, 0.3)`}}>
+                <span style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'600', display:'block'}}>{sc.left}</span>
+              </div>
+              {/* RIGHT BOX - PURPLE */}
+              <div style={{flex:1, background:'rgba(139, 92, 246, 0.08)', padding:'12px 16px', borderRadius:'8px', border:`1px solid rgba(139, 92, 246, 0.3)`, textAlign:'right'}}>
+                <span style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'600', display:'block'}}>{sc.right}</span>
+              </div>
             </div>
-            <svg viewBox="0 0 500 110" style={{width:'100%',overflow:'visible',marginBottom:'4px'}}>
-              <polygon points="250,100 232,112 268,112" fill={T.b2}/>
-              <rect x="225" y="110" width="50" height="5" rx="2.5" fill={T.b2}/>
-              <g style={{transformOrigin:'250px 100px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
-                <rect x="60" y="96" width="380" height="8" rx="4" fill={T.t0}/>
-                <rect x="52" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="76" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.t1} fontWeight="700">{sc.lLabel}</text>
-                <rect x="400" y="84" width="48" height="5" rx="2" fill={T.bg3}/>
-                <text x="424" y="80" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="9" fill={T.t1} fontWeight="700">{sc.rLabel}</text>
+            
+            <svg viewBox="0 0 500 120" style={{width:'100%',overflow:'visible',marginBottom:'8px'}}>
+              <polygon points="250,105 232,117 268,117" fill={T.b2}/>
+              <rect x="225" y="115" width="50" height="5" rx="2.5" fill={T.b2}/>
+              <g style={{transformOrigin:'250px 105px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
+                <rect x="60" y="101" width="380" height="8" rx="4" fill={T.t0}/>
+                
+                {/* LEFT PAD & TEXT - BLUE */}
+                <rect x="52" y="93" width="48" height="8" rx="2" fill="#3B82F6"/>
+                <text x="76" y="82" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#3B82F6" fontWeight="800">{sc.lLabel}</text>
+                
+                {/* RIGHT PAD & TEXT - PURPLE */}
+                <rect x="400" y="93" width="48" height="8" rx="2" fill="#8B5CF6"/>
+                <text x="424" y="82" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#8B5CF6" fontWeight="800">{sc.rLabel}</text>
               </g>
             </svg>
-   <div style={{padding:'0 4px',marginBottom:'16px'}}><input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.gold,cursor:'pointer'}} /></div>            <div style={{textAlign:'center',padding:'10px 14px',background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:T.t1,marginBottom:'20px'}}>{zone.label}</div>
-            <button onClick={nextSeesaw} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
+            
+            <div style={{padding:'0 4px',marginBottom:'24px'}}>
+              <input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.gold,cursor:'pointer'}} />
+            </div>            
+            
+            <div style={{textAlign:'center',padding:'12px 16px',background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'8px',fontSize:'13px',fontWeight:'700',color:T.t1,marginBottom:'24px'}}>
+              {zone.label}
+            </div>
+            
+            <button onClick={nextSeesaw} style={{width:'100%',padding:'14px',borderRadius:'8px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
           </div>
         </div>
       </div>

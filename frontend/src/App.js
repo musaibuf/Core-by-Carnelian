@@ -612,7 +612,7 @@ const StatsStrip = () => {
   const stats = [
     {n:'63',l:'Diagnostic Items'},{n:'14',l:'Dimensions Scored'},
     {n:'4', l:'Validity Indices'},{n:'10',l:'Lie-Detection Items'},
-    {n:'12',l:'Industry Contexts'},{n:'4', l:'Distinct Reports'},
+    {n:'12',l:'Industry Contexts'},{n:'5', l:'Distinct Reports'},
   ];
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -1940,7 +1940,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           <div style={{width:'60px',height:'60px',borderRadius:'50%',margin:'0 auto 22px',background:`${T.gn}16`,border:`2px solid ${T.gn}40`,display:'flex',alignItems:'center',justifyContent:'center'}}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={T.gn} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <Pill label={`${b.pct}% complete`} style={{marginBottom:'18px'}} />
+          <Pill label={`${b.pct}% complete`} color={T.gn} style={{marginBottom:'18px'}} />
           <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'2.2rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{b.title}</h2>
           <p style={{color:T.t2,fontSize:'14px',lineHeight:'1.7',marginBottom:'32px',fontWeight:'600'}}>{b.msg}</p>
           <div style={{display:'flex',gap:'4px',justifyContent:'center',marginBottom:'36px'}}>

@@ -2061,6 +2061,7 @@ const ResultsPage = ({reportData}) => {
   const [batchData, setBatchData] = useState([]);
   const [promoRole, setPromoRole] = useState(0);
   const [evState, setEvState] = useState({});
+const [expandedSteps, setExpandedSteps] = useState({});
 
   useEffect(() => {
     if (reportData?.docId) {
@@ -2176,46 +2177,46 @@ const allDims = [
 const buildHabits = (now, soon, fut, acts, v, dim) => {
   const dimSpecific = {
     'Conscientiousness & Delivery': {
-      managerStep:    'Tell your manager the 3 specific deliverables you are tracking this month and ask them to hold you accountable if you miss a self-imposed deadline.',
-      selfAssess:     'Pull up your last 8 weeks of commitments. Count how many you hit on time, how many were late, and how many were quietly dropped. Write the number down — not an estimate.',
-      retake:         'Retake CORE — your Conscientiousness baseline was ' + v + '/100. A 6-point rise here is achievable with consistent habit practice.',
-      ongoing:        'Every Friday, score yourself 1–5 on delivery reliability for the week. Note the one commitment that was hardest to keep and why.',
+      managerStep:  'Tell your manager the 3 specific deliverables you are tracking this month and ask them to hold you accountable if you miss a self-imposed deadline.',
+      selfAssess:   'Pull up your last 8 weeks of commitments. Count how many you hit on time, how many were late, and how many were quietly dropped. Write the number down — not an estimate.',
+      retake:       'Retake CORE — your Conscientiousness baseline was ' + v + '/100. A 6-point rise here is achievable with consistent habit practice.',
+      ongoing:      'Every Friday, score yourself 1–5 on delivery reliability for the week. Note the one commitment that was hardest to keep and why.',
     },
     'Emotional Resilience': {
-      managerStep:    'Tell your manager one specific pressure source in your role and ask for one structural change — not sympathy. Make it a concrete ask.',
-      selfAssess:     'Review the last 3 high-pressure situations you faced. For each, write: how did I respond in the moment, and what would a more stable version of me have done differently?',
-      retake:         'Retake CORE — your Emotional Stability baseline was ' + v + '/100. Stability is measurable and it does move with deliberate practice.',
-      ongoing:        'Every Friday, rate your emotional regulation for the week 1–5. Identify the moment you felt most reactive and log what triggered it.',
+      managerStep:  'Tell your manager one specific pressure source in your role and ask for one structural change — not sympathy. Make it a concrete ask.',
+      selfAssess:   'Review the last 3 high-pressure situations you faced. For each, write: how did I respond in the moment, and what would a more stable version of me have done differently?',
+      retake:       'Retake CORE — your Emotional Stability baseline was ' + v + '/100. Stability is measurable and it does move with deliberate practice.',
+      ongoing:      'Every Friday, rate your emotional regulation for the week 1–5. Identify the moment you felt most reactive and log what triggered it.',
     },
     'Learning Agility': {
-      managerStep:    'Tell your manager one domain outside your current expertise you are investing in this quarter and ask them to assign you one task that requires you to use it.',
-      selfAssess:     'List every significant thing you have learned in the past 3 months — self-directed only, not mandatory training. If the list is short, that is your data point.',
-      retake:         'Retake CORE — your Learning Agility baseline was ' + v + '/100. This dimension responds fastest to deliberate habit change.',
-      ongoing:        'Every Friday, write one sentence: "This week I learned _____ and I will apply it by _____." Keep the log. Review it monthly.',
+      managerStep:  'Tell your manager one domain outside your current expertise you are investing in this quarter and ask them to assign you one task that requires you to use it.',
+      selfAssess:   'List every significant thing you have learned in the past 3 months — self-directed only, not mandatory training. If the list is short, that is your data point.',
+      retake:       'Retake CORE — your Learning Agility baseline was ' + v + '/100. This dimension responds fastest to deliberate habit change.',
+      ongoing:      'Every Friday, write one sentence: "This week I learned _____ and I will apply it by _____." Keep the log. Review it monthly.',
     },
     'Constructive Attitude & Sportsmanship': {
-      managerStep:    'Tell your manager one institutional frustration you have been carrying and present it as a specific improvement proposal — not a complaint. Ask for the right channel to route it.',
-      selfAssess:     'Think back over the past month. How many times did you share a workplace frustration with a colleague rather than acting on it constructively? Write the honest number.',
-      retake:         'Retake CORE — your Sportsmanship baseline was ' + v + '/100. This dimension is directly observable by your team and shifts faster than most.',
-      ongoing:        'Every Friday, ask yourself: did I complain this week without proposing a solution? If yes, write down what the solution would have been.',
+      managerStep:  'Tell your manager one institutional frustration you have been carrying and present it as a specific improvement proposal — not a complaint. Ask for the right channel to route it.',
+      selfAssess:   'Think back over the past month. How many times did you share a workplace frustration with a colleague rather than acting on it constructively? Write the honest number.',
+      retake:       'Retake CORE — your Sportsmanship baseline was ' + v + '/100. This dimension is directly observable by your team and shifts faster than most.',
+      ongoing:      'Every Friday, ask yourself: did I complain this week without proposing a solution? If yes, write down what the solution would have been.',
     },
     'People Agility & Self-Reflection': {
-      managerStep:    'Ask your manager for one specific piece of feedback on a blind spot they have observed in you. Write it down and tell them what you will do about it.',
-      selfAssess:     'Pick one significant professional setback from the past 6 months. Write a one-page account — what happened, what your role was, and what you would do differently. Be specific.',
-      retake:         'Retake CORE — your People Agility baseline was ' + v + '/100. Self-awareness scores are among the most movable in the CORE battery.',
-      ongoing:        'After every significant meeting or decision this week, write two sentences: what I did well, and what I would change. Do not skip the second one.',
+      managerStep:  'Ask your manager for one specific piece of feedback on a blind spot they have observed in you. Write it down and tell them what you will do about it.',
+      selfAssess:   'Pick one significant professional setback from the past 6 months. Write a one-page account — what happened, what your role was, and what you would do differently. Be specific.',
+      retake:       'Retake CORE — your People Agility baseline was ' + v + '/100. Self-awareness scores are among the most movable in the CORE battery.',
+      ongoing:      'After every significant meeting or decision this week, write two sentences: what I did well, and what I would change. Do not skip the second one.',
     },
     'Social Confidence & Extraversion': {
-      managerStep:    'Tell your manager one specific situation — a meeting, a presentation, a difficult conversation — where you held back instead of stepping forward. Ask them to flag the next opportunity where you can take point.',
-      selfAssess:     'Think of the last 5 professional situations where you stayed quiet when you had something to say. Write down what stopped you each time. Look for the pattern.',
-      retake:         'Retake CORE — your Social Confidence baseline was ' + v + '/100. This dimension is directly observable by colleagues and responds measurably to deliberate practice.',
-      ongoing:        'Every Friday, log one moment where you spoke up and one where you held back. Over time, the ratio is your data.',
+      managerStep:  'Tell your manager one specific situation — a meeting, a presentation, a difficult conversation — where you held back instead of stepping forward. Ask them to flag the next opportunity where you can take point.',
+      selfAssess:   'Think of the last 5 professional situations where you stayed quiet when you had something to say. Write down what stopped you each time. Look for the pattern.',
+      retake:       'Retake CORE — your Social Confidence baseline was ' + v + '/100. This dimension is directly observable by colleagues and responds measurably to deliberate practice.',
+      ongoing:      'Every Friday, log one moment where you spoke up and one where you held back. Over time, the ratio is your data.',
     },
     'Agreeableness & Collaboration': {
-      managerStep:    'Tell your manager one colleague relationship that has friction and ask for coaching on one specific communication habit you can change.',
-      selfAssess:     'Think of the last 3 disagreements you had at work. In how many did you genuinely consider the other person\'s reasoning before defending your own? Write the honest answer.',
-      retake:         'Retake CORE — your Agreeableness baseline was ' + v + '/100. This dimension is directly observable by colleagues and measurable through 360 feedback.',
-      ongoing:        'Every Friday, recall one moment where you felt defensive or dismissive. Write what the other person\'s actual point was — in their terms, not yours.',
+      managerStep:  'Tell your manager one colleague relationship that has friction and ask for coaching on one specific communication habit you can change.',
+      selfAssess:   "Think of the last 3 disagreements you had at work. In how many did you genuinely consider the other person's reasoning before defending your own? Write the honest answer.",
+      retake:       'Retake CORE — your Agreeableness baseline was ' + v + '/100. This dimension is directly observable by colleagues and measurable through 360 feedback.',
+      ongoing:      'Every Friday, recall one moment where you felt defensive or dismissive. Write what the other person\'s actual point was — in their terms, not yours.',
     },
   };
 
@@ -2227,16 +2228,56 @@ const buildHabits = (now, soon, fut, acts, v, dim) => {
   };
 
   return [
-    { h:'Week 1:',    t: now    || acts[0] || 'Audit your current behaviour in this area — write down one honest observation.' },
-    { h:'Week 2:',    t: acts[0] || 'Track one real situation this week where this dimension affected your work or a relationship.' },
-    { h:'Week 3:',    t: acts[1] || 'Ask one trusted colleague for specific, candid feedback on how they experience you in this area.' },
-    { h:'Week 4:',    t: acts[2] || 'Start one recommended resource from your development toolkit specifically targeting this dimension.' },
-    { h:'Month 2:',   t: soon   || 'Apply one concrete behaviour change in a real work situation and write down what happened.' },
-    { h:'Month 2:',   t: specific.managerStep },
-    { h:'Month 3:',   t: specific.selfAssess },
-    { h:'Month 4–6:', t: fut    || 'Take on a stretch assignment that puts this dimension under sustained real-world pressure.' },
-    { h:'6 Months:',  t: specific.retake },
-    { h:'Ongoing:',   t: specific.ongoing },
+    {
+      h:'Week 1:',
+      t: now || acts[0] || 'Audit your current behaviour in this area — write down one honest observation.',
+      how: 'Tool: Stop-Start-Continue. On a blank page write three columns — what you should Stop doing in this area, what you should Start doing, and what you should Continue. Each item must be one specific sentence. No vague language. This becomes your Week 1 baseline.'
+    },
+    {
+      h:'Week 2:',
+      t: acts[0] || 'Track one real situation this week where this dimension affected your work or a relationship.',
+      how: 'Tool: Incident Log. After each relevant situation this week write 3 sentences — (1) What happened, (2) How I responded, (3) What the impact was on the outcome or the other person. Do not editorialize. Review all entries on Friday.'
+    },
+    {
+      h:'Week 3:',
+      t: acts[1] || 'Ask one trusted colleague for specific, candid feedback on how they experience you in this area.',
+      how: 'Tool: SBI Feedback Model. Ask your colleague to describe a specific Situation, your Behaviour in it, and the Impact it had on them or the work. Listen without interrupting or defending. Write down exactly what they say — your interpretation comes later.'
+    },
+    {
+      h:'Week 4:',
+      t: acts[2] || 'Start one recommended resource from your development toolkit specifically targeting this dimension.',
+      how: 'Tool: 3-2-1 Reflection. After each chapter, episode, or section of your chosen resource, pause and write — 3 things you learned, 2 you will try this week, 1 question it raised. Research shows this triples retention compared to passive reading or listening.'
+    },
+    {
+      h:'Month 2:',
+      t: soon || 'Apply one concrete behaviour change in a real work situation and write down what happened.',
+      how: "Tool: Implementation Intentions. Before the week starts, write 3 sentences in the format: 'When [specific situation] happens, I will [specific behaviour].' Psychologist Peter Gollwitzer's research shows this format doubles follow-through compared to stating a general intention."
+    },
+    {
+      h:'Month 2:',
+      t: specific.managerStep,
+      how: 'Tool: COIN Framework. Structure your manager conversation in 4 parts — Context (the situation you are describing), Observation (what specifically happened), Impact (what it affected), Next step (the one concrete thing you are asking for). Keep the conversation under 10 minutes and send a written follow-up the same day.'
+    },
+    {
+      h:'Month 3:',
+      t: specific.selfAssess,
+      how: 'Tool: Before/After Table. Draw two columns. Left column: copy your Week 1 Stop-Start-Continue entries exactly. Right column: write what has actually changed for each item. Score yourself 1–5 on each line. Any score that is unchanged is your next priority focus.'
+    },
+    {
+      h:'Month 4–6:',
+      t: fut || 'Take on a stretch assignment that puts this dimension under sustained real-world pressure.',
+      how: 'Framework: 70-20-10. Research shows 70% of professional development comes from stretch experience, 20% from feedback during that experience, and 10% from formal learning. This step is your 70%. Ask for a short debrief conversation with your manager after every significant challenge in the assignment.'
+    },
+    {
+      h:'6 Months:',
+      t: specific.retake,
+      how: 'Process: Book your CORE retake through carnelianco.com or your HR team. Bring this report to the session. A Carnelian consultant can run a 90-minute Before/After debrief comparing your two profiles side by side and recalibrating your next development cycle based on what actually moved.'
+    },
+    {
+      h:'Ongoing:',
+      t: specific.ongoing,
+      how: 'Tool: Weekly Review Log. Keep a single running document. Each Friday add — date, one moment where this dimension helped you this week, one where it held you back, and one word describing your overall week in this area. Review the last 4 entries at the start of each month and look for the pattern.'
+    },
   ];
 };
 
@@ -2622,7 +2663,10 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.35rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Score Profile at a Glance</h3>
-            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
+<div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
+  <strong style={{color:T.t2}}>Note on groupings:</strong> Personality & Drive is the average of 5 individual traits — Openness, Conscientiousness, Social Confidence, Collaborative Spirit, and Emotional Resilience. Cultural Agility, Team Citizenship, Learning Agility, and Ethical Integrity are each averages of 3–5 sub-dimensions. The development areas and priority matrix below drill into the individual dimensions within these groups — which is why you may see names that differ from the bars above.
+</div>
             <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px'}}>
               {bars.slice(1).map(([l,v],i)=>(
                 <div key={l} style={{marginBottom:'8px'}}>
@@ -2666,7 +2710,10 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>What You Are Good At — And Where To Grow</h3>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>What You Are Good At — And Where To Grow</h3>
+            <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'500', marginBottom:'24px'}}>
+              <strong style={{color:T.t0}}>How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style={{color:T.gn}}>Top 2</strong> become your anchor strengths — the natural instincts you should actively leverage. The <strong style={{color:T.rd}}>Bottom 2</strong> become your priority development areas — the specific gaps where focused effort will yield the highest career return.
+            </p>
             <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
               {top2.map(d=>(
                 <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:T.gnP,border:`1px solid ${T.gn}40`,borderLeft:`5px solid ${T.gn}`}}>
@@ -2716,21 +2763,37 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
                 <div className="mono" style={{fontSize:'10px',textTransform:'uppercase',letterSpacing:'0.1em',color:T.t3,fontWeight:'800',marginBottom:'12px'}}>Your 10-Step Action Plan for {d.dim}</div>
                 <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'24px'}}>
 {(d.habits||[]).map((h, j) => {
-                        const isRed = j < 2;
-                    const isAm = j >= 2 && j < 5;
-                    const sCol = isRed ? T.rd : isAm ? T.am : T.gn;
-                    const sBg = isRed ? T.rdP : isAm ? T.amP : T.gnP;
-                    return (
-                      <div key={j} style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', background:sBg, borderRadius:'8px'}}>
-                        <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:sCol, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{j+1}</div>
-                        <div style={{flex:1}}>
-                          <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'4px'}}>{h.h}</div>
-<div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}><strong style={{color:T.t0}}>{h.h}</strong> {h.t}</div>
+  const isRed = j < 2;
+  const isAm = j >= 2 && j < 5;
+  const sCol = isRed ? T.rd : isAm ? T.am : T.gn;
+  const sBg = isRed ? T.rdP : isAm ? T.amP : T.gnP;
+  const stepKey = `${i}_${j}`;
+  const isExpanded = expandedSteps[stepKey];
+  return (
+    <div key={j} style={{background:sBg, borderRadius:'8px', overflow:'hidden'}}>
+      <div
+        onClick={() => setExpandedSteps(prev => ({...prev, [stepKey]: !prev[stepKey]}))}
+        style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', cursor:'pointer'}}
+      >
+        <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:sCol, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{j+1}</div>
+        <div style={{flex:1}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'4px'}}>
+            <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.08em'}}>{h.h}</div>
+            <span style={{fontSize:'10px', color:sCol, fontWeight:'700', flexShrink:0, marginLeft:'8px'}}>{isExpanded ? '▲ hide how' : '▼ how to do this'}</span>
+          </div>
+          <div style={{fontSize:'13px', color:T.t0, lineHeight:'1.6', fontWeight:'500'}}><strong style={{color:T.t0}}>{h.h}</strong> {h.t}</div>
+        </div>
+      </div>
+      {isExpanded && h.how && (
+        <div style={{margin:'0 16px 14px 52px', padding:'12px 14px', background:T.bg1, borderRadius:'6px', borderLeft:`3px solid ${sCol}`}}>
+          <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>How to do this</div>
+          <div style={{fontSize:'12.5px', color:T.t1, lineHeight:'1.75', fontWeight:'500'}}>{h.how}</div>
+        </div>
+      )}
+    </div>
+  );
+})}
 </div>
-                      </div>
-                    );
-                  })}
-                </div>
 
                 <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
                   <span style={{padding:'6px 12px', borderRadius:'100px', fontSize:'11px', fontWeight:'700', background:T.rdP, color:T.rd, border:`1px solid ${T.rd}40`}}>🔴 Days 1–30: {d.now||d.acts[0]}</span>
@@ -2821,7 +2884,10 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
           {/* Priority Matrix */}
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
-            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
+            <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
+              <strong style={{color:T.t2}}>Where these come from:</strong> The bars above show module-level composites. This matrix goes one level deeper — it sorts the individual dimensions that make up those composites by urgency, so you know exactly which specific behaviour to focus on, not just which broad module to work on.
+            </div>
             
             <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
               <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'10px', padding:'20px'}}>

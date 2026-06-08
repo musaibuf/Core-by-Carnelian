@@ -815,7 +815,7 @@ const HomePage = ({setTab}) => {
                 }}
                 onMouseOver={e => { e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.boxShadow=`0 10px 30px rgba(0,0,0,.5), 0 0 0 1px ${m.c}40`; }}
                 onMouseOut={e  => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
-                  <div className="mono" style={{fontSize:'10px', fontWeight:'700', color:m.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'8px'}}>Module {m.n}</div>
+                  <div className="mono" style={{fontSize:'10px', fontWeight:'700', color:m.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'8px'}}>Pillar {m.n}</div>
                   <div style={{fontSize:'14px', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>{m.t}</div>
                   <div style={{fontSize:'12px', color:T.t2, lineHeight:'1.5', fontWeight:'500'}}>{m.d}</div>
                 </div>
@@ -978,9 +978,13 @@ const ReportsSlideshow = () => {
     { i:'👥', c:'#FBBF24', t:'Team Aggregate Report',  s:'Batch-level',
       d:'Appears automatically when you run 2+ assessments in a batch. Team dimension averages, composite benchmarks, archetype distribution, collective risk pattern frequency, validity summary.',
       tags:['Team Averages','Archetype Distribution','Risk Frequency','Auto-Generated'] },
+      { i:'🏢', c:'#6366F1', t:'Team Composition Report', s:'HR Strategy',
+  d:'Strategic workforce mapping. Highlights team role balance, skill distribution, leadership pipeline strength, and succession readiness. Identifies gaps in composition that affect long-term organisational resilience and provides recommendations for HR strategy.',
+  tags:['Role Balance','Skill Distribution','Leadership Pipeline','Succession Readiness'] },
     { i:'🎮', c:'#E879F9', t:'Player Report',           s:'Gamified',
       d:'Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.',
       tags:['10 Levels','Achievement Badges','Quest Objectives','Power-Up Armory'] },
+    
   ];
 
   const goTo = i => {
@@ -1014,13 +1018,13 @@ const ReportsSlideshow = () => {
         flexWrap:'wrap', gap:'16px',
       }}>
         <div>
-          <Pill label="Four Reports · One Assessment" color={T.c} />
+          <Pill label="Five Reports · One Assessment" color={T.c} />
           <h2 style={{
             fontFamily:"'Playfair Display',serif",
             fontSize:'clamp(1.6rem,3vw,2.2rem)', fontWeight:'700',
             color:T.t0, marginTop:'16px', marginBottom:'10px', letterSpacing:'-0.02em',
           }}>
-            Every assessment generates four<br/>
+            Every assessment generates five<br/>
             <em style={{color:T.gold, fontStyle:'italic'}}>purpose-built reports</em>
           </h2>
           <p style={{fontSize:'13px', color:T.t2, maxWidth:'560px', lineHeight:1.7, fontWeight:'500'}}>
@@ -3250,12 +3254,12 @@ const buildHabits = (content, dim, profile, R) => {
 
           {/* ── THE 5 MODULE TABLES ── */}
           {[
-            { title: 'Personality at Work — OCEAN Framework', pill: 'Pillar 1', col: '#3B82F6', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]], note: 'Validity note: OCEAN framework shows mean validity r = .27 for overall job performance (Barrick & Mount, 1991 meta-analysis, N = 12,893). Conscientiousness (r = .22) and Emotional Stability (r = .13) most robust. Scores reflect self-report — triangulate with structured behavioural interview.' },
-            { title: 'Cultural Intelligence (CQ)', pill: 'Pillar 2', col: T.gn, dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]], note: "CQ demonstrates incremental predictive validity β = .31 for cross-cultural performance over IQ and personality (Ang et al., 2007). Particularly relevant for professionals working across Pakistan's diverse regional, linguistic, and institutional landscape." },
-            { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Pillar 3', col: T.am, dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]], note: '' },
-            { title: 'Adaptive Thinking & Learning Agility', pill: 'Pillar 4', col: '#8B5CF6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]], note: 'Learning agility is the single strongest predictor of leadership potential beyond current performance (Lombardo & Eichinger, 2000). In fast-evolving regulatory and market environments, learning agility is the emerging differentiator at senior levels.' },
-            { title: 'Integrity & Ethical Orientation', pill: 'Pillar 5', col: T.rd, dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]], note: 'Ethical orientation assessments demonstrate strong criterion validity for misconduct prediction (r = −.41, Rest, 1986). Low EO scores — particularly in Authentic Integrity and Transparent Disclosure — should trigger mandatory ethics training before placement in high-discretion roles.' }
-          ].map((mod, i) => (
+  { title: 'Personality at Work — OCEAN Framework', pill: 'Pillar 1', col: '#3B82F6', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]] },
+  { title: 'Cultural Intelligence (CQ)', pill: 'Pillar 2', col: T.gn, dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]] },
+  { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Pillar 3', col: T.am, dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]] },
+  { title: 'Adaptive Thinking & Learning Agility', pill: 'Pillar 4', col: '#8B5CF6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]] },
+  { title: 'Integrity & Ethical Orientation', pill: 'Pillar 5', col: T.rd, dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]] }
+].map((mod, i) => (
             <div key={i} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
               <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
                 <Pill label={mod.pill} color={mod.col} bg={`${mod.col}15`} />

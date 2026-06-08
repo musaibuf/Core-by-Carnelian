@@ -2155,21 +2155,71 @@ const allDims = [
   };
 
   const devAreas = [];
-  const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
-    dim, v, why, now, soon, fut, acts,
-    habits: [
-      { h:'Week 1:', t: now || acts[0] || 'Review your current approach.' },
-      { h:'Week 2:', t: acts[0] || 'Document one observation about your behaviour.' },
-      { h:'Week 3:', t: acts[1] || 'Ask a colleague for specific feedback.' },
-      { h:'Week 4:', t: soon || acts[1] || 'Begin the recommended resource.' },
-      { h:'Month 2:', t: acts[2] || soon || 'Implement one new habit.' },
-      { h:'Month 2:', t: 'Share your development goal with your manager.' },
-      { h:'Month 3:', t: soon || 'Schedule a formal progress check-in.' },
-      { h:'Month 4–6:', t: fut || 'Take on a stretch assignment.' },
-      { h:'6 Months:', t: 'Reassess via CORE retake — measure change from ' + v + '/100.' },
-      { h:'Ongoing:', t: 'Keep a weekly log. Review every Friday.' }
-    ]
-  });
+const buildHabits = (now, soon, fut, acts, v, dim) => {
+  const dimSpecific = {
+    'Conscientiousness & Delivery': {
+      managerStep:    'Tell your manager the 3 specific deliverables you are tracking this month and ask them to hold you accountable if you miss a self-imposed deadline.',
+      selfAssess:     'Pull up your last 8 weeks of commitments. Count how many you hit on time, how many were late, and how many were quietly dropped. Write the number down — not an estimate.',
+      retake:         'Retake CORE — your Conscientiousness baseline was ' + v + '/100. A 6-point rise here is achievable with consistent habit practice.',
+      ongoing:        'Every Friday, score yourself 1–5 on delivery reliability for the week. Note the one commitment that was hardest to keep and why.',
+    },
+    'Emotional Resilience': {
+      managerStep:    'Tell your manager one specific pressure source in your role and ask for one structural change — not sympathy. Make it a concrete ask.',
+      selfAssess:     'Review the last 3 high-pressure situations you faced. For each, write: how did I respond in the moment, and what would a more stable version of me have done differently?',
+      retake:         'Retake CORE — your Emotional Stability baseline was ' + v + '/100. Stability is measurable and it does move with deliberate practice.',
+      ongoing:        'Every Friday, rate your emotional regulation for the week 1–5. Identify the moment you felt most reactive and log what triggered it.',
+    },
+    'Learning Agility': {
+      managerStep:    'Tell your manager one domain outside your current expertise you are investing in this quarter and ask them to assign you one task that requires you to use it.',
+      selfAssess:     'List every significant thing you have learned in the past 3 months — self-directed only, not mandatory training. If the list is short, that is your data point.',
+      retake:         'Retake CORE — your Learning Agility baseline was ' + v + '/100. This dimension responds fastest to deliberate habit change.',
+      ongoing:        'Every Friday, write one sentence: "This week I learned _____ and I will apply it by _____." Keep the log. Review it monthly.',
+    },
+    'Constructive Attitude & Sportsmanship': {
+      managerStep:    'Tell your manager one institutional frustration you have been carrying and present it as a specific improvement proposal — not a complaint. Ask for the right channel to route it.',
+      selfAssess:     'Think back over the past month. How many times did you share a workplace frustration with a colleague rather than acting on it constructively? Write the honest number.',
+      retake:         'Retake CORE — your Sportsmanship baseline was ' + v + '/100. This dimension is directly observable by your team and shifts faster than most.',
+      ongoing:        'Every Friday, ask yourself: did I complain this week without proposing a solution? If yes, write down what the solution would have been.',
+    },
+    'People Agility & Self-Reflection': {
+      managerStep:    'Ask your manager for one specific piece of feedback on a blind spot they have observed in you. Write it down and tell them what you will do about it.',
+      selfAssess:     'Pick one significant professional setback from the past 6 months. Write a one-page account — what happened, what your role was, and what you would do differently. Be specific.',
+      retake:         'Retake CORE — your People Agility baseline was ' + v + '/100. Self-awareness scores are among the most movable in the CORE battery.',
+      ongoing:        'After every significant meeting or decision this week, write two sentences: what I did well, and what I would change. Do not skip the second one.',
+    },
+    'Agreeableness & Collaboration': {
+      managerStep:    'Tell your manager one colleague relationship that has friction and ask for coaching on one specific communication habit you can change.',
+      selfAssess:     'Think of the last 3 disagreements you had at work. In how many did you genuinely consider the other person\'s reasoning before defending your own? Write the honest answer.',
+      retake:         'Retake CORE — your Agreeableness baseline was ' + v + '/100. This dimension is directly observable by colleagues and measurable through 360 feedback.',
+      ongoing:        'Every Friday, recall one moment where you felt defensive or dismissive. Write what the other person\'s actual point was — in their terms, not yours.',
+    },
+  };
+
+  const specific = dimSpecific[dim] || {
+    managerStep:  'Tell your line manager your specific development goal for this dimension and ask them to flag relevant opportunities as they arise.',
+    selfAssess:   'Do a written self-assessment — compare your current behaviour in this area to where you were at Week 1. Name one thing that has visibly changed.',
+    retake:       'Retake CORE — your baseline on this dimension was ' + v + '/100. Measure the movement honestly.',
+    ongoing:      'Every Friday, log one moment from the week where this dimension shaped a decision or interaction. Review the log monthly.',
+  };
+
+  return [
+    { h:'Week 1:',    t: now    || acts[0] || 'Audit your current behaviour in this area — write down one honest observation.' },
+    { h:'Week 2:',    t: acts[0] || 'Track one real situation this week where this dimension affected your work or a relationship.' },
+    { h:'Week 3:',    t: acts[1] || 'Ask one trusted colleague for specific, candid feedback on how they experience you in this area.' },
+    { h:'Week 4:',    t: acts[2] || 'Start one recommended resource from your development toolkit specifically targeting this dimension.' },
+    { h:'Month 2:',   t: soon   || 'Apply one concrete behaviour change in a real work situation and write down what happened.' },
+    { h:'Month 2:',   t: specific.managerStep },
+    { h:'Month 3:',   t: specific.selfAssess },
+    { h:'Month 4–6:', t: fut    || 'Take on a stretch assignment that puts this dimension under sustained real-world pressure.' },
+    { h:'6 Months:',  t: specific.retake },
+    { h:'Ongoing:',   t: specific.ongoing },
+  ];
+};
+
+const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
+  dim, v, why, now, soon, fut, acts,
+  habits: buildHabits(now, soon, fut, acts, v, dim)
+});
 
 
   if(S.C<55) devAreas.push({dim:'Conscientiousness & Delivery',v:S.C,
@@ -2216,18 +2266,7 @@ const allDims = [
       devAreas.forEach(d => {
         if (!d.habits) {
           const safeActs = d.acts || [];
-          d.habits = [
-            { h:'Week 1:', t: d.now || safeActs[0] || 'Review your current approach.' },
-            { h:'Week 2:', t: safeActs[0] || 'Document one observation about your behaviour.' },
-            { h:'Week 3:', t: safeActs[1] || 'Ask a colleague for specific feedback.' },
-            { h:'Week 4:', t: d.soon || safeActs[1] || 'Begin the recommended resource.' },
-            { h:'Month 2:', t: safeActs[2] || d.soon || 'Implement one new habit.' },
-            { h:'Month 2:', t: 'Share your development goal with your manager.' },
-            { h:'Month 3:', t: d.soon || 'Schedule a formal progress check-in.' },
-            { h:'Month 4–6:', t: d.fut || 'Take on a stretch assignment.' },
-            { h:'6 Months:', t: 'Reassess via CORE retake — measure change from ' + d.v + '/100.' },
-            { h:'Ongoing:', t: 'Keep a weekly log. Review every Friday.' }
-          ];
+          d.habits = buildHabits(d.now, d.soon, d.fut, safeActs, d.v, d.dim);
         }
       });
 
@@ -3972,7 +4011,7 @@ const updatedResults = results.map(entries => entries.filter(e => e.email?.toLow
       {searched && results.length === 0 && (
         <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'40px', textAlign:'center'}}>
           <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>No records found</div>
-          <p style={{fontSize:'13px', color:T.t2, fontWeight:'600'}}>No assessments match the CNIC you entered. Make sure the candidate used this identifier when taking the assessment.</p>
+          <p style={{fontSize:'13px', color:T.t2, fontWeight:'600'}}>No assessments match the email you entered.</p>
         </div>
       )}
 

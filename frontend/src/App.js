@@ -781,7 +781,7 @@ const HomePage = ({setTab}) => {
               What makes CORE the tool for you
             </h2>
             <p style={{fontSize:'15px', color:T.t2, maxWidth:'700px', margin:'0 auto', fontWeight:'500'}}>
-              A complete picture of everything CORE does — built for HR leaders, L&D professionals,
+              A complete picture of everything CORE does, built for HR leaders, L&D professionals,
               and organisational decision-makers across Pakistan.
             </p>
           </div>
@@ -793,7 +793,7 @@ const HomePage = ({setTab}) => {
             <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
               <span style={{fontSize:'24px'}}>🧠</span>
               <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
-                Five Evidence-Based Assessment Pillars - 63 Items Total
+                Five Evidence‑Based Assessment Pillars, 63 Items Total
 
               </h3>
             </div>
@@ -4320,23 +4320,23 @@ const LegalPage = () => {
             {/* To Participants */}
             <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', borderTop:`4px solid ${T.c}`}}>
               <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.c, marginBottom:'24px'}}>
-                To Participants — What Carnelian Commits
+                To Participants · What Carnelian Commits
               </div>
               <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13.5px', color:T.t1, lineHeight:'1.65', fontWeight:'500'}}>
-                <div><strong style={{color:T.t0}}>What we collect:</strong> Your full name, email address, phone number, and professional details (role, department, experience, organisation) — to generate your personalised report and link your results across retakes.</div>
+                <div><strong style={{color:T.t0}}>What we collect:</strong> Your full name, email address, phone number, and professional details (role, department, experience, organisation) to generate your personalised report and link your results across retakes.</div>
 <div><strong style={{color:T.t0}}>Why we use your email:</strong> Your email address is your unique assessment identifier. It is used solely to link your results if you retake CORE and to generate progress comparisons. It is never used for marketing.</div>
 <div><strong style={{color:T.t0}}>What we never do:</strong> Sell your data. Share your identifiable results with anyone outside your assessment process. Use your email or phone number for any purpose other than assessment delivery, progress tracking, and responding to your data rights requests.</div>
 <div><strong style={{color:T.t0}}>Who sees your results:</strong> The commissioning organisation's HR leadership receives the Technical Report under their confidentiality level setting. The Action Plan is written for you personally and contains no HR risk language.</div>
-<div><strong style={{color:T.t0}}>AI training use:</strong> Anonymised, non-identifiable aggregated data only. Never raw responses. Never your name, email, or phone. Carnelian internal use only — never shared with third-party AI providers.</div>
+<div><strong style={{color:T.t0}}>AI training use:</strong> Anonymised, non-identifiable aggregated data only. Never raw responses. Never your name, email, or phone. Carnelian internal use only, never shared with third-party AI providers.</div>
 <div><strong style={{color:T.t0}}>Your rights:</strong> You may request access to, correction of, or deletion of your personal data at any time by writing to hello@carnelianco.com. We will respond within 30 days. Deletion requests are processed within 45 days.</div>
-<div><strong style={{color:T.t0}}>Legal protection:</strong> PECA 2016 (Sections 25 & 26) — unauthorised disclosure of personal information is a criminal offence under Pakistani law. Contract Act 1872 — this agreement is legally binding. Personal Data Protection Act 2023 applies to all data collection, processing, and retention under this assessment.</div>
+<div><strong style={{color:T.t0}}>Legal protection:</strong> PECA 2016 (Sections 25 & 26): unauthorised disclosure of personal information is a criminal offence under Pakistani law. Contract Act 1872: this agreement is legally binding. Personal Data Protection Act 2023 applies to all data collection, processing, and retention under this assessment.</div>
               </div>
             </div>
 
             {/* To Organisations */}
             <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px', borderTop:`4px solid #3B82F6`}}>
               <div className="mono" style={{fontSize:'11px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:'#3B82F6', marginBottom:'24px'}}>
-                To Organisations — What Carnelian Commits
+                To Organisations · What Carnelian Commits
               </div>
               <div style={{display:'flex', flexDirection:'column', gap:'16px', fontSize:'13.5px', color:T.t1, lineHeight:'1.65', fontWeight:'500'}}>
                 <div><strong style={{color:T.t0}}>Role:</strong> Carnelian is the Data Processor. The client organisation is the Data Controller. Carnelian processes data on the client's behalf according to this agreement.</div>

@@ -1937,8 +1937,8 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
     return (
       <div style={{minHeight:'100vh',background:'transparent',display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
         <div style={{textAlign:'center',maxWidth:'460px',animation:'slideUp 0.5s ease forwards'}}>
-          <div style={{width:'60px',height:'60px',borderRadius:'50%',margin:'0 auto 22px',background:`${T.c}16`,border:`2px solid ${T.bC}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={T.c} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div style={{width:'60px',height:'60px',borderRadius:'50%',margin:'0 auto 22px',background:`${T.gn}16`,border:`2px solid ${T.gn}40`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={T.gn} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <Pill label={`${b.pct}% complete`} style={{marginBottom:'18px'}} />
           <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'2.2rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{b.title}</h2>

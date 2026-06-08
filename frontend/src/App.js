@@ -1560,8 +1560,8 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
         <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>What we collect and why</div>
           <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'500'}}>
-            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your name, email, phone number, and professional details — to generate your personalised report.</span>
-            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your assessment responses — scored by our engine to produce dimension profiles.</span>
+            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your name, email, phone number, and professional details to generate your personalised report.</span>
+            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your assessment responses scored by our engine to produce dimension profiles.</span>
             <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Aggregated, anonymised data may be used solely to improve the accuracy and quality of future assessments.</span>
           </div>
         </div>
@@ -1585,7 +1585,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
         <div style={{background:`${T.c}10`,border:`1px solid ${T.c}30`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
   <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
   <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
-    For the most accurate results, please complete the assessment in one uninterrupted session — this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths — which is what makes the feedback genuinely useful.
+    For the most accurate results, please complete the assessment in one uninterrupted session, this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths, making the feedback genuinely useful.
   </p>
 </div>
 
@@ -1678,36 +1678,36 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'16px'}}>
                   <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Professional Profile</div>
-                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>A named archetype that describes your dominant working style — how you approach challenges, teams, and decisions.</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>A named archetype that describes your dominant working style and how you approach challenges, teams, and decisions.</div>
                   </div>
                   <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Dimension Scores</div>
-                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>Scores across 9 professional dimensions — personality, cultural intelligence, learning agility, and ethical orientation.</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>Scores across 9 professional dimensions such as personality, cultural intelligence, learning agility, and ethical orientation.</div>
                   </div>
                   <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Development Roadmap</div>
-                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>A personalised 30–90–180 day action plan built specifically around your scores — not a generic programme.</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>A personalised 30–90–180 day action plan built specifically around your scores, not a generic programme.</div>
                   </div>
                   <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Development Toolkit</div>
-                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>Specific books, methods, and resources selected for your profile — and if-then decision protocols for when habits break.</div>
+                    <div style={{fontSize:'12px',color:T.t1,lineHeight:'1.5',fontWeight:'500'}}>Specific books, methods, and resources selected for your profile and if-then decision protocols for when habits break.</div>
                   </div>
                 </div>
-                <div style={{fontSize:'12px',color:T.t2,lineHeight:'1.6',fontWeight:'500'}}>Regardless of why your organisation commissioned this assessment, your personal Action Plan belongs to you. It is designed to help you understand yourself and grow — not to evaluate you against a pass/fail standard.</div>
+                <div style={{fontSize:'12px',color:T.t2,lineHeight:'1.6',fontWeight:'500'}}>Regardless of why your organisation commissioned this assessment, your personal Action Plan belongs to you. It is designed to help you understand yourself and grow, not to evaluate you against a pass/fail standard.</div>
               </div>
 
               {/* Green Box */}
               <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, borderRadius:'10px', padding:'16px 20px', marginBottom:'20px', fontSize:'13px', color:T.gn, lineHeight:'1.65', fontWeight:'600'}}>
-                <strong style={{color:T.gn, fontWeight:'800'}}>This is not a test. There are almost no wrong answers.</strong> The questions are designed to understand how you naturally think and work — not to judge you. The more honestly you answer, the more specific and useful your personal results will be.
+                <strong style={{color:T.gn, fontWeight:'800'}}>This is not a test. There are almost no wrong answers.</strong> The questions are designed to understand how you naturally think and work, not to judge you. The more honestly you answer, the more specific and useful your personal results will be.
               </div>
 
               {/* Bullet Points */}
               <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'24px'}}>
                 {[
-                  <>Answer based on how you <strong style={{color:T.t0}}>actually are</strong> at work — not the ideal version of yourself. The assessment works best when it reflects the real you.</>,
+                  <>Answer based on how you <strong style={{color:T.t0}}>actually are</strong> at work, not the ideal version of yourself. The assessment works best when it reflects the real you.</>,
                   <>Go with your <strong style={{color:T.t0}}>first instinct</strong>. Your immediate reaction to a statement is usually the most accurate reflection of your natural style. Don't overthink it.</>,
-                  <>Some questions may feel similar to each other — this is intentional. The assessment measures patterns across your responses, not individual answers in isolation.</>,
-                  <>You will encounter three interactive challenges mid-assessment. The first is a values dilemma with no time limit. The second and third are <strong style={{color:T.t0}}>45-second timed decisions</strong> — the clock starts when you click. Read the instructions on screen before starting each timed section. Approach all three honestly.</>,
+                  <>Some questions may feel similar to each other , this is intentional. The assessment measures patterns across your responses, not individual answers in isolation.</>,
+                  <>You will encounter three interactive challenges mid-assessment. The first is a values dilemma with no time limit. The second and third are <strong style={{color:T.t0}}>45-second timed decisions</strong>. Read the instructions on screen before starting each timed section. Approach all three honestly.</>,
                   <>You can go back and change answers within each section. Once you advance to the next section, you cannot return to the previous one.</>
                 ].map((text, i) => (
                   <div key={i} style={{display:'flex', alignItems:'flex-start', gap:'12px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
@@ -1726,7 +1726,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               {/* Buttons */}
               <div style={{display:'flex',gap:'10px'}}>
                 <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
-                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>I'm Ready — Start →</button>
+                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>I'm Ready · Start →</button>
               </div>
             </div>
           )}

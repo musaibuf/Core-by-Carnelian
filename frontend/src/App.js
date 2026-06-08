@@ -2601,6 +2601,9 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
 
             <div style={{background:T.bg2, borderRadius:'10px', padding:'24px', marginTop:'32px'}}>
               <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'16px'}}>Your 7 Composite Indices — How Dimensions Interact</div>
+<div style={{fontSize:'12px', color:T.t2, lineHeight:'1.6', marginBottom:'16px', fontWeight:'500', padding:'12px 16px', background:T.bg3, borderRadius:'8px', borderLeft:`3px solid ${T.gold}`}}>
+  These 7 indices combine scores across all five modules to reflect how your dimensions interact — not just how they score individually. Each index is weighted by meta-analytic research for its specific role family. A low index in any area is a targeted development signal, not a general verdict. For a full debrief of what your indices mean for your role and career trajectory, reach out to <strong style={{color:T.gold}}>Carnelian at hello@carnelianco.com</strong>
+</div>
 <div className="grid-7-col" style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'10px', textAlign:'center'}}>                {[
                   ['CII','Compliance',CI.CII,70,54],['LRS','Leadership',CI.LRS,72,55],['TVS','Team Value',CI.TVS,68,51],
                   ['ADS','Adaptability',CI.ADS,67,50],['SES','Stakeholder',CI.SES,68,52],['OPS','Operations',CI.OPS,67,51],['PMS','People Mgmt',CI.PMS,67,51]
@@ -2650,7 +2653,14 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `— ${R.industry}` : ''}</h3>
-            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'16px', fontWeight:'500'}}>Your roadmap is calibrated to your actual scores. Each development area includes a numbered 10-step action plan with specific instructions for each step. Follow the steps in order — each one builds on the previous.</p>
+            <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
+              <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', fontWeight:'500', margin:0}}>
+                The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style={{color:T.t0}}>This action plan focuses on your two lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
+                <br/><br/>
+                Once you have built real habits around these two dimensions and your next CORE retake shows movement, Carnelian will work with you on the next layer. Think of this as <strong style={{color:T.gold}}>sequenced development</strong> — not a limitation, but a strategy. If you want to understand how your full profile maps to a broader development plan, <strong style={{color:T.gold}}>reach out to Carnelian at hello@carnelianco.com</strong>
+              </p>
+            </div>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'16px', fontWeight:'500'}}>Each area below includes a 10-step plan with week-by-week instructions. Follow the steps in order — each one builds on the previous.</p>
             {R.industry && <div style={{background:`${T.c}10`, borderLeft:`3px solid ${T.c}`, padding:'10px 14px', borderRadius:'0 8px 8px 0', fontSize:'12px', color:T.c, fontWeight:'600', marginBottom:'24px'}}>Industry lens: <strong>{R.industry}</strong> — all actions are framed for this sector.</div>}
             
             {devAreas.length > 0 ? devAreas.map((d,i)=>{

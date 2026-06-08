@@ -351,7 +351,7 @@ const getProfile = (s) => {
   if(burnoutRisk && ((C>=76&&E>=68&&EOavg>=74&&LAavg>=65) || (C>=70&&OCBavg>=74&&EOavg>=68) || (EOavg>=75&&C>=65)))
     return {name:'High-Capability, Under Strain',tier:3,desc:"Strong delivery or ethical orientation combined with signs of reduced emotional stability. The capability is real, but sustained high performance is at risk without deliberate recovery practices."};
   if(C>=76&&E>=68&&EOavg>=74&&LAavg>=65) return {name:'Strategic Integrity Leader',tier:1,desc:"A high-performance profile combining delivery drive, social presence, strong ethical orientation, and adaptive learning. Ready for senior leadership in high-accountability environments."};
-  if(C>=70&&OCBavg>=74&&EOavg>=68) return {name:'Institutional Anchor',tier:1,desc:"Conscientious, ethical, and deeply invested in organisational citizenship. The institutional backbone — delivers consistently, supports colleagues, and upholds institutional norms."};
+  if(C>=70&&OCBavg>=74&&EOavg>=68) return {name:'Institutional Anchor',tier:1,desc:"Conscientious, ethical, and deeply invested in organisational citizenship. The institutional backbone delivers consistently, supports colleagues, and upholds institutional norms."};
   if(O>=65&&LAavg>=70&&CQavg>=65) return {name:'Adaptive Innovator',tier:2,desc:"High intellectual curiosity combined with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
   if(EOavg>=75&&C>=65) return {name:'Ethics-Driven Executor',tier:2,desc:"A reliable and principled professional with strong compliance orientation and consistent delivery. Excellent for audit, compliance, and risk management."};
   if(CQavg>=70&&E>=65&&A>=65) return {name:'Cross-Cultural Bridge',tier:2,desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
@@ -359,7 +359,7 @@ const getProfile = (s) => {
   if(O>=70&&C<52&&LAavg>=62) return {name:'Visionary Sprinter',tier:3,desc:"High intellectual energy and idea generation combined with lower structured delivery. Most effective in short-burst, project-based environments."};
   if(CQ_M>=70&&CQ_B<55&&CQavg<65) return {name:'Eager Cultural Bridge-Builder',tier:3,desc:"Strong motivation to engage across cultural contexts combined with a gap in behavioural flexibility. The enthusiasm is genuine, but the toolkit needs development."};
   if(OCB_A>=75&&E<48&&OCBavg>=68&&OCB_S<52) return {name:'Generous Under Pressure',tier:3,desc:"Exceptionally strong team support orientation combined with lower social assertiveness and signs of accumulated frustration with institutional demands."};
-  if(LA_CA>=72&&LA_RA<52&&LAavg>=62) return {name:'Strategic Pivoter',tier:3,desc:"Strong capacity to identify when a direction needs to change — combined with a gap in driving initiatives through to completion."};
+  if(LA_CA>=72&&LA_RA<52&&LAavg>=62) return {name:'Strategic Pivoter',tier:3,desc:"Strong capacity to identify when a direction needs to change, combining with a gap in driving initiatives through to completion."};
   if(LAavg>=70&&O>=65) return {name:'Learning Champion',tier:2,desc:"A fast learner who thrives on intellectual challenge and new knowledge. Strong asset in research, training design, and capacity building."};
   return {name:'Emerging Professional',tier:4,desc:"A profile with clear foundations and specific dimensions ready for focused development. Structured development investment here creates measurable change."};
 };
@@ -1597,7 +1597,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
         </div>
 
         <button onClick={()=>{if(consentChecked) setStep('intake');}} disabled={!consentChecked} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:consentChecked?'pointer':'not-allowed',background:consentChecked?T.c:T.bg3,color:consentChecked?'#fff':T.t3,fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>{if(consentChecked) e.target.style.background=T.cDark;}} onMouseOut={e=>{if(consentChecked) e.target.style.background=T.c;}}>
-          I Agree — Continue →
+          I Agree · Continue →
         </button>
       </div>
     </div>
@@ -1749,28 +1749,28 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
     
     const scenarios = [
       {
-        title: "Dilemma 1 of 3 — Process vs. Culture",
-        text: "Your organisation has always resolved internal disputes informally — through conversation and relationships rather than formal written procedures. You believe this occasionally produces unfair outcomes, but it maintains team cohesion. A junior colleague asks your honest advice: should they follow the formal grievance process or handle this the way things have always been done here?",
-        left: "Follow the formal process — policies exist to protect people, regardless of organisational culture.",
-        right: "Handle it informally — relationships and trust matter more than process in real professional life.",
+        title: "Dilemma 1 of 3 · Process vs. Culture",
+        text: "Your organisation has always resolved internal disputes informally, through conversation and relationships rather than formal written procedures. You believe this occasionally produces unfair outcomes, but it maintains team cohesion. A junior colleague asks your honest advice: should they follow the formal grievance process or handle this the way things have always been done here?",
+        left: "Follow the formal process: Policies exist to protect people, regardless of organisational culture.",
+        right: "Handle it informally: Relationships and trust matter more than process in real professional life.",
         lLabel: "Formal", rLabel: "Informal",
-        intro: "This is a short dilemma where two legitimate professional values pull in opposite directions. Use the slider to show where you genuinely lean — not where you think you should lean. There is no time limit."
+        intro: "This is a short dilemma where two legitimate professional values pull in opposite directions. Use the slider to show where you genuinely lean, not where you think you should lean. There is no time limit."
       },
       {
-        title: "Dilemma 2 of 3 — Loyalty vs. Transparency",
+        title: "Dilemma 2 of 3 · Loyalty vs. Transparency",
         text: "A colleague you respect and work closely with is leading a project that is clearly falling behind. They have not yet disclosed this to leadership and are quietly hoping to recover before anyone notices. You are aware of the situation. The next leadership update is in three days.",
-        left: "Raise it with leadership yourself — stakeholders deserve accurate information to make good decisions.",
-        right: "Give your colleague the chance to disclose it themselves — loyalty and trust come first in a team.",
+        left: "Raise it with leadership yourself, stakeholders deserve accurate information to make good decisions.",
+        right: "Give your colleague the chance to disclose it themselves, loyalty and trust come first in a team.",
         lLabel: "Transparent", rLabel: "Loyal",
-        intro: "Here is the second of three brief dilemmas. Use the slider to show your genuine lean — there is no right answer."
+        intro: "Here is the second of three brief dilemmas. Use the slider to show your genuine lean, there is no right answer."
       },
       {
-        title: "Dilemma 3 of 3 — Results vs. Method",
+        title: "Dilemma 3 of 3 · Results vs. Method",
         text: "You have been asked to deliver a significant outcome by end of quarter. Halfway through, you realise the method your team is using is producing the right numbers but cutting corners on quality checks that are technically required by your institution's procedures. The outcome will look good. The risk is low but not zero.",
-        left: "Slow down and restore the quality checks — procedures exist for good reasons, even when the risk feels low.",
-        right: "Continue as is — the outcome is what matters, and the risk is manageable in this case.",
+        left: "Slow down and restore the quality checks, procedures exist for good reasons, even when the risk feels low.",
+        right: "Continue as the outcome is what matters, and the risk is manageable in this case.",
         lLabel: "Process", rLabel: "Results",
-        intro: "This is the final dilemma in this short series. Use the slider to show your genuine lean — there is no right answer."
+        intro: "This is the final dilemma in this short series. Use the slider to show your genuine lean, there is no right answer."
       }
     ];
     const sc = scenarios[ssStep];
@@ -2762,7 +2762,7 @@ const buildHabits = (content, dim, profile, R) => {
             <div style={{position:'relative',zIndex:1}}>
               <div className="mono" style={{fontSize:'10px',color:T.gold,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:'12px',fontWeight:'700'}}>Your Personal CORE Development Report</div>
               <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>{R.name}</h1>
-              <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',marginBottom:'16px',fontWeight:'500'}}>This report is written directly to you — not to your manager, not to HR. It translates your assessment results into specific, actionable guidance: what your scores mean, where your genuine strengths are, what to develop, and exactly how. Read it once for the picture. Read it again with a pen.</p>
+              <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',marginBottom:'16px',fontWeight:'500'}}>This report is written directly to you and not to your manager or HR. It translates your assessment results into specific, actionable guidance: what your scores mean, where your genuine strengths are, what to develop, and exactly how. Read it once for the picture. Read it again with a pen.</p>
               <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px'}}>{date} · {R.exp} · {R.purpose} {R.industry ? `· ${R.industry}` : ''}</div>
               
               <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'24px', borderLeft:`4px solid ${T.c}`}}>
@@ -2823,7 +2823,7 @@ const buildHabits = (content, dim, profile, R) => {
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>What You Are Good At — And Where To Grow</h3>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>What You Are Good At · And Where To Grow</h3>
             <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'500', marginBottom:'24px'}}>
               <strong style={{color:T.t0}}>How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style={{color:T.gn}}>Top 2</strong> become your anchor strengths — the natural instincts you should actively leverage. The <strong style={{color:T.rd}}>Bottom 2</strong> become your priority development areas — the specific gaps where focused effort will yield the highest career return.
             </p>
@@ -2849,7 +2849,7 @@ const buildHabits = (content, dim, profile, R) => {
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `— ${R.industry}` : ''}</h3>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `· ${R.industry}` : ''}</h3>
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
               <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', fontWeight:'500', margin:0}}>
                 The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style={{color:T.t0}}>This action plan focuses on your lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
@@ -2948,7 +2948,7 @@ const buildHabits = (content, dim, profile, R) => {
             </div>
 
             <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your If-Then Protocol — When Habits Break</h3>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your If-Then Protocol · When Habits Break</h3>
               <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Research consistently shows relapse risk is highest in the first 30 days. These protocols are decision frameworks for situations you will encounter.</p>
               <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
                 {relapse.map((p, i) => (
@@ -2969,7 +2969,7 @@ const buildHabits = (content, dim, profile, R) => {
 
           {/* Carnelian Programs */}
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Training — Carnelian Programmes</h3>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Training · Carnelian Programmes</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>The following Carnelian programmes are specifically matched to your CORE profile and dimension scores. Your organisation can commission any of these — or you can reach out as an individual.</p>
             <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'24px'}}>
               {programs.map((p, i) => (
@@ -3037,7 +3037,7 @@ const buildHabits = (content, dim, profile, R) => {
           {/* Close Note */}
           <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>A Note to Close</h3>
-            <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>This report is a starting point, not a verdict. Psychometric scores describe tendencies — they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10-step plans above are specific because vague advice produces no change. Take one action from this report today — not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self-knowledge. You have just demonstrated that.</p>
+            <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>“This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that.</p>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:`1px solid ${T.b1}`, paddingTop:'20px', flexWrap:'wrap', gap:'12px'}}>
               <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>CORE · {docId} · Carnelian Pvt Ltd · {date}</div>
               <div style={{fontSize:'12px', color:T.gn, fontWeight:'700'}}>Questions? hello@carnelianco.com</div>

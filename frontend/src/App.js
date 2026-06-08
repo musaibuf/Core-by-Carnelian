@@ -500,7 +500,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
             {id:'assess', l:'Assessment'},
             ...(hasResults?[{id:'results', l:'Reports'}]:[]),
             ...(hasHistory?[{id:'progress', l:'Progress'}]:[]),
-            {id:'legal', l:'Legal & Privacy'},
+            {id:'legal', l:'Compliance & Privacy'},
           ].map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)} style={{
               padding:'8px 16px', borderRadius:'6px', border:'none', cursor:'pointer',
@@ -739,9 +739,7 @@ const HomePage = ({setTab}) => {
             {/* Subtitle */}
             <div className="anim-fadeUp" style={{animationDelay:'0.32s'}}>
               <p style={{color:T.t1, fontSize:'16px', maxWidth:'700px', lineHeight:'1.8', margin:'0 auto 48px', fontWeight:'500'}}>
-                CORE is a validated, 63-item psychometric battery with built-in validity controls, social desirability
-                screening, and an industry context engine for 12 Pakistani sectors. Instant, scientifically
-                grounded results.
+                CORE is a validated, 63‑item psychometric assessment powered by Carnelian’s proprietary algorithm - refined over 30+ years of L&D expertise and validated across 12 industry contexts in Pakistan. With built‑in validity controls, social desirability screening, and an industry context engine, CORE delivers instant, scientifically grounded results.
               </p>
             </div>
 
@@ -795,15 +793,16 @@ const HomePage = ({setTab}) => {
             <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
               <span style={{fontSize:'24px'}}>🧠</span>
               <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
-                Five Validated Assessment Modules — 63 Items Total
+                Five Evidence-Based Assessment Pillars - 63 Items Total
+
               </h3>
             </div>
           </Reveal>
           <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'12px'}}>
             {[
-              {n:'1', t:'Personality at Work',   d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit. Public domain items (IPIP).', c:T.c},
+              {n:'1', t:'Personality at Work',   d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit.', c:T.c},
               {n:'2', t:'Cultural Intelligence',  d:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:T.gold},
-              {n:'3', t:'Workplace Initiative',   d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals who sustains your institution.', c:T.gn},
+              {n:'3', t:'Workplace Initiative',   d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals what sustains an institution.', c:T.gn},
               {n:'4', t:'Learning Agility',       d:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:T.am},
               {n:'5', t:'Integrity & Ethics',     d:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#8B5CF6'},
             ].map((m,i) => (
@@ -967,7 +966,7 @@ const ReportsSlideshow = () => {
   const [active, setActive] = useState(0);
   const [prog,   setProg]   = useState(0);
   const [fade,   setFade]   = useState(true);
-  const INTERVAL = 5200;
+  const INTERVAL = 15000;
 
   const reports = [
     { i:'📊', c:'#60A5FA', t:'Technical Report',       s:'HR & Leadership',
@@ -2173,180 +2172,278 @@ const allDims = [
     return generic;
   };
 
-  const devAreas = [];
-const buildHabits = (now, soon, fut, acts, v, dim) => {
-  const dimSpecific = {
-    'Conscientiousness & Delivery': {
-      managerStep:  'Tell your manager the 3 specific deliverables you are tracking this month and ask them to hold you accountable if you miss a self-imposed deadline.',
-      selfAssess:   'Pull up your last 8 weeks of commitments. Count how many you hit on time, how many were late, and how many were quietly dropped. Write the number down — not an estimate.',
-      retake:       'Retake CORE — your Conscientiousness baseline was ' + v + '/100. A 6-point rise here is achievable with consistent habit practice.',
-      ongoing:      'Every Friday, score yourself 1–5 on delivery reliability for the week. Note the one commitment that was hardest to keep and why.',
-    },
-    'Emotional Resilience': {
-      managerStep:  'Tell your manager one specific pressure source in your role and ask for one structural change — not sympathy. Make it a concrete ask.',
-      selfAssess:   'Review the last 3 high-pressure situations you faced. For each, write: how did I respond in the moment, and what would a more stable version of me have done differently?',
-      retake:       'Retake CORE — your Emotional Stability baseline was ' + v + '/100. Stability is measurable and it does move with deliberate practice.',
-      ongoing:      'Every Friday, rate your emotional regulation for the week 1–5. Identify the moment you felt most reactive and log what triggered it.',
-    },
-    'Learning Agility': {
-      managerStep:  'Tell your manager one domain outside your current expertise you are investing in this quarter and ask them to assign you one task that requires you to use it.',
-      selfAssess:   'List every significant thing you have learned in the past 3 months — self-directed only, not mandatory training. If the list is short, that is your data point.',
-      retake:       'Retake CORE — your Learning Agility baseline was ' + v + '/100. This dimension responds fastest to deliberate habit change.',
-      ongoing:      'Every Friday, write one sentence: "This week I learned _____ and I will apply it by _____." Keep the log. Review it monthly.',
-    },
-    'Constructive Attitude & Sportsmanship': {
-      managerStep:  'Tell your manager one institutional frustration you have been carrying and present it as a specific improvement proposal — not a complaint. Ask for the right channel to route it.',
-      selfAssess:   'Think back over the past month. How many times did you share a workplace frustration with a colleague rather than acting on it constructively? Write the honest number.',
-      retake:       'Retake CORE — your Sportsmanship baseline was ' + v + '/100. This dimension is directly observable by your team and shifts faster than most.',
-      ongoing:      'Every Friday, ask yourself: did I complain this week without proposing a solution? If yes, write down what the solution would have been.',
-    },
-    'People Agility & Self-Reflection': {
-      managerStep:  'Ask your manager for one specific piece of feedback on a blind spot they have observed in you. Write it down and tell them what you will do about it.',
-      selfAssess:   'Pick one significant professional setback from the past 6 months. Write a one-page account — what happened, what your role was, and what you would do differently. Be specific.',
-      retake:       'Retake CORE — your People Agility baseline was ' + v + '/100. Self-awareness scores are among the most movable in the CORE battery.',
-      ongoing:      'After every significant meeting or decision this week, write two sentences: what I did well, and what I would change. Do not skip the second one.',
-    },
-    'Social Confidence & Extraversion': {
-      managerStep:  'Tell your manager one specific situation — a meeting, a presentation, a difficult conversation — where you held back instead of stepping forward. Ask them to flag the next opportunity where you can take point.',
-      selfAssess:   'Think of the last 5 professional situations where you stayed quiet when you had something to say. Write down what stopped you each time. Look for the pattern.',
-      retake:       'Retake CORE — your Social Confidence baseline was ' + v + '/100. This dimension is directly observable by colleagues and responds measurably to deliberate practice.',
-      ongoing:      'Every Friday, log one moment where you spoke up and one where you held back. Over time, the ratio is your data.',
-    },
-    'Agreeableness & Collaboration': {
-      managerStep:  'Tell your manager one colleague relationship that has friction and ask for coaching on one specific communication habit you can change.',
-      selfAssess:   "Think of the last 3 disagreements you had at work. In how many did you genuinely consider the other person's reasoning before defending your own? Write the honest answer.",
-      retake:       'Retake CORE — your Agreeableness baseline was ' + v + '/100. This dimension is directly observable by colleagues and measurable through 360 feedback.',
-      ongoing:      'Every Friday, recall one moment where you felt defensive or dismissive. Write what the other person\'s actual point was — in their terms, not yours.',
-    },
+  const getDimContent = (dim) => {
+    const map = {
+      'Conscientiousness': {
+        why: ctxAction("Consistent delivery is the foundation of professional credibility. Missed deadlines or incomplete work creates friction that compounds over time.", "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),
+        now: ctxAction("Agree a weekly check-in with your supervisor on 3 explicit priority deliverables.","Book a 30-minute weekly slot with your line manager to review your open regulatory deliverables.","Schedule a weekly meeting with your supervisor to review your progress against departmental KPIs.","Set up a shared milestone tracker with your programme coordinator this week.","Send your team a written commitment list every Monday.","Have an honest conversation with your line manager this week about which current commitments you are most at risk of missing."),
+        soon: ctxAction("Enrol in a personal productivity workshop or study one methodology (GTD, Agile personal planning).","Complete a structured time management or professional effectiveness programme.","Attend a civil service effectiveness workshop through your Training Institute.","Enrol in a project management short course.","Commission a team productivity audit to understand where delivery bottlenecks are systemic.","Attend a productivity and professional effectiveness workshop."),
+        fut: ctxAction("Lead a project end-to-end within 6 months to build delivery confidence with structured accountability.","Take ownership of an end-to-end compliance or regulatory project.","Lead a cross-departmental working group to demonstrate sustained delivery over a 6-month period.","Lead a full programme cycle from design to donor reporting.","Commission an organisational review of how delivery accountability is structured across your team.","Ask to lead a complete project or initiative end-to-end."),
+        acts: ["Use a weekly priority matrix every Monday.","Break large projects into milestone check-ins.","Track one commitment per week that you made and actually completed."],
+        managerStep: 'Tell your manager the 3 specific deliverables you are tracking this month and ask them to hold you accountable if you miss a self-imposed deadline.',
+        selfAssess: 'Pull up your last 8 weeks of commitments. Count how many you hit on time, how many were late, and how many were quietly dropped. Write the number down.',
+        ongoing: 'Every Friday, score yourself 1–5 on delivery reliability for the week. Note the one commitment that was hardest to keep and why.',
+        retake: `Retake CORE — your Conscientiousness baseline was ${S.C}/100. A 6-point rise here is achievable with consistent habit practice.`
+      },
+      'Emotional Resilience': {
+        why: ctxAction("High-stakes professional environments involve pressure cycles. Your ability to remain clear-headed under pressure is career-determining.", "Banking environments are characterised by regulatory cycles, audit periods, and market pressure.", "Civil service reform creates sustained pressure on officers at all levels.", "Development sector professionals work in environments of resource constraints, community pressure, and donor scrutiny.", "At senior level, your emotional state sets the emotional tone for the entire team.", "Early career is when pressure tolerance is built."),
+        now: ctxAction("Identify one specific pressure source in your current role and have a direct conversation with your leadership about managing it structurally.","Ask your institution's HR team this week about EAP access and stress management resources.","Contact your Training Institute about resilience coaching resources available to civil service officers.","Speak to your programme director about workload distribution.","Identify one specific pressure source in your current role and have a direct conversation with your leadership.","Talk to your line manager this week about one specific pressure point in your role and what support is available."),
+        soon: ctxAction("Attend a resilience or emotional intelligence workshop this quarter.","Attend a professional resilience workshop — specifically one designed for high-accountability financial environments.","Attend a public sector leadership and resilience programme.","Attend an NGO or development sector leadership workshop.","Commission an executive coaching engagement for yourself.","Attend an emotional intelligence or resilience workshop."),
+        fut: ctxAction("Seek a role with progressively increasing accountability to build resilience through real-world exposure.","Seek out a role rotation that includes a high-pressure function.","Pursue a secondment or cross-posting to a reform-facing role.","Accept an assignment in a resource-constrained or high-stakes programme context.","Build a senior leadership resilience programme for your team.","Ask to be included in high-stakes projects where you will be stretched."),
+        acts: ["Build a 10-minute daily decompression practice.","Write a post-incident reflection after a stressful event.","Identify 2 trusted sounding boards."],
+        managerStep: 'Tell your manager one specific pressure source in your role and ask for one structural change — not sympathy. Make it a concrete ask.',
+        selfAssess: 'Review the last 3 high-pressure situations you faced. For each, write: how did I respond in the moment, and what would a more stable version of me have done differently?',
+        ongoing: 'Every Friday, rate your emotional regulation for the week 1–5. Identify the moment you felt most reactive and log what triggered it.',
+        retake: `Retake CORE — your Emotional Stability baseline was ${S.ES}/100. Stability is measurable and it does move with deliberate practice.`
+      },
+      'Learning Agility': {
+        why: ctxAction("The professionals who rise are those who learn and adapt fastest. Current knowledge has a shelf life.", "Pakistan's banking sector is changing faster than almost any other.", "Pakistan's civil service is in active reform.", "The development sector's evidence base evolves continuously.", "At your seniority level, your learning agility determines whether you remain strategically relevant.", "The first decade of a career is where learning habits are formed."),
+        now: ctxAction("Subscribe to one sector publication you do not currently follow.","Subscribe today to SBP's official regulatory updates.","Subscribe to an international public administration publication.","Subscribe to an international development sector publication.","Audit your team's current knowledge sources.","Identify one technical skill gap holding you back and find a resource for it."),
+        soon: ctxAction("Build a 90-day self-directed learning plan on one topic outside your current expertise.","Build a 90-day learning plan on one banking domain outside your specialty.","Build a 90-day learning plan on one reform area relevant to your department.","Build a 90-day learning plan on a new methodology.","Implement a team-wide knowledge sharing protocol.","Complete a short certification in a new skill."),
+        fut: ctxAction("Apply to facilitate or co-design a training or knowledge-sharing session.","Apply to co-design an internal knowledge-sharing session at your institution.","Apply to deliver a session at your Training Institute.","Apply to design a staff capacity building session for your programme team.","Sponsor an innovation initiative within your department.","Ask to present a new concept to the broader team."),
+        acts: ["Dedicate 30 mins a week to reading an industry report.","Ask yourself what you learned after every major task.","Request candid feedback from a supervisor."],
+        managerStep: 'Tell your manager one domain outside your current expertise you are investing in this quarter and ask them to assign you one task that requires you to use it.',
+        selfAssess: 'List every significant thing you have learned in the past 3 months — self-directed only. If the list is short, that is your data point.',
+        ongoing: 'Every Friday, write one sentence: "This week I learned _____ and I will apply it by _____." Keep the log.',
+        retake: `Retake CORE — your Learning Agility baseline was ${S.LAavg}/100. This dimension responds fastest to deliberate habit change.`
+      },
+      'Social Confidence': {
+        why: ctxAction("Social confidence is a professional skill. Your ability to assert your perspective determines your influence.","In banking, stakeholder presence is a career-defining skill.","In government, your ability to communicate clearly determines your influence.","In the development sector, donor presentations require professionals who can project confidence.","At your seniority level, social confidence is the multiplier on every other strength you have.","Early in your career, social confidence determines whether your ideas get heard."),
+        now: ctxAction("Have one conversation this week that you have been avoiding.","Schedule one client or regulatory conversation you have been postponing.","Initiate one interaction with a senior officer you have been avoiding.","Initiate one donor or partner conversation you have been postponing.","Have one high-visibility conversation this week that you would normally delegate.","Speak up in a meeting where you would normally stay silent."),
+        soon: ctxAction("Enrol in a communication and influence workshop.","Attend a professional communication workshop designed for financial professionals.","Attend a public speaking programme through your Training Institute.","Attend a facilitation workshop for development sector professionals.","Commission an executive presence coaching engagement.","Join a public speaking group like Toastmasters."),
+        fut: ctxAction("Seek a role or assignment that requires regular public speaking or stakeholder presentations.","Ask to lead the next client presentation.","Apply to represent your department at a public forum.","Apply to lead the next donor presentation.","Commit to speak at one external event or industry forum.","Ask to present in the next team meeting."),
+        acts: ["Identify one conversation you've avoided and have it today.","Volunteer to speak first in at least one meeting per week.","Join a forum where you must contribute publicly."],
+        managerStep: 'Tell your manager one specific situation where you held back instead of stepping forward. Ask them to flag the next opportunity where you can take point.',
+        selfAssess: 'Think of the last 5 professional situations where you stayed quiet when you had something to say. Write down what stopped you each time.',
+        ongoing: 'Every Friday, log one moment where you spoke up and one where you held back. Over time, the ratio is your data.',
+        retake: `Retake CORE — your Social Confidence baseline was ${S.E}/100. This dimension responds measurably to deliberate practice.`
+      },
+      'Team Citizenship': {
+        why: ctxAction("Institutions are sustained by discretionary effort. Moving beyond your formal job description builds the social capital necessary for leadership.", "In banking, siloed departments create massive inefficiency; citizenship bridges those gaps.", "In the civil service, cross-departmental cooperation is the only way complex policies are implemented.", "In NGOs, mission success relies heavily on team members supporting each other beyond their TORs.", "At the executive level, your citizenship sets the culture. If you don't collaborate, your team won't.", "Building a reputation as an institutional citizen early in your career makes you indispensable."),
+        now: ctxAction("Identify one institutional frustration and present a constructive solution instead of complaining.", "Identify a bottleneck between your unit and another, and propose a fix.", "Draft a one-page improvement proposal for a broken bureaucratic process.", "Offer to take one administrative burden off a stressed colleague this week.", "Praise a colleague's unseen work in front of the broader leadership team.", "Volunteer for an unglamorous task that helps the whole team."),
+        soon: ctxAction("Volunteer for an internal committee or improvement initiative.", "Join a cross-functional working group.", "Participate in a departmental reform committee.", "Take the lead on organizing a team-building or knowledge-sharing event.", "Establish a formal recognition system within your department.", "Shadow a colleague in a different role to understand their challenges."),
+        fut: ctxAction("Lead a process improvement workstream for your department.", "Take ownership of an initiative that benefits the entire branch, not just your KPIs.", "Lead a policy implementation working group.", "Design and lead a new capacity-building initiative for your NGO.", "Sponsor a cross-departmental integration project.", "Become the go-to person for onboarding new team members."),
+        acts: ["Adopt the 'solution before complaint' rule.", "Take on one administrative burden for the team.", "Praise a colleague's unseen work publicly."],
+        managerStep: 'Ask your manager for visibility on where the team is currently bottlenecked, and volunteer to take one administrative or support burden off a colleague.',
+        selfAssess: 'Review your calendar for the last month. How much time did you spend helping colleagues or improving processes that were not explicitly in your KPIs?',
+        ongoing: 'Every Friday, log one proactive thing you did for the team this week that no one explicitly asked you to do.',
+        retake: `Retake CORE — your Team Citizenship baseline was ${S.OCBavg}/100. Citizenship is what separates individual contributors from true institutional anchors.`
+      },
+      'Collaborative Spirit': {
+        why: ctxAction("High performance in modern institutions is team-based. Friction, defensiveness, and lack of empathy destroy psychological safety and derail projects.", "In high-stakes finance, adversarial relationships between front-office and risk/audit destroy institutional value.", "In government, territorial disputes between departments halt public service delivery.", "In the development sector, failing to build consensus with communities or partners leads to programme failure.", "As a senior leader, a lack of collaborative spirit creates a culture of fear and information hoarding.", "Learning to disagree without damaging relationships is the most critical soft skill you can build right now."),
+        now: ctxAction("Identify a strained workplace relationship and initiate a reset conversation.", "Reach out to a colleague in Risk, Audit, or Compliance to understand their perspective on a recent friction point.", "Schedule a coffee with a counterpart in a rival department to build rapport.", "Ask a community partner or stakeholder for their honest feedback on your approach.", "Publicly acknowledge a mistake you made to normalize vulnerability in your team.", "Ask a colleague you disagreed with recently for their perspective, and just listen."),
+        soon: ctxAction("Complete a course on active listening or conflict resolution.", "Attend a stakeholder negotiation workshop focused on interest-based outcomes.", "Take a public administration course on consensus building.", "Enrol in a partnership management or mediation workshop.", "Commission a 360-degree feedback review for yourself and share the results with your team.", "Read and apply the frameworks from 'Getting to Yes' in your daily interactions."),
+        fut: ctxAction("Mentor a junior colleague or lead a cross-functional initiative requiring high diplomacy.", "Lead a project that requires deep collaboration between sales and risk/compliance.", "Manage a multi-stakeholder policy rollout.", "Take the lead on a complex consortium or multi-partner grant proposal.", "Mediate a long-standing departmental dispute.", "Volunteer to manage a project with a notoriously difficult stakeholder."),
+        acts: ["In your next disagreement, repeat the other person's point back to them before making yours.", "Offer help to a stressed colleague without being asked.", "Acknowledge a mistake publicly."],
+        managerStep: 'Tell your manager one colleague relationship that has friction and ask for coaching on one specific communication habit you can change.',
+        selfAssess: "Think of the last 3 disagreements you had at work. In how many did you genuinely consider the other person's reasoning before defending your own? Write the honest answer.",
+        ongoing: 'Every Friday, recall one moment where you felt defensive or dismissive. Write what the other person\'s actual point was — in their terms, not yours.',
+        retake: `Retake CORE — your Agreeableness baseline was ${S.A}/100. This dimension is directly observable by colleagues and measurable through 360 feedback.`
+      },
+      'Openness to Ideas': {
+        why: ctxAction("In a rapidly evolving market, relying solely on established methods leads to obsolescence. Innovation requires deliberate exposure to new frameworks.", "The financial sector is being disrupted by fintech and changing regulations; rigid thinking is a liability.", "Bureaucratic inertia is the enemy of reform. Openness is required to modernize civil service delivery.", "The development sector demands continuous adaptation to new evidence and changing ground realities.", "As a leader, if you immediately shoot down unconventional ideas, your team will stop bringing them to you.", "Building a reputation as an adaptable, open-minded professional accelerates your career trajectory."),
+        now: ctxAction("Identify one process you follow blindly and write down three ways it could be optimized.", "Review a legacy banking process and propose a digital or streamlined alternative.", "Look at one standard operating procedure in your department and draft a modernization proposal.", "Review your programme's M&E framework and suggest one innovative way to capture impact.", "In your next meeting, force yourself to say 'Tell me more' instead of 'But...'", "Ask a colleague from a completely different department how they would solve a problem you are facing."),
+        soon: ctxAction("Present a new tool or methodology to your team that you researched independently.", "Attend a workshop on digital transformation or agile methodologies.", "Participate in a design-thinking workshop for public sector innovation.", "Enrol in a course on human-centered design or innovative financing.", "Host a 'reverse mentoring' session where junior staff pitch ideas to you.", "Take a short online course in a subject entirely outside your field."),
+        fut: ctxAction("Lead a pilot project testing a completely new approach to a legacy problem.", "Sponsor a sandbox initiative for a new financial product or service.", "Lead the implementation of a new e-governance tool in your department.", "Design a pilot intervention using a completely untested methodology.", "Allocate budget and time for an internal innovation incubator.", "Volunteer to be the early adopter for a new company-wide software or process."),
+        acts: ["Spend 30 minutes a week reading outside your discipline.", "Propose one idea that breaks the current rules in your next brainstorm.", "Ask a colleague from a different department how they would solve your problem."],
+        managerStep: 'Ask your manager to include you in one brainstorming or strategy session outside your usual scope, just to observe and contribute one left-field idea.',
+        selfAssess: 'Look at the last 3 times a new process or tool was introduced. Did you instinctively point out why it wouldn\'t work, or did you explore how it could? Be honest.',
+        ongoing: 'Every Friday, ask yourself: "Did I do anything differently this week, or did I rely entirely on my established routines?"',
+        retake: `Retake CORE — your Openness baseline was ${S.O}/100. Expanding this dimension prevents career stagnation.`
+      },
+      'Cultural Intelligence': {
+        why: ctxAction("Pakistan's professional landscape is highly diverse. Navigating regional, linguistic, and institutional differences is essential for multi-stakeholder success.", "In national banks, you must seamlessly navigate interactions from corporate head offices to rural agricultural branches.", "Civil servants are posted across diverse provinces and must adapt to local cultural and power dynamics instantly.", "Development work spans international donors in capital cities to deeply conservative rural communities.", "Senior leaders must build inclusive cultures that leverage diversity rather than demanding conformity.", "Demonstrating respect and adaptability across cultures marks you as leadership material early on."),
+        now: ctxAction("Identify a miscommunication caused by cultural or departmental differences and clarify it.", "Adjust your communication style deliberately in your next email to a regional branch.", "Have a conversation with a local stakeholder purely to understand their context, without an agenda.", "Ask a community mobilizer to explain the unspoken norms of the district you are working in.", "Review your leadership team's composition and ask whose perspective is missing.", "Ask a colleague from a different background about their perspective on a workplace norm."),
+        soon: ctxAction("Attend an intercultural communication workshop.", "Participate in a diversity and inclusion training focused on the Pakistani context.", "Study the regional history and administrative nuances of your current posting.", "Complete a course on culturally responsive programming or participatory development.", "Implement an inclusive meeting protocol that ensures minority voices are heard.", "Read 'The Culture Map' and map your own communication style against it."),
+        fut: ctxAction("Take an assignment that requires deep engagement with a new region or stakeholder group.", "Volunteer for a rotation in a province or division you have never worked in.", "Request a field posting or secondment to a culturally distinct region.", "Lead a project that requires managing a highly diverse, multi-ethnic consortium.", "Sponsor an organizational initiative that promotes regional diversity in hiring.", "Lead a cross-regional project team."),
+        acts: ["Research the institutional norms of a partner you struggle to understand.", "Adapt your communication style (formal vs informal) in your next email.", "Ask a colleague from a different background about their perspective."],
+        managerStep: 'Ask your manager to assign you to a cross-functional project or committee involving a region, department, or stakeholder group you rarely interact with.',
+        selfAssess: 'Recall the last time a colleague from a different background frustrated you. Did you attribute it to their competence, or did you consider cultural/institutional norms?',
+        ongoing: 'Every Friday, note one assumption you made about a stakeholder that turned out to be inaccurate based on their background or context.',
+        retake: `Retake CORE — your Cultural Intelligence baseline was ${S.CQavg}/100. This is increasingly critical for senior leadership in Pakistan.`
+      },
+      'Ethical Integrity': {
+        why: ctxAction("In environments with high fiduciary or public accountability, transparency and rule compliance are non-negotiable trust metrics.", "In banking, ethical breaches lead to regulatory sanctions, reputational ruin, and criminal liability.", "In government, transparent decision-making is the bulwark against corruption allegations and audit paras.", "In the NGO sector, fiduciary integrity is the absolute baseline for donor trust and organizational survival.", "As a leader, your minor compromises become your team's major breaches. You set the ethical ceiling.", "Your professional reputation is built in decades and destroyed in a single compromised decision."),
+        now: ctxAction("Identify a process where you cut corners and realign it with official policy today.", "Review your recent approvals and ensure every single one has complete, transparent documentation.", "Audit your last three decisions for strict compliance with PPRA or departmental rules.", "Disclose a minor error or variance to a donor/partner immediately rather than hiding it.", "Publicly state your commitment to a specific compliance standard in your next team meeting.", "Consult a peer or mentor on an ethically ambiguous choice you are currently facing."),
+        soon: ctxAction("Attend a professional ethics and values workshop.", "Complete an advanced anti-money laundering (AML) or compliance certification.", "Attend a workshop on public procurement rules and administrative transparency.", "Enrol in a course on fiduciary risk management and donor compliance.", "Commission an independent audit of your department's decision-making processes.", "Read and discuss a case study on corporate ethics with your team."),
+        fut: ctxAction("Take ownership of a high-compliance or audit-facing project.", "Volunteer to serve on the institution's internal audit or risk committee.", "Lead a departmental initiative to rewrite and modernize standard operating procedures for transparency.", "Design and enforce a new anti-fraud and safeguarding framework for your organization.", "Champion a whistleblower protection or transparency initiative across the company.", "Become the compliance champion for your unit."),
+        acts: ["Audit a recent decision for transparency.", "Consult a peer on an ethically ambiguous choice.", "Disclose a minor error immediately rather than hiding it."],
+        managerStep: 'Ask your manager to review a recent complex decision you made to ensure your transparency and compliance standards align perfectly with institutional expectations.',
+        selfAssess: 'Audit your communication this week. Did you delay sharing bad news? Did you frame a mistake to look better than it was? Integrity gaps start small.',
+        ongoing: 'Every Friday, ask yourself: "If all my professional conversations and decisions this week were made public, would I be defending them or explaining them away?"',
+        retake: `Retake CORE — your Ethical Integrity baseline was ${S.EOavg}/100. This is the ultimate trust metric for high-level deployment.`
+      }
+    };
+    return map[dim] || map['Learning Agility'];
   };
 
-  const specific = dimSpecific[dim] || {
-    managerStep:  'Tell your line manager your specific development goal for this dimension and ask them to flag relevant opportunities as they arise.',
-    selfAssess:   'Do a written self-assessment — compare your current behaviour in this area to where you were at Week 1. Name one thing that has visibly changed.',
-    retake:       'Retake CORE — your baseline on this dimension was ' + v + '/100. Measure the movement honestly.',
-    ongoing:      'Every Friday, log one moment from the week where this dimension shaped a decision or interaction. Review the log monthly.',
+const buildHabits = (content, dim, profile, R) => {
+    const isBanking = R.industry?.includes('Banking')||R.industry?.includes('Insurance')||R.industry?.includes('Takaful');
+    const isGovt = R.industry?.includes('Government')||R.industry?.includes('Civil');
+    const isDev = R.industry?.includes('Development')||R.industry?.includes('NGO');
+    const lvl = R.level || R.exp || '';
+    const isJunior = lvl.includes('Entry')||lvl.includes('Junior')||lvl.includes('0–2')||lvl.includes('3–5');
+    const isSenior = lvl.includes('Senior')||lvl.includes('Executive')||lvl.includes('Director')||lvl.includes('C-Suite')||lvl.includes('16+');
+
+    const profileContext = profile?.name ? `As a ${profile.name}, your natural instincts can sometimes mask your blind spots here.` : '';
+    const industryContextWeek2 = isBanking ? 'In the financial sector, even minor interactions carry regulatory or client trust weight.' :
+                                 isGovt ? 'In the civil service, note how hierarchy or bureaucratic friction influenced your response.' :
+                                 isDev ? 'In the development space, note how donor, partner, or community dynamics played a role.' :
+                                 'In your sector, context determines the outcome.';
+    const seniorContextWeek3 = isSenior ? 'As a senior leader, you must actively dismantle the hierarchy that prevents honest feedback. Ask a peer or a trusted direct report.' : 'Listen without interrupting or defending. Write down exactly what they say.';
+    const stretchContext = isBanking ? 'Volunteer for a cross-functional audit, risk, or product committee.' :
+                           isGovt ? 'Apply to lead a multi-departmental policy implementation or reform taskforce.' :
+                           isDev ? 'Take the lead on a complex donor reporting cycle or new programme design.' :
+                           'Ask for an assignment that forces you to practice this dimension under real institutional pressure.';
+
+    // Helper to format the text beautifully with bold headers
+    const formatHow = (tool, method, context = '') => (
+      <span>
+        <strong style={{color: T.t0}}>{tool}</strong> <strong style={{color: T.t0}}>Methodology:</strong> {method} {context && <span style={{fontStyle: 'italic', color: T.t2}}>{context}</span>}
+      </span>
+    );
+
+    const hows = {
+      'Conscientiousness & Delivery': [
+        formatHow('Tool: Stop-Start-Continue Audit.', 'Draw three columns. List exactly what behaviors you must Stop, Start, and Continue regarding your task delivery. Each must be a single, measurable sentence.', profileContext),
+        formatHow('Framework: The Eisenhower Matrix.', 'Force yourself to select only 3 non-negotiable, high-impact tasks per day. Do them before opening your email inbox.', industryContextWeek2),
+        formatHow('Tool: The 5 Whys Root Cause Analysis.', 'When you miss a deadline, ask "Why?" 5 times to uncover if it was a time-estimation error, a resource bottleneck, or a focus error.', seniorContextWeek3),
+        formatHow('Tool: 3-2-1 Reflection.', 'As you read your recommended book, write down 3 new systems, 2 you will test this week, and 1 question to explore further.'),
+        formatHow('Action Protocol: The 2-Minute Rule.', 'If a task takes less than two minutes, do it immediately. Do not schedule it. Execute it now.', isJunior ? 'Building this discipline early sets your career trajectory.' : ''),
+        formatHow('Framework: COIN Conversation Model.', 'Structure upward communication using Context, Observation, Impact, and Next step. Keep it purely factual.', isSenior ? 'Even at the executive level, upward accountability accelerates growth.' : ''),
+        formatHow('Tool: Before/After Calibration.', 'Look at your Week 1 audit. Have your late deliveries decreased? Score your progress 1-5 to ensure the habit is sticking.'),
+        formatHow('Methodology: 70-20-10 Rule.', '70% of growth comes from doing. True delivery reliability is built under pressure. Take the stretch project and map every milestone on Day 1.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. A 5-point jump in Conscientiousness completely changes your leadership trajectory.'),
+        formatHow('Tool: The Friday Weekly Review (GTD).', 'Every Friday at 4 PM, clear your desk, review your calendar for next week, and block uninterrupted time for deep work.')
+      ],
+      'Emotional Resilience': [
+        formatHow('Tool: The Trigger Audit.', 'For two days, note exactly what times of day or which interactions cause your heart rate to spike. Identify the pattern before trying to fix it.', profileContext),
+        formatHow('Framework: The 90-Second Rule.', 'When triggered, physically step away from your desk. The physiological stress response lasts 90 seconds. Wait it out before hitting reply.', industryContextWeek2),
+        formatHow('Tool: Trusted Sounding Board.', 'Run your intended reaction past a grounded colleague before you execute it. Ask them: "Is my response proportionate to the issue?"', seniorContextWeek3),
+        formatTool => formatHow('Tool: Active Reading & Mapping.', 'As you consume your resilience resource, map their theoretical frameworks directly to your top 3 specific workplace stressors.'),
+        formatHow('Action Protocol: De-escalation.', 'Have this difficult conversation when you are calm, not when you are already overwhelmed. Pre-plan your opening sentence.'),
+        formatHow('Framework: Solution-Oriented Upward Communication.', 'Frame your request to your manager as a structural workflow improvement, not a complaint about stress levels.'),
+        formatHow('Tool: Response Calibration Check.', 'Are you still reacting instantly to bad news? Rate your composure improvement 1-5 and identify one remaining trigger.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Don\'t hide from pressure—manage it. Lean into a high-stakes assignment to pressure-test your new coping tools in real-time.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Emotional Stability is highly responsive to deliberate cognitive reframing over 6 months.'),
+        formatHow('Tool: Boundary Rituals.', 'Leave work at work. Write down any lingering anxieties in a notebook at 5 PM, close it, and physically walk away.')
+      ],
+      'Learning Agility': [
+        formatHow('Tool: The Comfort Zone Audit.', 'Identify the specific software, process, or regulation you have been actively avoiding learning. Write down why it intimidates you.', profileContext),
+        formatHow('Framework: Timeboxing (Pomodoro).', 'Dedicate just 15 uninterrupted minutes a day to exploring a completely new domain. No distractions, just focused learning.', industryContextWeek2),
+        formatHow('Methodology: The "What Did I Miss" Loop.', 'Ask a colleague to review your work specifically to point out a better or faster way to do it. Do not defend your original method.', seniorContextWeek3),
+        formatHow('Tool: Cross-Pollination.', 'As you consume your recommended resource, force yourself to write down one specific way the concept applies to your current daily tasks.'),
+        formatHow('Action Protocol: Zero Barrier Entry.', 'Subscribe to the journal or enroll in the course right now. The barrier to entry must be eliminated immediately.'),
+        formatHow('Framework: Strategic "Why" Extraction.', 'Ask your manager to explain the strategic reasoning behind a decision you don\'t understand, rather than just accepting the "What".'),
+        formatHow('Tool: The Friction Test.', 'Are you still instinctively rejecting new tools or methods? Score your adaptability 1-5 and force yourself to adopt one new tool this week.'),
+        formatHow('Methodology: 70-20-10 Rule.', '70% of learning is experiential. Volunteer to test a beta software or pilot a new process for the department. Be the guinea pig.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Learning Agility is the #1 predictor of executive potential and responds fastest to habit change.'),
+        formatHow('Framework: The Feynman Technique.', 'Every Friday, ask yourself: "What did I learn this week, and could I explain it simply to a junior colleague?"')
+      ],
+      'Social Confidence & Extraversion': [
+        formatHow('Tool: The Avoidance Audit.', 'Write down every meeting or conversation where you held back this week. Identify if the barrier was fear of being wrong or fear of the spotlight.', profileContext),
+        formatHow('Framework: The "First 5 Minutes" Rule.', 'Force yourself to speak, agree, or ask a question in the first 5 minutes of every meeting to break the psychological barrier of entry.', industryContextWeek2),
+        formatHow('Methodology: The Wingman Protocol.', 'Privately ask a peer to actively prompt you for your opinion in a group setting (e.g., "What do you think about this?").', seniorContextWeek3),
+        formatHow('Tool: 3-2-1 Presence Reflection.', 'Note 3 specific vocal or physical presence techniques from your resources, and actively test 2 of them in your next meeting.'),
+        formatHow('Action Protocol: Exposure Therapy.', 'Do not script the conversation. Just initiate it. The goal is exposure to the discomfort of speaking up, not perfection.'),
+        formatHow('Framework: Stepping-Stone Visibility.', 'Ask your manager to let you lead just the first 10 minutes of the next team sync to build structured visibility.'),
+        formatHow('Tool: Before/After Calibration.', 'Are you speaking up more naturally? Score your meeting participation 1-5 compared to Month 1.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Volunteer for the presentation you are terrified of. Preparation will carry you through, but the exposure will permanently expand your comfort zone.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Extraversion can be learned as a behavioral skill, even if it is not your natural state.'),
+        formatHow('Tool: Weekly Ratio Log.', 'Tally the ratio of times you spoke up vs. held back. Watch the ratio flip over time as the habit solidifies.')
+      ],
+      'Agreeableness & Collaboration': [
+        formatHow('Tool: The Interruption Audit.', 'Keep a tally of how many times you cut someone off or dismiss their idea this week. Awareness of the micro-behavior is the first step.', profileContext),
+        formatHow('Framework: The "Playback" Protocol.', 'Before responding in a disagreement, you must repeat the other person\'s point back to them to their satisfaction.', industryContextWeek2),
+        formatHow('Methodology: The Empathy Check.', 'Ask a peer you recently clashed with how they experienced the interaction. Listen entirely to understand, not to rebut.', seniorContextWeek3),
+        formatHow('Tool: Active Reading.', 'Focus entirely on the negotiation and conflict de-escalation tactics in your toolkit. Write down one phrase you will use in your next conflict.'),
+        formatHow('Action Protocol: The Reset.', 'Swallow your pride and initiate the relationship reset. Do not wait for them to come to you. Apologize for the friction, not the stance.'),
+        formatHow('Framework: Unfiltered Upward Coaching.', 'Ask your manager for direct, unfiltered feedback on your collaborative tone. Ask: "Do I make it hard for people to disagree with me?"'),
+        formatHow('Tool: Friction Test Calibration.', 'Are your workplace relationships feeling less adversarial? Score your team cohesion 1-5 and identify one remaining fractured relationship.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Take on a project where you have zero formal authority and must rely entirely on influence, diplomacy, and consensus-building.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Agreeableness is the absolute foundation of psychological safety in your team.'),
+        formatHow('Tool: The Friday Ledger.', 'Who did I genuinely help this week? Who did I alienate? Be brutally honest with your self-assessment.')
+      ],
+      'Openness to Ideas': [
+        formatHow('Tool: The "Yes, And" Audit.', 'For two days, count how many times your first reaction to an idea is "No, but...". Catch the reflex before trying to change it.', profileContext),
+        formatHow('Framework: Intentional Friction.', 'Expose yourself to a completely different department\'s workflow to see how they solve problems. Shadow them for one hour.', industryContextWeek2),
+        formatHow('Methodology: The Devil\'s Advocate.', 'In your next meeting, force yourself to argue in favor of the idea you secretly disagree with most, just to explore its merits.', seniorContextWeek3),
+        formatHow('Tool: Concept Mapping.', 'As you consume your recommended resource, draw physical connections between their industry innovations and your daily workflows.'),
+        formatHow('Action Protocol: Bias to Action.', 'Do this before you feel "ready" or before the plan is perfect. The goal is exposure to ambiguity, not flawless execution.'),
+        formatHow('Framework: Strategic "Why" Extraction.', 'Ask your manager to explain the strategic "Why" behind a decision you don\'t understand, to broaden your conceptual horizon.'),
+        formatHow('Tool: Before/After Calibration.', 'Are you still instinctively rejecting new tools? Score your adaptability 1-5 and force yourself to champion one new idea this month.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Volunteer to test a beta software or a completely untested process. Be the guinea pig and document the failure points constructively.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book your CORE retake. Expanding this dimension prevents career stagnation and obsolescence.'),
+        formatHow('Tool: The Friday Question.', 'Ask yourself: "What did I change my mind about this week?" If your answer is nothing, your openness is regressing.')
+      ],
+      'Cultural Intelligence': [
+        formatHow('Tool: The Assumption Audit.', 'Write down 3 assumptions you made about a stakeholder based purely on their regional or linguistic background. Verify if they were actually true.', profileContext),
+        formatHow('Framework: Code-Switching.', 'Consciously adapt your communication medium (call vs. email) and tone (formal vs. informal) based on the recipient\'s institutional norm.', industryContextWeek2),
+        formatHow('Methodology: The Cultural Guide.', 'Ask a colleague from a different background to explicitly explain a workplace dynamic, joke, or power structure you don\'t fully grasp.', seniorContextWeek3),
+        formatHow('Tool: Active Reading & Mapping.', 'Map the 8 scales of "The Culture Map" (e.g., direct vs. indirect feedback) to the different departments or provinces you interact with.'),
+        formatHow('Action Protocol: Curiosity First.', 'Reach out today. Lead with curiosity rather than competence. People respect professionals who admit they want to learn their context.'),
+        formatHow('Framework: Upward Exposure.', 'Ask your manager to expose you to stakeholders from entirely different regions, sectors, or socioeconomic tiers.'),
+        formatHow('Tool: Before/After Calibration.', 'Are you still judging different working styles as "wrong", or are you accurately labeling them as "different"? Score your bias 1-5.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Volunteer for a cross-provincial, multi-institutional, or international steering committee where your default cultural norms do not apply.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. CQ is a defining metric for modern executives managing diverse workforces in Pakistan.'),
+        formatHow('Tool: Friday Reflection.', 'Name one interaction this week where deliberately adapting your cultural or communication style directly changed the outcome.')
+      ],
+      'Team Citizenship': [
+        formatHow('Tool: The Silo Audit.', 'Track exactly how many times you said "That\'s not my job" this week, either out loud or in your head. Write down what the task was.', profileContext),
+        formatHow('Framework: The +1 Protocol.', 'Every time you finish a task, ask one specific colleague: "I have 15 minutes, what can I take off your plate?"', industryContextWeek2),
+        formatHow('Methodology: The Recognition Loop.', 'Ask a peer who the unsung hero of the department is, and ensure you thank or credit that person publicly in the next group setting.', seniorContextWeek3),
+        formatHow('Tool: 3-2-1 Reflection.', 'Focus your reading specifically on the chapters covering servant leadership and leading without authority. Write down 2 actionable steps.'),
+        formatHow('Action Protocol: Stealth Execution.', 'Execute this administrative or support task quietly. Do it for the team\'s efficiency, not for visibility or credit.'),
+        formatHow('Framework: Upward Support.', 'Ask your manager what their biggest administrative headache is right now, and offer to completely own the solution for them.'),
+        formatHow('Tool: Before/After Calibration.', 'Do people come to you for help more often now? Score your institutional value 1-5. True anchors are magnets for team problem-solving.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Take complete ownership of a broken internal process that no one else wants to touch, and fix it without asking for additional resources.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Citizenship is what makes you indispensable during organizational restructuring.'),
+        formatHow('Tool: Weekly Review Log.', 'Write down one specific thing you did this week that benefited the institution\'s health, rather than just your personal KPIs.')
+      ],
+      'Ethical Integrity': [
+        formatHow('Tool: The Rationalization Audit.', 'Track how many times you say "It\'s fine just this once" or "Everyone does it." Rationalization is the first step of ethical fade.', profileContext),
+        formatHow('Framework: The Daylight Test.', 'Before taking a procedural shortcut, ask: "Would I do this if my manager and the internal auditor were CC\'d on the email?" If no, stop.', industryContextWeek2),
+        formatHow('Methodology: The Ethical Sounding Board.', 'Run a grey-area decision past a mentor who has absolutely nothing to gain or lose from the outcome. Ask them to poke holes in your logic.', seniorContextWeek3),
+        formatHow('Tool: Active Reading.', 'Focus on the case studies of how small, incremental compromises lead to massive compliance failures. Map those risks to your own department.'),
+        formatHow('Action Protocol: Immediate Correction.', 'Fix the compliance gap immediately. Do not wait for an audit to catch it. Self-reporting is the ultimate proof of integrity.'),
+        formatHow('Framework: Upward Transparency.', 'Tell your manager about a mistake or procedural breach you made *before* they find out from someone else. Own the narrative.'),
+        formatHow('Tool: The Friction Test.', 'Is it getting easier to say "no" to inappropriate requests? Score your ethical courage 1-5.'),
+        formatHow('Methodology: 70-20-10 Rule.', 'Volunteer to lead a compliance review or draft a new transparency SOP for your unit. Become the standard-bearer for the rules.', stretchContext),
+        formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Authentic integrity and rule compliance form the absolute baseline for executive promotion.'),
+        formatHow('Tool: Friday Reflection.', 'Ask yourself: "Could all my decisions and emails this week be published on the front page of a newspaper?" Be brutally honest.')
+      ]
+    };
+
+    const targetHows = hows[dim] || hows['Learning Agility'];
+
+    return [
+      { h:'Week 1: Baseline', t: content.now || content.acts?.[0] || 'Audit your current behaviour in this area — write down one honest observation.', how: targetHows[0] },
+      { h:'Week 2: Micro-Habit', t: content.acts?.[0] || 'Track one real situation this week where this dimension affected your work.', how: targetHows[1] },
+      { h:'Week 3: External Data', t: content.acts?.[1] || 'Ask one trusted colleague for specific, candid feedback.', how: targetHows[2] },
+      { h:'Week 4: Knowledge', t: content.acts?.[2] || 'Start one recommended resource from your development toolkit.', how: targetHows[3] },
+      { h:'Month 2: Execution', t: content.soon || 'Apply one concrete behaviour change in a real work situation.', how: targetHows[4] },
+      { h:'Month 2: Alignment', t: content.managerStep || 'Align with your manager on this specific development priority.', how: targetHows[5] },
+      { h:'Month 3: Pattern Check', t: content.selfAssess || 'Compare your current habits to your Week 1 baseline.', how: targetHows[6] },
+      { h:'Month 4–6: Pressure Test', t: content.fut || 'Take on a stretch assignment that puts this dimension under pressure.', how: targetHows[7] },
+      { h:'6 Months: Recalibration', t: content.retake || 'Retake the CORE assessment to measure your progress.', how: targetHows[8] },
+      { h:'Ongoing: Maintenance', t: content.ongoing || 'Establish a weekly review habit to prevent regression.', how: targetHows[9] },
+    ];
   };
 
-  return [
-    {
-      h:'Week 1:',
-      t: now || acts[0] || 'Audit your current behaviour in this area — write down one honest observation.',
-      how: 'Tool: Stop-Start-Continue. On a blank page write three columns — what you should Stop doing in this area, what you should Start doing, and what you should Continue. Each item must be one specific sentence. No vague language. This becomes your Week 1 baseline.'
-    },
-    {
-      h:'Week 2:',
-      t: acts[0] || 'Track one real situation this week where this dimension affected your work or a relationship.',
-      how: 'Tool: Incident Log. After each relevant situation this week write 3 sentences — (1) What happened, (2) How I responded, (3) What the impact was on the outcome or the other person. Do not editorialize. Review all entries on Friday.'
-    },
-    {
-      h:'Week 3:',
-      t: acts[1] || 'Ask one trusted colleague for specific, candid feedback on how they experience you in this area.',
-      how: 'Tool: SBI Feedback Model. Ask your colleague to describe a specific Situation, your Behaviour in it, and the Impact it had on them or the work. Listen without interrupting or defending. Write down exactly what they say — your interpretation comes later.'
-    },
-    {
-      h:'Week 4:',
-      t: acts[2] || 'Start one recommended resource from your development toolkit specifically targeting this dimension.',
-      how: 'Tool: 3-2-1 Reflection. After each chapter, episode, or section of your chosen resource, pause and write — 3 things you learned, 2 you will try this week, 1 question it raised. Research shows this triples retention compared to passive reading or listening.'
-    },
-    {
-      h:'Month 2:',
-      t: soon || 'Apply one concrete behaviour change in a real work situation and write down what happened.',
-      how: "Tool: Implementation Intentions. Before the week starts, write 3 sentences in the format: 'When [specific situation] happens, I will [specific behaviour].' Psychologist Peter Gollwitzer's research shows this format doubles follow-through compared to stating a general intention."
-    },
-    {
-      h:'Month 2:',
-      t: specific.managerStep,
-      how: 'Tool: COIN Framework. Structure your manager conversation in 4 parts — Context (the situation you are describing), Observation (what specifically happened), Impact (what it affected), Next step (the one concrete thing you are asking for). Keep the conversation under 10 minutes and send a written follow-up the same day.'
-    },
-    {
-      h:'Month 3:',
-      t: specific.selfAssess,
-      how: 'Tool: Before/After Table. Draw two columns. Left column: copy your Week 1 Stop-Start-Continue entries exactly. Right column: write what has actually changed for each item. Score yourself 1–5 on each line. Any score that is unchanged is your next priority focus.'
-    },
-    {
-      h:'Month 4–6:',
-      t: fut || 'Take on a stretch assignment that puts this dimension under sustained real-world pressure.',
-      how: 'Framework: 70-20-10. Research shows 70% of professional development comes from stretch experience, 20% from feedback during that experience, and 10% from formal learning. This step is your 70%. Ask for a short debrief conversation with your manager after every significant challenge in the assignment.'
-    },
-    {
-      h:'6 Months:',
-      t: specific.retake,
-      how: 'Process: Book your CORE retake through carnelianco.com or your HR team. Bring this report to the session. A Carnelian consultant can run a 90-minute Before/After debrief comparing your two profiles side by side and recalibrating your next development cycle based on what actually moved.'
-    },
-    {
-      h:'Ongoing:',
-      t: specific.ongoing,
-      how: 'Tool: Weekly Review Log. Keep a single running document. Each Friday add — date, one moment where this dimension helped you this week, one where it held you back, and one word describing your overall week in this area. Review the last 4 entries at the start of each month and look for the pattern.'
-    },
-  ];
-};
-
-const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
-  dim, v, why, now, soon, fut, acts,
-  habits: buildHabits(now, soon, fut, acts, v, dim)
-});
-
-
-  if(S.C<55) devAreas.push({dim:'Conscientiousness & Delivery',v:S.C,
-    why: ctxAction("Consistent delivery is the foundation of professional credibility. Missed deadlines or incomplete work creates friction that compounds over time.", "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),
-    acts:[
-      ctxAction("Use a weekly priority matrix every Monday: list your top 3 deliverables and set personal deadlines 2 days ahead of official ones","Review your open regulatory or compliance deliverables every Monday and set internal deadlines 2 days ahead","Map your weekly deliverables against departmental KPIs every Monday morning","Review your programme milestones against donor reporting timelines every Monday","Implement a weekly leadership accountability check-in","Every Monday, identify your 3 most important deliverables for the week"),
-      "Break large projects into milestone check-ins with your line manager every two weeks — make progress visible before problems become surprises",
-      ctxAction("Track one commitment per week that you made and actually completed","Keep a simple log of every regulatory or compliance commitment you make","Document your completed commitments in writing","Track your programme deliverables against donor commitments in a shared log","Your team is watching how you follow through. Document your own commitments publicly","Keep a weekly log of three things you committed to and whether you completed them")
-    ],
-    now:ctxAction("Agree a weekly check-in with your supervisor on 3 explicit priority deliverables","Book a 30-minute weekly slot with your line manager to review your open regulatory deliverables","Schedule a weekly meeting with your supervisor to review your progress against departmental KPIs","Set up a shared milestone tracker with your programme coordinator this week","Send your team a written commitment list every Monday","Have an honest conversation with your line manager this week about which current commitments you are most at risk of missing"),
-    soon:ctxAction("Enrol in a personal productivity workshop or study one methodology (GTD, Agile personal planning)","Complete a structured time management or professional effectiveness programme","Attend a civil service effectiveness workshop through your Training Institute","Enrol in a project management short course","Commission a team productivity audit to understand where delivery bottlenecks are systemic","Attend a productivity and professional effectiveness workshop"),
-    fut:ctxAction("Lead a project end-to-end within 6 months to build delivery confidence with structured accountability","Take ownership of an end-to-end compliance or regulatory project","Lead a cross-departmental working group to demonstrate sustained delivery over a 6-month period","Lead a full programme cycle from design to donor reporting","Commission an organisational review of how delivery accountability is structured across your team","Ask to lead a complete project or initiative end-to-end")
+  const devAreas = bot2.map(d => {
+    const content = getDimContent(d.l);
+    return {
+      dim: d.l,
+      v: d.v,
+      why: content.why,
+      gap: d.gap,
+      habits: buildHabits(content, d.l, profile, R),
+      now: content.now,
+      soon: content.soon,
+      fut: content.fut
+    };
   });
-
-  if(S.ES<55) devAreas.push({dim:'Emotional Resilience',v:S.ES,
-    why: ctxAction("High-stakes professional environments involve pressure cycles. Your ability to remain clear-headed under pressure is not a soft skill — it is career-determining.", "Banking environments are characterised by regulatory cycles, audit periods, and market pressure.", "Civil service reform creates sustained pressure on officers at all levels.", "Development sector professionals work in environments of resource constraints, community pressure, and donor scrutiny simultaneously.", "At senior level, your emotional state sets the emotional tone for the entire team.", "Early career is when pressure tolerance is built."),
-    acts:["Build a 10-minute daily decompression practice — journalling, walking, or structured reflection — so daily stress does not accumulate","After difficult professional situations, write three sentences: what happened, how I responded, and what I would do differently","Identify 2–3 trusted colleagues who can provide a grounded sounding board when you are under pressure — and use them proactively"],
-    now:ctxAction("Speak to your HR team about access to an employee assistance programme or wellbeing resources","Ask your institution's HR team this week about EAP access and stress management resources","Contact your Training Institute about resilience coaching resources available to civil service officers","Speak to your programme director about workload distribution","Identify one specific pressure source in your current role and have a direct conversation with your leadership about managing it structurally","Talk to your line manager this week about one specific pressure point in your role and what support is available"),
-    soon:ctxAction("Attend a resilience or emotional intelligence workshop this quarter","Attend a professional resilience workshop — specifically one designed for high-accountability financial environments","Attend a public sector leadership and resilience programme through your Provincial or Federal Training Institute","Attend an NGO or development sector leadership workshop","Commission an executive coaching engagement for yourself","Attend an emotional intelligence or resilience workshop and keep a personal learning journal throughout"),
-    fut:ctxAction("Seek a role with progressively increasing accountability to build resilience through real-world exposure","Seek out a role rotation that includes a high-pressure function","Pursue a secondment or cross-posting to a reform-facing role","Accept an assignment in a resource-constrained or high-stakes programme context","Build a senior leadership resilience programme for your team","Ask to be included in high-stakes projects or client-facing situations where you will be stretched")
-  });
-
-  if(S.LAavg<55) devAreas.push({dim:'Learning Agility',v:S.LAavg,
-    why: ctxAction("In every Pakistani sector, the professionals who rise are those who learn and adapt fastest. Current knowledge has a shelf life. Learning agility is how you extend yours.", "Pakistan's banking sector is changing faster than almost any other.", "Pakistan's civil service is in active reform.", "The development sector's evidence base, tools, and best practices evolve continuously.", "At your seniority level, your learning agility determines whether you remain strategically relevant as your sector evolves.", "The first decade of a career is where learning habits are formed."),
-    acts:[
-      ctxAction("Dedicate 30 minutes per week to reading one regulation, industry report, or domain publication outside your normal scope","Set a standing 30-minute weekly appointment with SBP's regulatory circulars","Set a standing 30-minute weekly appointment with relevant NCGR documents","Subscribe to OECD Development Co-operation Reports"),
-      "After completing any significant task, ask: 'What did I learn from this, and how could I apply it somewhere completely different?' — this single habit accelerates learning agility faster than any training course",
-      ctxAction("Request feedback from at least 2 colleagues or supervisors per quarter, write down what you will change, and follow through","After every significant banking transaction, write a brief reflection","After every major policy implementation, conduct a personal After-Action Review","After every programme cycle, conduct a personal learning review")
-    ],
-    now:ctxAction("Subscribe to one sector publication or regulatory update you do not currently follow","Subscribe today to SBP's official regulatory updates","Subscribe today to at least one international public administration publication","Subscribe today to one international development sector publication"),
-    soon:ctxAction("Build a 90-day self-directed learning plan on one topic outside your current expertise","Build a 90-day learning plan on one banking domain outside your current specialty","Build a 90-day learning plan on one reform area directly relevant to your department","Build a 90-day learning plan on one methodology outside your current programme toolkit"),
-    fut:ctxAction("Apply to facilitate or co-design a training or knowledge-sharing session — teaching is the fastest way to deepen learning agility","Apply to co-design or facilitate an internal knowledge-sharing session at your institution","Apply to deliver a session at your Training Institute","Apply to design or facilitate a staff capacity building session for your programme team")
-  });
-
-  if(S.OCB_S<50) devAreas.push({dim:'Constructive Attitude & Sportsmanship',v:S.OCB_S,
-    why: ctxAction("How we respond to institutional frustration shapes the morale of everyone around us. In Pakistani professional culture, sustained negativity has a compounding cost to your standing.", "Banking environments involve significant process constraints, regulatory pressure, and institutional bureaucracy.", "The civil service has structural inefficiencies that frustrate virtually everyone who works within it.", "Development sector environments involve resource constraints, bureaucratic donor requirements, and community expectations.", "At senior level, your attitude toward institutional frustration is magnified across your team.", "Early career frustrations are real and often valid. The professional habit of channelling them constructively is critical."),
-    acts:["Adopt the 'solution before complaint' rule — before voicing any frustration, have at least one concrete improvement suggestion ready","Create a private written log for institutional frustrations — getting them out of your head and onto paper reduces the emotional pressure to share them with colleagues","Identify one institutional frustration you currently hold, and make a deliberate decision: either act on it through the right channel, or consciously let it go"],
-    now:ctxAction("Identify one frustration you have recently shared with colleagues and commit to a more constructive approach","Identify one operational or regulatory constraint you have recently complained about — write down what a constructive improvement proposal would look like","Identify one civil service process you have recently complained about — draft a one-page improvement proposal","Identify one donor requirement or programme constraint you have recently expressed frustration about — write down what a constructive alternative would look like"),
-    soon:ctxAction("Discuss with your line manager the most effective channel for improvement ideas in your organisation","Schedule a conversation with your line manager about the most effective channels for raising process improvement ideas","Identify and use your department's formal suggestion and reform proposal mechanisms","Map your organisation's internal feedback and improvement channels and commit to routing your frustrations through them"),
-    fut:ctxAction("Volunteer to lead a process improvement initiative — channelling frustration into change is the most effective long-term strategy","Volunteer to lead a process improvement workstream in your institution","Apply to join a civil service reform working group or departmental improvement committee","Apply to lead a programme process improvement review")
-  });
-
-  if(S.E<55) devAreas.push({dim:'Social Confidence & Extraversion',v:S.E,
-    why: ctxAction("Social confidence is not personality — it is a professional skill. In every Pakistani sector, your ability to assert your perspective, initiate conversations, and hold presence in high-visibility situations directly affects how your capability is perceived and how far it takes you.","In banking and financial services, stakeholder presence is a career-defining skill. Client relationships, credit committees, and regulatory interactions all require professionals who can hold their ground with confidence.","In government and civil service, your ability to communicate your position clearly in meetings, committees, and with senior officers determines your influence far beyond your formal grade.","In the development sector, donor presentations, community engagement, and partner negotiations all require professionals who can project confidence across very different audiences.","At your seniority level, social confidence is the multiplier on every other strength you have. People who cannot hold presence in a room cannot lead.","Early in your career, social confidence determines whether your ideas get heard. Professionals who develop this early build visibility that compounds over the entire arc of their career."),
-    acts:[
-      ctxAction("Each morning this week, identify one conversation you have been avoiding at work — a disagreement, a request, a difficult update — and have it before end of day","Each morning this week, identify one client or stakeholder conversation you have been delaying and initiate it before end of day","Each morning this week, identify one conversation with a senior officer you have been avoiding and have it before end of day","Each morning this week, identify one donor or partner conversation you have been delaying and initiate it before end of day","This week, identify one high-visibility conversation you have been delegating downward and own it directly","Each morning this week, identify one professional conversation you have been avoiding and have it before end of day"),
-      "Volunteer to speak first in at least one meeting per week — even if it is only to summarise the agenda or ask the opening question. The habit of initiating builds presence faster than any other single practice.",
-      ctxAction("Join one professional group, committee, or industry forum where you will be regularly required to contribute in front of peers","Join one professional association or regulatory forum where you will need to represent your institution publicly","Identify one inter-departmental committee or cross-ministry working group and apply to participate in it","Join one professional network or donor working group where you will be expected to represent your organisation")
-    ],
-    now:ctxAction("Have one conversation this week that you have been avoiding. Do not prepare a script — prepare one clear sentence that states your position.","Identify one client or regulatory conversation you have been postponing and schedule it for this week.","Identify one interaction with a senior officer you have been avoiding and initiate it this week.","Identify one donor or partner conversation you have been postponing and initiate it this week.","Have one high-visibility conversation this week that you would normally delegate.","Have one professional conversation this week that you have been avoiding."),
-    soon:ctxAction("Enrol in a communication and influence workshop — specifically one that includes live practice, not just theory.","Attend a professional communication or negotiation workshop designed for client-facing financial professionals.","Attend a public speaking or leadership communication programme through your Training Institute.","Attend a facilitation or stakeholder communication workshop for development sector professionals.","Commission an executive presence coaching engagement for yourself.","Attend a communication and professional presence workshop this quarter."),
-    fut:ctxAction("Seek a role or assignment that requires regular public speaking, stakeholder presentations, or cross-functional leadership — and do not wait until you feel ready.","Ask to lead the next client presentation or regulatory engagement rather than supporting it.","Apply to represent your department at an inter-ministerial meeting or public forum.","Apply to lead the next donor presentation or community engagement session rather than supporting it.","Make a commitment to speak at one external event or industry forum in the next 6 months.","Ask to present in the next team meeting or client interaction — and do it without excessive preparation.")
-  });
-
-  // Safely add habits to any devArea that is missing them
-      devAreas.forEach(d => {
-        if (!d.habits) {
-          const safeActs = d.acts || [];
-          d.habits = buildHabits(d.now, d.soon, d.fut, safeActs, d.v, d.dim);
-        }
-      });
-
+  
       const bars = [
         ['Overall Match', S.overall], ['Personality & Drive', S.OCEANavg], ['Cultural Agility', S.CQavg],
         ['Team Citizenship', S.OCBavg], ['Learning Agility', S.LAavg], ['Ethical Integrity', S.EOavg],
@@ -2739,7 +2836,7 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `— ${R.industry}` : ''}</h3>
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
               <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', fontWeight:'500', margin:0}}>
-                The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style={{color:T.t0}}>This action plan focuses on your two lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
+                The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style={{color:T.t0}}>This action plan focuses on your lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
                 <br/><br/>
                 Once you have built real habits around these two dimensions and your next CORE retake shows movement, Carnelian will work with you on the next layer. Think of this as <strong style={{color:T.gold}}>sequenced development</strong> — not a limitation, but a strategy. If you want to understand how your full profile maps to a broader development plan, <strong style={{color:T.gold}}>reach out to Carnelian at hello@carnelianco.com</strong>
               </p>
@@ -3153,11 +3250,11 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
 
           {/* ── THE 5 MODULE TABLES ── */}
           {[
-            { title: 'Personality at Work — OCEAN Framework', pill: 'Module 1', col: '#3B82F6', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]], note: 'Validity note: OCEAN framework shows mean validity r = .27 for overall job performance (Barrick & Mount, 1991 meta-analysis, N = 12,893). Conscientiousness (r = .22) and Emotional Stability (r = .13) most robust. Scores reflect self-report — triangulate with structured behavioural interview.' },
-            { title: 'Cultural Intelligence (CQ)', pill: 'Module 2', col: T.gn, dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]], note: "CQ demonstrates incremental predictive validity β = .31 for cross-cultural performance over IQ and personality (Ang et al., 2007). Particularly relevant for professionals working across Pakistan's diverse regional, linguistic, and institutional landscape." },
-            { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Module 3', col: T.am, dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]], note: '' },
-            { title: 'Adaptive Thinking & Learning Agility', pill: 'Module 4', col: '#8B5CF6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]], note: 'Learning agility is the single strongest predictor of leadership potential beyond current performance (Lombardo & Eichinger, 2000). In fast-evolving regulatory and market environments, learning agility is the emerging differentiator at senior levels.' },
-            { title: 'Integrity & Ethical Orientation', pill: 'Module 5', col: T.rd, dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]], note: 'Ethical orientation assessments demonstrate strong criterion validity for misconduct prediction (r = −.41, Rest, 1986). Low EO scores — particularly in Authentic Integrity and Transparent Disclosure — should trigger mandatory ethics training before placement in high-discretion roles.' }
+            { title: 'Personality at Work — OCEAN Framework', pill: 'Pillar 1', col: '#3B82F6', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]], note: 'Validity note: OCEAN framework shows mean validity r = .27 for overall job performance (Barrick & Mount, 1991 meta-analysis, N = 12,893). Conscientiousness (r = .22) and Emotional Stability (r = .13) most robust. Scores reflect self-report — triangulate with structured behavioural interview.' },
+            { title: 'Cultural Intelligence (CQ)', pill: 'Pillar 2', col: T.gn, dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]], note: "CQ demonstrates incremental predictive validity β = .31 for cross-cultural performance over IQ and personality (Ang et al., 2007). Particularly relevant for professionals working across Pakistan's diverse regional, linguistic, and institutional landscape." },
+            { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Pillar 3', col: T.am, dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]], note: '' },
+            { title: 'Adaptive Thinking & Learning Agility', pill: 'Pillar 4', col: '#8B5CF6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]], note: 'Learning agility is the single strongest predictor of leadership potential beyond current performance (Lombardo & Eichinger, 2000). In fast-evolving regulatory and market environments, learning agility is the emerging differentiator at senior levels.' },
+            { title: 'Integrity & Ethical Orientation', pill: 'Pillar 5', col: T.rd, dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]], note: 'Ethical orientation assessments demonstrate strong criterion validity for misconduct prediction (r = −.41, Rest, 1986). Low EO scores — particularly in Authentic Integrity and Transparent Disclosure — should trigger mandatory ethics training before placement in high-discretion roles.' }
           ].map((mod, i) => (
             <div key={i} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
               <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
@@ -4207,12 +4304,11 @@ const LegalPage = () => {
     <div style={{maxWidth:'1100px', margin:'0 auto', padding:'80px 32px'}}>
       <Reveal delay={0.1}>
         <div>
-          <Pill label="Legal & Privacy" style={{marginBottom:'16px'}} />
           <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', marginBottom:'16px', color:T.t0}}>
-            Legal Framework Summary
+            Compliance & Privacy
           </h2>
           <p style={{fontSize:'15px', color:T.t2, fontWeight:'500', marginBottom:'48px', lineHeight:'1.7', maxWidth:'750px'}}>
-            A plain-language summary of Carnelian's legal commitments to participants and client organisations. Full agreements are available separately as CORE-ICA-001 (individual) and CORE-ODPA-001 (organisational).
+            A plain-language summary of Carnelian's legal commitments to participants and client organisations. Full agreements can be requested separately as CORE-ICA-001 (individual) and CORE-ODPA-001 (organisational) by contacting us at hello@carnelianco.com.
           </p>
 
           <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'32px'}}>

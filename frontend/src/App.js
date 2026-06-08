@@ -2122,15 +2122,33 @@ const ResultsPage = ({reportData}) => {
 
   // ─── ACTION PLAN DATA PREP ───
 const allDims = [
-      {k:'C', l:'Conscientiousness', v:S.C, str:'You are a highly reliable, organised professional. People can depend on you to deliver — even when it is inconvenient.'},
-    {k:'O', l:'Openness to Ideas', v:S.O, str:'You bring genuine intellectual curiosity and creative problem-solving to your work.'},
-    {k:'E', l:'Social Confidence', v:S.E, str:'You communicate with confidence and energy — effective in leadership and stakeholder-facing roles.'},
-    {k:'A', l:'Collaborative Spirit', v:S.A, str:'You are empathetic and cooperative — a team builder who creates psychologically safe environments.'},
-    {k:'ES', l:'Emotional Resilience', v:S.ES, str:'You stay grounded under pressure — invaluable in high-stakes situations.'},
-    {k:'CQavg', l:'Cultural Intelligence', v:S.CQavg, str:"You navigate Pakistan's diverse professional landscape with skill and genuine interest."},
-    {k:'OCBavg', l:'Team Citizenship', v:S.OCBavg, str:'You go well beyond your formal role to support colleagues and the institution.'},
-    {k:'LAavg', l:'Learning Agility', v:S.LAavg, str:'You learn fast, reflect honestly, and apply lessons across domains.'},
-    {k:'EOavg', l:'Ethical Integrity', v:S.EOavg, str:'Your commitment to transparency and authentic behaviour is rare and highly valued.'},
+  {k:'C', l:'Conscientiousness', v:S.C,
+    str:'You are a highly reliable, organised professional. People can depend on you to deliver — even when it is inconvenient.',
+    gap:'How consistently you follow through on commitments, manage your time, and hold yourself to quality standards — even without oversight.'},
+  {k:'O', l:'Openness to Ideas', v:S.O,
+    str:'You bring genuine intellectual curiosity and creative problem-solving to your work.',
+    gap:'How readily you seek new approaches, engage with unfamiliar ideas, and move beyond established methods when the situation demands it.'},
+  {k:'E', l:'Social Confidence', v:S.E,
+    str:'You communicate with confidence and energy — effective in leadership and stakeholder-facing roles.',
+    gap:'How comfortably you initiate conversations, assert your perspective, and hold presence in group or high-visibility professional situations.'},
+  {k:'A', l:'Collaborative Spirit', v:S.A,
+    str:'You are empathetic and cooperative — a team builder who creates psychologically safe environments.',
+    gap:"How naturally you consider others' perspectives, manage disagreement constructively, and prioritise team relationships under pressure."},
+  {k:'ES', l:'Emotional Resilience', v:S.ES,
+    str:'You stay grounded under pressure — invaluable in high-stakes situations.',
+    gap:'How well you maintain composure, decision quality, and interpersonal effectiveness when facing criticism, setbacks, or sustained pressure.'},
+  {k:'CQavg', l:'Cultural Intelligence', v:S.CQavg,
+    str:"You navigate Pakistan's diverse professional landscape with skill and genuine interest.",
+    gap:"How effectively you understand, adapt to, and work across the cultural, regional, and institutional differences that define Pakistan's professional landscape."},
+  {k:'OCBavg', l:'Team Citizenship', v:S.OCBavg,
+    str:'You go well beyond your formal role to support colleagues and the institution.',
+    gap:'How much you contribute to your team and organisation beyond your formal job description — through support, initiative, and institutional investment.'},
+  {k:'LAavg', l:'Learning Agility', v:S.LAavg,
+    str:'You learn fast, reflect honestly, and apply lessons across domains.',
+    gap:'How quickly and deliberately you update your knowledge, reflect on experience, and apply lessons from one domain to another.'},
+  {k:'EOavg', l:'Ethical Integrity', v:S.EOavg,
+    str:'Your commitment to transparency and authentic behaviour is rare and highly valued.',
+    gap:'How consistently your behaviour aligns with professional standards, transparent disclosure, and principled decision-making — especially under pressure.'},
 ].filter(d => d.v !== undefined && d.v !== null).sort((a,b) => b.v - a.v);
 
   const top2 = allDims.slice(0, 2);
@@ -2186,6 +2204,12 @@ const buildHabits = (now, soon, fut, acts, v, dim) => {
       selfAssess:     'Pick one significant professional setback from the past 6 months. Write a one-page account — what happened, what your role was, and what you would do differently. Be specific.',
       retake:         'Retake CORE — your People Agility baseline was ' + v + '/100. Self-awareness scores are among the most movable in the CORE battery.',
       ongoing:        'After every significant meeting or decision this week, write two sentences: what I did well, and what I would change. Do not skip the second one.',
+    },
+    'Social Confidence & Extraversion': {
+      managerStep:    'Tell your manager one specific situation — a meeting, a presentation, a difficult conversation — where you held back instead of stepping forward. Ask them to flag the next opportunity where you can take point.',
+      selfAssess:     'Think of the last 5 professional situations where you stayed quiet when you had something to say. Write down what stopped you each time. Look for the pattern.',
+      retake:         'Retake CORE — your Social Confidence baseline was ' + v + '/100. This dimension is directly observable by colleagues and responds measurably to deliberate practice.',
+      ongoing:        'Every Friday, log one moment where you spoke up and one where you held back. Over time, the ratio is your data.',
     },
     'Agreeableness & Collaboration': {
       managerStep:    'Tell your manager one colleague relationship that has friction and ask for coaching on one specific communication habit you can change.',
@@ -2260,6 +2284,18 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
     now:ctxAction("Identify one frustration you have recently shared with colleagues and commit to a more constructive approach","Identify one operational or regulatory constraint you have recently complained about — write down what a constructive improvement proposal would look like","Identify one civil service process you have recently complained about — draft a one-page improvement proposal","Identify one donor requirement or programme constraint you have recently expressed frustration about — write down what a constructive alternative would look like"),
     soon:ctxAction("Discuss with your line manager the most effective channel for improvement ideas in your organisation","Schedule a conversation with your line manager about the most effective channels for raising process improvement ideas","Identify and use your department's formal suggestion and reform proposal mechanisms","Map your organisation's internal feedback and improvement channels and commit to routing your frustrations through them"),
     fut:ctxAction("Volunteer to lead a process improvement initiative — channelling frustration into change is the most effective long-term strategy","Volunteer to lead a process improvement workstream in your institution","Apply to join a civil service reform working group or departmental improvement committee","Apply to lead a programme process improvement review")
+  });
+
+  if(S.E<55) devAreas.push({dim:'Social Confidence & Extraversion',v:S.E,
+    why: ctxAction("Social confidence is not personality — it is a professional skill. In every Pakistani sector, your ability to assert your perspective, initiate conversations, and hold presence in high-visibility situations directly affects how your capability is perceived and how far it takes you.","In banking and financial services, stakeholder presence is a career-defining skill. Client relationships, credit committees, and regulatory interactions all require professionals who can hold their ground with confidence.","In government and civil service, your ability to communicate your position clearly in meetings, committees, and with senior officers determines your influence far beyond your formal grade.","In the development sector, donor presentations, community engagement, and partner negotiations all require professionals who can project confidence across very different audiences.","At your seniority level, social confidence is the multiplier on every other strength you have. People who cannot hold presence in a room cannot lead.","Early in your career, social confidence determines whether your ideas get heard. Professionals who develop this early build visibility that compounds over the entire arc of their career."),
+    acts:[
+      ctxAction("Each morning this week, identify one conversation you have been avoiding at work — a disagreement, a request, a difficult update — and have it before end of day","Each morning this week, identify one client or stakeholder conversation you have been delaying and initiate it before end of day","Each morning this week, identify one conversation with a senior officer you have been avoiding and have it before end of day","Each morning this week, identify one donor or partner conversation you have been delaying and initiate it before end of day","This week, identify one high-visibility conversation you have been delegating downward and own it directly","Each morning this week, identify one professional conversation you have been avoiding and have it before end of day"),
+      "Volunteer to speak first in at least one meeting per week — even if it is only to summarise the agenda or ask the opening question. The habit of initiating builds presence faster than any other single practice.",
+      ctxAction("Join one professional group, committee, or industry forum where you will be regularly required to contribute in front of peers","Join one professional association or regulatory forum where you will need to represent your institution publicly","Identify one inter-departmental committee or cross-ministry working group and apply to participate in it","Join one professional network or donor working group where you will be expected to represent your organisation")
+    ],
+    now:ctxAction("Have one conversation this week that you have been avoiding. Do not prepare a script — prepare one clear sentence that states your position.","Identify one client or regulatory conversation you have been postponing and schedule it for this week.","Identify one interaction with a senior officer you have been avoiding and initiate it this week.","Identify one donor or partner conversation you have been postponing and initiate it this week.","Have one high-visibility conversation this week that you would normally delegate.","Have one professional conversation this week that you have been avoiding."),
+    soon:ctxAction("Enrol in a communication and influence workshop — specifically one that includes live practice, not just theory.","Attend a professional communication or negotiation workshop designed for client-facing financial professionals.","Attend a public speaking or leadership communication programme through your Training Institute.","Attend a facilitation or stakeholder communication workshop for development sector professionals.","Commission an executive presence coaching engagement for yourself.","Attend a communication and professional presence workshop this quarter."),
+    fut:ctxAction("Seek a role or assignment that requires regular public speaking, stakeholder presentations, or cross-functional leadership — and do not wait until you feel ready.","Ask to lead the next client presentation or regulatory engagement rather than supporting it.","Apply to represent your department at an inter-ministerial meeting or public forum.","Apply to lead the next donor presentation or community engagement session rather than supporting it.","Make a commitment to speak at one external event or industry forum in the next 6 months.","Ask to present in the next team meeting or client interaction — and do it without excessive preparation.")
   });
 
   // Safely add habits to any devArea that is missing them
@@ -2643,8 +2679,9 @@ const add = (dim, v, why, acts, now, soon, fut) => devAreas.push({
               {bot2.map(d=>(
                 <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:T.rdP,border:`1px solid ${T.rd}40`,borderLeft:`5px solid ${T.rd}`}}>
                   <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.rd,marginBottom:'8px'}}>◈ Priority Development Area</div>
-                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'10px',color:T.rd}}>{d.l}</h4>
-                  <p style={{fontSize:'13px',color:T.rd,lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>Your development investment here creates the greatest career impact. Your 10-step action plan below is built around this dimension specifically.</p>
+                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'8px',color:T.rd}}>{d.l}</h4>
+                  <p style={{fontSize:'12px',color:T.rd,lineHeight:'1.6',fontWeight:'600',marginBottom:'10px',borderBottom:`1px solid ${T.rd}25`,paddingBottom:'10px'}}>{d.gap || 'A core driver of professional effectiveness and your highest-leverage development opportunity right now.'}</p>
+                  <p style={{fontSize:'12px',color:T.rd,lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>Your 10-step action plan below targets this dimension specifically. Building habits here creates the greatest measurable career impact at your current stage.</p>
                   <div className="mono" style={{fontSize:'10px', color:T.rd, fontWeight:'700'}}>Score: {d.v}/100 · {bd(d.v)} Range</div>
                 </div>
               ))}

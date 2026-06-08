@@ -1947,7 +1947,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
             {['A','B','C','D','E','F'].map(ch=>{
               const idx=QS.findIndex(q=>q.ch===ch);
               const done=cur>idx+9; const active=QS[cur]?.ch===ch;
-              return <div key={ch} style={{height:'4px',width:'36px',borderRadius:'2px',background:done?T.c:active?T.gold:T.b2,transition:'background 0.3s'}} />;
+              return <div key={ch} style={{height:'4px',width:'36px',borderRadius:'2px',background:done?T.gn:active?T.gold:T.b2,transition:'background 0.3s'}} />;
             })}
           </div>
           <button onClick={()=>setBreaker(null)} style={{padding:'12px 32px',borderRadius:'7px',border:`2px solid ${T.b2}`,background:'transparent',color:T.t1,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}} onMouseOver={e=>{e.target.style.borderColor=T.c;e.target.style.color=T.c;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t1;}}>Continue →</button>

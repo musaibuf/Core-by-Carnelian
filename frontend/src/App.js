@@ -1275,6 +1275,7 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
   const [gameChoice, setGameChoice] = useState(null);
   const [priorFound, setPriorFound] = useState(null);
 const [consentChecked, setConsentChecked] = useState(false);
+const [legalChecked, setLegalChecked] = useState(false);
   const [startTime, setStartTime] = useState(null);
     const timerRef = useRef(null);
 
@@ -1293,6 +1294,11 @@ useEffect(()=>{
     else if(timerActive&&timer===0){ setTimerActive(false); setGameLocked(true); setGameChoice({quality:'timeout'}); }
     return()=>clearTimeout(timerRef.current);
   },[timerActive,timer]);
+
+  // NEW: Scroll to top whenever the step or intake stage changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [step, intakeStage]);
 
   const startTimer=()=>{ setTimer(45); setTimerActive(true); setGameLocked(false); setGameChoice(null); };
 
@@ -1677,18 +1683,28 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           </div>
         </div>
 
+        {/* NEW SEPARATE BLOCK FOR LEGAL & DATA PROCESSING */}
+        <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'24px'}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>Legal Disclaimer & Data Processing</div>
+          <div style={{display:'flex', flexDirection:'column', gap:'12px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
+            <p style={{margin:0}}><strong>Disclaimer:</strong> The information, materials, and assessments provided in this module are for educational, illustrative, and informational purposes only. We make no representations or warranties of any kind, express or implied.</p>
+            <p style={{margin:0}}><strong>Data Protection:</strong> We are committed to protecting your information. Your data will be stored securely and will not be shared with unauthorized third parties, except where required by law or necessary to operate this training platform. By proceeding, you consent to this processing of your personal data.</p>
+            <p style={{margin:0}}><strong>Data Collection:</strong> By participating in this training module, you acknowledge and agree that we collect certain personal information (such as your name, email address, completion status, and module responses). This data is collected for lawful purposes, specifically to administer the training, track progress, issue certificates of completion, and improve our educational offerings.</p>
+          </div>
+        </div>
+
         <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
-          <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500'}}>
+          <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
             <strong style={{color:T.am}}>Validity Alert System is always active.</strong> Ten L-scale items and four validity indices run automatically for every assessment regardless of configuration. Candidates are never informed of validity checks. The Validity Index appears only in the Technical Report.
           </p>
         </div>
 
         <div style={{background:`${T.c}10`,border:`1px solid ${T.c}30`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
-  <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
-  <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
-    For the most accurate results, please complete the assessment in one uninterrupted session, this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths, making the feedback genuinely useful.
-  </p>
-</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
+          <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
+            For the most accurate results, please complete the assessment in one uninterrupted session, this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths, making the feedback genuinely useful.
+          </p>
+        </div>
 
         <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'16px 20px',marginBottom:'24px',display:'flex',alignItems:'flex-start',gap:'12px'}}>
           <input type="checkbox" checked={consentChecked} onChange={e=>setConsentChecked(e.target.checked)} style={{marginTop:'4px',accentColor:T.c,width:'18px',height:'18px',flexShrink:0,cursor:'pointer'}} />

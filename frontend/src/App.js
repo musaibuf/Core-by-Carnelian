@@ -528,7 +528,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
         }}>
           {/* Logo */}
           <div style={{display:'flex', alignItems:'center', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
-        <img src="/logo.svg" alt="CORE by Carnelian" style={{height:'38px', width:'auto', objectFit:'contain'}} />
+        <img src="/logo.svg" alt="CORE by Carnelian" style={{height:'48px', width:'auto', objectFit:'contain'}} />
       </div>
 
           {/* Desktop nav */}

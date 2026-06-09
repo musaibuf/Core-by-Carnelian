@@ -120,7 +120,39 @@ const Fonts = ({ mode }) => {
         h1 { font-size: 2.6rem !important; }
         h2 { font-size: 1.8rem !important; }
       }
-      @media (max-width: 400px) { .grid-7-col, .grid-5-col, .grid-6-col { grid-template-columns: 1fr !important; } }
+     @media (max-width: 400px) { .grid-7-col, .grid-5-col, .grid-6-col { grid-template-columns: 1fr !important; } }
+
+      /* ── GLOBAL MOBILE FIXES ── */
+      @media (max-width: 768px) {
+        .desktop-nav { display: none !important; }
+        .mobile-nav-controls { display: flex !important; }
+        
+        /* Center all main content */
+        div[style*="maxWidth:"] { margin-left: auto !important; margin-right: auto !important; }
+        
+        /* Fix padding on main sections */
+        div[style*="padding:'40px 24px'"] { padding: 24px 16px !important; }
+        div[style*="padding:'80px 24px'"] { padding: 48px 16px !important; }
+        div[style*="padding:'56px 24px'"] { padding: 40px 16px !important; }
+        
+        /* Fix report tabs */
+        div[style*="gap:'8px'"][style*="flexWrap:'wrap'"] { gap: 6px !important; }
+        
+        /* Fix table overflow */
+        table { font-size: 11px !important; }
+        
+        /* Fix card padding on mobile */
+        div[style*="padding:'48px 40px'"] { padding: 28px 20px !important; }
+        div[style*="padding:'32px 36px'"] { padding: 24px 16px !important; }
+        div[style*="padding:'32px'"] { padding: 20px 16px !important; }
+        div[style*="padding:'36px'"] { padding: 24px 16px !important; }
+        div[style*="padding:'40px'"] { padding: 24px 16px !important; }
+      }
+      
+      @media (min-width: 769px) {
+        .desktop-nav { display: flex !important; }
+        .mobile-nav-controls { display: none !important; }
+      }
     `}</style>
   );
 };
@@ -336,11 +368,11 @@ const computeValidity = (answers) => {
   const redCount=flags.filter(f=>f.type==='red').length;
   const amberCount=flags.filter(f=>f.type==='amber').length;
   let overall,overallLabel;
-  if(catastrophic||extremeCareless||(conScore<30&&extRatio>0.70)){overall='red';overallLabel='Invalid — Do Not Use Results. Recommend Immediate Verification.';}
-  else if(conScore<20||extRatio>0.90){overall='red';overallLabel='Invalid — Results Uninterpretable. Retake Required.';}
-  else if(redCount>=2){overall='red';overallLabel='Low — Recommend Verification Interview Before Any Decision.';}
-  else if(redCount===1||amberCount>=2){overall='amber';overallLabel='Moderate — Interpret with Caution. Cross-Validate with Interview.';}
-  else{overall='green';overallLabel='High — Proceed with Confidence.';}
+  if(catastrophic||extremeCareless||(conScore<30&&extRatio>0.70)){overall='red';overallLabel='Invalid · Do Not Use Results. Recommend Immediate Verification.';}
+  else if(conScore<20||extRatio>0.90){overall='red';overallLabel='Invalid · Results Uninterpretable. Retake Required.';}
+  else if(redCount>=2){overall='red';overallLabel='Low · Recommend Verification Interview Before Any Decision.';}
+  else if(redCount===1||amberCount>=2){overall='amber';overallLabel='Moderate · Interpret with Caution. Cross-Validate with Interview.';}
+  else{overall='green';overallLabel='High · Proceed with Confidence.';}
   
   return{lAgree,saRatio,extRatio,conScore,flags,overall,overallLabel};
 };
@@ -472,65 +504,132 @@ const Reveal = ({ children, delay = 0, direction = 'up', distance = 36 }) => {
 };
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => (
-  <nav style={{
-    position:'sticky', top:0, zIndex:200,
-    background:T.bg0 + 'EE',
-    backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
-    borderBottom:`1px solid ${T.b2}`,
-  }} className="no-print">
-    <div className="nav-wrap" style={{
-      maxWidth:'1200px', margin:'0 auto',
-      display:'flex', alignItems:'center', justifyContent:'space-between',
-      padding:'0 32px', height:'64px',
-    }}>
-      <div style={{display:'flex', alignItems:'center', gap:'12px', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
-<img src="/logo.png" alt="Carnelian" style={{height:'30px', minWidth:'30px', objectFit:'contain'}}
-          onError={e=>{e.target.style.display='none'; e.target.nextSibling.style.display='flex';}} />
-        <div style={{display:'none', width:'30px', height:'30px', background:T.c, borderRadius:'6px', alignItems:'center', justifyContent:'center', fontFamily:"'Playfair Display',serif", fontWeight:'700', color:'#fff', fontSize:'15px'}}>C</div>
-        <div>
-          <div style={{fontFamily:"'Playfair Display',serif", fontSize:'26px', fontWeight:'700', color:T.gold, letterSpacing:'-0.02em', lineHeight:'0.95'}}>CORE</div>
-          <div className="mono" style={{fontSize:'8px', color:T.c, letterSpacing:'0.18em', marginTop:'3px', fontWeight:'800'}}>BY CARNELIAN</div>
-        </div>
+const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navItems = [
+    {id:'home', l:'Overview'},
+    {id:'assess', l:'Assessment'},
+    ...(hasResults?[{id:'results', l:'Reports'}]:[]),
+    ...(hasHistory?[{id:'progress', l:'Progress'}]:[]),
+    {id:'legal', l:'Compliance & Privacy'},
+  ];
+  return (
+    <>
+      <nav style={{
+        position:'sticky', top:0, zIndex:200,
+        background:T.bg0 + 'EE',
+        backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
+        borderBottom:`1px solid ${T.b2}`,
+      }} className="no-print">
+        <div style={{
+          maxWidth:'1200px', margin:'0 auto',
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          padding:'0 16px', height:'64px',
+        }}>
+          {/* Logo */}
+          <div style={{display:'flex', alignItems:'center', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
+        <img src="/logo.svg" alt="CORE by Carnelian" style={{height:'38px', width:'auto', objectFit:'contain'}} />
       </div>
 
-      <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-<div style={{display:'flex', gap:'2px', overflowX:'auto', scrollbarWidth:'none', maxWidth:'calc(100vw - 140px)'}}>          {[
-            {id:'home', l:'Overview'},
-            {id:'assess', l:'Assessment'},
-            ...(hasResults?[{id:'results', l:'Reports'}]:[]),
-            ...(hasHistory?[{id:'progress', l:'Progress'}]:[]),
-            {id:'legal', l:'Compliance & Privacy'},
-          ].map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{
-              padding:'8px 16px', borderRadius:'6px', border:'none', cursor:'pointer',
-              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'700',
-              transition:'all 0.18s', whiteSpace:'nowrap',
-                background: tab===t.id ? `${T.gold}20` : 'transparent',
-              color: tab===t.id ? T.gold : T.t2,
+          {/* Desktop nav */}
+          <div style={{display:'flex', alignItems:'center', gap:'4px', '@media(max-width:768px)':{display:'none'}}}>
+            <div className="desktop-nav" style={{display:'flex', gap:'2px'}}>
+              {navItems.map(t=>(
+                <button key={t.id} onClick={()=>setTab(t.id)} style={{
+                  padding:'8px 14px', borderRadius:'6px', border:'none', cursor:'pointer',
+                  fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'12px', fontWeight:'700',
+                  whiteSpace:'nowrap',
+                  background: tab===t.id ? `${T.gold}20` : 'transparent',
+                  color: tab===t.id ? T.gold : T.t2,
+                  transition:'all 0.18s',
+                }}
+                onMouseOver={e=>{if(tab!==t.id){e.currentTarget.style.color=T.t0; e.currentTarget.style.background=T.b1;}}}
+                onMouseOut={e=>{if(tab!==t.id){e.currentTarget.style.color=T.t2; e.currentTarget.style.background='transparent';}}}
+                >{t.l}</button>
+              ))}
+            </div>
+            <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
+              display:'flex', alignItems:'center', gap:'6px',
+              padding:'8px 14px', borderRadius:'6px',
+              border:`1px solid ${T.b2}`, background: T.bg2, color: T.t0,
+              cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif",
+              fontSize:'12px', fontWeight:'700', whiteSpace:'nowrap', transition:'all 0.2s',
             }}
-            onMouseOver={e=>{if(tab!==t.id){e.target.style.color=T.t0; e.target.style.background=T.b1;}}}
-            onMouseOut={e=>{if(tab!==t.id){e.target.style.color=T.t2; e.target.style.background='transparent';}}}
-            >{t.l}</button>
-          ))}
+            onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.color=T.c;}}
+            onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.color=T.t0;}}>
+              {mode === 'dark' ? '☀ Light' : '◑ Dark'}
+            </button>
+          </div>
+
+          {/* Mobile right side */}
+          <div className="mobile-nav-controls" style={{display:'flex', alignItems:'center', gap:'8px'}}>
+            <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
+              padding:'8px 12px', borderRadius:'6px',
+              border:`1px solid ${T.b2}`, background: T.bg2, color: T.t0,
+              cursor:'pointer', fontSize:'13px', fontWeight:'700',
+            }}>
+              {mode === 'dark' ? '☀' : '◑'}
+            </button>
+            <button onClick={()=>setMenuOpen(o=>!o)} style={{
+              display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center',
+              gap:'5px', width:'40px', height:'40px',
+              background: menuOpen ? `${T.c}20` : T.bg2,
+              border:`1px solid ${menuOpen ? T.c : T.b2}`,
+              borderRadius:'8px', cursor:'pointer', padding:'8px',
+            }}>
+              {menuOpen ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12M14 2L2 14" stroke={T.c} strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              ) : (
+                <>
+                  <div style={{width:'18px', height:'2px', background:T.t0, borderRadius:'1px'}}/>
+                  <div style={{width:'18px', height:'2px', background:T.t0, borderRadius:'1px'}}/>
+                  <div style={{width:'12px', height:'2px', background:T.t0, borderRadius:'1px', alignSelf:'flex-start'}}/>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
-        <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
-          display:'flex', alignItems:'center', gap:'8px',
-          padding:'8px 16px', borderRadius:'6px',
-          border:`1px solid ${T.b2}`, background: T.bg2, color: T.t0,
-          cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif",
-          fontSize:'12px', fontWeight:'700', letterSpacing:'0.03em',
-          transition:'all 0.2s', whiteSpace:'nowrap',
-        }}
-        onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.color=T.c;}}
-        onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.color=T.t0;}}>
-          {mode === 'dark' ? '☀ Light' : '◑ Dark'}
-        </button>
-      </div>
-    </div>
-  </nav>
-);
+        {/* Mobile dropdown */}
+        {menuOpen && (
+          <div style={{
+            borderTop:`1px solid ${T.b2}`,
+            background: T.bg1,
+            padding:'12px 16px',
+            display:'flex', flexDirection:'column', gap:'4px',
+          }}>
+            {navItems.map(t=>(
+              <button key={t.id} onClick={()=>{setTab(t.id); setMenuOpen(false);}} style={{
+                padding:'14px 16px', borderRadius:'8px', border:'none', cursor:'pointer',
+                fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'700',
+                textAlign:'left', transition:'all 0.18s',
+                background: tab===t.id ? `${T.gold}20` : 'transparent',
+                color: tab===t.id ? T.gold : T.t1,
+                borderLeft: tab===t.id ? `3px solid ${T.gold}` : `3px solid transparent`,
+              }}>
+                {t.l}
+              </button>
+            ))}
+          </div>
+        )}
+      </nav>
+
+      {/* Inject CSS to show/hide desktop vs mobile nav */}
+      <style>{`
+        @media (min-width: 769px) {
+          .desktop-nav { display: flex !important; }
+          .mobile-nav-controls { display: none !important; }
+        }
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-nav-controls { display: flex !important; }
+        }
+      `}</style>
+    </>
+  );
+};
 
 // ─── HOME PAGE SUB-COMPONENTS ─────────────────────────────────────────────────
 // ─── TYPEWRITER ───────────────────────────────────────────────────────────────
@@ -2482,7 +2581,7 @@ const buildHabits = (content, dim, profile, R) => {
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
     const A4_W = 210, A4_H = 297;
     const firstName = R.name?.split(' ')[0] || 'Professional';
-    const logoURL = `${window.location.origin}/logo.png`;
+    const logoURL = `${window.location.origin}/logo.svg`;
 
     const addPageFromHTML = async (htmlContent, bgColor = '#F8F7F5') => {
       const container = document.createElement('div');
@@ -2519,9 +2618,8 @@ const buildHabits = (content, dim, profile, R) => {
     await addPageFromHTML(wrap(`
       <div style="position:absolute;top:0;left:0;right:0;height:6px;background:#B01C24;"></div>
       <div style="position:absolute;top:-100px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.09) 0%,transparent 72%);"></div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:auto;position:relative;z-index:2;">
-        <img src="${logoURL}" style="width:52px;height:52px;object-fit:contain;" crossorigin="anonymous"/>
-        <div><div class="serif" style="font-size:32px;font-weight:700;line-height:1;color:#B8912E;letter-spacing:0.01em;">CORE</div><div class="mono" style="font-size:9px;font-weight:800;color:#B01C24;letter-spacing:0.22em;text-transform:uppercase;margin-top:3px;">By Carnelian</div></div>
+      <div style="display:flex;align-items:center;margin-bottom:auto;position:relative;z-index:2;">
+        <img src="${logoURL}" style="height:56px;width:auto;object-fit:contain;" crossorigin="anonymous"/>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 0 40px;position:relative;z-index:2;">
         <div class="mono" style="font-size:10px;font-weight:800;color:#B01C24;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;">Personal Action Plan</div>
@@ -3104,7 +3202,7 @@ const buildHabits = (content, dim, profile, R) => {
 
             {isDevContext && !(validity.overall === 'red' && validity.extRatio > 0.85) && (
               <div style={{background:'rgba(59, 130, 246, 0.1)', border:'1px solid rgba(59, 130, 246, 0.3)', borderRadius:'8px', padding:'12px 16px', marginTop:'16px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6', position:'relative', zIndex:1}}>
-                <strong style={{color:'#3B82F6'}}>Development Context:</strong> This assessment was commissioned for <em>{R.purpose}</em>. All role suitability and risk language in this report should be read as <strong>development priorities</strong>, not placement restrictions. Phrases such as "do not deploy without intervention" indicate where focused coaching will have the highest impact — they are not disqualification verdicts in a development context. Share the Candidate Action Plan with the individual directly.
+                <strong style={{color:'#3B82F6'}}>Development Context:</strong> This assessment was commissioned for <em>{R.purpose}</em>. All role suitability and risk language in this report should be read as <strong>development priorities</strong>, not placement restrictions. Phrases such as "do not deploy without intervention" indicate where focused coaching will have the highest impact, they are not disqualification verdicts in a development context. Share the Candidate Action Plan with the individual directly.
               </div>
             )}
 

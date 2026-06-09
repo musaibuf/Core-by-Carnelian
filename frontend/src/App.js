@@ -548,7 +548,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
                 >{t.l}</button>
               ))}
             </div>
-            <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
+            <button className="desktop-theme-btn" onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')} style={{
               display:'flex', alignItems:'center', gap:'6px',
               padding:'8px 14px', borderRadius:'6px',
               border:`1px solid ${T.b2}`, background: T.bg2, color: T.t0,
@@ -620,10 +620,12 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
       <style>{`
         @media (min-width: 769px) {
           .desktop-nav { display: flex !important; }
+          .desktop-theme-btn { display: flex !important; }
           .mobile-nav-controls { display: none !important; }
         }
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
+          .desktop-theme-btn { display: none !important; }
           .mobile-nav-controls { display: flex !important; }
         }
       `}</style>

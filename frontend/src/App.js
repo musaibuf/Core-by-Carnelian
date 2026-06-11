@@ -1129,7 +1129,7 @@ const ReportsSlideshow = () => {
             <em style={{color:T.gold, fontStyle:'italic'}}>purpose-built reports</em>
           </h2>
           <p style={{fontSize:'13px', color:T.t2, maxWidth:'560px', lineHeight:1.7, fontWeight:'500'}}>
-            Each report is written for a specific reader — HR gets technical depth, individuals get a roadmap,
+            Each report is written for a specific reader. HR gets technical depth, individuals get a roadmap,
             teams get aggregate insights, candidates get a gamified experience.
           </p>
         </div>

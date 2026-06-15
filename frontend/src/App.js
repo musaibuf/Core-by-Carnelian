@@ -2679,49 +2679,36 @@ const buildHabits = (content, dim, profile, R) => {
       </div>
     `));
 
-    // Page 3: Composite Indices + Validity
-    const compGridHTML = [
-      ['CII','Compliance',CI.CII,70,54],['LRS','Leadership',CI.LRS,72,55],['TVS','Team Value',CI.TVS,68,51],
-      ['ADS','Adaptability',CI.ADS,67,50],['SES','Stakeholder',CI.SES,68,52],['OPS','Operations',CI.OPS,67,51],['PMS','People Mgmt',CI.PMS,67,51]
-    ].map(([k,l,v,g,a]) => {
-      const col = v>=g ? '#16A34A' : v>=a ? '#D97706' : '#DC2626';
-      return `<div style="text-align:center;">
-        <div style="width:48px;height:48px;border-radius:50%;border:3px solid ${col};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:13px;font-weight:800;color:${col};">${v}</div>
-        <div style="font-size:10px;font-weight:800;color:#B8912E;">${k}</div>
-        <div style="font-size:9px;color:#6B7280;margin-top:2px;">${l}</div>
-      </div>`;
-    }).join('');
-
-    const validityHTML = validity.flags.map(f=>{
-      const col = f.type==='red'?'#DC2626':f.type==='amber'?'#D97706':'#16A34A';
-      return `<div style="font-size:11.5px;color:${col};margin-bottom:6px;line-height:1.5;"><strong>${f.key}:</strong> ${f.text}</div>`;
+    // Page 4: Composite Indices (With Descriptions, Validity Removed)
+    const compHTML = [
+      ['CII','Compliance & Integrity',CI.CII, 'Primary screen for fiduciary and compliance roles.'],
+      ['LRS','Leadership Readiness',CI.LRS, 'Predicts senior leadership performance and readiness.'],
+      ['TVS','Team Value',CI.TVS, 'Predicts team cohesion and collaborative contribution.'],
+      ['ADS','Adaptability',CI.ADS, 'Suitability for change, reform, and innovation roles.'],
+      ['SES','Stakeholder Effectiveness',CI.SES, 'Effectiveness with clients, donors, and external partners.'],
+      ['OPS','Operational Reliability',CI.OPS, 'Sustained delivery and reliability under pressure.'],
+      ['PMS','People Management',CI.PMS, 'Interpersonal and ethical readiness for people management.']
+    ].map(([k,l,v,d])=>{
+      const col = v>=70?'#16A34A':v>=54?'#D97706':'#DC2626';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #F3F4F6;"><div><div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:4px;">${l} (${k})</div><div style="font-size:11px;color:#6B7280;">${d}</div></div><div style="font-size:16px;font-weight:800;color:${col};">${v}/100</div></div>`;
     }).join('');
 
     await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;margin-bottom:20px;">
-        <div class="mono" style="font-size:10px; font-weight:800; color:#B8912E; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px;">Your 7 Composite Indices — How Dimensions Interact</div>
-        <div style="font-size:11.5px; color:#4B5563; line-height:1.6; margin-bottom:20px; font-weight:500; padding:12px 16px; background:#F9FAFB; border-radius:8px; border-left:3px solid #B8912E;">
-          These 7 indices combine scores across all five modules to reflect how your dimensions interact. Each index is weighted by meta-analytic research for its specific role family. A low index in any area is a targeted development signal, not a general verdict.
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;text-align:center;">
-          ${compGridHTML}
-        </div>
-      </div>
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-        <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:12px;">Validity Index Summary</h3>
-        <div style="font-size:12px;color:#374151;font-weight:700;margin-bottom:10px;">Overall: ${validity.overallLabel}</div>
-        ${validityHTML}
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">Your Composite Indices</h3>
+        <p style="color:#4B5563; font-size:12px; line-height:1.6; margin-bottom:20px; font-weight:500;">These 7 indices combine scores across all five modules to reflect how your dimensions interact. Each index is weighted by meta-analytic research for its specific role family.</p>
+        ${compHTML}
       </div>
     `));
 
-    // Page 4: Strengths & Priorities
-    const strengthsHTML = top2.map(d => `<div style="padding:22px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">✦ Core Strength</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4><p style="font-size:12px;color:#15803D;line-height:1.65;font-weight:500;margin-bottom:14px;">${d.str}</p><span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
-    const priorityHTML = bot2.map(d => `<div style="padding:22px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;border-left:5px solid #DC2626;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#B91C1C;margin-bottom:7px;">◈ Priority Development Area</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#B91C1C;">${d.l}</h4><p style="font-size:11.5px;color:#B91C1C;line-height:1.6;font-weight:600;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(185,28,28,0.15);">${d.gap || 'A core driver of professional effectiveness.'}</p><p style="font-size:12px;color:#B91C1C;line-height:1.65;font-weight:500;margin-bottom:14px;">Your 10-step action plan below targets this dimension specifically.</p><span style="padding:3px 10px;background:#FEE2E2;color:#B91C1C;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
+    // Page 3: Strengths & Priorities (Combined on one page)
+    const strengthsHTML = top2.map(d => `<div style="padding:20px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">✦ Core Strength</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4><p style="font-size:12px;color:#15803D;line-height:1.6;font-weight:500;margin-bottom:14px;">${d.str}</p><span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
+    const priorityHTML = bot2.map(d => `<div style="padding:20px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;border-left:5px solid #DC2626;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#B91C1C;margin-bottom:7px;">◈ Priority Development Area</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#B91C1C;">${d.l}</h4><p style="font-size:11.5px;color:#B91C1C;line-height:1.5;font-weight:600;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(185,28,28,0.15);">${d.gap || 'A core driver of professional effectiveness.'}</p><p style="font-size:11.5px;color:#B91C1C;line-height:1.5;font-weight:500;margin-bottom:14px;">Your 10-step action plan below targets this dimension specifically.</p><span style="padding:3px 10px;background:#FEE2E2;color:#B91C1C;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
 
     await addPageFromHTML(wrap(`
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
         <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">What You Are Good At · And Where To Grow</h3>
-        <p style="color:#4B5563;font-size:12.5px;line-height:1.7;margin-bottom:22px;font-weight:500;"><strong style="color:#111827;">How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style="color:#16A34A;">Top 2</strong> become your anchor strengths. The <strong style="color:#DC2626;">Bottom 2</strong> become your priority development areas.</p>
+        <p style="color:#4B5563;font-size:12.5px;line-height:1.6;margin-bottom:20px;font-weight:500;"><strong style="color:#111827;">How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style="color:#16A34A;">Top 2</strong> become your anchor strengths. The <strong style="color:#DC2626;">Bottom 2</strong> become your priority development areas.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">${strengthsHTML}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">${priorityHTML}</div>
       </div>
@@ -2785,41 +2772,36 @@ for (const d of devAreas) {
   `));
 }
 
-    // Resources & Carnelian Programmes
+   // Resources (Condensed to 5 per page)
+    const resCard = r => `<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#111827;">${r.title}</div><div style="font-size:10px;color:#6B7280;margin-bottom:4px;">${r.author}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${r.why}</div></div>`;
 
-const resCard = r => `<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#111827;">${r.title}</div><div style="font-size:10px;color:#6B7280;margin-bottom:4px;">${r.author}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${r.why}</div></div>`;
+    const resourceChunks = chunk(resources, 5); // Changed to 5 to save pages
+    for (let ci = 0; ci < resourceChunks.length; ci++) {
+      const heading = ci === 0 ? `<h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">Your Development Toolkit</h3>` : `<div class="mono" style="font-size:9px;color:#9CA3AF;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Development Toolkit (cont.)</div>`;
+      await addPageFromHTML(wrap(`
+        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+          ${heading}
+          ${resourceChunks[ci].map(resCard).join('')}
+        </div>
+      `));
+    }
 
-const resourceChunks = chunk(resources, 3);
-for (let ci = 0; ci < resourceChunks.length; ci++) {
-  const heading = ci === 0 ? `<h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:16px;">Your Development Toolkit</h3>` : `<div class="mono" style="font-size:9px;color:#9CA3AF;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Development Toolkit (cont.)</div>`;
-  await addPageFromHTML(wrap(`
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-      ${heading}
-      ${resourceChunks[ci].map(resCard).join('')}
-    </div>
-  `));
-}
+    // Carnelian Programmes + If-Then Protocol (Combined on one page)
+    const programsHTML = programs.map(p=>`<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#B01C24;">${p.name}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${p.desc}</div></div>`).join('');
+    const relapseHTML = relapse.map(p=>`<div style="margin-bottom:12px;padding:14px;background:#F9FAFB;border-radius:8px;border-left:4px solid #B01C24;"><div style="font-size:11px;font-weight:800;color:#B01C24;margin-bottom:6px;">IF: ${p.trigger}</div><div style="font-size:11.5px;color:#374151;line-height:1.6;"><strong>THEN:</strong> ${p.response}</div></div>`).join('');
 
-const programsHTML = programs.map(p=>`<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#B01C24;">${p.name}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${p.desc}</div></div>`).join('');
-
-await addPageFromHTML(wrap(`
-  <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-    <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:16px;">Recommended Carnelian Programmes</h3>
-    ${programsHTML}
-  </div>
-`));
-
-// If-Then Relapse Protocols
-const relapseHTML = relapse.map(p=>`<div style="margin-bottom:12px;padding:14px;background:#F9FAFB;border-radius:8px;border-left:4px solid #B01C24;"><div style="font-size:11px;font-weight:800;color:#B01C24;margin-bottom:6px;">IF: ${p.trigger}</div><div style="font-size:11.5px;color:#374151;line-height:1.6;"><strong>THEN:</strong> ${p.response}</div></div>`).join('');
-
-await addPageFromHTML(wrap(`
-  <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-    <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:8px;">Your If-Then Protocol</h3>
-    <p style="font-size:12px;color:#6B7280;margin-bottom:18px;line-height:1.6;">Relapse risk is highest in the first 30 days. These are decision frameworks for situations you will encounter.</p>
-    ${relapseHTML}
-  </div>
-`));
-
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;margin-bottom:24px;">
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">Recommended Carnelian Programmes</h3>
+        ${programsHTML}
+      </div>
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:8px;">Your If-Then Protocol</h3>
+        <p style="font-size:12px;color:#6B7280;margin-bottom:16px;line-height:1.6;">Relapse risk is highest in the first 30 days. These are decision frameworks for situations you will encounter.</p>
+        ${relapseHTML}
+      </div>
+    `));
+    
     // Priority Action Matrix (4-Box Layout)
     const actNowList = devAreas.filter(d=>d.v<45).map(d=>`<li style="margin-bottom:4px;">${d.dim}</li>`).join('') || '<li>No critical gaps — focus on elevation</li>';
     const buildSoonList = devAreas.filter(d=>d.v>=45&&d.v<60).map(d=>`<li style="margin-bottom:4px;">${d.dim}</li>`).join('') || '<li>No short-term gaps identified</li>';

@@ -2417,11 +2417,8 @@ const buildHabits = (content, dim, profile, R) => {
                            isDev ? 'Take the lead on a complex donor reporting cycle or new programme design.' :
                            'Ask for an assignment that forces you to practice this dimension under real institutional pressure.';
 
-    const formatHow = (tool, method, context = '') => (
-      <span>
-        <strong style={{color: T.t0}}>{tool}</strong> <strong style={{color: T.t0}}>Methodology:</strong> {method} {context && <span style={{fontStyle: 'italic', color: T.t2}}>{context}</span>}
-      </span>
-    );
+    const formatHow = (tool, method, context = '') => 
+  `<strong style="color:${T.t0}">${tool}</strong> <strong style="color:${T.t0}">Methodology:</strong> ${method}${context ? ` <span style="font-style:italic;color:${T.t2}">${context}</span>` : ''}`;
 
     const hows = {
       'Conscientiousness & Delivery': [
@@ -2596,6 +2593,7 @@ const buildHabits = (content, dim, profile, R) => {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
     const { jsPDF } = window.jspdf;
+    const chunk = (arr, size) => { const out=[]; for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; };
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
     const A4_W = 210, A4_H = 297;
     const firstName = R.name?.split(' ')[0] || 'Professional';
@@ -2637,7 +2635,7 @@ const buildHabits = (content, dim, profile, R) => {
       <div style="position:absolute;top:0;left:0;right:0;height:6px;background:#B01C24;"></div>
       <div style="position:absolute;top:-100px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.09) 0%,transparent 72%);"></div>
       <div style="display:flex;align-items:center;margin-bottom:auto;position:relative;z-index:2;">
-        <img src="${logoURL}" style="height:56px;width:auto;object-fit:contain;" crossorigin="anonymous"/>
+        <img src="${logoURL}" style="height:48px;width:180px;object-fit:contain;display:block;" crossorigin="anonymous" onerror="this.style.display='none'"/>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 0 40px;position:relative;z-index:2;">
         <div class="mono" style="font-size:10px;font-weight:800;color:#B01C24;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;">Personal Action Plan</div>
@@ -2672,71 +2670,216 @@ const buildHabits = (content, dim, profile, R) => {
         </div>
       </div>
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 32px;">
-        <h3 class="serif" style="font-size:1.25rem;font-weight:700;color:#111827;margin-bottom:20px;">Your Score Landscape</h3>
+        <h3 class="serif" style="font-size:1.35rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Score Profile at a Glance</h3>
+        <p style="color:#4B5563; font-size:12px; line-height:1.7; margin-bottom:12px; font-weight:500;">Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
+        <div style="font-size:11px; color:#6B7280; margin-bottom:24px; padding:10px 14px; background:#F9FAFB; border-radius:6px; line-height:1.6; font-weight:500;">
+          <strong style="color:#4B5563;">Note on groupings:</strong> Personality & Drive is the average of 5 individual traits. Cultural Agility, Team Citizenship, Learning Agility, and Ethical Integrity are each averages of 3–5 sub-dimensions. The development areas and priority matrix below drill into the individual dimensions within these groups.
+        </div>
         <div style="display:flex;flex-direction:column;gap:10px;">${barsHTML}</div>
       </div>
     `));
 
-    // Page 3: Strengths
-    const strengthsHTML = top2.map(d => `<div style="padding:22px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">Core Strength</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4><p style="font-size:12px;color:#15803D;line-height:1.65;font-weight:500;margin-bottom:14px;">${d.str}</p><span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">${d.v}/100</span></div>`).join('');
+    // Page 3: Composite Indices + Validity
+    const compGridHTML = [
+      ['CII','Compliance',CI.CII,70,54],['LRS','Leadership',CI.LRS,72,55],['TVS','Team Value',CI.TVS,68,51],
+      ['ADS','Adaptability',CI.ADS,67,50],['SES','Stakeholder',CI.SES,68,52],['OPS','Operations',CI.OPS,67,51],['PMS','People Mgmt',CI.PMS,67,51]
+    ].map(([k,l,v,g,a]) => {
+      const col = v>=g ? '#16A34A' : v>=a ? '#D97706' : '#DC2626';
+      return `<div style="text-align:center;">
+        <div style="width:48px;height:48px;border-radius:50%;border:3px solid ${col};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:13px;font-weight:800;color:${col};">${v}</div>
+        <div style="font-size:10px;font-weight:800;color:#B8912E;">${k}</div>
+        <div style="font-size:9px;color:#6B7280;margin-top:2px;">${l}</div>
+      </div>`;
+    }).join('');
+
+    const validityHTML = validity.flags.map(f=>{
+      const col = f.type==='red'?'#DC2626':f.type==='amber'?'#D97706':'#16A34A';
+      return `<div style="font-size:11.5px;color:${col};margin-bottom:6px;line-height:1.5;"><strong>${f.key}:</strong> ${f.text}</div>`;
+    }).join('');
+
     await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
-        <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;">What You Bring to the Table</h3>
-        <p style="color:#4B5563;font-size:12px;line-height:1.7;margin-bottom:22px;font-weight:500;">These are your anchor strengths. When things get difficult, these are the natural instincts you rely on. Lean into them—they are what make you uniquely valuable to your team.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">${strengthsHTML}</div>
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;margin-bottom:20px;">
+        <div class="mono" style="font-size:10px; font-weight:800; color:#B8912E; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px;">Your 7 Composite Indices — How Dimensions Interact</div>
+        <div style="font-size:11.5px; color:#4B5563; line-height:1.6; margin-bottom:20px; font-weight:500; padding:12px 16px; background:#F9FAFB; border-radius:8px; border-left:3px solid #B8912E;">
+          These 7 indices combine scores across all five modules to reflect how your dimensions interact. Each index is weighted by meta-analytic research for its specific role family. A low index in any area is a targeted development signal, not a general verdict.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;text-align:center;">
+          ${compGridHTML}
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+        <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:12px;">Validity Index Summary</h3>
+        <div style="font-size:12px;color:#374151;font-weight:700;margin-bottom:10px;">Overall: ${validity.overallLabel}</div>
+        ${validityHTML}
       </div>
     `));
 
-    // Pages 4+: Development Roadmap
-    for (const d of devAreas) {
-      const habitsHTML = d.habits.map(h => `<li style="display:flex;gap:10px;padding:7px 0;font-size:12px;color:#374151;line-height:1.55;font-weight:500;"><span style="color:#D97706;font-weight:800;flex-shrink:0;">→</span><span><strong style="color:#111827;">${h.h}</strong> ${h.t}</span></li>`).join('');
-      await addPageFromHTML(wrap(`
-        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><h4 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;">${d.dim}</h4><span style="padding:5px 12px;background:rgba(217,119,6,0.1);color:#D97706;border-radius:6px;font-size:12px;font-weight:800;">${d.v}/100</span></div>
-          <div class="mono" style="font-size:9px;color:#6B7280;margin-bottom:18px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;">${d.v >= 70 ? 'HIGH' : d.v >= 50 ? 'MID' : 'LOW'} range</div>
-          <p style="font-size:12.5px;color:#4B5563;line-height:1.75;margin-bottom:24px;font-weight:500;padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid #D97706;">${d.why}</p>
-          <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Daily Habits to Build:</h5>
-          <ul style="padding-left:0;list-style:none;margin-bottom:28px;">${habitsHTML}</ul>
-          <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Your Growth Timeline:</h5>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;gap:18px;background:#FEF2F2;padding:16px;border-radius:8px;border-left:4px solid #DC2626;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:0.04em;">Now<br/><span style="font-size:8px;opacity:0.8">(0–30 Days)</span></div><div style="font-size:12.5px;color:#7F1D1D;line-height:1.55;font-weight:600;">${d.now || d.acts[0]}</div></div>
-            <div style="display:flex;gap:18px;background:#FFFBEB;padding:16px;border-radius:8px;border-left:4px solid #D97706;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;letter-spacing:0.04em;">Soon<br/><span style="font-size:8px;opacity:0.8">(30–90 Days)</span></div><div style="font-size:12.5px;color:#92400E;line-height:1.55;font-weight:600;">${d.soon || d.acts[1]}</div></div>
-            <div style="display:flex;gap:18px;background:#F0FDF4;padding:16px;border-radius:8px;border-left:4px solid #16A34A;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:0.04em;">Future<br/><span style="font-size:8px;opacity:0.8">(90–180 Days)</span></div><div style="font-size:12.5px;color:#166534;line-height:1.55;font-weight:600;">${d.fut}</div></div>
-          </div>
-        </div>
-      `));
-    }
+    // Page 4: Strengths & Priorities
+    const strengthsHTML = top2.map(d => `<div style="padding:22px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">✦ Core Strength</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4><p style="font-size:12px;color:#15803D;line-height:1.65;font-weight:500;margin-bottom:14px;">${d.str}</p><span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
+    const priorityHTML = bot2.map(d => `<div style="padding:22px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;border-left:5px solid #DC2626;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#B91C1C;margin-bottom:7px;">◈ Priority Development Area</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#B91C1C;">${d.l}</h4><p style="font-size:11.5px;color:#B91C1C;line-height:1.6;font-weight:600;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(185,28,28,0.15);">${d.gap || 'A core driver of professional effectiveness.'}</p><p style="font-size:12px;color:#B91C1C;line-height:1.65;font-weight:500;margin-bottom:14px;">Your 10-step action plan below targets this dimension specifically.</p><span style="padding:3px 10px;background:#FEE2E2;color:#B91C1C;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
 
-    // Priority Action Matrix
-    const matrixCards = [
-      {bg:'#FEF2F2',border:'#FECACA',color:'#B91C1C',title:'1. Act Now (0–30 Days)',sub:'Micro-Habit Formation',text:"Focus purely on the 'Daily Habits' listed in your roadmap. Pick just one dimension to start. Do not attempt a massive overhaul—focus on tiny, 5-minute behavioral shifts that you can sustain daily without burnout."},
-      {bg:'#FFFBEB',border:'#FDE68A',color:'#D97706',title:'2. Build Soon (30–90 Days)',sub:'Social Accountability',text:'Involve others. Share your specific development goals with a trusted manager or mentor. This is the phase for enrolling in workshops, restructuring your workflows, and actively asking colleagues for feedback.'},
-      {bg:'#F0FDF4',border:'#BBF7D0',color:'#15803D',title:'3. Sustain (90–180 Days)',sub:'Pressure Testing',text:'Transition from learning to leading. Take ownership of a complex project that forces you to use your new skills under pressure. Cement your new brand within the team by delivering consistently.'},
-      {bg:'#F3F4F6',border:'#E5E7EB',color:'#4B5563',title:'4. The Feedback Loop',sub:'Measuring Success',text:'Book a recurring 15-minute calendar block on the last Friday of every month. Ask yourself: "Am I reacting out of habit, or responding with intention?" Adjust your approach based on what is working.'},
-      {bg:'#EFF6FF',border:'#BFDBFE',color:'#1D4ED8',title:'5. Anticipating Relapse',sub:'Grace Under Fire',text:'When stress hits, you will likely revert to old habits. Expect this. When it happens, do not abandon the plan. Acknowledge the slip, reset your environment, and start fresh the very next morning.'},
-      {bg:'#FAF5FF',border:'#E9D5FF',color:'#7E22CE',title:'6. Expanding Impact',sub:'Teaching Others',text:'The ultimate test of mastering a new skill is teaching it. Once you have solidified your new habits, look for a junior colleague struggling with the same issues and gently mentor them through your process.'}
-    ].map(item => `<div style="background:${item.bg};border:1px solid ${item.border};border-radius:10px;padding:20px;"><div style="font-size:11px;font-weight:800;color:${item.color};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">${item.title}</div><div style="font-size:13px;font-weight:700;color:${item.color};margin-bottom:7px;">${item.sub}</div><p style="font-size:11.5px;color:${item.color};line-height:1.55;font-weight:500;opacity:0.85;">${item.text}</p></div>`).join('');
     await addPageFromHTML(wrap(`
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
-        <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;">Priority Action Matrix</h3>
-        <p style="color:#4B5563;font-size:12px;line-height:1.7;margin-bottom:28px;font-weight:500;">A comprehensive visual guide on how to distribute your energy over the next 6 months for maximum career impact.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">${matrixCards}</div>
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">What You Are Good At · And Where To Grow</h3>
+        <p style="color:#4B5563;font-size:12.5px;line-height:1.7;margin-bottom:22px;font-weight:500;"><strong style="color:#111827;">How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style="color:#16A34A;">Top 2</strong> become your anchor strengths. The <strong style="color:#DC2626;">Bottom 2</strong> become your priority development areas.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">${strengthsHTML}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">${priorityHTML}</div>
+      </div>
+    `));
+
+   // Pages 4+: Development Roadmap
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;margin-bottom:24px;">
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Development Roadmap ${R.industry ? `· ${R.industry}` : ''}</h3>
+        <div style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:10px; padding:20px 24px; margin-bottom:20px; border-left:4px solid #D97706;">
+          <p style="color:#374151; font-size:12.5px; line-height:1.8; font-weight:500; margin:0;">
+            The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style="color:#111827;">This action plan focuses on your lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
+            <br/><br/>
+            Once you have built real habits around these two dimensions and your next CORE retake shows movement, Carnelian will work with you on the next layer. Think of this as <strong style="color:#D97706;">sequenced development</strong> — not a limitation, but a strategy. If you want to understand how your full profile maps to a broader development plan, <strong style="color:#D97706;">reach out to Carnelian at hello@carnelianco.com</strong>
+          </p>
+        </div>
+        <p style="color:#4B5563; font-size:12.5px; line-height:1.7; margin-bottom:16px; font-weight:500;">Each area below includes a 10-step plan with week-by-week instructions. Follow the steps in order — each one builds on the previous.</p>
+        ${R.industry ? `<div style="background:rgba(176,28,36,0.05); border-left:3px solid #B01C24; padding:10px 14px; border-radius:0 8px 8px 0; font-size:12px; color:#B01C24; font-weight:600; margin-bottom:24px;">Industry lens: <strong>${R.industry}</strong> — all actions are framed for this sector.</div>` : ''}
+      </div>
+    `));
+
+    const habitCard = h => `<li style="padding:8px 0;font-size:12px;color:#374151;line-height:1.55;font-weight:500;"><div style="display:flex;gap:10px;"><span style="color:#D97706;font-weight:800;flex-shrink:0;">→</span><span><strong style="color:#111827;">${h.h}</strong> ${h.t}</span></div>${h.how ? `<div style="margin:6px 0 0 20px;padding:8px 10px;background:#F9FAFB;border-left:3px solid #D97706;border-radius:4px;font-size:11px;color:#4B5563;line-height:1.6;">${h.how}</div>` : ''}</li>`;
+for (const d of devAreas) {
+  const dimCol = d.v<45?'#DC2626':d.v<60?'#D97706':'#16A34A';
+  const habitChunks = chunk(d.habits, 5); // Changed to 5 to fit better on pages
+
+  for (let ci = 0; ci < habitChunks.length; ci++) {
+    const isFirst = ci === 0;
+    const header = isFirst ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <h4 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;">${d.dim}</h4>
+        <span style="padding:5px 12px;background:rgba(217,119,6,0.1);color:${dimCol};border-radius:6px;font-size:12px;font-weight:800;">${d.v}/100</span>
+      </div>
+      <div class="mono" style="font-size:9px;color:#6B7280;margin-bottom:18px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;">${d.v >= 70 ? 'HIGH' : d.v >= 50 ? 'MID' : 'LOW'} range</div>
+      <p style="font-size:12.5px;color:#4B5563;line-height:1.75;margin-bottom:24px;font-weight:500;padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid #D97706;">${d.why}</p>
+      <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Your 10-Step Action Plan for ${d.dim}:</h5>
+    ` : `
+      <h4 class="serif" style="font-size:1.2rem;font-weight:700;color:#111827;margin-bottom:4px;">${d.dim}</h4>
+      <div class="mono" style="font-size:9px;color:#9CA3AF;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.1em;">Action Plan (cont.)</div>
+    `;
+
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+        ${header}
+        <ul style="padding-left:0;list-style:none;margin:0;">${habitChunks[ci].map(habitCard).join('')}</ul>
+      </div>
+    `));
+  }
+
+  // Growth timeline on its own page
+  await addPageFromHTML(wrap(`
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+      <h4 class="serif" style="font-size:1.2rem;font-weight:700;color:#111827;margin-bottom:4px;">${d.dim}</h4>
+      <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin:16px 0 14px;">Your Growth Timeline:</h5>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:18px;background:#FEF2F2;padding:16px;border-radius:8px;border-left:4px solid #DC2626;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:0.04em;">Now<br/><span style="font-size:8px;opacity:0.8">(0–30 Days)</span></div><div style="font-size:12.5px;color:#7F1D1D;line-height:1.55;font-weight:600;">${d.now || d.acts[0]}</div></div>
+        <div style="display:flex;gap:18px;background:#FFFBEB;padding:16px;border-radius:8px;border-left:4px solid #D97706;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;letter-spacing:0.04em;">Soon<br/><span style="font-size:8px;opacity:0.8">(30–90 Days)</span></div><div style="font-size:12.5px;color:#92400E;line-height:1.55;font-weight:600;">${d.soon || d.acts[1]}</div></div>
+        <div style="display:flex;gap:18px;background:#F0FDF4;padding:16px;border-radius:8px;border-left:4px solid #16A34A;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:0.04em;">Future<br/><span style="font-size:8px;opacity:0.8">(90–180 Days)</span></div><div style="font-size:12.5px;color:#166534;line-height:1.55;font-weight:600;">${d.fut}</div></div>
+      </div>
+    </div>
+  `));
+}
+
+    // Resources & Carnelian Programmes
+
+const resCard = r => `<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#111827;">${r.title}</div><div style="font-size:10px;color:#6B7280;margin-bottom:4px;">${r.author}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${r.why}</div></div>`;
+
+const resourceChunks = chunk(resources, 3);
+for (let ci = 0; ci < resourceChunks.length; ci++) {
+  const heading = ci === 0 ? `<h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:16px;">Your Development Toolkit</h3>` : `<div class="mono" style="font-size:9px;color:#9CA3AF;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Development Toolkit (cont.)</div>`;
+  await addPageFromHTML(wrap(`
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+      ${heading}
+      ${resourceChunks[ci].map(resCard).join('')}
+    </div>
+  `));
+}
+
+const programsHTML = programs.map(p=>`<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#B01C24;">${p.name}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${p.desc}</div></div>`).join('');
+
+await addPageFromHTML(wrap(`
+  <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+    <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:16px;">Recommended Carnelian Programmes</h3>
+    ${programsHTML}
+  </div>
+`));
+
+// If-Then Relapse Protocols
+const relapseHTML = relapse.map(p=>`<div style="margin-bottom:12px;padding:14px;background:#F9FAFB;border-radius:8px;border-left:4px solid #B01C24;"><div style="font-size:11px;font-weight:800;color:#B01C24;margin-bottom:6px;">IF: ${p.trigger}</div><div style="font-size:11.5px;color:#374151;line-height:1.6;"><strong>THEN:</strong> ${p.response}</div></div>`).join('');
+
+await addPageFromHTML(wrap(`
+  <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
+    <h3 class="serif" style="font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:8px;">Your If-Then Protocol</h3>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:18px;line-height:1.6;">Relapse risk is highest in the first 30 days. These are decision frameworks for situations you will encounter.</p>
+    ${relapseHTML}
+  </div>
+`));
+
+    // Priority Action Matrix (4-Box Layout)
+    const actNowList = devAreas.filter(d=>d.v<45).map(d=>`<li style="margin-bottom:4px;">${d.dim}</li>`).join('') || '<li>No critical gaps — focus on elevation</li>';
+    const buildSoonList = devAreas.filter(d=>d.v>=45&&d.v<60).map(d=>`<li style="margin-bottom:4px;">${d.dim}</li>`).join('') || '<li>No short-term gaps identified</li>';
+    const sustainList = allDims.filter(d=>d.v>=75).map(d=>`<li style="margin-bottom:4px;">${d.l}</li>`).join('') || '<li>Continue balanced development</li>';
+    const monitorList = allDims.filter(d=>d.v>=60&&d.v<75).map(d=>`<li style="margin-bottom:4px;">${d.l}</li>`).join('') || '<li>Review all dimensions at 6-month CORE retake</li>';
+
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Priority Action Matrix</h3>
+        <p style="color:#4B5563; font-size:13px; line-height:1.7; margin-bottom:12px; font-weight:500;">Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
+        <div style="font-size:11.5px; color:#6B7280; margin-bottom:24px; padding:10px 14px; background:#F9FAFB; border-radius:6px; line-height:1.6; font-weight:500;">
+          <strong style="color:#4B5563;">Where these come from:</strong> This matrix sorts the individual dimensions that make up your composites by urgency, so you know exactly which specific behaviour to focus on.
+        </div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div style="background:#FEF2F2; border:1px solid rgba(239,68,68,0.4); border-radius:10px; padding:20px;">
+            <div style="font-size:13px; font-weight:800; color:#DC2626; margin-bottom:12px;">🔴 Act Now (0–30 Days)</div>
+            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${actNowList}</ul>
+          </div>
+          <div style="background:#FFFBEB; border:1px solid rgba(245,158,11,0.4); border-radius:10px; padding:20px;">
+            <div style="font-size:13px; font-weight:800; color:#D97706; margin-bottom:12px;">🟡 Build Soon (30–90 Days)</div>
+            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${buildSoonList}</ul>
+          </div>
+          <div style="background:#F0FDF4; border:1px solid rgba(34,197,94,0.4); border-radius:10px; padding:20px;">
+            <div style="font-size:13px; font-weight:800; color:#16A34A; margin-bottom:12px;">🟢 Sustain & Expand</div>
+            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${sustainList}</ul>
+          </div>
+          <div style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:10px; padding:20px;">
+            <div style="font-size:13px; font-weight:800; color:#6B7280; margin-bottom:12px;">🔵 Monitor Progress</div>
+            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${monitorList}</ul>
+          </div>
+        </div>
+      </div>
+    `));
+
+    // Close Note
+    await addPageFromHTML(wrap(`
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;margin-bottom:24px;">
+        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">A Note to Close</h3>
+        <p style="color:#374151; font-size:13px; line-height:1.8; margin-bottom:24px; font-weight:500;">"This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that."</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #E5E7EB; padding-top:20px;">
+          <div class="mono" style="font-size:10px; color:#6B7280; font-weight:600;">CORE · ${docId} · Carnelian Pvt Ltd · ${date}</div>
+          <div style="font-size:12px; color:#16A34A; font-weight:700;">Questions? hello@carnelianco.com</div>
+        </div>
       </div>
     `));
 
     // CTA
     await addPageFromHTML(wrap(`
       <div style="background:#1A1A1A;border-radius:12px;padding:56px 48px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;">🤝</div>
-  <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
-  <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
-  <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">
-    <a href="mailto:hello@carnelianco.com" style="color:#fff;text-decoration:none;">Reach out at hello@carnelianco.com</a>
-  </div>
-  <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
-</div>
+        <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border:2px solid #B8912E;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px;font-weight:800;color:#B8912E;">→</div>
+        <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
+        <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
+        <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">
+          <a href="mailto:hello@carnelianco.com" style="color:#fff;text-decoration:none;">Reach out at hello@carnelianco.com</a>
+        </div>
+        <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
+      </div>
     `));
-
+    
     pdf.deletePage(1);
     pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
   };
@@ -3016,7 +3159,7 @@ const buildHabits = (content, dim, profile, R) => {
       {isExpanded && h.how && (
         <div style={{margin:'0 16px 14px 52px', padding:'12px 14px', background:T.bg1, borderRadius:'6px', borderLeft:`3px solid ${sCol}`}}>
           <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>How to do this</div>
-          <div style={{fontSize:'12.5px', color:T.t1, lineHeight:'1.75', fontWeight:'500'}}>{h.how}</div>
+          <div style={{fontSize:'12.5px', color:T.t1, lineHeight:'1.75', fontWeight:'500'}} dangerouslySetInnerHTML={{__html: h.how}} />
         </div>
       )}
     </div>
@@ -3161,6 +3304,7 @@ const buildHabits = (content, dim, profile, R) => {
           </div>
 
           <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
+            
             <button onClick={downloadPDF} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>⬇ Download Action Plan (PDF)</button>
           </div>
 

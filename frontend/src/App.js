@@ -1917,23 +1917,23 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               </div>
             </div>
             
-            <svg viewBox="0 0 500 120" style={{width:'100%',overflow:'visible',marginBottom:'8px'}}>
-              <polygon points="250,105 232,117 268,117" fill={T.b2}/>
-              <rect x="225" y="115" width="50" height="5" rx="2.5" fill={T.b2}/>
-              <g style={{transformOrigin:'250px 105px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
-                <rect x="60" y="101" width="380" height="8" rx="4" fill={T.t0}/>
+            <svg viewBox="0 0 500 180" style={{width:'100%',overflow:'visible',marginBottom:'16px'}}>
+              <polygon points="250,125 232,137 268,137" fill={T.b2}/>
+              <rect x="225" y="135" width="50" height="5" rx="2.5" fill={T.b2}/>
+              <g style={{transformOrigin:'250px 125px',transform:`rotate(${tilt}deg)`,transition:'transform 0.4s ease'}}>
+                <rect x="60" y="121" width="380" height="8" rx="4" fill={T.t0}/>
                 
                 {/* LEFT PAD & TEXT - BLUE */}
-                <rect x="52" y="93" width="48" height="8" rx="2" fill="#3B82F6"/>
-                <text x="76" y="82" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#3B82F6" fontWeight="800">{sc.lLabel}</text>
+                <rect x="52" y="113" width="48" height="8" rx="2" fill="#3B82F6"/>
+                <text x="76" y="102" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#3B82F6" fontWeight="800">{sc.lLabel}</text>
                 
                 {/* RIGHT PAD & TEXT - PURPLE */}
-                <rect x="400" y="93" width="48" height="8" rx="2" fill="#8B5CF6"/>
-                <text x="424" y="82" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#8B5CF6" fontWeight="800">{sc.rLabel}</text>
+                <rect x="400" y="113" width="48" height="8" rx="2" fill="#8B5CF6"/>
+                <text x="424" y="102" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#8B5CF6" fontWeight="800">{sc.rLabel}</text>
               </g>
             </svg>
             
-            <div style={{padding:'0 4px',marginBottom:'24px'}}>
+            <div style={{padding:'0 4px',marginBottom:'36px'}}>
               <input type="range" min="0" max="100" value={ssVals[ssStep]} onChange={e=>updateSeesaw(e.target.value)} style={{width:'100%',accentColor:T.gold,cursor:'pointer'}} />
             </div>            
             
@@ -2841,7 +2841,7 @@ for (const d of devAreas) {
     await addPageFromHTML(wrap(`
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;margin-bottom:24px;">
         <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">A Note to Close</h3>
-        <p style="color:#374151; font-size:13px; line-height:1.8; margin-bottom:24px; font-weight:500;">"This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that."</p>
+        <p style="color:#374151; font-size:13px; line-height:1.8; margin-bottom:24px; font-weight:500;">This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that."</p>
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #E5E7EB; padding-top:20px;">
           <div class="mono" style="font-size:10px; color:#6B7280; font-weight:600;">CORE · ${docId} · Carnelian Pvt Ltd · ${date}</div>
           <div style="font-size:12px; color:#16A34A; font-weight:700;">Questions? hello@carnelianco.com</div>

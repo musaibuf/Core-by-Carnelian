@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Bolt, WorkspacePremium, AccountBalance, Lightbulb,
+  Balance, Public, Groups, RocketLaunch,
+  Diversity3, Shield, AltRoute, MenuBook, TrendingUp
+} from '@mui/icons-material';
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────
 const darkTheme = {
@@ -1742,7 +1747,162 @@ const REPORT_TABS = [
   { id:'player',  label:'🎮 Player Report',          sub:'Gamified' },
   { id:'team',    label:'👥 Team Aggregate',         sub:'Batch-Level' },
   { id:'comp',    label:'🧩 Team Composition',       sub:'HR Strategy' },
+  { id:'persona', label:'📸 Persona Card',           sub:'Shareable' },
 ];
+
+// ─── PERSONA CARD ─────────────────────────────────────────────
+const PersonaCard = ({ candidate, T }) => {
+  const rd      = candidate.report_data || {};
+  const S       = rd.scores   || {};
+  const profile = rd.profile  || {};
+  const date    = new Date(candidate.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  const allDims = [
+    { l:'Conscientiousness',    v:S.C },
+    { l:'Openness to Ideas',    v:S.O },
+    { l:'Social Confidence',    v:S.E },
+    { l:'Collaborative Spirit', v:S.A },
+    { l:'Emotional Resilience', v:S.ES },
+    { l:'Cultural Intelligence',v:S.CQavg },
+    { l:'Team Citizenship',     v:S.OCBavg },
+    { l:'Learning Agility',     v:S.LAavg },
+    { l:'Ethical Integrity',    v:S.EOavg },
+  ].filter(d => d.v != null).sort((a,b) => b.v - a.v);
+  const top3 = allDims.slice(0, 3);
+
+  const iconMap = {
+    'High-Capability, Under Strain':    <Bolt fontSize="inherit" />,
+    'Strategic Integrity Leader':       <WorkspacePremium fontSize="inherit" />,
+    'Institutional Anchor':             <AccountBalance fontSize="inherit" />,
+    'Adaptive Innovator':               <Lightbulb fontSize="inherit" />,
+    'Ethics-Driven Executor':           <Balance fontSize="inherit" />,
+    'Cross-Cultural Bridge':            <Public fontSize="inherit" />,
+    'Collaborative Team Leader':        <Groups fontSize="inherit" />,
+    'Visionary Sprinter':               <RocketLaunch fontSize="inherit" />,
+    'Eager Cultural Bridge-Builder':    <Diversity3 fontSize="inherit" />,
+    'Generous Under Pressure':          <Shield fontSize="inherit" />,
+    'Strategic Pivoter':                <AltRoute fontSize="inherit" />,
+    'Learning Champion':                <MenuBook fontSize="inherit" />,
+    'Emerging Professional':            <TrendingUp fontSize="inherit" />,
+  };
+  const archIcon = iconMap[profile.name || candidate.profile_name] || <WorkspacePremium fontSize="inherit" />;
+  const cardId = `dash-persona-${candidate.doc_id}`;
+
+  const downloadPersonaPNG = async () => {
+    const loadScript = (src) => new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.body.appendChild(s);
+    });
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    const el = document.getElementById(cardId);
+    if (!el) return;
+    const orig = el.style.transform;
+    el.style.transform = 'none';
+    const canvas = await window.html2canvas(el, { scale:3, useCORS:true, backgroundColor:T.bg0 });
+    el.style.transform = orig;
+    const link = document.createElement('a');
+    link.download = `${candidate.name?.replace(/\s+/g,'_') || 'CORE'}_Persona.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+      <div style={{ textAlign:'center', marginBottom:'24px' }}>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>
+          {candidate.name} · Persona Card
+        </div>
+        <div style={{ fontSize:'13px', color:T.t2, fontWeight:'500' }}>
+          Download the PNG to share on social media.
+        </div>
+      </div>
+
+      {/* Preview wrapper */}
+      <div style={{ width:'100%', maxWidth:'480px', background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'20px', marginBottom:'8px' }}>
+        {/* Capture target — rendered at full 1080×1350, scaled down for preview */}
+        <div id={cardId} style={{
+          width:'1080px', height:'1350px',
+          background:T.bg0, position:'relative', overflow:'hidden',
+          display:'flex', flexDirection:'column', boxSizing:'border-box',
+          transform:'scale(0.41)', transformOrigin:'top left', marginBottom:'-796px',
+        }}>
+          {/* Glows */}
+          <div style={{position:'absolute',top:'-10%',right:'-10%',width:'700px',height:'700px',borderRadius:'50%',background:`radial-gradient(circle,${T.cGlow} 0%,transparent 65%)`,pointerEvents:'none'}} />
+          <div style={{position:'absolute',bottom:'5%',left:'-10%',width:'500px',height:'500px',borderRadius:'50%',background:`radial-gradient(circle,${T.goldP} 0%,transparent 65%)`,pointerEvents:'none'}} />
+
+          {/* Top bar */}
+          <div style={{height:'6px',background:`linear-gradient(90deg,${T.c},${T.gold},transparent)`,flexShrink:0,position:'relative',zIndex:2}} />
+
+          {/* Header */}
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'44px 72px 0',flexShrink:0,position:'relative',zIndex:2}}>
+            <img src="/logo.svg" alt="CORE" style={{height:'72px',objectFit:'contain'}} />
+            <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.gold,fontSize:'28px',fontWeight:'800',letterSpacing:'0.18em'}}>CORE ASSESSMENT</div>
+          </div>
+
+          {/* Main */}
+          <div style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',textAlign:'center',padding:'40px 72px 0',position:'relative',zIndex:2}}>
+            <div style={{width:'148px',height:'148px',borderRadius:'50%',border:`2px solid ${T.gold}50`,background:T.goldP,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:'40px',color:T.gold,fontSize:'72px',boxShadow:`0 0 48px ${T.goldP}`}}>
+              {archIcon}
+            </div>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.t3,fontSize:'22px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'10px',textTransform:'uppercase'}}>YOUR CORE PERSONA</div>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.t0,fontSize:'40px',fontWeight:'800',letterSpacing:'0.08em',marginBottom:'26px',textTransform:'uppercase'}}>{candidate.name}</div>
+            <div style={{width:'64px',height:'5px',background:`linear-gradient(90deg,${T.c},${T.gold})`,borderRadius:'3px',marginBottom:'30px'}} />
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'90px',fontWeight:'700',color:T.gold,lineHeight:'1.05',margin:'0 0 28px',letterSpacing:'-0.02em',maxWidth:'920px'}}>
+              {profile.name || candidate.profile_name}
+            </h1>
+            <p style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'30px',color:T.t2,lineHeight:'1.65',maxWidth:'880px',fontWeight:'600'}}>
+              {profile.desc}
+            </p>
+          </div>
+
+          {/* Superpowers */}
+          <div style={{background:T.bg2,borderTop:`1px solid ${T.b2}`,padding:'44px 72px 40px',flexShrink:0,position:'relative',zIndex:2}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.c,fontSize:'20px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'32px'}}>CORE SUPERPOWERS</div>
+            <div style={{display:'flex',flexDirection:'column',gap:'22px'}}>
+              {top3.map((s,i) => (
+                <div key={i}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:'10px'}}>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'28px',color:T.t0,fontWeight:'700'}}>{s.l}</span>
+                    <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'28px',color:T.gold,fontWeight:'800'}}>{s.v}/100</span>
+                  </div>
+                  <div style={{height:'10px',background:T.b1,borderRadius:'20px',overflow:'hidden'}}>
+                    <div style={{width:`${s.v}%`,height:'100%',background:`linear-gradient(90deg,${T.c},${T.gold})`,borderRadius:'20px'}} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'26px 72px',borderTop:`1px solid ${T.b2}`,flexShrink:0,position:'relative',zIndex:2,background:T.bg1}}>
+            <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'22px',color:T.t3,fontWeight:'600'}}>
+              Discover yours at <strong style={{color:T.t0}}>CORE by Carnelian</strong>
+            </div>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'20px',color:T.t3}}>{date}</div>
+          </div>
+
+          {/* Bottom bar */}
+          <div style={{height:'5px',background:`linear-gradient(90deg,transparent,${T.c},${T.gold},transparent)`,flexShrink:0,position:'relative',zIndex:2}} />
+        </div>
+      </div>
+
+      <button onClick={downloadPersonaPNG} style={{
+        marginTop:'28px', padding:'13px 40px', borderRadius:'100px',
+        background:T.c, color:'#fff', border:'none', cursor:'pointer',
+        fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800',
+        letterSpacing:'0.06em', textTransform:'uppercase',
+        boxShadow:`0 10px 28px ${T.cGlow}`, transition:'all 0.2s',
+      }}
+      onMouseOver={e=>{ e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.background=T.cDark; }}
+      onMouseOut={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.background=T.c; }}>
+        ⬇ Download Persona Card
+      </button>
+      <p style={{marginTop:'10px', fontSize:'12px', color:T.t3, fontWeight:'500'}}>Share on LinkedIn, Instagram, or WhatsApp.</p>
+    </div>
+  );
+};
 
 const CandidateModal = ({ candidate, onClose, T, allData }) => {
   const [reportTab, setReportTab] = useState('tech');
@@ -1815,8 +1975,8 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
           {reportTab === 'action' && <ActionPlanReport candidate={candidate} T={T} />}
           {reportTab === 'player' && <PlayerReport     candidate={candidate} T={T} />}
           {reportTab === 'team'   && <TeamReport       candidate={candidate} allData={allData} T={T} />}
-          {reportTab === 'comp'   && <TeamCompositionReport candidate={candidate} allData={allData} T={T} />}
-        </div>
+{reportTab === 'comp'   && <TeamCompositionReport candidate={candidate} allData={allData} T={T} />}
+          {reportTab === 'persona' && <PersonaCard candidate={candidate} T={T} />}        </div>
       </div>
     </div>
   );

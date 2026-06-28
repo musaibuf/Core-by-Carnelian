@@ -720,7 +720,7 @@ const StatsStrip = () => {
   const stats = [
     {n:'63',l:'Diagnostic Items'},{n:'14',l:'Dimensions Scored'},
     {n:'4', l:'Validity Indices'},{n:'10',l:'Lie-Detection Items'},
-    {n:'12',l:'Industry Contexts'},{n:'5', l:'Distinct Reports'},
+    {n:'12',l:'Industry Contexts'},{n:'6', l:'Distinct Reports'},
   ];
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -908,19 +908,23 @@ const HomePage = ({setTab}) => {
           </Reveal>
           <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'12px'}}>
             {[
-              {n:'1', t:'Personality at Work',   d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit.', c:T.c},
-              {n:'2', t:'Cultural Intelligence',  d:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:T.gold},
-              {n:'3', t:'Workplace Initiative',   d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals what sustains an institution.', c:T.gn},
-              {n:'4', t:'Learning Agility',       d:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:T.am},
-              {n:'5', t:'Integrity & Ethics',     d:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#8B5CF6'},
-            ].map((m,i) => (
-              <Reveal key={i} delay={i * 0.08}>
-                <div style={{
-                  background:T.bg1, border:`1px solid ${T.b2}`,
-                  borderTop:`3px solid ${m.c}`, borderRadius:'10px',
-                  padding:'20px', height:'100%', cursor:'default',
-                  transition:'transform .28s ease, box-shadow .28s ease',
-                }}
+  {n:'1', t:'Personality at Work',   d:'Big Five OCEAN framework. Predicts job performance, leadership readiness, and team fit.', c:'#EC4899'},
+  {n:'2', t:'Cultural Intelligence',  d:"CQ Knowledge, Motivation, and Behaviour. Critical for Pakistan's diverse provincial, institutional, and international contexts.", c:'#06B6D4'},
+  {n:'3', t:'Workplace Initiative',   d:'Five OCB dimensions: Altruism, Civic Virtue, Sportsmanship, Courtesy, and Conscientiousness. Reveals what sustains an institution.', c:'#F97316'},
+  {n:'4', t:'Learning Agility',       d:'Mental, People, Change, and Results Agility. The strongest single predictor of leadership potential beyond current performance.', c:'#3B82F6'},
+  {n:'5', t:'Integrity & Ethics',     d:'Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity. The compliance screen every Pakistani employer needs.', c:'#7C3AED'},
+].map((m,i) => (
+  <Reveal key={i} delay={i * 0.08}>
+    <div style={{
+      background:T.bg1,
+      borderTop:`3px solid ${m.c}`,
+      borderLeft:`1px solid ${T.b2}`,
+      borderRight:`1px solid ${T.b2}`,
+      borderBottom:`1px solid ${T.b2}`,
+      borderRadius:'10px',
+      padding:'20px', height:'100%', cursor:'default',
+      transition:'transform .28s ease, box-shadow .28s ease',
+    }}
                 onMouseOver={e => { e.currentTarget.style.transform='translateY(-5px)'; e.currentTarget.style.boxShadow=`0 10px 30px rgba(0,0,0,.5), 0 0 0 1px ${m.c}40`; }}
                 onMouseOut={e  => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
                   <div className="mono" style={{fontSize:'10px', fontWeight:'700', color:m.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'8px'}}>Pillar {m.n}</div>
@@ -1077,22 +1081,24 @@ const ReportsSlideshow = () => {
   const INTERVAL = 15000;
 
   const reports = [
-    { i:'📊', c:'#60A5FA', t:'Technical Report',       s:'HR & Leadership',
-      d:'Full psychometric breakdown. 7 composite indices, validity analysis, cross-dimensional risk patterns, role suitability matrix with interview probes, industry lens, completion time tracking.',
-      tags:['7 Composite Indices','Risk Patterns','Interview Probes','Industry Lens'] },
+    { i:'📸', c:'#F97316', t:'My Persona Card',          s:'Shareable',
+      d:'A high-resolution social card generated from your CORE results. Features your professional persona, dominant dimensions, and top superpowers. Download as PNG and share on LinkedIn, Instagram, or WhatsApp.',
+      tags:['Shareable PNG','Persona Identity','Top Dimensions','Social-Ready'] },
     { i:'🧭', c:'#4ADE80', t:'Candidate Action Plan',  s:'Individual',
       d:'Personal development roadmap. Visual score dashboard, numbered 10-step action plans per gap, profile-matched books, TED talks, YouTube resources, peer-reviewed research.',
       tags:['10-Step Plans','Curated Resources','Score Dashboard','Research-Backed'] },
+    { i:'📊', c:'#60A5FA', t:'Technical Report',       s:'HR & Leadership',
+      d:'Full psychometric breakdown. 7 composite indices, validity analysis, cross-dimensional risk patterns, role suitability matrix with interview probes, industry lens, completion time tracking.',
+      tags:['7 Composite Indices','Risk Patterns','Interview Probes','Industry Lens'] },
+    { i:'🎮', c:'#E879F9', t:'Player Report',           s:'Gamified',
+      d:'Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.',
+      tags:['10 Levels','Achievement Badges','Quest Objectives','Power-Up Armory'] },
     { i:'👥', c:'#FBBF24', t:'Team Aggregate Report',  s:'Batch-level',
       d:'Appears automatically when you run 2+ assessments in a batch. Team dimension averages, composite benchmarks, archetype distribution, collective risk pattern frequency, validity summary.',
       tags:['Team Averages','Archetype Distribution','Risk Frequency','Auto-Generated'] },
       { i:'🏢', c:'#6366F1', t:'Team Composition Report', s:'HR Strategy',
   d:'Strategic workforce mapping. Highlights team role balance, skill distribution, leadership pipeline strength, and succession readiness. Identifies gaps in composition that affect long-term organisational resilience and provides recommendations for HR strategy.',
   tags:['Role Balance','Skill Distribution','Leadership Pipeline','Succession Readiness'] },
-    { i:'🎮', c:'#E879F9', t:'Player Report',           s:'Gamified',
-      d:'Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.',
-      tags:['10 Levels','Achievement Badges','Quest Objectives','Power-Up Armory'] },
-    
   ];
 
   const goTo = i => {
@@ -1126,13 +1132,13 @@ const ReportsSlideshow = () => {
         flexWrap:'wrap', gap:'16px',
       }}>
         <div>
-          <Pill label="Five Reports · One Assessment" color={T.c} />
+          <Pill label="Six Reports · One Assessment" color={T.c} />
           <h2 style={{
             fontFamily:"'Playfair Display',serif",
             fontSize:'clamp(1.6rem,3vw,2.2rem)', fontWeight:'700',
             color:T.t0, marginTop:'16px', marginBottom:'10px', letterSpacing:'-0.02em',
           }}>
-            Every assessment generates five<br/>
+            Every assessment generates six<br/>
             <em style={{color:T.gold, fontStyle:'italic'}}>purpose-built reports</em>
           </h2>
           <p style={{fontSize:'13px', color:T.t2, maxWidth:'560px', lineHeight:1.7, fontWeight:'500'}}>

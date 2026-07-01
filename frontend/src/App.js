@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bolt, WorkspacePremium, AccountBalance, Lightbulb,
   Balance, Public, Groups, RocketLaunch,
@@ -717,11 +718,131 @@ const IndustryMarquee = () => {
 const StatsStrip = () => {
   const ref = useRef(null);
   const [vis, setVis] = useState(false);
+  const [activeStat, setActiveStat] = useState(null);
+
   const stats = [
-    {n:'63',l:'Diagnostic Items'},{n:'14',l:'Dimensions Scored'},
-    {n:'4', l:'Validity Indices'},{n:'10',l:'Lie-Detection Items'},
-    {n:'12',l:'Industry Contexts'},{n:'6', l:'Distinct Reports'},
+    {
+      n:'63', l:'Diagnostic Items',
+      tagline:'Every one of the 63 statements is built to capture a specific, observable behavioural signal, not a vague personality impression.',
+      sections:[
+        { heading:'Six focus areas', points:[
+          'Work Style and Drive: focused on conscientiousness, delivery and creative problem solving',
+          'Working with Others: focused on social confidence, empathy and team support behaviour',
+          'Navigating Diversity: focused on cultural knowledge, motivation and behavioural flexibility',
+          'Thinking and Adapting: focused on ambiguity tolerance, self reflection and systems thinking',
+          'Professional Integrity: focused on rule compliance, transparency and ethical reasoning',
+          'Workplace Citizenship: focused on civic virtue, sportsmanship and conscientious effort',
+        ]},
+        { heading:'Built for accuracy, not just length', points:[
+          'Each dimension is measured using both forward worded and reverse worded statements to catch contradictory answers',
+          'Statements are written in plain, concrete workplace language rather than abstract personality jargon',
+          'Long enough to triangulate a trait from several angles, short enough to complete in about 20 minutes',
+          'Ten of the 63 items are hidden validity checks, woven in so they cannot be spotted or gamed',
+        ]},
+      ]
+    },
+    {
+      n:'14', l:'Dimensions Scored',
+      tagline:'Your raw answers are converted into 14 separate, individually interpretable scores, not a single overall number.',
+      sections:[
+        { heading:'The five pillars behind the scores', points:[
+          'Personality at Work: the OCEAN framework, covering openness, conscientiousness, extraversion, agreeableness and emotional stability',
+          "Cultural Intelligence: knowledge, motivation and behaviour, measuring how you adapt across Pakistan's diverse professional landscape",
+          'Workplace Initiative: the OCB dimensions, covering altruism, civic virtue, sportsmanship, courtesy and institutional conscientiousness',
+          'Learning Agility: mental, people, change and results agility, the strongest predictor of leadership potential',
+          'Integrity and Ethics: rule compliance, transparency, ethical reasoning and authentic integrity',
+        ]},
+        { heading:'How a score is calculated', points:[
+          'Each dimension is built from several statements, never a single question',
+          'Reverse worded items are automatically re-scored before averaging so they cannot distort the result',
+          'Final scores are normalised to a 0 to 100 scale so every dimension can be compared on the same footing',
+          'Scores also roll up into 5 group averages and 7 weighted composite indices for HR level decision making',
+        ]},
+      ]
+    },
+    {
+      n:'4', l:'Validity Indices',
+      tagline:'Four independent checks run quietly in the background of every assessment to flag results that should not be trusted.',
+      sections:[
+        { heading:'The four checks', points:[
+          'L-Scale: ten impossible to honestly endorse statements that catch impression management',
+          'Acquiescence Bias: tracks how often Strongly Agree is selected, flagging a pattern of agreeing rather than genuinely answering',
+          'Extreme Responses: tracks how often the two most extreme options are selected, since high rates make scores statistically meaningless',
+          'Consistency Index: compares answers to forward and reverse worded versions of the same dimension and flags contradictions',
+        ]},
+        { heading:'Why it matters', points:[
+          'Candidates are never told which items are validity checks, so the checks cannot be consciously avoided',
+          'A red flag on any single index can downgrade the entire result to Invalid, regardless of how favourable the dimension scores look',
+          'The Validity Index appears only in the Technical Report, reserved for HR and never shown to the candidate',
+          'A red flagged result calls for a supervised retake before any hiring or promotion decision is made',
+        ]},
+      ]
+    },
+    {
+      n:'13', l:'Archetypes',
+      tagline:'Your combined dimension scores are matched against 13 defined professional archetypes, each with its own development pathway.',
+      sections:[
+        { heading:'The 13 archetypes', points:[
+          'Strategic Integrity Leader: high delivery drive, social presence, ethics and learning agility together',
+          'Institutional Anchor: conscientious, ethical and deeply invested in organisational citizenship',
+          'High-Capability, Under Strain: strong delivery or ethics paired with signs of reduced emotional stability',
+          'Adaptive Innovator: high curiosity, learning agility and cultural intelligence',
+          'Ethics-Driven Executor: reliable, principled and strong on compliance',
+          'Cross-Cultural Bridge: socially adept and effective across diverse regional and institutional contexts',
+          'Collaborative Team Leader: empathetic, cooperative and a strong driver of team cohesion',
+          'Learning Champion: a fast learner who thrives on intellectual challenge',
+          'Visionary Sprinter: high idea generation with lower structured delivery, best in short project bursts',
+          'Eager Cultural Bridge-Builder: strong motivation to engage across cultures, with a behavioural skills gap',
+          'Generous Under Pressure: exceptionally supportive of colleagues, with lower social assertiveness',
+          'Strategic Pivoter: strong at spotting when direction needs to change, weaker at follow through',
+          'Emerging Professional: a developing profile with clear strengths and specific, addressable growth areas',
+        ]},
+        { heading:'How an archetype is assigned', points:[
+          'Matched using specific score thresholds across multiple dimensions at once, never a single score in isolation',
+          'Organised into four tiers, from senior leadership ready to emerging, so HR can read seniority readiness at a glance',
+          'Two people with the same overall score can land on different archetypes depending on which dimensions drive that score',
+        ]},
+      ]
+    },
+    {
+      n:'12', l:'Industry Contexts',
+      tagline:"The same set of scores is interpreted differently depending on which of Pakistan's 12 major sectors you work in.",
+      sections:[
+        { heading:'The 12 sectors covered', points:[
+          'Banking and Financial Services', 'Insurance and Takaful', 'Government and Civil Service',
+          'FMCG and Consumer Goods', 'Telecommunications and Technology', 'Energy and Utilities',
+          'Healthcare and Pharmaceuticals', 'Manufacturing and Industrial', 'Development Sector and NGOs',
+          'Education and Academia', 'Real Estate and Construction', 'Retail and Distribution',
+        ]},
+        { heading:'What changes per industry', points:[
+          'Which dimensions are treated as highest stakes, for example Rule Compliance in Energy versus Cultural Intelligence in Development work',
+          'The specific high potential benchmark thresholds used to flag a candidate as ready for senior roles',
+          'A tailored risk note describing the real world consequence of a low score on the most critical dimension for that sector',
+          'The interview probe questions generated for any role rated Not Recommended',
+        ]},
+      ]
+    },
+    {
+      n:'6', l:'Distinct Reports',
+      tagline:'One completed assessment generates 6 separate reports, each written for a different reader and a different purpose.',
+      sections:[
+        { heading:'The six reports', points:[
+          'Persona Card: a shareable, high resolution social card with your archetype and top strengths, ready for LinkedIn or WhatsApp',
+          'Candidate Action Plan: a personal development roadmap with a 10 step plan for each priority area',
+          'Technical Report: the full psychometric breakdown for HR, including composite indices, validity analysis and role suitability',
+          'Player Report: a gamified version with levels, XP, badges and quests, designed to make development feel rewarding',
+          'Team Aggregate Report: generated automatically once 2 or more people complete the assessment under the same batch',
+          'Team Composition Report: a strategic HR view of role balance, skill distribution and hiring gaps across the team',
+        ]},
+        { heading:'Built for different audiences', points:[
+          'The Candidate Action Plan never contains HR risk language, since it belongs to the individual',
+          'The Technical Report is restricted by a configurable confidentiality level, from HR only to fully candidate visible',
+          'Team level reports only unlock once there is enough data in a batch to produce a meaningful comparison',
+        ]},
+      ]
+    },
   ];
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([e]) => { if(e.isIntersecting){ setVis(true); obs.disconnect(); } },
@@ -730,15 +851,28 @@ const StatsStrip = () => {
     if(ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
+
+  const renderPoint = (text) => {
+    const idx = text.indexOf(':');
+    if (idx === -1) return <span>{text}</span>;
+    return (
+      <>
+        <strong style={{color:T.t0, fontWeight:'800'}}>{text.slice(0, idx+1)}</strong>
+        <span>{text.slice(idx+1)}</span>
+      </>
+    );
+  };
+
   return (
+    <>
     <div ref={ref} className="grid-6-col" style={{
       display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:'1px',
       background:T.b2, border:`1px solid ${T.b2}`,
       borderRadius:'10px', overflow:'hidden', marginTop:'80px',
     }}>
       {stats.map((s,i) => (
-        <div key={i} style={{
-          background:T.bg1, textAlign:'center', padding:'28px 12px',
+        <div key={i} onClick={() => setActiveStat(s)} style={{
+          background:T.bg1, textAlign:'center', padding:'28px 12px', cursor:'pointer',
           opacity: vis ? 1 : 0,
           transform: vis ? 'translateY(0)' : 'translateY(24px)',
           transition:`opacity .65s ease ${i*.09}s, transform .65s cubic-bezier(.16,1,.3,1) ${i*.09}s, background .2s`,
@@ -753,6 +887,37 @@ const StatsStrip = () => {
         </div>
       ))}
     </div>
+
+    {activeStat && createPortal(
+      <div onClick={()=>setActiveStat(null)} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9999, overflowY:'auto', padding:'40px 20px', boxSizing:'border-box'}}>
+        <div onClick={e=>e.stopPropagation()} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'14px', maxWidth:'560px', width:'100%', margin:'0 auto', padding:'36px', position:'relative', boxShadow:'0 20px 50px rgba(0,0,0,0.5)', textAlign:'left', boxSizing:'border-box'}}>
+          <button onClick={()=>setActiveStat(null)} style={{position:'absolute', top:'18px', right:'18px', width:'32px', height:'32px', borderRadius:'8px', background:T.bg2, border:`1px solid ${T.b2}`, color:T.t2, fontSize:'18px', cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>×</button>
+
+          <div style={{display:'flex', alignItems:'baseline', gap:'14px', marginBottom:'14px', paddingRight:'40px'}}>
+            <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:1}}>{activeStat.n}</div>
+            <div className="mono" style={{fontSize:'11px', color:T.c, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700'}}>{activeStat.l}</div>
+          </div>
+
+          <p style={{fontSize:'13.5px', color:T.t1, lineHeight:'1.7', fontWeight:'600', marginBottom:'24px', paddingBottom:'20px', borderBottom:`1px solid ${T.b1}`, textAlign:'left'}}>{activeStat.tagline}</p>
+
+          {activeStat.sections.map((sec, si) => (
+            <div key={si} style={{marginBottom: si < activeStat.sections.length-1 ? '24px' : 0}}>
+              <div className="mono" style={{fontSize:'10px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'12px', textAlign:'left'}}>{sec.heading}</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'9px'}}>
+                {sec.points.map((p, pi) => (
+                  <div key={pi} style={{display:'flex', gap:'10px', fontSize:'13px', color:T.t1, lineHeight:'1.6', fontWeight:'500', textAlign:'left'}}>
+                    <span style={{color:T.c, fontWeight:'800', flexShrink:0, marginTop:'1px'}}>→</span>
+                    <span>{renderPoint(p)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
 

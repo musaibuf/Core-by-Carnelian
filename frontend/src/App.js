@@ -79,16 +79,16 @@ const Fonts = ({ mode }) => {
   const TT = mode === 'dark' ? darkTheme : lightTheme;
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
       @media print { footer, nav, .no-print { display: none !important; } body { background: #fff !important; color: #000 !important; } }
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-      body { font-family: 'Plus Jakarta Sans', sans-serif; background: ${TT.bg0}; color: ${TT.t0}; min-height: 100vh; overflow-x: hidden; transition: background 0.3s ease, color 0.3s ease; font-weight: 500; }
+      body { font-family: 'Public Sans', sans-serif; background: ${TT.bg0}; color: ${TT.t0}; min-height: 100vh; overflow-x: hidden; transition: background 0.3s ease, color 0.3s ease; font-weight: 500; }
       body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(${TT.gridColor} 1px, transparent 1px), linear-gradient(90deg, ${TT.gridColor} 1px, transparent 1px); background-size: ${TT.gridSize} ${TT.gridSize}; pointer-events: none; z-index: 0; }
       body::after { content: ''; position: fixed; inset: 0; background-image: ${mode === 'dark' ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E")` : 'none'}; pointer-events: none; z-index: 0; opacity: ${mode === 'dark' ? '0.4' : '0'}; }
       nav, main, section, div:not(body > div) { position: relative; z-index: 1; }
-      .serif { font-family: 'Playfair Display', serif; font-weight: 600; }
-      .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+      .serif { font-family: 'Crimson Pro', serif; font-weight: 600; }
+      .mono { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: ${TT.bg0}; }
       ::-webkit-scrollbar-thumb { background: ${TT.b2}; border-radius: 2px; }
@@ -545,7 +545,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
               {navItems.map(t=>(
                 <button key={t.id} onClick={()=>setTab(t.id)} style={{
                   padding:'8px 14px', borderRadius:'6px', border:'none', cursor:'pointer',
-                  fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'12px', fontWeight:'700',
+                  fontFamily:"'Public Sans',sans-serif", fontSize:'12px', fontWeight:'700',
                   whiteSpace:'nowrap',
                   background: tab===t.id ? `${T.gold}20` : 'transparent',
                   color: tab===t.id ? T.gold : T.t2,
@@ -560,7 +560,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
               display:'flex', alignItems:'center', gap:'6px',
               padding:'8px 14px', borderRadius:'6px',
               border:`1px solid ${T.b2}`, background: T.bg2, color: T.t0,
-              cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif",
+              cursor:'pointer', fontFamily:"'Public Sans',sans-serif",
               fontSize:'12px', fontWeight:'700', whiteSpace:'nowrap', transition:'all 0.2s',
             }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.color=T.c;}}
@@ -611,7 +611,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
             {navItems.map(t=>(
               <button key={t.id} onClick={()=>{setTab(t.id); setMenuOpen(false);}} style={{
                 padding:'14px 16px', borderRadius:'8px', border:'none', cursor:'pointer',
-                fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'700',
+                fontFamily:"'Public Sans',sans-serif", fontSize:'14px', fontWeight:'700',
                 textAlign:'left', transition:'all 0.18s',
                 background: tab===t.id ? `${T.gold}20` : 'transparent',
                 color: tab===t.id ? T.gold : T.t1,
@@ -880,7 +880,7 @@ const StatsStrip = () => {
         onMouseOver={e => e.currentTarget.style.background = T.bg2}
         onMouseOut={e  => e.currentTarget.style.background = T.bg1}
         >
-          <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:'1'}}>
+          <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:'1'}}>
             {vis ? <AnimatedNumber value={s.n} /> : '0'}
           </div>
           <div className="mono" style={{fontSize:'9px', color:T.t2, textTransform:'uppercase', letterSpacing:'0.12em', marginTop:'8px', fontWeight:'600'}}>{s.l}</div>
@@ -894,7 +894,7 @@ const StatsStrip = () => {
           <button onClick={()=>setActiveStat(null)} style={{position:'absolute', top:'18px', right:'18px', width:'32px', height:'32px', borderRadius:'8px', background:T.bg2, border:`1px solid ${T.b2}`, color:T.t2, fontSize:'18px', cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>×</button>
 
           <div style={{display:'flex', alignItems:'baseline', gap:'14px', marginBottom:'14px', paddingRight:'40px'}}>
-            <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:1}}>{activeStat.n}</div>
+            <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'2.6rem', color:T.gold, fontWeight:'700', lineHeight:1}}>{activeStat.n}</div>
             <div className="mono" style={{fontSize:'11px', color:T.c, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700'}}>{activeStat.l}</div>
           </div>
 
@@ -989,7 +989,7 @@ const HomePage = ({setTab}) => {
             {/* Headline — second line uses typewriter */}
             <div className="anim-fadeUp" style={{animationDelay:'0.12s'}}>
               <h1 style={{
-                fontFamily:"'Playfair Display',serif", fontWeight:'700',
+                fontFamily:"'Crimson Pro',serif", fontWeight:'700',
                 fontSize:'clamp(2.8rem,6vw,5rem)', color:T.t0,
                 lineHeight:'1.05', margin:'0 0 16px', letterSpacing:'-0.03em',
               }}>
@@ -1020,7 +1020,7 @@ const HomePage = ({setTab}) => {
             <div className="anim-fadeUp" style={{animationDelay:'0.42s', display:'flex', justifyContent:'center', marginTop:'10px'}}>
               <button onClick={()=>setTab('assess')} style={{
                 padding:'18px 48px', borderRadius:'100px', border:'none', cursor:'pointer',
-                background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif",
+                background:T.c, color:'#fff', fontFamily:"'Public Sans',sans-serif",
                 fontSize:'15px', fontWeight:'800', letterSpacing:'0.06em', textTransform:'uppercase',
                 animation:'btnPulse 2s infinite',
                 transition:'all 0.3s ease',
@@ -1047,7 +1047,7 @@ const HomePage = ({setTab}) => {
           <div style={{marginBottom:'48px', textAlign:'center'}}>
             <Pill label="Platform Deep Dive" color={T.c} />
             <h2 style={{
-              fontFamily:"'Playfair Display',serif",
+              fontFamily:"'Crimson Pro',serif",
               fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700',
               margin:'16px 0 12px', color:T.t0, letterSpacing:'-0.02em',
             }}>
@@ -1065,7 +1065,7 @@ const HomePage = ({setTab}) => {
           <Reveal delay={0}>
             <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px'}}>
               <span style={{fontSize:'24px'}}>🧠</span>
-              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
+              <h3 style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.4rem', fontWeight:'700', color:T.t0}}>
                 Five Evidence‑Based Assessment Pillars, 63 Items Total
 
               </h3>
@@ -1104,7 +1104,7 @@ const HomePage = ({setTab}) => {
         {/* ── INDUSTRY MARQUEE ── */}
         <Reveal delay={0}>
           <div style={{marginBottom:'8px'}}>
-            <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'10px', textAlign:'center'}}>
+            <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'10px', textAlign:'center'}}>
               Context engine covers 12 Pakistani sectors — hover to pause
             </div>
             <IndustryMarquee />
@@ -1122,7 +1122,7 @@ const HomePage = ({setTab}) => {
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
               <Pill label="Strategic Value" color={T.c} />
               <h2 style={{
-                fontFamily: "'Playfair Display',serif",
+                fontFamily: "'Crimson Pro',serif",
                 fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: '700',
                 margin: '16px 0 12px', color: T.t0, letterSpacing: '-0.02em',
               }}>
@@ -1139,7 +1139,7 @@ const HomePage = ({setTab}) => {
             
             {/* For Organisations */}
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
+              <h3 style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
                 For Organisations
               </h3>
               <p className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'24px'}}>
@@ -1169,10 +1169,10 @@ const HomePage = ({setTab}) => {
 
                       <div style={{ overflow:'hidden', maxHeight: isActive ? '80px' : '0', opacity: isActive ? 1 : 0, transition:'max-height 0.32s ease, opacity 0.24s ease' }}>
                         <div style={{ background: T.b0, borderRadius:'7px', padding:'10px 12px', display:'flex', alignItems:'center', gap:'10px' }}>
-                          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color: col, flexShrink:0, lineHeight:1 }}>{u.stat}</div>
+                          <div style={{ fontFamily:"'Crimson Pro',serif", fontSize:'1.2rem', fontWeight:'700', color: col, flexShrink:0, lineHeight:1 }}>{u.stat}</div>
                           <div>
                             <div style={{fontSize:'10px', fontWeight:'700', color:T.t1, lineHeight:'1.3'}}>{u.statLabel}</div>
-                            <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, fontWeight:'600', marginTop:'2px'}}>{u.src}</div>
+                            <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize:'8px', color:T.t3, fontWeight:'600', marginTop:'2px'}}>{u.src}</div>
                           </div>
                         </div>
                       </div>
@@ -1186,7 +1186,7 @@ const HomePage = ({setTab}) => {
 
             {/* For Individuals */}
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'16px', padding:'40px'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
+              <h3 style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'6px'}}>
                 For Individuals
               </h3>
               <p className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'24px'}}>
@@ -1216,10 +1216,10 @@ const HomePage = ({setTab}) => {
 
                       <div style={{ overflow:'hidden', maxHeight: isActive ? '80px' : '0', opacity: isActive ? 1 : 0, transition:'max-height 0.32s ease, opacity 0.24s ease' }}>
                         <div style={{ background: T.b0, borderRadius:'7px', padding:'10px 12px', display:'flex', alignItems:'center', gap:'10px' }}>
-                          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color: col, flexShrink:0, lineHeight:1 }}>{u.stat}</div>
+                          <div style={{ fontFamily:"'Crimson Pro',serif", fontSize:'1.2rem', fontWeight:'700', color: col, flexShrink:0, lineHeight:1 }}>{u.stat}</div>
                           <div>
                             <div style={{fontSize:'10px', fontWeight:'700', color:T.t1, lineHeight:'1.3'}}>{u.statLabel}</div>
-                            <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, fontWeight:'600', marginTop:'2px'}}>{u.src}</div>
+                            <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize:'8px', color:T.t3, fontWeight:'600', marginTop:'2px'}}>{u.src}</div>
                           </div>
                         </div>
                       </div>
@@ -1299,7 +1299,7 @@ const ReportsSlideshow = () => {
         <div>
           <Pill label="Six Reports · One Assessment" color={T.c} />
           <h2 style={{
-            fontFamily:"'Playfair Display',serif",
+            fontFamily:"'Crimson Pro',serif",
             fontSize:'clamp(1.6rem,3vw,2.2rem)', fontWeight:'700',
             color:T.t0, marginTop:'16px', marginBottom:'10px', letterSpacing:'-0.02em',
           }}>
@@ -1384,7 +1384,7 @@ const ReportsSlideshow = () => {
           }}>
             <div style={{fontSize:'3.2rem', marginBottom:'18px', lineHeight:1}}>{r.i}</div>
             <h3 style={{
-              fontFamily:"'Playfair Display',serif", fontSize:'1.9rem',
+              fontFamily:"'Crimson Pro',serif", fontSize:'1.9rem',
               fontWeight:'700', color:r.c, marginBottom:'4px',
               textShadow:`0 0 30px ${r.c}55`,
             }}>{r.t}</h3>
@@ -1691,13 +1691,13 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
  const inp=(focused)=>({
     width:'100%', padding:'12px 16px', border:`1px solid ${focused?T.gold:T.b2}`, borderRadius:'6px',
-    fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
+    fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'600',
     background:T.bg3, color:T.t0, outline:'none', transition:'all 0.2s',
     boxShadow:focused?`0 0 0 3px ${T.goldP}`:'none',
   });
   const [focused,setFocused]=useState({});
-  const lbl={display:'block',fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.t2,marginBottom:'7px',fontFamily:"'JetBrains Mono',monospace"};
-  const selStyle={width:'100%',padding:'12px 16px',border:`1px solid ${T.b2}`,borderRadius:'6px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'600',background:T.bg3,color:T.t0,outline:'none',cursor:'pointer'};
+  const lbl={display:'block',fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.12em',color:T.t2,marginBottom:'7px',fontFamily:"'IBM Plex Mono',monospace"};
+  const selStyle={width:'100%',padding:'12px 16px',border:`1px solid ${T.b2}`,borderRadius:'6px',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'600',background:T.bg3,color:T.t0,outline:'none',cursor:'pointer'};
 
  // ── ASSESSMENT CONTEXT (Formerly Admin Setup) ──
   if(step==='admin') {
@@ -1705,18 +1705,18 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
       <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px', display:'flex', alignItems:'center', justifyContent:'center'}}>
         <div style={{maxWidth:'800px', width:'100%', animation:'fadeUp 0.6s ease forwards'}}>
           <div style={{textAlign:'center', marginBottom:'40px'}}>
-            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0}}>How are you taking this assessment?</h2>
+            <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0}}>How are you taking this assessment?</h2>
             <p style={{fontSize:'15px',color:T.t2,fontWeight:'500'}}>Select your path to calibrate the assessment context.</p>
           </div>
           <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px'}}>
             <button onClick={() => { setAssessmentType('org'); setResp(r=>({...r, conf:'Restricted — HR Leadership Only'})); }} style={{background:T.bg1, border:`2px solid ${T.b2}`, borderRadius:'16px', padding:'48px 32px', cursor:'pointer', transition:'all 0.2s', textAlign:'center'}} onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.transform='translateY(-4px)';}} onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.transform='none';}}>
               <div style={{fontSize:'48px', marginBottom:'16px'}}>🏢</div>
-              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Assigned by Organization</h3>
+              <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Assigned by Organization</h3>
               <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.6'}}>I was asked to complete this by my employer, HR, or a hiring manager.</p>
             </button>
             <button onClick={() => { setAssessmentType('ind'); setResp(r=>({...r, purpose:'Personal Development Planning', conf:'Candidate-Visible — Both Reports'})); }} style={{background:T.bg1, border:`2px solid ${T.b2}`, borderRadius:'16px', padding:'48px 32px', cursor:'pointer', transition:'all 0.2s', textAlign:'center'}} onMouseOver={e=>{e.currentTarget.style.borderColor=T.c; e.currentTarget.style.transform='translateY(-4px)';}} onMouseOut={e=>{e.currentTarget.style.borderColor=T.b2; e.currentTarget.style.transform='none';}}>
               <div style={{fontSize:'48px', marginBottom:'16px'}}>👤</div>
-              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Taking Individually</h3>
+              <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Taking Individually</h3>
               <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.6'}}>I am taking this for my own personal and professional development.</p>
             </button>
           </div>
@@ -1731,13 +1731,13 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'24px'}}>
             <span style={{fontSize:'28px'}}>{assessmentType === 'org' ? '🏢' : '👤'}</span>
             <div>
-              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0}}>Assessment Context</h2>
+              <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0}}>Assessment Context</h2>
               <p style={{fontSize:'13px',color:T.t2,fontWeight:'500'}}>Please provide your details to calibrate your results.</p>
             </div>
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Industry & Role Details</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Industry & Role Details</h3>
             <p style={{fontSize:'13px',color:T.t2,marginBottom:'24px',fontWeight:'500'}}>Select your sector and assessment purpose. Your development plan will adapt automatically to this context.</p>
 
             {assessmentType === 'org' ? (
@@ -1789,7 +1789,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                   background:resp.industry===key?`${T.gold}20`:T.bg3,
                   border:`2px solid ${resp.industry===key?T.gold:T.b1}`,
                   color:resp.industry===key?T.gold:T.t2,
-                  fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'11px',fontWeight:'700',
+                  fontFamily:"'Public Sans',sans-serif",fontSize:'11px',fontWeight:'700',
                   transition:'all 0.18s',lineHeight:'1.3',
                 }}>
                   <div style={{fontSize:'18px', marginBottom:'4px'}}>{val.icon}</div>
@@ -1826,7 +1826,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               if(assessmentType === 'ind' && !resp.name){alert('Please enter your Full Name.');return;}
               if(!resp.industry){alert('Please select an industry sector.');return;} 
               setStep('consent');
-            }} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+            }} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
               Continue to Consent →
             </button>
           </div>
@@ -1839,11 +1839,11 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
   if(step==='consent') return (
     <div style={{minHeight:'100vh', background:'transparent', padding:'80px 24px'}}>
       <div style={{maxWidth:'600px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
-        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Before We Begin</h2>
+        <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Before We Begin</h2>
         <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>Carnelian takes your privacy seriously. Please read this short summary before you start.</p>
         
         <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>What we collect and why</div>
+          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>What we collect and why</div>
           <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'500'}}>
             <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your name, email, phone number, and professional details to generate your personalised report.</span>
             <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your assessment responses scored by our engine to produce dimension profiles.</span>
@@ -1852,7 +1852,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
         </div>
 
         <div style={{background:T.gnP,border:`1px solid ${T.gn}40`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.gn}}>What we will never do</div>
+          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.gn}}>What we will never do</div>
           <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.gn,lineHeight:'1.6',fontWeight:'600'}}>
             <span style={{fontWeight:'800'}}>✗</span><span>Sell your data to any third party.</span>
             <span style={{fontWeight:'800'}}>✗</span><span>Share your identifiable results with anyone outside your assessment process.</span>
@@ -1863,7 +1863,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
         {/* NEW SEPARATE BLOCK FOR LEGAL & DATA PROCESSING */}
         <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'24px'}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>Legal Disclaimer & Data Processing</div>
+          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>Legal Disclaimer & Data Processing</div>
           <div style={{display:'flex', flexDirection:'column', gap:'12px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
             <p style={{margin:0}}><strong>Disclaimer:</strong> The information, materials, and assessments provided in this module are for educational, illustrative, and informational purposes only. We make no representations or warranties of any kind, express or implied.</p>
             <p style={{margin:0}}><strong>Data Protection:</strong> We are committed to protecting your information. Your data will be stored securely and will not be shared with unauthorized third parties, except where required by law or necessary to operate this assessment. By proceeding, you consent to this processing of your personal data.</p>
@@ -1878,7 +1878,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
         </div>
 
         <div style={{background:`${T.c}10`,border:`1px solid ${T.c}30`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
+          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
           <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
             For the most accurate results, please complete the assessment in one uninterrupted session, this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths, making the feedback genuinely useful.
           </p>
@@ -1891,7 +1891,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           </label>
         </div>
 
-        <button onClick={()=>{if(consentChecked) setStep('intake');}} disabled={!consentChecked} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:consentChecked?'pointer':'not-allowed',background:consentChecked?T.c:T.bg3,color:consentChecked?'#fff':T.t3,fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>{if(consentChecked) e.target.style.background=T.cDark;}} onMouseOut={e=>{if(consentChecked) e.target.style.background=T.c;}}>
+        <button onClick={()=>{if(consentChecked) setStep('intake');}} disabled={!consentChecked} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:consentChecked?'pointer':'not-allowed',background:consentChecked?T.c:T.bg3,color:consentChecked?'#fff':T.t3,fontFamily:"'Public Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>{if(consentChecked) e.target.style.background=T.cDark;}} onMouseOut={e=>{if(consentChecked) e.target.style.background=T.c;}}>
           I Agree · Continue →
         </button>
       </div>
@@ -1924,7 +1924,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
         <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
           {intakeStage===1&&(
             <div key="stage1" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Your Information</h2>
+              <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'24px'}}>Your Information</h2>
               <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
   <div><label style={lbl}>Full Name *</label><input value={resp.name} onChange={e=>setResp(r=>({...r,name:e.target.value}))} placeholder="e.g. Ayesha Raza" style={inp(focused.name)} onFocus={()=>setFocused(f=>({...f,name:true}))} onBlur={()=>setFocused(f=>({...f,name:false}))} /></div>
   <div><label style={lbl}>Email Address *</label><input value={resp.email} onChange={e=>setResp(r=>({...r,email:e.target.value}))} placeholder="ayesha@company.com" style={inp(focused.email)} onFocus={()=>setFocused(f=>({...f,email:true}))} onBlur={()=>setFocused(f=>({...f,email:false}))} /></div>
@@ -1956,7 +1956,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address containing an @ symbol.');return;} 
                 if(!/^\d{4}-\d{7}$/.test(resp.phone)){alert('Please enter a valid phone number in the format 0000-0000000.');return;}
                 setIntakeStage(2);
-              }} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
+              }} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
                 Continue →
               </button>
             </div>
@@ -1964,12 +1964,12 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
           {intakeStage===2&&(
             <div key="stage2" style={{animation:'scaleIn 0.3s ease forwards'}}>
-              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>A Few Things Before You Start</h2>
+              <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>A Few Things Before You Start</h2>
               <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>This assessment takes approximately 20 minutes and is designed entirely for <strong style={{color:T.t0}}>your benefit</strong>.</p>
 
               {/* What you will receive */}
               <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'24px', marginBottom:'20px'}}>
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.2rem',fontWeight:'700',color:T.gold,marginBottom:'16px'}}>What you will receive when you finish</div>
+                <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.2rem',fontWeight:'700',color:T.gold,marginBottom:'16px'}}>What you will receive when you finish</div>
                 <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'16px'}}>
                   <div style={{background:T.b0, borderRadius:'8px', padding:'16px'}}>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.gold,marginBottom:'6px'}}>Your Professional Profile</div>
@@ -2020,8 +2020,8 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
               {/* Buttons */}
               <div style={{display:'flex',gap:'10px'}}>
-                <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
-                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>I'm Ready · Start →</button>
+                <button onClick={()=>setIntakeStage(1)} style={{padding:'13px 20px',borderRadius:'7px',border:`1px solid ${T.b2}`,background:'transparent',color:T.t2,cursor:'pointer',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}}>← Back</button>
+                <button onClick={()=>{setAnswers(Array(QS.length).fill(null));setCur(0);setStartTime(Date.now());setStep('questions');}} style={{flex:1,padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>I'm Ready · Start →</button>
               </div>
             </div>
           )}
@@ -2077,11 +2077,11 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
             <span className="mono" style={{fontSize:'9px',color:T.c,textTransform:'uppercase',letterSpacing:'0.14em',fontWeight:'700'}}>Values in Balance — {ssStep+1} of 3</span>
           </div>
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'clamp(20px, 5vw, 36px)'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(1.4rem, 5vw, 1.8rem)',fontWeight:'700',color:T.gold,marginBottom:'10px'}}>{sc.title}</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'clamp(1.4rem, 5vw, 1.8rem)',fontWeight:'700',color:T.gold,marginBottom:'10px'}}>{sc.title}</h3>
             <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>{sc.intro}</p>
             
             <div style={{background:`${T.c}10`,borderRadius:'8px',padding:'20px',marginBottom:'24px',borderLeft:`4px solid ${T.c}`}}>
-              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(15px, 4vw, 17px)',color:T.t0,lineHeight:'1.7',fontWeight:'600'}}>{sc.text}</p>
+              <p style={{fontFamily:"'Crimson Pro',serif",fontSize:'clamp(15px, 4vw, 17px)',color:T.t0,lineHeight:'1.7',fontWeight:'600'}}>{sc.text}</p>
             </div>
             
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:'16px',gap:'12px'}}>
@@ -2103,11 +2103,11 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 
                 {/* LEFT PAD & TEXT - BLUE */}
                 <rect x="52" y="113" width="48" height="8" rx="2" fill="#3B82F6"/>
-                <text x="76" y="102" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#3B82F6" fontWeight="800">{sc.lLabel}</text>
+                <text x="76" y="102" textAnchor="middle" fontFamily="'IBM Plex Mono',monospace" fontSize="14" fill="#3B82F6" fontWeight="800">{sc.lLabel}</text>
                 
                 {/* RIGHT PAD & TEXT - PURPLE */}
                 <rect x="400" y="113" width="48" height="8" rx="2" fill="#8B5CF6"/>
-                <text x="424" y="102" textAnchor="middle" fontFamily="'JetBrains Mono',monospace" fontSize="14" fill="#8B5CF6" fontWeight="800">{sc.rLabel}</text>
+                <text x="424" y="102" textAnchor="middle" fontFamily="'IBM Plex Mono',monospace" fontSize="14" fill="#8B5CF6" fontWeight="800">{sc.rLabel}</text>
               </g>
             </svg>
             
@@ -2119,7 +2119,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               {zone.label}
             </div>
             
-            <button onClick={nextSeesaw} style={{width:'100%',padding:'14px',borderRadius:'8px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
+            <button onClick={nextSeesaw} style={{width:'100%',padding:'14px',borderRadius:'8px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Continue with Assessment →</button>
           </div>
         </div>
       </div>
@@ -2137,7 +2137,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           </div>
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'36px'}}>
             <div style={{textAlign:'center',marginBottom:'28px'}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0,marginBottom:'10px'}}>45-Second {isG2?'Decision':'Ethics'} Challenge</div>
+              <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'2.4rem',fontWeight:'700',color:T.t0,marginBottom:'10px'}}>45-Second {isG2?'Decision':'Ethics'} Challenge</div>
               <p style={{fontSize:'13px',color:T.t2,lineHeight:'1.65',maxWidth:'440px',margin:'0 auto',fontWeight:'500'}}>{isG2?'A real workplace situation will appear. You must read it and choose one of four responses. The clock starts when you click below.':'This is your last timed challenge. It tests ethical decision-making under relationship pressure — one of the most realistic situations professionals face.'}</p>
             </div>
             <div style={{background:T.bg2,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
@@ -2147,7 +2147,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 </div>
               ))}
             </div>
-            <button onClick={()=>{setGameStage(isG2?'g2':'g3'); startTimer();}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Start the Clock →</button>
+            <button onClick={()=>{setGameStage(isG2?'g2':'g3'); startTimer();}} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>Start the Clock →</button>
           </div>
         </div>
       </div>
@@ -2198,7 +2198,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               <div style={{fontSize:'13px',color:T.t2,lineHeight:'1.6',fontWeight:'600'}}>Read carefully and choose. <strong style={{color:urgent?T.rd:T.t0,fontWeight:'800'}}>The clock is running.</strong></div>
             </div>
             <div style={{background:T.bg2,borderRadius:'7px',padding:'18px 20px',borderLeft:`4px solid ${T.c}`,marginBottom:'20px'}}>
-              <p style={{fontFamily:"'Playfair Display',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>{scenario}</p>
+              <p style={{fontFamily:"'Crimson Pro',serif",fontSize:'15px',color:T.t0,lineHeight:'1.7',fontWeight:'500'}}>{scenario}</p>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'16px'}}>
               {options.map(opt=>{
@@ -2219,7 +2219,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 </button>
               )})}
             </div>
-            {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section D →':'Continue to Final Section →'}</button>}
+            {gameLocked&&<button onClick={onNext} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>{isG2?'Continue to Section D →':'Continue to Final Section →'}</button>}
           </div>
         </div>
       </div>
@@ -2236,7 +2236,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={T.gn} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <Pill label={`${b.pct}% complete`} color={T.gn} style={{marginBottom:'18px'}} />
-          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'2.2rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{b.title}</h2>
+          <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'2.2rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>{b.title}</h2>
           <p style={{color:T.t2,fontSize:'14px',lineHeight:'1.7',marginBottom:'32px',fontWeight:'600'}}>{b.msg}</p>
           <div style={{display:'flex',gap:'4px',justifyContent:'center',marginBottom:'36px'}}>
             {['A','B','C','D','E','F'].map(ch=>{
@@ -2245,7 +2245,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               return <div key={ch} style={{height:'4px',width:'36px',borderRadius:'2px',background:done?T.gn:active?T.gold:T.b2,transition:'background 0.3s'}} />;
             })}
           </div>
-          <button onClick={()=>setBreaker(null)} style={{padding:'12px 32px',borderRadius:'7px',border:`2px solid ${T.b2}`,background:'transparent',color:T.t1,cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}} onMouseOver={e=>{e.target.style.borderColor=T.c;e.target.style.color=T.c;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t1;}}>Continue →</button>
+          <button onClick={()=>setBreaker(null)} style={{padding:'12px 32px',borderRadius:'7px',border:`2px solid ${T.b2}`,background:'transparent',color:T.t1,cursor:'pointer',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'700',transition:'all 0.2s'}} onMouseOver={e=>{e.target.style.borderColor=T.c;e.target.style.color=T.c;}} onMouseOut={e=>{e.target.style.borderColor=T.b2;e.target.style.color=T.t1;}}>Continue →</button>
         </div>
       </div>
     );
@@ -2266,7 +2266,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'28px'}}>
             <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
               <div style={{width:'8px',height:'8px',borderRadius:'50%',background:T.c,boxShadow:`0 0 10px ${T.c}`}} />
-              <span style={{fontSize:'12px',fontWeight:'700',color:T.t2,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>{PARTNAMES[q.ch]}</span>
+              <span style={{fontSize:'12px',fontWeight:'700',color:T.t2,fontFamily:"'Public Sans',sans-serif"}}>{PARTNAMES[q.ch]}</span>
             </div>
             <span className="mono" style={{fontSize:'11px',color:T.t3,fontWeight:'600'}}>{totalPct}%</span>
           </div>
@@ -2276,7 +2276,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
             borderRadius:'12px', padding:'40px 40px',
             animation:'scaleIn 0.25s ease forwards',
           }} key={cur}>
-            <p style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(1.2rem,3vw,1.55rem)',color:T.t0,lineHeight:'1.55',marginBottom:'32px',fontWeight:'600'}}>{q.t}</p>
+            <p style={{fontFamily:"'Crimson Pro',serif",fontSize:'clamp(1.2rem,3vw,1.55rem)',color:T.t0,lineHeight:'1.55',marginBottom:'32px',fontWeight:'600'}}>{q.t}</p>
 
             <div style={{display:'flex',flexDirection:'column',gap:'7px',marginBottom:'28px'}}>
               {LKOPTS.map(([val,label])=>{
@@ -2320,7 +2320,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               <button onClick={prevQ} disabled={cur===0} style={{
                 padding:'9px 18px',borderRadius:'6px',border:`1px solid ${T.b2}`,
                 background:'transparent',color:T.t2,cursor:cur===0?'not-allowed':'pointer',
-                fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'12px',fontWeight:'700',
+                fontFamily:"'Public Sans',sans-serif",fontSize:'12px',fontWeight:'700',
                 visibility:cur===0?'hidden':'visible',
                 transition:'all 0.18s',
               }}>← Back</button>
@@ -2330,7 +2330,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 cursor:(answers[cur]===null || generating)?'not-allowed':'pointer',
                 background:(answers[cur]===null || generating)?T.bg3:T.c,
                 color:(answers[cur]===null || generating)?T.t3:'#fff',
-                fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'13px',fontWeight:'800',
+                fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',
                 letterSpacing:'0.03em',
                 transition:'all 0.2s',
                 display:'flex', alignItems:'center', gap:'8px',
@@ -2779,7 +2779,7 @@ const buildHabits = (content, dim, profile, R) => {
 
     const addPageFromHTML = async (htmlContent, bgColor = '#F8F7F5') => {
       const container = document.createElement('div');
-      container.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:794px; min-height:1122px; background:${bgColor}; font-family:'Plus Jakarta Sans',sans-serif; -webkit-print-color-adjust:exact;`;
+      container.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:794px; min-height:1122px; background:${bgColor}; font-family:'Public Sans',sans-serif; -webkit-print-color-adjust:exact;`;
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
       await new Promise(r => setTimeout(r, 400));
@@ -2804,8 +2804,8 @@ const buildHabits = (content, dim, profile, R) => {
       }
     };
 
-    const fontLink = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>`;
-    const baseStyles = `${fontLink}<style>* { margin:0; padding:0; box-sizing:border-box; } body, div, p, span, h1, h2, h3, h4, h5 { font-family:'Plus Jakarta Sans',sans-serif; } .serif { font-family:'Playfair Display',serif !important; } .mono { font-family:'Courier New',monospace !important; }</style>`;
+    const fontLink = `<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>`;
+   const baseStyles = `${fontLink}<style>* { margin:0; padding:0; box-sizing:border-box; } body, div, p, span, h1, h2, h3, h4, h5 { font-family:'Public Sans',sans-serif; } .serif { font-family:'Crimson Pro',serif !important; } .mono { font-family:'Courier New',monospace !important; }</style>`;
     const wrap = (content, bg = '#F8F7F5', pad = '56px 64px') => `${baseStyles}<div style="width:794px;min-height:1122px;background:${bg};padding:${pad};box-sizing:border-box;display:flex;flex-direction:column;">${content}</div>`;
 
     // Page 1: Cover
@@ -3184,24 +3184,24 @@ for (const d of devAreas) {
       
      {/* Tab Navigation */}
       <div className="no-print" style={{display:'flex', gap:'8px', marginBottom:'32px', flexWrap:'wrap'}}>
-        <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='action'?T.gold:T.b2}`, background:resTab==='action'?T.gold:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='action'?T.gold:T.b2}`, background:resTab==='action'?T.gold:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
           🧭 Candidate Action Plan
         </button>
-        <button onClick={()=>setResTab('persona')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='persona'?T.gold:T.b2}`, background:resTab==='persona'?T.gold:'transparent', color:resTab==='persona'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('persona')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='persona'?T.gold:T.b2}`, background:resTab==='persona'?T.gold:'transparent', color:resTab==='persona'?'#fff':T.t1, transition:'all 0.2s'}}>
           📸 My Persona
         </button>
-        <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.gold:T.b2}`, background:resTab==='tech'?T.gold:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.gold:T.b2}`, background:resTab==='tech'?T.gold:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
           📊 Technical Report
         </button>
-        <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
+        <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
           🎮 Player Report
         </button>
         {R.purpose !== 'Personal Development Planning' && (
           <>
-            <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='team'?T.gold:T.b2}`, background:resTab==='team'?T.gold:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
+            <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='team'?T.gold:T.b2}`, background:resTab==='team'?T.gold:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
               👥 Team Aggregate
             </button>
-            <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.gold:T.b2}`, background:resTab==='comp'?T.gold:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
+            <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.gold:T.b2}`, background:resTab==='comp'?T.gold:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
               🧩 Team Composition
             </button>
           </>
@@ -3215,13 +3215,13 @@ for (const d of devAreas) {
             <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.goldP} 0%,transparent 70%)`}} />
             <div style={{position:'relative',zIndex:1}}>
               <div className="mono" style={{fontSize:'10px',color:T.gold,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:'12px',fontWeight:'700'}}>Your Personal CORE Development Report</div>
-              <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>{R.name}</h1>
+              <h1 style={{fontFamily:"'Crimson Pro',serif",fontSize:'clamp(2rem,4vw,2.6rem)',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>{R.name}</h1>
               <p style={{color:T.t1,fontSize:'14px',lineHeight:'1.8',marginBottom:'16px',fontWeight:'500'}}>This report is written directly to you and not to your manager or HR. It translates your assessment results into specific, actionable guidance: what your scores mean, where your genuine strengths are, what to develop, and exactly how. Read it once for the picture. Read it again with a pen.</p>
               <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px'}}>{date} · {R.exp} · {R.purpose} {R.industry ? `· ${R.industry}` : ''}</div>
               
               <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'24px', borderLeft:`4px solid ${T.c}`}}>
                 <div className="mono" style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'0.14em',color:T.gold,fontWeight:'700',marginBottom:'8px'}}>Your Professional Profile</div>
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.8rem',color:T.t0,fontWeight:'700',marginBottom:'10px'}}>{profile?.name || 'Professional Profile'}</div>
+                <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.8rem',color:T.t0,fontWeight:'700',marginBottom:'10px'}}>{profile?.name || 'Professional Profile'}</div>
                 <div style={{fontSize:'13px',color:T.t2,lineHeight:'1.7',fontWeight:'600'}}>{profile?.desc || 'A reliable and principled professional with strong compliance orientation.'}</div>
                 {profile?.devNote && <div style={{marginTop:'12px', padding:'12px', background:`${T.gold}10`, borderLeft:`3px solid ${T.gold}`, borderRadius:'6px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6'}}>{profile.devNote}</div>}
               </div>
@@ -3229,7 +3229,7 @@ for (const d of devAreas) {
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.35rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Score Profile at a Glance</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.35rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Score Profile at a Glance</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
 <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
   <strong style={{color:T.t2}}>Note on groupings:</strong> Personality & Drive is the average of 5 individual traits — Openness, Conscientiousness, Social Confidence, Collaborative Spirit, and Emotional Resilience. Cultural Agility, Team Citizenship, Learning Agility, and Ethical Integrity are each averages of 3–5 sub-dimensions. The development areas and priority matrix below drill into the individual dimensions within these groups — which is why you may see names that differ from the bars above.
@@ -3277,7 +3277,7 @@ for (const d of devAreas) {
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>What You Are Good At · And Where To Grow</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>What You Are Good At · And Where To Grow</h3>
             <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'500', marginBottom:'24px'}}>
               <strong style={{color:T.t0}}>How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style={{color:T.gn}}>Top 2</strong> become your anchor strengths — the natural instincts you should actively leverage. The <strong style={{color:T.rd}}>Bottom 2</strong> become your priority development areas — the specific gaps where focused effort will yield the highest career return.
             </p>
@@ -3285,7 +3285,7 @@ for (const d of devAreas) {
               {top2.map(d=>(
                 <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:T.gnP,border:`1px solid ${T.gn}40`,borderLeft:`5px solid ${T.gn}`}}>
                   <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.gn,marginBottom:'8px'}}>✦ Core Strength</div>
-                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'10px',color:T.gn}}>{d.l}</h4>
+                  <h4 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'10px',color:T.gn}}>{d.l}</h4>
                   <p style={{fontSize:'13px',color:T.gn,lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>{d.str}</p>
                   <div className="mono" style={{fontSize:'10px', color:T.gn, fontWeight:'700'}}>Score: {d.v}/100 · {bd(d.v)} Range</div>
                 </div>
@@ -3293,7 +3293,7 @@ for (const d of devAreas) {
               {bot2.map(d=>(
                 <div key={d.k} style={{padding:'24px',borderRadius:'10px',background:T.rdP,border:`1px solid ${T.rd}40`,borderLeft:`5px solid ${T.rd}`}}>
                   <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.rd,marginBottom:'8px'}}>◈ Priority Development Area</div>
-                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'8px',color:T.rd}}>{d.l}</h4>
+                  <h4 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.3rem',fontWeight:'700',marginBottom:'8px',color:T.rd}}>{d.l}</h4>
                   <p style={{fontSize:'12px',color:T.rd,lineHeight:'1.6',fontWeight:'600',marginBottom:'10px',borderBottom:`1px solid ${T.rd}25`,paddingBottom:'10px'}}>{d.gap || 'A core driver of professional effectiveness and your highest-leverage development opportunity right now.'}</p>
                   <p style={{fontSize:'12px',color:T.rd,lineHeight:'1.7',fontWeight:'500',marginBottom:'16px'}}>Your 10-step action plan below targets this dimension specifically. Building habits here creates the greatest measurable career impact at your current stage.</p>
                   <div className="mono" style={{fontSize:'10px', color:T.rd, fontWeight:'700'}}>Score: {d.v}/100 · {bd(d.v)} Range</div>
@@ -3303,7 +3303,7 @@ for (const d of devAreas) {
           </div>
 
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `· ${R.industry}` : ''}</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `· ${R.industry}` : ''}</h3>
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
               <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', fontWeight:'500', margin:0}}>
                 The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style={{color:T.t0}}>This action plan focuses on your lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
@@ -3319,7 +3319,7 @@ for (const d of devAreas) {
               return (
               <div key={i} style={{border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px',marginBottom:'24px',background:T.bg2}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
-                  <h4 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0}}>{d.dim}</h4>
+                  <h4 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0}}>{d.dim}</h4>
                   <span className="mono" style={{fontSize:'14px',fontWeight:'800',color:dimCol}}>{d.v}/100</span>
                 </div>
                 <div style={{height:'6px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'16px'}}>
@@ -3378,7 +3378,7 @@ for (const d of devAreas) {
           {/* Resources & Protocols */}
           <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'24px'}}>
             <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Profile-Matched Development Toolkit</h3>
+              <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Profile-Matched Development Toolkit</h3>
               <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Every resource below was selected for your specific psychometric profile and dimension scores — not a generic reading list.</p>
               <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
                 {resources.map((r, i) => {
@@ -3402,7 +3402,7 @@ for (const d of devAreas) {
             </div>
 
             <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
-              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your If-Then Protocol · When Habits Break</h3>
+              <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your If-Then Protocol · When Habits Break</h3>
               <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Research consistently shows relapse risk is highest in the first 30 days. These protocols are decision frameworks for situations you will encounter.</p>
               <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
                 {relapse.map((p, i) => (
@@ -3423,7 +3423,7 @@ for (const d of devAreas) {
 
           {/* Carnelian Programs */}
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Training · Carnelian Programmes</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Training · Carnelian Programmes</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>The following Carnelian programmes are specifically matched to your CORE profile and dimension scores. Your organisation can commission any of these — or you can reach out as an individual.</p>
             <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'24px'}}>
               {programs.map((p, i) => (
@@ -3439,7 +3439,7 @@ for (const d of devAreas) {
             </div>
             <div style={{background:T.c, borderRadius:'10px', padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:'16px'}}>
               <div>
-                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', fontWeight:'700', color:'#fff', marginBottom:'4px'}}>Get in touch with Carnelian</div>
+                <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.2rem', fontWeight:'700', color:'#fff', marginBottom:'4px'}}>Get in touch with Carnelian</div>
                 <div style={{fontSize:'13px', color:'rgba(255,255,255,0.8)', fontWeight:'500'}}>Request programme information, commission in-house delivery, or arrange a personal CORE coaching session.</div>
               </div>
               <div style={{fontSize:'14px', fontWeight:'800', color:T.gold}}><a href="mailto:hello@carnelianco.com" style={{fontSize:'14px', fontWeight:'800', color:T.gold, textDecoration:'none'}}>
@@ -3450,7 +3450,7 @@ for (const d of devAreas) {
 
           {/* Priority Matrix */}
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
             <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
               <strong style={{color:T.t2}}>Where these come from:</strong> The bars above show module-level composites. This matrix goes one level deeper — it sorts the individual dimensions that make up those composites by urgency, so you know exactly which specific behaviour to focus on, not just which broad module to work on.
@@ -3490,7 +3490,7 @@ for (const d of devAreas) {
 
           {/* Close Note */}
           <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>A Note to Close</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>A Note to Close</h3>
             <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>“This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that.</p>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:`1px solid ${T.b1}`, paddingTop:'20px', flexWrap:'wrap', gap:'12px'}}>
               <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>CORE · {docId} · Carnelian Pvt Ltd · {date}</div>
@@ -3500,7 +3500,7 @@ for (const d of devAreas) {
 
           <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
             
-            <button onClick={downloadPDF} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>⬇ Download Action Plan (PDF)</button>
+            <button onClick={downloadPDF} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>⬇ Download Action Plan (PDF)</button>
           </div>
 
         </div>
@@ -3893,7 +3893,7 @@ for (const d of devAreas) {
           </div>
 
           <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
-            <button onClick={()=>window.print()} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>🖨 Print / Save as PDF</button>
+            <button onClick={()=>window.print()} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>🖨 Print / Save as PDF</button>
           </div>
 
         </div>
@@ -4248,27 +4248,27 @@ for (const d of devAreas) {
 
                 {evModal.type === 'book' && (
                   <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
-                    <textarea placeholder="Direct quote from the book..." rows={3} value={evInput.quote} onChange={e=>setEvInput({...evInput, quote:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
-                    <input placeholder="Page number" value={evInput.page} onChange={e=>setEvInput({...evInput, page:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
-                    <textarea placeholder="Your biggest takeaway..." rows={2} value={evInput.takeaway} onChange={e=>setEvInput({...evInput, takeaway:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="Direct quote from the book..." rows={3} value={evInput.quote} onChange={e=>setEvInput({...evInput, quote:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
+                    <input placeholder="Page number" value={evInput.page} onChange={e=>setEvInput({...evInput, page:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="Your biggest takeaway..." rows={2} value={evInput.takeaway} onChange={e=>setEvInput({...evInput, takeaway:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
                   </div>
                 )}
                 {(evModal.type === 'ted' || evModal.type === 'youtube') && (
                   <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
-                    <input placeholder="Timestamp (e.g. 08:34)" value={evInput.timestamp} onChange={e=>setEvInput({...evInput, timestamp:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
-                    <textarea placeholder="The key insight in your own words..." rows={3} value={evInput.insight} onChange={e=>setEvInput({...evInput, insight:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <input placeholder="Timestamp (e.g. 08:34)" value={evInput.timestamp} onChange={e=>setEvInput({...evInput, timestamp:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="The key insight in your own words..." rows={3} value={evInput.insight} onChange={e=>setEvInput({...evInput, insight:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
                   </div>
                 )}
                 {evModal.type === 'research' && (
                   <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
-                    <input placeholder="Paper Title or DOI" value={evInput.ref} onChange={e=>setEvInput({...evInput, ref:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
-                    <textarea placeholder="One key finding that changes how you work..." rows={3} value={evInput.finding} onChange={e=>setEvInput({...evInput, finding:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <input placeholder="Paper Title or DOI" value={evInput.ref} onChange={e=>setEvInput({...evInput, ref:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="One key finding that changes how you work..." rows={3} value={evInput.finding} onChange={e=>setEvInput({...evInput, finding:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
                   </div>
                 )}
                 {evModal.type === 'quest' && (
                   <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'20px'}}>
-                    <textarea placeholder="Your reflection or action log..." rows={4} value={evInput.reflection} onChange={e=>setEvInput({...evInput, reflection:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
-                    <input type="date" value={evInput.date} onChange={e=>setEvInput({...evInput, date:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px'}} />
+                    <textarea placeholder="Your reflection or action log..." rows={4} value={evInput.reflection} onChange={e=>setEvInput({...evInput, reflection:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
+                    <input type="date" value={evInput.date} onChange={e=>setEvInput({...evInput, date:e.target.value})} style={{width:'100%', padding:'10px', borderRadius:'6px', background:T.bg3, border:`1px solid ${T.b2}`, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px'}} />
                   </div>
                 )}
 
@@ -4367,7 +4367,7 @@ for (const d of devAreas) {
               })}
             </div>
 
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Team Dimension Averages</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Team Dimension Averages</h3>
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px', marginBottom:'40px'}}>
               {['C','O','E','A','ES','CQavg','OCBavg','LAavg','EOavg'].map((k, i) => {
                 const avg = Math.round(safeBatch.reduce((sum, b) => sum + (b?.scores?.[k] || 0), 0) / (safeBatch.length || 1));
@@ -4384,7 +4384,7 @@ for (const d of devAreas) {
               })}
             </div>
 
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Archetype Distribution</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Archetype Distribution</h3>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
               {archSorted.map(([name, count], i) => {
                 const pct = Math.round((count / (safeBatch.length || 1)) * 100);
@@ -4402,7 +4402,7 @@ for (const d of devAreas) {
               })}
             </div>
 
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Risk Pattern Frequency</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Risk Pattern Frequency</h3>
             {riskEntries.length > 0 ? (
               <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'40px'}}>
                 {riskEntries.map(([name, count], i) => {
@@ -4428,7 +4428,7 @@ for (const d of devAreas) {
               </div>
             )}
 
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Respondent Summary</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Respondent Summary</h3>
             <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
               {[...safeBatch].sort((a,b)=>(b?.scores?.overall||0)-(a?.scores?.overall||0)).map((b, i) => (
                 <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
@@ -4522,7 +4522,7 @@ for (const d of devAreas) {
             <p style={{fontSize:'13px', color:T.t2, marginBottom:'32px', lineHeight:'1.6'}}>HR-only strategic report — composition diagnosis, hiring profile generation, and promotion fit analysis.</p>
             
             {/* 1. Diagnostic */}
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>1. Composition Diagnostic</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>1. Composition Diagnostic</h3>
             <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'40px'}}>
               {findings.map((f, i) => {
                 const col = f.sev==='critical'?T.rd:f.sev==='watch'?T.am:T.gn;
@@ -4540,7 +4540,7 @@ for (const d of devAreas) {
             </div>
 
             {/* 2. Hiring Profile */}
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>2. Hiring Profile Specification</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>2. Hiring Profile Specification</h3>
             <p style={{fontSize:'13px', color:T.t2, marginBottom:'16px'}}>Target these dimension ranges for your next hire to balance the team's current blind spots.</p>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'12px', marginBottom:'40px'}}>
               {dimGaps.map((g, i) => (
@@ -4553,7 +4553,7 @@ for (const d of devAreas) {
             </div>
 
             {/* 2.5 Interview Probes */}
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Targeted Interview Probes</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>Targeted Interview Probes</h3>
             <p style={{fontSize:'13px', color:T.t2, marginBottom:'16px'}}>Use these specific questions in your next interview to test for the dimensions this team currently lacks.</p>
             <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'40px'}}>
               {dimGaps.slice(0,3).map((g, i) => {
@@ -4580,9 +4580,9 @@ for (const d of devAreas) {
             </div>
 
             {/* 3. Promotion Fit */}
-            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>3. Promotion Fit Check</h3>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>3. Promotion Fit Check</h3>
             <div style={{marginBottom:'16px'}}>
-              <select value={promoRole} onChange={e=>setPromoRole(parseInt(e.target.value))} style={{padding:'10px 16px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg3, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600', outline:'none', cursor:'pointer'}}>
+              <select value={promoRole} onChange={e=>setPromoRole(parseInt(e.target.value))} style={{padding:'10px 16px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg3, color:T.t0, fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'600', outline:'none', cursor:'pointer'}}>
                 {ROLE_TARGETS.map((r, i) => <option key={i} value={i}>{r.name}</option>)}
               </select>
             </div>
@@ -4671,7 +4671,7 @@ for (const d of devAreas) {
   {/* Header */}
   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'44px 72px 0',flexShrink:0,position:'relative',zIndex:2}}>
     <img src="/logo.svg" alt="CORE" style={{height:'72px',objectFit:'contain'}} />
-<div style={{fontFamily:"'JetBrains Mono',monospace",color:T.gold,fontSize:'28px',fontWeight:'800',letterSpacing:'0.18em'}}>CORE ASSESSMENT</div>
+<div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.gold,fontSize:'28px',fontWeight:'800',letterSpacing:'0.18em'}}>CORE ASSESSMENT</div>
   </div>
 
   {/* Main content */}
@@ -4691,10 +4691,10 @@ for (const d of devAreas) {
     </div>
 
     {/* Labels */}
-    <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.t2,fontSize:'26px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'10px',textTransform:'uppercase'}}>
+    <div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.t2,fontSize:'26px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'10px',textTransform:'uppercase'}}>
                     YOUR CORE PERSONA
                   </div>
-                  <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.t0,fontSize:'40px',fontWeight:'800',letterSpacing:'0.08em',marginBottom:'26px',textTransform:'uppercase'}}>
+                  <div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.t0,fontSize:'40px',fontWeight:'800',letterSpacing:'0.08em',marginBottom:'26px',textTransform:'uppercase'}}>
                     {R.name}
                   </div>
 
@@ -4702,12 +4702,12 @@ for (const d of devAreas) {
     <div style={{width:'64px',height:'5px',background:`linear-gradient(90deg,${T.c},${T.gold})`,borderRadius:'3px',marginBottom:'30px'}} />
 
     {/* Profile name */}
-<h1 style={{fontFamily:"'Playfair Display',serif",fontSize:'90px',fontWeight:'700',color:T.gold,lineHeight:'1.05',margin:'0 0 28px',letterSpacing:'-0.02em',maxWidth:'920px'}}>
+<h1 style={{fontFamily:"'Crimson Pro',serif",fontSize:'90px',fontWeight:'700',color:T.gold,lineHeight:'1.05',margin:'0 0 28px',letterSpacing:'-0.02em',maxWidth:'920px'}}>
         {profile.name}
     </h1>
 
     {/* Description */}
-<p style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'30px',color:T.t2,lineHeight:'1.65',maxWidth:'880px',fontWeight:'600'}}>
+<p style={{fontFamily:"'Public Sans',sans-serif",fontSize:'30px',color:T.t2,lineHeight:'1.65',maxWidth:'880px',fontWeight:'600'}}>
         {profile.desc}
     </p>
   </div>
@@ -4718,15 +4718,15 @@ for (const d of devAreas) {
     padding:'44px 72px 40px',
     flexShrink:0,position:'relative',zIndex:2,
   }}>
-    <div style={{fontFamily:"'JetBrains Mono',monospace",color:T.c,fontSize:'20px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'32px'}}>
+    <div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.c,fontSize:'20px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'32px'}}>
       CORE SUPERPOWERS
     </div>
     <div style={{display:'flex',flexDirection:'column',gap:'22px'}}>
       {top3.map((s,i) => (
         <div key={i}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:'10px'}}>
-            <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'28px',color:T.t0,fontWeight:'700'}}>{s.l}</span>
-            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'28px',color:T.gold,fontWeight:'800'}}>{s.v}/100</span>
+            <span style={{fontFamily:"'Public Sans',sans-serif",fontSize:'28px',color:T.t0,fontWeight:'700'}}>{s.l}</span>
+            <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:'28px',color:T.gold,fontWeight:'800'}}>{s.v}/100</span>
           </div>
           <div style={{height:'10px',background:T.b1,borderRadius:'20px',overflow:'hidden'}}>
             <div style={{width:`${s.v}%`,height:'100%',background:`linear-gradient(90deg,${T.c},${T.gold})`,borderRadius:'20px'}} />
@@ -4743,10 +4743,10 @@ for (const d of devAreas) {
     flexShrink:0,position:'relative',zIndex:2,
     background:T.bg1,
   }}>
-    <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:'22px',color:T.t3,fontWeight:'600'}}>
+    <div style={{fontFamily:"'Public Sans',sans-serif",fontSize:'22px',color:T.t3,fontWeight:'600'}}>
 Discover yours at <strong style={{color:T.t0}}>CORE by Carnelian</strong>
     </div>
-    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'20px',color:T.t3}}>{date}</div>
+    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:'20px',color:T.t3}}>{date}</div>
   </div>
 
   {/* Bottom accent bar */}
@@ -4757,7 +4757,7 @@ Discover yours at <strong style={{color:T.t0}}>CORE by Carnelian</strong>
             <button onClick={downloadPersonaPNG} style={{
               marginTop: '40px', padding: '16px 44px', borderRadius: '100px',
               background: T.c, color: '#fff', border: 'none', cursor: 'pointer',
-              fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '14px', fontWeight: '800',
+              fontFamily: "'Public Sans',sans-serif", fontSize: '14px', fontWeight: '800',
               letterSpacing: '0.06em', textTransform: 'uppercase',
               boxShadow: `0 10px 28px ${T.cGlow}`, transition: 'all 0.2s',
             }}
@@ -4811,20 +4811,20 @@ const updatedResults = results.map(entries => entries.filter(e => e.email?.toLow
 
   const inp = {
     padding:'12px 16px', border:`1px solid ${T.b2}`, borderRadius:'6px',
-    fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'600',
+    fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'600',
     background:T.bg3, color:T.t0, outline:'none', transition:'all 0.2s', flex:1,
   };
 
   return(
     <div style={{maxWidth:'900px', margin:'0 auto', padding:'56px 24px'}}>
       <Pill label="Progress Tracker" style={{marginBottom:'16px'}} />
-      <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'2.4rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>Assessment History</h2>
+      <h2 style={{fontFamily:"'Crimson Pro',serif", fontSize:'2.4rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>Assessment History</h2>
       <p style={{fontSize:'14px', color:T.t2, fontWeight:'600', marginBottom:'36px', lineHeight:'1.7'}}>
   Look up a candidate's assessment history using their <strong style={{color:T.t0}}>email address</strong>.
 </p>
 
       <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'28px 28px', marginBottom:'32px'}}>
-<div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', fontWeight:'700', color:T.c, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:'16px'}}>Search by Email</div>
+<div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', fontWeight:'700', color:T.c, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:'16px'}}>Search by Email</div>
         <div style={{display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'12px'}}>
           <input
   value={searchEmail}
@@ -4838,7 +4838,7 @@ const updatedResults = results.map(entries => entries.filter(e => e.email?.toLow
             style={{
               padding:'12px 24px', borderRadius:'6px', border:'none', cursor:'pointer',
               background:T.c, color:'#fff',
-              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800',
+              fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'800',
               letterSpacing:'0.03em', transition:'all 0.2s', whiteSpace:'nowrap',
             }}
             onMouseOver={e=>e.target.style.background=T.cDark}
@@ -4852,7 +4852,7 @@ const updatedResults = results.map(entries => entries.filter(e => e.email?.toLow
 
       {searched && results.length === 0 && (
         <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'40px', textAlign:'center'}}>
-          <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>No records found</div>
+          <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.5rem', fontWeight:'700', color:T.t0, marginBottom:'8px'}}>No records found</div>
           <p style={{fontSize:'13px', color:T.t2, fontWeight:'600'}}>No assessments match the email you entered.</p>
         </div>
       )}
@@ -4867,7 +4867,7 @@ const pid_email = latest.email||'';
           <div key={ri} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', marginBottom:'20px', overflow:'hidden'}}>
             <div style={{background:T.bg2, padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'12px'}}>
               <div>
-                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', color:T.t0, fontWeight:'700', marginBottom:'4px'}}>{latest.name}</div>
+                <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.6rem', color:T.t0, fontWeight:'700', marginBottom:'4px'}}>{latest.name}</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>
                   {latest.role&&`${latest.role} · `}
                   {latest.dept&&`${latest.dept} · `}
@@ -4885,12 +4885,12 @@ const pid_email = latest.email||'';
                 <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'18px'}}>
                   <div style={{background:T.bg2, borderRadius:'8px', padding:'14px 16px'}}>
                     <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Previous · {prev.date}</div>
-                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'600', marginBottom:'5px', color:T.t0}}>{prev.profile}</div>
+                    <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.1rem', fontWeight:'600', marginBottom:'5px', color:T.t0}}>{prev.profile}</div>
                     <div className="mono" style={{fontSize:'1.4rem', color:T.t3, fontWeight:'700'}}>{prev.scores.overall}/100</div>
                   </div>
                   <div style={{background:T.bg3, borderRadius:'8px', padding:'14px 16px'}}>
                     <div className="mono" style={{fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'600'}}>Latest · {latest.date}</div>
-                    <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', color:T.t0, fontWeight:'700', marginBottom:'5px'}}>{latest.profile}</div>
+                    <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.1rem', color:T.t0, fontWeight:'700', marginBottom:'5px'}}>{latest.profile}</div>
                     <div className="mono" style={{fontSize:'1.4rem', color:T.gold, fontWeight:'700'}}>{latest.scores.overall}/100 <span style={{fontSize:'11px', color:delta>=0?T.gn:T.rd, fontWeight:'800'}}>({delta>=0?'+':''}{delta})</span></div>
                   </div>
                 </div>
@@ -4919,8 +4919,8 @@ const pid_email = latest.email||'';
                   } else {
                     alert('Full report data is not available for this older record.');
                   }
-                }} style={{padding:'7px 14px', borderRadius:'5px', border:'none', background:T.c, color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>View Full Report →</button>
-                <button onClick={()=>del(pid_email)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
+                }} style={{padding:'7px 14px', borderRadius:'5px', border:'none', background:T.c, color:'#fff', fontFamily:"'Public Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>View Full Report →</button>
+                <button onClick={()=>del(pid_email)} style={{padding:'7px 14px', borderRadius:'5px', border:`1px solid ${T.rdP}`, background:'transparent', color:T.rd, fontFamily:"'Public Sans',sans-serif", fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>Delete Records</button>
               </div>
             </div>
           </div>
@@ -4936,7 +4936,7 @@ const LegalPage = () => {
     <div style={{maxWidth:'1100px', margin:'0 auto', padding:'80px 32px'}}>
       <Reveal delay={0.1}>
         <div>
-          <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', marginBottom:'16px', color:T.t0}}>
+          <h2 style={{fontFamily:"'Crimson Pro',serif", fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:'700', marginBottom:'16px', color:T.t0}}>
             Compliance & Privacy
           </h2>
           <p style={{fontSize:'15px', color:T.t2, fontWeight:'500', marginBottom:'48px', lineHeight:'1.7', maxWidth:'750px'}}>

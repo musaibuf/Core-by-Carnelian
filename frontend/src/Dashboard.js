@@ -56,11 +56,11 @@ const COMPOSITE_KEYS = [
 const OCEAN_KEYS   = ['O','C','E','A','ES'];
 const OCEAN_LABELS = { O:'Openness', C:'Conscientiousness', E:'Extraversion', A:'Agreeableness', ES:'Emotional Stability' };
 const MODULE_KEYS  = [
-  { k:'OCEANavg', l:'Personality (OCEAN)' },
-  { k:'CQavg',    l:'Cultural Intelligence' },
-  { k:'OCBavg',   l:'Org. Citizenship' },
-  { k:'LAavg',    l:'Learning Agility' },
-  { k:'EOavg',    l:'Ethical Orientation' },
+  { k:'OCEANavg', l:'Personality (OCEAN)', c:'#EC4899' },
+  { k:'CQavg',    l:'Cultural Intelligence', c:'#06B6D4' },
+  { k:'OCBavg',   l:'Org. Citizenship', c:'#F97316' },
+  { k:'LAavg',    l:'Learning Agility', c:'#3B82F6' },
+  { k:'EOavg',    l:'Ethical Orientation', c:'#7C3AED' },
 ];
 const CQ_KEYS  = [
   { k:'CQ_K', l:'Cultural Knowledge' },
@@ -240,9 +240,9 @@ const GoldLine = ({ style={} }) => (
   <div style={{ height:'2px', background:'linear-gradient(90deg,#B01C24,#C8A84B,transparent)', ...style }} />
 );
 
-const SectionHead = ({ label, T }) => (
+const SectionHead = ({ label, T, color }) => (
   <div style={{
-    fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold,
+    fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color: color || T.gold,
     textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'14px',
   }}>{label}</div>
 );
@@ -422,9 +422,9 @@ const TechnicalReport = ({ candidate, T }) => {
               </div>
               <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, fontWeight:'600' }}>Doc: {candidate.doc_id}</div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'6px', marginTop:'12px' }}>
-                {MODULE_KEYS.map(({ k, l }) => (
+                {MODULE_KEYS.map(({ k, l, c }) => (
                   <div key={k} style={{ background:T.bg3, borderRadius:'6px', padding:'8px', textAlign:'center' }}>
-                    <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:bCol(S[k]||0,T), fontWeight:'700' }}>{S[k]||'—'}</div>
+                    <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:c, fontWeight:'700' }}>{S[k]||'—'}</div>
                     <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600', lineHeight:'1.3' }}>{l.split(' ')[0]}</div>
                   </div>
                 ))}
@@ -597,15 +597,15 @@ const TechnicalReport = ({ candidate, T }) => {
         </>
       )}
 
-      {/* OCEAN */}
+    {/* OCEAN */}
       {card(
         <>
-          <SectionHead label="Module 1 — Personality at Work (OCEAN)" T={T} />
+          <SectionHead label="Module 1 — Personality at Work (OCEAN)" T={T} color="#EC4899" />
           <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'8px' }}>
             {OCEAN_KEYS.map(k => (
               <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'12px', textAlign:'center', border:`1px solid ${T.b1}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'700' }}>{OCEAN_LABELS[k]}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:bCol(S[k]||0,T), fontWeight:'700' }}>{S[k]||0}</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:'#EC4899', fontWeight:'700' }}>{S[k]||0}</div>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
               </div>
             ))}
@@ -616,12 +616,12 @@ const TechnicalReport = ({ candidate, T }) => {
       {/* CQ */}
       {card(
         <>
-          <SectionHead label="Module 2 — Cultural Intelligence (CQ)" T={T} />
+          <SectionHead label="Module 2 — Cultural Intelligence (CQ)" T={T} color="#06B6D4" />
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px' }}>
             {CQ_KEYS.map(({ k, l }) => (
               <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'14px', textAlign:'center', border:`1px solid ${T.b1}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', color:bCol(S[k]||0,T), fontWeight:'700' }}>{S[k]||0}</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', color:'#06B6D4', fontWeight:'700' }}>{S[k]||0}</div>
                 <MiniBar score={S[k]||0} w="100%" h={5} />
               </div>
             ))}
@@ -632,12 +632,12 @@ const TechnicalReport = ({ candidate, T }) => {
       {/* OCB */}
       {card(
         <>
-          <SectionHead label="Module 3 — Organisational Citizenship Behaviour (OCB)" T={T} />
+          <SectionHead label="Module 3 — Organisational Citizenship Behaviour (OCB)" T={T} color="#F97316" />
           <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'8px' }}>
             {OCB_KEYS.map(({ k, l }) => (
               <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'12px', textAlign:'center', border:`1px solid ${T.b1}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', color:bCol(S[k]||0,T), fontWeight:'700' }}>{S[k]||0}</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', color:'#F97316', fontWeight:'700' }}>{S[k]||0}</div>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
               </div>
             ))}
@@ -648,12 +648,12 @@ const TechnicalReport = ({ candidate, T }) => {
       {/* LEARNING AGILITY */}
       {card(
         <>
-          <SectionHead label="Module 4 — Adaptive Thinking & Learning Agility" T={T} />
+          <SectionHead label="Module 4 — Adaptive Thinking & Learning Agility" T={T} color="#3B82F6" />
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
             {LA_KEYS.map(({ k, l }) => (
               <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'14px', textAlign:'center', border:`1px solid ${T.b1}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:bCol(S[k]||0,T), fontWeight:'700' }}>{S[k]||0}</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:'#3B82F6', fontWeight:'700' }}>{S[k]||0}</div>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
               </div>
             ))}
@@ -664,12 +664,12 @@ const TechnicalReport = ({ candidate, T }) => {
       {/* ETHICAL ORIENTATION */}
       {card(
         <>
-          <SectionHead label="Module 5 — Integrity & Ethical Orientation" T={T} />
+          <SectionHead label="Module 5 — Integrity & Ethical Orientation" T={T} color="#7C3AED" />
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
             {EO_KEYS.map(({ k, l }) => (
               <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'14px', textAlign:'center', border:`1px solid ${T.b1}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:bCol(S[k]||0,T), fontWeight:'700' }}>{S[k]||0}</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:'#7C3AED', fontWeight:'700' }}>{S[k]||0}</div>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
               </div>
             ))}
@@ -911,17 +911,22 @@ const ActionPlanReport = ({ candidate, T }) => {
         <>
           <SectionHead label="Score Profile at a Glance" T={T} />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 28px', marginBottom:'20px' }}>
-            {allDims.map(d => (
+            {allDims.map(d => {
+              const pCol = d.l.includes('Personality')||d.l.includes('Conscientiousness')||d.l.includes('Emotional')||d.l.includes('Openness')||d.l.includes('Social')||d.l.includes('Collaborative') ? '#EC4899' : d.l.includes('Cultural') ? '#06B6D4' : d.l.includes('Citizenship') ? '#F97316' : d.l.includes('Learning') ? '#3B82F6' : d.l.includes('Integrity') ? '#7C3AED' : T.t0;
+              return (
               <div key={d.k} style={{ marginBottom:'4px' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'3px' }}>
-                  <span style={{ fontSize:'12px', color:T.t0, fontWeight:'700' }}>{d.l}</span>
+                  <span style={{ fontSize:'12px', color:T.t0, fontWeight:'700', display:'flex', alignItems:'center' }}>
+                    <span style={{display:'inline-block', width:'6px', height:'6px', borderRadius:'50%', background:pCol, marginRight:'6px'}}></span>
+                    {d.l}
+                  </span>
                   <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:bCol(d.v,T), fontWeight:'700' }}>{d.v}/100 · {d.v>=75?'Strong':d.v>=55?'Developing':'Priority'}</span>
                 </div>
                 <div style={{ height:'7px', background:T.b1, borderRadius:'100px', overflow:'hidden' }}>
                   <div style={{ height:'100%', width:`${d.v}%`, background:barGrad(d.v), borderRadius:'100px', transition:'width 0.8s ease' }} />
                 </div>
               </div>
-            ))}
+            )})}
           </div>
           {/* Composite ring display */}
           <div style={{ background:T.bg3, borderRadius:'10px', padding:'16px' }}>
@@ -1392,7 +1397,7 @@ const TeamReport = ({ candidate, allData, T }) => {
       {/* HEADER */}
       <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}` }}>
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Aggregate Report · Batch: {batch}</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', marginBottom:'16px' }}>
           {[
             [allData.filter(r=>r.batch===batch).length, 'Responses'],
             [n, 'Valid'],
@@ -1405,6 +1410,18 @@ const TeamReport = ({ candidate, allData, T }) => {
               <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600' }}>{l}</div>
             </div>
           ))}
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg1, borderRadius:'8px', padding:'16px', border:`1px solid ${T.b1}` }}>
+          {MODULE_KEYS.map(({ k, l, c }) => {
+            const avg = Math.round(batchData.reduce((sum, b) => sum + (b.report_data?.scores?.[k] || 0), 0) / (batchData.length || 1));
+            return (
+              <div key={k} style={{textAlign:'center'}}>
+                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:c}}>{avg}</div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px', fontWeight:'600'}}>{l.split(' ')[0]}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -1748,7 +1765,69 @@ const REPORT_TABS = [
   { id:'team',    label:'👥 Team Aggregate',         sub:'Batch-Level' },
   { id:'comp',    label:'🧩 Team Composition',       sub:'HR Strategy' },
   { id:'persona', label:'📸 Persona Card',           sub:'Shareable' },
+  { id:'evidence',label:'📎 Evidence & Uploads',     sub:'Verification' },
 ];
+
+const EvidenceReport = ({ candidate, T }) => {
+  const [evState, setEvState] = useState({});
+  useEffect(() => {
+    try { setEvState(JSON.parse(localStorage.getItem(`core_ev_${candidate.doc_id}`) || '{}')); } catch(e) {}
+  }, [candidate.doc_id]);
+
+  return (
+    <div className="anim-fadeUp">
+      <div style={{ background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px' }}>
+        <SectionHead label="Candidate Evidence & Uploads" T={T} />
+        <h2 style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Verification Dashboard</h2>
+        <p style={{fontSize:'13px', color:T.t2, marginBottom:'24px'}}>Review the proof uploaded by the candidate for their Action Plan quests and power-ups.</p>
+        
+        {Object.keys(evState).length === 0 ? (
+          <div style={{background:T.bg2, border:`1px dashed ${T.b2}`, borderRadius:'10px', padding:'40px', textAlign:'center'}}>
+            <div style={{fontSize:'24px', marginBottom:'12px'}}>📂</div>
+            <div style={{fontSize:'14px', fontWeight:'700', color:T.t1}}>No evidence uploaded yet</div>
+          </div>
+        ) : (
+          <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+            {Object.entries(evState).map(([k, e], i) => (
+              <div key={i} style={{background:T.bg2, border:`1px solid ${T.gn}40`, borderLeft:`4px solid ${T.gn}`, borderRadius:'8px', padding:'20px'}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px'}}>
+                  <div>
+                    <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', fontWeight:'800', color:T.gn, marginBottom:'4px'}}>SUBMITTED ACTION · +{e.xp} XP</div>
+                    <div style={{fontSize:'12px', color:T.t2}}>Date: {new Date(e.ts).toLocaleDateString()}</div>
+                  </div>
+                  <button onClick={() => {
+                    if(!window.confirm('Reject this evidence? This will revoke the XP from the candidate.')) return;
+                    const newState = {...evState};
+                    delete newState[k];
+                    setEvState(newState);
+                    localStorage.setItem(`core_ev_${candidate.doc_id}`, JSON.stringify(newState));
+                  }} style={{background:T.rdP, color:T.rd, border:`1px solid ${T.rd}40`, padding:'8px 14px', borderRadius:'6px', fontSize:'11px', fontWeight:'700', cursor:'pointer'}}>
+                    Reject & Revoke XP
+                  </button>
+                </div>
+                
+                <div style={{background:T.bg3, padding:'16px', borderRadius:'6px', fontSize:'13px', color:T.t1, lineHeight:'1.6'}}>
+                  {e.type === 'book' && <><p><strong>Quote:</strong> "{e.data.quote}"</p><p><strong>Takeaway:</strong> {e.data.takeaway}</p></>}
+                  {(e.type === 'ted' || e.type === 'youtube') && <><p><strong>Timestamp:</strong> {e.data.timestamp}</p><p><strong>Insight:</strong> {e.data.insight}</p></>}
+                  {e.type === 'research' && <><p><strong>Ref:</strong> {e.data.ref}</p><p><strong>Finding:</strong> {e.data.finding}</p></>}
+                  {e.type === 'quest' && <><p><strong>Reflection:</strong> {e.data.reflection}</p></>}
+                  
+                  {e.data.fileBase64 && (
+                    <div style={{marginTop:'16px', paddingTop:'16px', borderTop:`1px solid ${T.b2}`}}>
+                      <a href={e.data.fileBase64} download={e.data.fileName} style={{display:'inline-flex', alignItems:'center', gap:'8px', color:'#38bdf8', textDecoration:'none', fontSize:'12px', fontWeight:'700', background:'rgba(56,189,248,0.1)', padding:'8px 16px', borderRadius:'6px', border:'1px solid rgba(56,189,248,0.3)'}}>
+                        📎 Download Attached Proof ({e.data.fileName})
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // ─── PERSONA CARD ─────────────────────────────────────────────
 const PersonaCard = ({ candidate, T }) => {
@@ -1976,7 +2055,9 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
           {reportTab === 'player' && <PlayerReport     candidate={candidate} T={T} />}
           {reportTab === 'team'   && <TeamReport       candidate={candidate} allData={allData} T={T} />}
 {reportTab === 'comp'   && <TeamCompositionReport candidate={candidate} allData={allData} T={T} />}
-          {reportTab === 'persona' && <PersonaCard candidate={candidate} T={T} />}        </div>
+          {reportTab === 'persona' && <PersonaCard candidate={candidate} T={T} />}
+          {reportTab === 'evidence' && <EvidenceReport candidate={candidate} T={T} />}
+        </div>
       </div>
     </div>
   );
@@ -2172,7 +2253,7 @@ const ProfilesTab = ({ data, T, onSelect }) => {
                   { l:'Email', k:'email' }, { l:'Phone', k:'phone' },
                   { l:'Batch', k:'batch' }, { l:'Role', k:'role' },
                   { l:'Score', k:'overall_score' }, { l:'Profile', k:'profile_name' },
-                  { l:'Validity', k:null }, { l:'Date', k:'created_at' }, { l:'', k:null },
+                { l:'Validity', k:null }, { l:'Evid.', k:null }, { l:'Date', k:'created_at' }, { l:'', k:null },
                 ].map(({ l, k }) => (
                   <th key={l} className={k?'sort-th':''} onClick={()=>k&&toggleSort(k)}
                     style={{ padding:'10px 14px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.12em', color:sortKey===k?T.t0:T.t3, fontFamily:"'JetBrains Mono',monospace", whiteSpace:'nowrap' }}>
@@ -2192,7 +2273,10 @@ const ProfilesTab = ({ data, T, onSelect }) => {
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.role}</td>
                   <td style={{ padding:'12px 14px' }}><ScoreBadge score={r.overall_score} T={T} /></td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.c, fontWeight:'700', maxWidth:'160px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.profile_name}</td>
-                  <td style={{ padding:'12px 14px' }}><ValidityDot overall={r.report_data?.validity?.overall} T={T} /></td>
+                 <td style={{ padding:'12px 14px' }}><ValidityDot overall={r.report_data?.validity?.overall} T={T} /></td>
+                  <td style={{ padding:'12px 14px', textAlign:'center' }}>
+                    {localStorage.getItem(`core_ev_${r.doc_id}`) && Object.keys(JSON.parse(localStorage.getItem(`core_ev_${r.doc_id}`)||'{}')).length > 0 ? '📎' : '—'}
+                  </td>
                   <td style={{ padding:'12px 14px', fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:T.t3, fontWeight:'600', whiteSpace:'nowrap' }}>
                     {new Date(r.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
                   </td>
@@ -2220,9 +2304,9 @@ const ScoresTab = ({ data, T, onSelect }) => {
     const avg = Math.round(data.reduce((s,r)=>s+(r.report_data?.CI?.[k]||r.report_data?.scores?.[k]||0),0)/total);
     return { k, l, avg, green, amber };
   });
-  const avgMod = MODULE_KEYS.map(({ k, l }) => {
+  const avgMod = MODULE_KEYS.map(({ k, l, c }) => {
     const avg = Math.round(data.reduce((s,r)=>s+(r.report_data?.scores?.[k]||0),0)/total);
-    return { k, l, avg };
+    return { k, l, avg, c };
   });
   const leaders = [...data].sort((a,b)=>b.overall_score-a.overall_score).slice(0,5);
   const atRisk  = data.filter(r => COMPOSITE_KEYS.some(({ k, amber }) => (r.report_data?.CI?.[k]||r.report_data?.scores?.[k]||0)<amber)).slice(0,5);
@@ -2250,15 +2334,15 @@ const ScoresTab = ({ data, T, onSelect }) => {
         </div>
       </div>
 
-      <div style={{ background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', marginBottom:'16px' }} className="dash-anim-2">
+    <div style={{ background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', marginBottom:'16px' }} className="dash-anim-2">
         <SectionHead label="Module Score Averages" T={T} />
-        {avgMod.map(({ k, l, avg }) => (
+        {avgMod.map(({ k, l, avg, c }) => (
           <div key={k} style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'10px' }}>
             <div style={{ width:'200px', fontSize:'12px', color:T.t1, fontWeight:'700', flexShrink:0 }}>{l}</div>
             <div style={{ flex:1, height:'7px', background:T.b1, borderRadius:'3px', overflow:'hidden' }}>
-              <div style={{ width:`${avg}%`, height:'100%', background:barGrad(avg), transition:'width 0.8s ease' }} />
+              <div style={{ width:`${avg}%`, height:'100%', background:c, transition:'width 0.8s ease' }} />
             </div>
-            <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'13px', color:bCol(avg,T), fontWeight:'700', width:'36px', textAlign:'right' }}>{avg}</span>
+            <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'13px', color:c, fontWeight:'700', width:'36px', textAlign:'right' }}>{avg}</span>
             <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, fontWeight:'600', width:'55px' }}>{bd(avg)}</span>
           </div>
         ))}

@@ -742,21 +742,30 @@ const StatsStrip = () => {
       ]
     },
     {
-      n:'14', l:'Dimensions Scored',
-      tagline:'Your raw answers are converted into 14 separate, individually interpretable scores, not a single overall number.',
+      n:'21', l:'Sub-Dimensions Measured',
+      tagline:'The 63 diagnostic items are organised under 5 pillars, and score out to 21 individually interpretable sub-dimensions, which then feed into 7 composite indices for HR decision making.',
       sections:[
-        { heading:'The five pillars behind the scores', points:[
-          'Personality at Work: the OCEAN framework, covering openness, conscientiousness, extraversion, agreeableness and emotional stability',
-          "Cultural Intelligence: knowledge, motivation and behaviour, measuring how you adapt across Pakistan's diverse professional landscape",
-          'Workplace Initiative: the OCB dimensions, covering altruism, civic virtue, sportsmanship, courtesy and institutional conscientiousness',
-          'Learning Agility: mental, people, change and results agility, the strongest predictor of leadership potential',
-          'Integrity and Ethics: rule compliance, transparency, ethical reasoning and authentic integrity',
+        { heading:'The full measurement flow', points:[
+          '63 Diagnostic Items are answered across the assessment',
+          'Those items are organised under 5 Pillars: Personality, Cultural Intelligence, Workplace Initiative, Learning Agility, and Integrity and Ethics',
+          '21 Sub-Dimensions are scored out of those 5 pillars, each built from several statements rather than a single question',
+          '7 Composite Indices are then calculated by combining specific sub-dimensions using meta-analytic weightings, giving HR a small set of decision-ready scores',
         ]},
-        { heading:'How a score is calculated', points:[
-          'Each dimension is built from several statements, never a single question',
-          'Reverse worded items are automatically re-scored before averaging so they cannot distort the result',
-          'Final scores are normalised to a 0 to 100 scale so every dimension can be compared on the same footing',
-          'Scores also roll up into 5 group averages and 7 weighted composite indices for HR level decision making',
+        { heading:'The 21 sub-dimensions, by pillar', points:[
+          'Personality (5): Openness, Conscientiousness, Extraversion, Agreeableness, Emotional Stability',
+          'Cultural Intelligence (3): Cultural Knowledge, Cultural Motivation, Cultural Behaviour',
+          'Workplace Initiative (5): Altruism, Civic Virtue, Sportsmanship, Courtesy, Conscientiousness',
+          'Learning Agility (4): Mental Agility, People Agility, Change Agility, Results Agility',
+          'Integrity and Ethics (4): Rule Compliance, Transparency, Ethical Reasoning, Authentic Integrity',
+        ]},
+        { heading:'The 7 composite indices this feeds into', points:[
+          'Compliance and Integrity Index: the primary screen for fiduciary, audit and procurement roles',
+          'Leadership Readiness Score: predicts senior leadership performance',
+          'Team Value Score: predicts team cohesion contribution',
+          'Adaptability Score: suitability for reform, change and innovation roles',
+          'Stakeholder Effectiveness Score: effectiveness with clients, donors and partners',
+          'Operational Reliability Score: sustained delivery under pressure',
+          'People Management Score: interpersonal and ethical readiness for people management',
         ]},
       ]
     },
@@ -3234,16 +3243,21 @@ for (const d of devAreas) {
 <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
   <strong style={{color:T.t2}}>Note on groupings:</strong> Personality & Drive is the average of 5 individual traits — Openness, Conscientiousness, Social Confidence, Collaborative Spirit, and Emotional Resilience. Cultural Agility, Team Citizenship, Learning Agility, and Ethical Integrity are each averages of 3–5 sub-dimensions. The development areas and priority matrix below drill into the individual dimensions within these groups — which is why you may see names that differ from the bars above.
 </div>
-            <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px'}}>
-              {bars.slice(1).map(([l,v],i)=>(
+           <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px'}}>
+              {bars.slice(1).map(([l,v],i)=>{
+                const pCol = l.includes('Personality')||l.includes('Conscientiousness')||l.includes('Emotional') ? '#EC4899' : l.includes('Cultural') ? '#06B6D4' : l.includes('Citizenship') ? '#F97316' : l.includes('Learning') ? '#3B82F6' : l.includes('Integrity') ? '#7C3AED' : T.t0;
+                return (
                 <div key={l} style={{marginBottom:'8px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'4px'}}>
-                    <span style={{fontSize:'13px',color:T.t0,fontWeight:'700'}}>{l}</span>
+                    <span style={{fontSize:'13px',color:T.t0,fontWeight:'700',display:'flex',alignItems:'center'}}>
+                      <span style={{display:'inline-block', width:'8px', height:'8px', borderRadius:'50%', background:pCol, marginRight:'8px'}}></span>
+                      {l}
+                    </span>
                     <span className="mono" style={{fontSize:'11px',color:bCol(v),fontWeight:'800'}}>{v}/100 · {v>=75?'Strong':v>=55?'Developing':'Priority'}</span>
                   </div>
                   <Bar score={v} w="100%" h={8} />
                 </div>
-              ))}
+              )})}
             </div>
 
             <div style={{background:T.bg2, borderRadius:'10px', padding:'24px', marginTop:'32px'}}>
@@ -3570,11 +3584,11 @@ for (const d of devAreas) {
                 </div>
               ) : (
                 <>
-                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.OCEANavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Personality</div></div>
-                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.CQavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Cultural IQ</div></div>
-                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.OCBavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Citizenship</div></div>
-                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.LAavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Learning</div></div>
-                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{S.EOavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Integrity</div></div>
+                 <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:'#EC4899'}}>{S.OCEANavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Personality</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:'#06B6D4'}}>{S.CQavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Cultural IQ</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:'#F97316'}}>{S.OCBavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Citizenship</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:'#3B82F6'}}>{S.LAavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Learning</div></div>
+                  <div style={{textAlign:'center'}}><div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:'#7C3AED'}}>{S.EOavg}</div><div className="mono" style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>Integrity</div></div>
                 </>
               )}
             </div>
@@ -3721,11 +3735,11 @@ for (const d of devAreas) {
 
           {/* ── THE 5 MODULE TABLES ── */}
           {[
-  { title: 'Personality at Work — OCEAN Framework', pill: 'Pillar 1', col: '#3B82F6', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]] },
-  { title: 'Cultural Intelligence (CQ)', pill: 'Pillar 2', col: T.gn, dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]] },
-  { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Pillar 3', col: T.am, dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]] },
-  { title: 'Adaptive Thinking & Learning Agility', pill: 'Pillar 4', col: '#8B5CF6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]] },
-  { title: 'Integrity & Ethical Orientation', pill: 'Pillar 5', col: T.rd, dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]] }
+  { title: 'Personality at Work — OCEAN Framework', pill: 'Pillar 1', col: '#EC4899', dims: [['O','Openness to Experience',S.O],['C','Conscientiousness',S.C],['E','Extraversion',S.E],['A','Agreeableness',S.A],['ES','Emotional Stability (inv.)',S.ES]] },
+  { title: 'Cultural Intelligence (CQ)', pill: 'Pillar 2', col: '#06B6D4', dims: [['CQ_K','Cultural Knowledge',S.CQ_K],['CQ_M','Cultural Motivation',S.CQ_M],['CQ_B','Cultural Behaviour',S.CQ_B]] },
+  { title: 'Organisational Citizenship Behaviour (OCB)', pill: 'Pillar 3', col: '#F97316', dims: [['OCB_A','Altruism',S.OCB_A],['OCB_CV','Civic Virtue',S.OCB_CV],['OCB_S','Sportsmanship',S.OCB_S],['OCB_CO','Courtesy',S.OCB_CO],['OCB_Cn','Conscientiousness (OCB)',S.OCB_Cn]] },
+  { title: 'Adaptive Thinking & Learning Agility', pill: 'Pillar 4', col: '#3B82F6', dims: [['LA_MA','Mental Agility',S.LA_MA],['LA_PA','People Agility (Self-Reflection)',S.LA_PA],['LA_CA','Change Agility (Systems Thinking)',S.LA_CA],['LA_RA','Results Agility (Cross-Domain Learning)',S.LA_RA]] },
+  { title: 'Integrity & Ethical Orientation', pill: 'Pillar 5', col: '#7C3AED', dims: [['EO_RC','Rule Compliance',S.EO_RC],['EO_T','Transparency & Disclosure',S.EO_T],['EO_ER','Ethical Reasoning',S.EO_ER],['EO_AI','Authentic Integrity',S.EO_AI]] }
 ].map((mod, i) => (
             <div key={i} style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
               <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', flexWrap:'wrap'}}>
@@ -4273,10 +4287,15 @@ for (const d of devAreas) {
                 )}
 
                 {/* File Upload Input */}
-                <div style={{marginBottom:'24px'}}>
+                <div style={{marginBottom:'20px'}}>
                   <label style={{fontSize:'12px', color:T.t1, fontWeight:'600', display:'block', marginBottom:'8px'}}>Upload Proof (Image/PDF, max 2.5MB)</label>
                   <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} style={{width:'100%', padding:'10px', background:T.bg3, color:T.t0, borderRadius:'6px', border:`1px solid ${T.b2}`, fontSize:'12px'}} />
                   {evInput.fileName && <div style={{fontSize:'11px', color:T.gn, marginTop:'6px', fontWeight:'700'}}>Attached: {evInput.fileName}</div>}
+                </div>
+
+                {/* Algorithmic Review Warning */}
+                <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'8px', padding:'12px 16px', marginBottom:'24px', fontSize:'11.5px', color:T.t1, lineHeight:'1.6'}}>
+                  <strong style={{color:T.am}}>Please note:</strong> Our algorithm reviews each upload individually within 3 to 5 business days. If the uploaded proof is flagged as invalid or unrelated, the earned XP will be reverted from your total score. For any queries, please contact <strong style={{color:T.t0}}>hello@carnelianco.com</strong>.
                 </div>
 
                 <div style={{display:'flex', gap:'10px', justifyContent:'flex-end'}}>
@@ -4358,9 +4377,10 @@ for (const d of devAreas) {
 <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>              {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
                 const avg = Math.round(safeBatch.reduce((sum, b) => sum + (b?.scores?.[k] || 0), 0) / (safeBatch.length || 1));
                 const labels = ['Personality', 'Cultural IQ', 'Citizenship', 'Learning', 'Integrity'];
+                const colors = ['#EC4899', '#06B6D4', '#F97316', '#3B82F6', '#7C3AED'];
                 return (
                   <div key={i} style={{textAlign:'center'}}>
-                    <div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:T.gold}}>{avg}</div>
+                    <div className="serif" style={{fontSize:'1.8rem', fontWeight:'700', color:colors[i]}}>{avg}</div>
                     <div style={{fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px'}}>{labels[i]}</div>
                   </div>
                 );

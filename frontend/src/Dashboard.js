@@ -1560,8 +1560,7 @@ const TeamReport = ({ candidate, allData, T }) => {
 
 // ─── TEAM COMPOSITION REPORT ──────────────────────────────────
 const TeamCompositionReport = ({ candidate, allData, T }) => {
-  const [promoRole, setPromoRole] = useState(0);
-  const batch = candidate.batch;
+    const batch = candidate.batch;
   
   if (!batch) {
     return (
@@ -1607,17 +1606,6 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
     {name:'Client-Facing Manager', targets:{E:[65,95],CQavg:[60,90],A:[60,90],SES:[60,95]}},
     {name:'Change Leader', targets:{ADS:[65,95],O:[65,95],LAavg:[65,95]}}
   ];
-  const targetRole = ROLE_TARGETS[promoRole];
-  
-  const scoredCandidates = batchData.map(b => {
-    let match = 0, count = 0;
-    Object.entries(targetRole.targets).forEach(([k, [min, max]]) => {
-      const v = b.report_data?.scores?.[k] || b.report_data?.CI?.[k];
-      if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
-    });
-    return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
-  }).sort((a,b) => b.fitPct - a.fitPct);
-
   const card = (children, style={}) => (
     <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>{children}</div>
   );
@@ -1695,23 +1683,39 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
       {card(
         <>
           <SectionHead label="3. Promotion Fit Check" T={T} />
-          <div style={{ marginBottom:'16px' }}>
-            <select value={promoRole} onChange={e=>setPromoRole(parseInt(e.target.value))} style={{ padding:'10px 14px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg3, color:T.t0, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'12px', fontWeight:'600', outline:'none', cursor:'pointer' }}>
-              {ROLE_TARGETS.map((r, i) => <option key={i} value={i}>{r.name}</option>)}
-            </select>
-          </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-            {scoredCandidates.map((c, i) => {
-              const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+          <p style={{ fontSize:'12px', color:T.t2, marginBottom:'20px' }}>Candidate fit percentages mapped against target dimension ranges for key organisational roles.</p>
+          
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', gap:'20px' }}>
+            {ROLE_TARGETS.map((role, idx) => {
+              const scored = batchData.map(b => {
+                let match = 0, count = 0;
+                Object.entries(role.targets).forEach(([k, [min, max]]) => {
+                  const v = b.report_data?.scores?.[k] || b.report_data?.CI?.[k];
+                  if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
+                });
+                return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
+              }).sort((a,b) => b.fitPct - a.fitPct);
+
               return (
-                <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px', background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px' }}>
-                  <div>
-                    <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{c.name}</div>
-                    <div style={{ fontSize:'11px', color:T.t2 }}>{c.profile_name}</div>
+                <div key={idx} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'16px' }}>
+                  <div style={{ fontSize:'14px', fontWeight:'800', color:T.gold, marginBottom:'12px', borderBottom:`1px solid ${T.b2}`, paddingBottom:'8px' }}>
+                    {role.name}
                   </div>
-                  <div style={{ textAlign:'right' }}>
-                    <div className="mono" style={{ fontSize:'16px', fontWeight:'800', color:col }}>{c.fitPct}%</div>
-                    <div style={{ fontSize:'9px', fontWeight:'700', color:col, textTransform:'uppercase', letterSpacing:'0.05em' }}>Fit Match</div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+                    {scored.map((c, i) => {
+                      const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+                      return (
+                        <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'6px' }}>
+                          <div>
+                            <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{c.name}</div>
+                            <div style={{ fontSize:'10px', color:T.t2 }}>{c.profile_name}</div>
+                          </div>
+                          <div style={{ textAlign:'right' }}>
+                            <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:col }}>{c.fitPct}%</div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

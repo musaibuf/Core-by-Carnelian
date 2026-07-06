@@ -102,10 +102,19 @@ app.post('/api/assessments', async (req, res) => {
   }
 });
 
-// GET: Fetch all assessments (We will use this later for the Dashboard)
+// GET: Fetch all assessments, or a single person's history via ?email=
 app.get('/api/assessments', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM assessments ORDER BY created_at DESC');
+    const { email } = req.query;
+    let result;
+    if (email) {
+      result = await pool.query(
+        'SELECT * FROM assessments WHERE LOWER(email) = LOWER($1) ORDER BY created_at DESC',
+        [email.trim()]
+      );
+    } else {
+      result = await pool.query('SELECT * FROM assessments ORDER BY created_at DESC');
+    }
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);

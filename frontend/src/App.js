@@ -4,7 +4,7 @@ import {
   Bolt, WorkspacePremium, AccountBalance, Lightbulb,
   Balance, Public, Groups, RocketLaunch,
   Diversity3, Shield, AltRoute, MenuBook,
-  TrendingUp, LinkedIn
+  TrendingUp
 } from '@mui/icons-material';
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
@@ -449,13 +449,6 @@ const Pill = ({label, color, bg, style={}}) => {
     }}>{label}</span>
   );
 };
-
-const ScoreBadge = ({score}) => (
-  <span className="mono" style={{
-    fontSize:'12px', fontWeight:'700', padding:'3px 10px', borderRadius:'3px',
-    background:bBg(score), color:bCol(score), border:`1px solid ${bCol(score)}40`
-  }}>{score}/100</span>
-);
 
 const Bar = ({score, w=110, h=5}) => (
   <div style={{width:w, height:h, background:T.b1, borderRadius:'3px', overflow:'hidden'}}>
@@ -1289,7 +1282,8 @@ const ReportsSlideshow = () => {
       setTimeout(() => { setActive(a => (a + 1) % reports.length); setProg(0); setFade(true); }, 320);
     }, INTERVAL);
     return () => { clearInterval(tick); clearTimeout(adv); };
-  }, [active]);
+  }, [active, reports.length]);
+
 
   const r = reports[active];
 
@@ -1462,7 +1456,6 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
   const [gameChoice, setGameChoice] = useState(null);
   const [priorFound, setPriorFound] = useState(null);
 const [consentChecked, setConsentChecked] = useState(false);
-const [legalChecked, setLegalChecked] = useState(false);
   const [startTime, setStartTime] = useState(null);
     const timerRef = useRef(null);
 
@@ -2169,12 +2162,6 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
     const circ=175.9;
     const offset=circ*(1-timer/45);
     const urgent=timer<=12;
-    const fb=gameChoice?{
-      best:{bg:T.gnP,bc:T.gn,c:T.gn,msg:isG2?'Disclosing the issue proactively protects team credibility and demonstrates transparency under pressure — the strongest combination of learning agility and ethical ownership.':'Strong integrity under relationship pressure. Declining while suggesting a legitimate alternative demonstrates rule compliance and ethical courage.'},
-      ok:{bg:T.amP,bc:T.am,c:T.am,msg:isG2?'This shows situational awareness and some degree of caution. A solid instinct, not the optimal one.':'This response maintains some oversight or documentation — awareness of the ethical issues, though not the most decisive approach.'},
-      poor:{bg:T.rdP,bc:T.rd,c:T.rd,msg:isG2?'This response prioritises short-term convenience over transparency. It reflects limited ethical ownership — the exact pattern this challenge is designed to detect.':"Approving a rule-bypass because a trusted relationship vouches for it is one of the most common pathways to institutional misconduct."},
-      timeout:{bg:T.amP,bc:T.am,c:T.am,msg:'Time expired. No response was recorded. Your existing dimension scores are unchanged.'},
-    }[gameChoice.quality]:null;
     const scenario=isG2
       ?"Your team is presenting a quarterly report to three senior directors in 8 minutes. Your colleague who built the data model has just told you a key assumption was wrong — it could significantly change your main recommendation. There is no time to fix it. What do you do?"
       :"Your line manager — someone who has actively supported your career — asks you to approve a vendor payment that bypasses the standard three-quote procurement process. He assures you it is urgent, the vendor is trustworthy, and he will sort the paperwork afterward. Approving this is within your authority. What do you do?";
@@ -2794,7 +2781,6 @@ const buildHabits = (content, dim, profile, R) => {
       await new Promise(r => setTimeout(r, 400));
       const canvas = await window.html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: bgColor, width: 794, windowWidth: 794 });
       document.body.removeChild(container);
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const canvasH = canvas.height;
       const canvasW = canvas.width;
       const pageHeightPx = (canvasW / A4_W) * A4_H;
@@ -4797,25 +4783,63 @@ Discover yours at <strong style={{color:T.t0}}>CORE by Carnelian</strong>
 // ─── PROGRESS PAGE ────────────────────────────────────────────────────────────
 const ProgressPage = ({ setTab, setReportData }) => {
   const [history, setHistory] = useState([]);
-const [searchEmail, setSearchEmail] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
   const [searched, setSearched] = useState(false);
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(()=>{
     try { setHistory(JSON.parse(localStorage.getItem('core_v3_history')||'[]')); } catch(e){}
   },[]);
 
-const handleSearch = () => {
+const handleSearch = async () => {
   setSearched(true);
   const term = searchEmail.trim().toLowerCase();
   if (!term) { setResults([]); return; }
-  const matches = history.filter(e => e.email && e.email.toLowerCase() === term);
+
+  // Matches saved on this device
+  const localMatches = history.filter(e => e.email && e.email.toLowerCase() === term);
+
+  // Matches from the server, so this works on any device or browser
+  let serverMatches = [];
+  setLoading(true);
+  try {
+    const res = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(term)}`);
+    if (res.ok) {
+      const data = await res.json();
+      serverMatches = (Array.isArray(data) ? data : []).map(r => {
+        const resp = r.report_data?.respondent || {};
+        return {
+          docId: r.doc_id,
+          date: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}) : (r.report_data?.date || ''),
+          timestamp: r.created_at ? new Date(r.created_at).getTime() : 0,
+          name: r.name, email: r.email, phone: r.phone||'', emp: resp.emp||'',
+          role: r.role||'', dept: r.department||'', exp: resp.exp||'',
+          org: resp.org||'', industry: r.industry||'', purpose: r.purpose||'', batch: r.batch||'',
+          profile: r.profile_name, validityOverall: r.report_data?.validity?.overall || 'unknown',
+          scores: r.report_data?.scores ? {
+            ...r.report_data.scores,
+            overall: r.overall_score,
+            ...(r.report_data.CI || {}),
+          } : { overall: r.overall_score },
+          report_data: r.report_data,
+        };
+      });
+    }
+  } catch (e) { console.error('Server lookup failed:', e); }
+  setLoading(false);
+
+  // Merge local + server, preferring server copy when the same record exists in both
+  const seenDocIds = new Set(serverMatches.map(e => e.docId));
+  const merged = [...serverMatches, ...localMatches.filter(e => !seenDocIds.has(e.docId))];
+
   const byPerson = {};
-  matches.forEach(e => {
+  merged.forEach(e => {
     const pid = e.email.toLowerCase();
     if (!byPerson[pid]) byPerson[pid] = [];
     byPerson[pid].push(e);
   });
+  Object.values(byPerson).forEach(arr => arr.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)));
   setResults(Object.values(byPerson));
 };
 
@@ -4855,15 +4879,16 @@ const updatedResults = results.map(entries => entries.filter(e => e.email?.toLow
 />
           <button
             onClick={handleSearch}
+            disabled={loading}
             style={{
-              padding:'12px 24px', borderRadius:'6px', border:'none', cursor:'pointer',
-              background:T.c, color:'#fff',
-              fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'800',
+              padding:'12px 24px', borderRadius:'6px', border:'none', cursor:loading?'not-allowed':'pointer',
+              background:loading?T.bg3:T.c, color:loading?T.t3:'#fff',
+              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'13px', fontWeight:'800',
               letterSpacing:'0.03em', transition:'all 0.2s', whiteSpace:'nowrap',
             }}
-            onMouseOver={e=>e.target.style.background=T.cDark}
-            onMouseOut={e=>e.target.style.background=T.c}
-          >Search →</button>
+            onMouseOver={e=>{if(!loading) e.target.style.background=T.cDark;}}
+            onMouseOut={e=>{if(!loading) e.target.style.background=T.c;}}
+          >{loading ? 'Searching…' : 'Search →'}</button>
         </div>
         <div style={{fontSize:'11px', color:T.t3, fontWeight:'600'}}>
           {history.length} record{history.length!==1?'s':''} stored locally on this device.

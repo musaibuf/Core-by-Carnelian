@@ -266,41 +266,6 @@ const SparkLine = ({ data, color='#C8A84B', w=80, h=28 }) => {
   );
 };
 
-// ─── RADAR CHART ─────────────────────────────────────────────
-const RadarChart = ({ scores, T, size=180 }) => {
-  const dims = [
-    { k:'OCEANavg', l:'Personality' },
-    { k:'CQavg',    l:'Cultural IQ' },
-    { k:'OCBavg',   l:'Citizenship' },
-    { k:'LAavg',    l:'Learning' },
-    { k:'EOavg',    l:'Integrity' },
-  ];
-  const cx=size/2, cy=size/2, r=size*0.36, n=dims.length;
-  const angle=(i)=>(i*2*Math.PI)/n - Math.PI/2;
-  const pt=(i,val)=>{ const a=angle(i),ratio=(val||0)/100; return { x:cx+r*ratio*Math.cos(a), y:cy+r*ratio*Math.sin(a) }; };
-  const outerPt=(i)=>({ x:cx+r*Math.cos(angle(i)), y:cy+r*Math.sin(angle(i)) });
-  const polygon=dims.map((d,i)=>{ const p=pt(i,scores[d.k]); return `${p.x},${p.y}`; }).join(' ');
-  return (
-    <svg width={size} height={size} style={{ overflow:'visible' }}>
-      {[0.25,0.5,0.75,1].map(lvl=>{
-        const pts=dims.map((_,i)=>{ const a=angle(i); return `${cx+r*lvl*Math.cos(a)},${cy+r*lvl*Math.sin(a)}`; }).join(' ');
-        return <polygon key={lvl} points={pts} fill="none" stroke={T.b1} strokeWidth="1" />;
-      })}
-      {dims.map((_,i)=>{ const op=outerPt(i); return <line key={i} x1={cx} y1={cy} x2={op.x} y2={op.y} stroke={T.b2} strokeWidth="1" />; })}
-      <polygon points={polygon} fill={`${T.c}28`} stroke={T.c} strokeWidth="2" strokeLinejoin="round" />
-      {dims.map((d,i)=>{ const p=pt(i,scores[d.k]); return <circle key={i} cx={p.x} cy={p.y} r="3.5" fill={T.c} />; })}
-      {dims.map((d,i)=>{
-        const lx=cx+(r+18)*Math.cos(angle(i)), ly=cy+(r+18)*Math.sin(angle(i));
-        return (
-          <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
-            fontFamily="'JetBrains Mono',monospace" fontSize="8" fontWeight="700" fill={T.t3}
-            style={{ textTransform:'uppercase', letterSpacing:'0.06em' }}>{d.l}</text>
-        );
-      })}
-    </svg>
-  );
-};
-
 // ─── DIST BAR ────────────────────────────────────────────────
 const DistBar = ({ value, max, label, color, T }) => {
   const pct = max > 0 ? (value/max)*100 : 0;
@@ -381,10 +346,6 @@ const TechnicalReport = ({ candidate, T }) => {
   const patterns= rd.patterns  || [];
   const CI      = rd.CI        || {};
   const gs      = rd.gameSummary || {};
-
-  const recommendedRoles  = roles.filter(r => r.score >= r.g);
-  const conditionalRoles  = roles.filter(r => r.score >= r.a && r.score < r.g);
-  const highRiskRoles     = roles.filter(r => r.score < r.a);
 
   const card = (children, style={}) => (
     <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
@@ -1139,17 +1100,26 @@ const PlayerReport = ({ candidate, T }) => {
   const baseXP   = Math.round(SKILLS.reduce((a,s)=>a+s.v,0)*10);
   const compVals = [CI.CII,CI.LRS,CI.TVS,CI.ADS,CI.SES,CI.OPS,CI.PMS].filter(Boolean);
   const compBonus= compVals.length ? Math.round((compVals.reduce((a,v)=>a+v,0)/compVals.length)*50) : 0;
-  const earnedXP = baseXP + compBonus;
+  
+  // Add Pattern Bonuses
+  const patterns = rd.patterns || [];
+  const patBonus = patterns.filter(p=>p.sev==='pos').length * 500;
+  
+  // Add Evidence XP
+  let verifiedXP = 0;
+  Object.values(evState).forEach(e => verifiedXP += (e.xp || 0));
+  
+  const totalXP = baseXP + compBonus + patBonus + verifiedXP;
 
   const LEVELS = [
     {n:1,l:'NOVICE',min:0},{n:2,l:'APPRENTICE',min:5000},{n:3,l:'PRACTITIONER',min:8000},
     {n:4,l:'PROFESSIONAL',min:11000},{n:5,l:'ADVANCED',min:14000},{n:6,l:'SENIOR',min:17000},
     {n:7,l:'EXPERT',min:20000},{n:8,l:'MASTER',min:23000},{n:9,l:'ELITE',min:26000},{n:10,l:'LEGEND',min:29000},
   ];
-  const curLvl  = [...LEVELS].reverse().find(l=>earnedXP>=l.min) || LEVELS[0];
+  const curLvl  = [...LEVELS].reverse().find(l=>totalXP>=l.min) || LEVELS[0];
   const nextLvl = LEVELS[Math.min(curLvl.n,9)];
   const lvlPct  = nextLvl && nextLvl.min > curLvl.min
-    ? Math.min(100, Math.round(((earnedXP-curLvl.min)/(nextLvl.min-curLvl.min))*100)) : 100;
+    ? Math.min(100, Math.round(((totalXP-curLvl.min)/(nextLvl.min-curLvl.min))*100)) : 100;
 
   const GC_MAP = {
     'Strategic Integrity Leader':'⚔️','Institutional Anchor':'🛡️','Adaptive Innovator':'🏹',
@@ -1196,7 +1166,7 @@ const PlayerReport = ({ candidate, T }) => {
                 LV{curLvl.n} {curLvl.l}
               </div>
               <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', color:'#94a3b8' }}>
-                <span style={{ color:accentCol, fontWeight:'800' }}>{earnedXP.toLocaleString()}</span> XP
+                <span style={{ color:accentCol, fontWeight:'800' }}>{totalXP.toLocaleString()}</span> XP
               </div>
             </div>
             <div style={{ width:'100%', maxWidth:'360px', height:'8px', background:'rgba(255,255,255,.07)', borderRadius:'100px', overflow:'hidden' }}>
@@ -1212,7 +1182,7 @@ const PlayerReport = ({ candidate, T }) => {
           </div>
         </div>
         <div style={{ marginTop:'14px', paddingTop:'12px', borderTop:'1px solid rgba(255,255,255,.06)', display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
-          {[['XP (Scores)',earnedXP,'#60a5fa'],['Achievements',ACHIEVEMENTS.reduce((a,b)=>a+b.xp,0),'#4ade80'],['Overall',S.overall||0,'#C8A84B'],['Level',curLvl.n,'#e879f9']].map(([l,v,c])=>(
+          {[['Total XP',totalXP,'#60a5fa'],['Achievements',ACHIEVEMENTS.reduce((a,b)=>a+b.xp,0),'#4ade80'],['Overall',S.overall||0,'#C8A84B'],['Level',curLvl.n,'#e879f9']].map(([l,v,c])=>(
             <div key={l} style={{ textAlign:'center' }}>
               <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'14px', fontWeight:'800', color:c }}>{typeof v==='number'&&v>999?v.toLocaleString():v}</div>
               <div style={{ fontSize:'8px', color:'#334155', textTransform:'uppercase', letterSpacing:'0.06em' }}>{l}</div>

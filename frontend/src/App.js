@@ -229,6 +229,126 @@ const IND = {
   },
 };
 
+const GEMSTONES = {
+  'Adaptive Innovator': {
+    emoji:'🧭', gem:'LABRADORITE', title:'The Pathfinder', color:'#3E6B8E', colorDark:'#24425A',
+    tagline:"You don't wait for the map. You make one.",
+    desc:'Where others see chaos, you see a route. You move fast, connect dots nobody else notices, and somehow always find the way through.',
+    inTeam:'The one who unsticks everyone else.',
+    edge:'You were already three steps ahead. The hard part is waiting for the room to catch up.',
+    oneLine:"Built for problems that don't have a playbook yet.",
+    quirky:'GPS could never.',
+  },
+  'Institutional Anchor': {
+    emoji:'🪨', gem:'JASPER', title:'The Cornerstone', color:'#8B5A2B', colorDark:'#5C3A1B',
+    tagline:"The team works because of you. They just don't always say it.",
+    desc:"You're the memory, the standard, and the steady hand. When everything else moves, you hold the line.",
+    inTeam:'The one everyone calibrates against.',
+    edge:"Consistency is rare. You've been delivering it for years.",
+    oneLine:'The foundation others build on.',
+    quirky:'The load-bearing wall of every group chat.',
+  },
+  'Visionary Sprinter': {
+    emoji:'🌟', gem:'CITRINE', title:'The Spark', color:'#D4A017', colorDark:'#8A6A0F',
+    tagline:'You see the finish line before the race has started.',
+    desc:'Big ideas. Bold moves. Unstoppable energy. You raise the ambition of every room you walk into.',
+    inTeam:'The one who makes the impossible feel inevitable.',
+    edge:"You don't just dream it. You get people running toward it.",
+    oneLine:'The person who makes the room believe.',
+    quirky:'Solar powered, main character energy.',
+  },
+  'Collaborative Team Leader': {
+    emoji:'🩵', gem:'TURQUOISE', title:'The Weaver', color:'#2CA6A4', colorDark:'#1C6E6C',
+    tagline:'You make the team actually work.',
+    desc:"You notice when someone's been quiet too long. You create the kind of trust that makes people do their best work. That's not soft, that's rare.",
+    inTeam:"The glue nobody sees until it's gone.",
+    edge:'Psychological safety is a skill. Yours is exceptional.',
+    oneLine:'The reason the team is more than the sum of its parts.',
+    quirky:'The human duct tape holding the team together.',
+  },
+  'Cross-Cultural Bridge': {
+    emoji:'🔵', gem:'LAPIS LAZULI', title:'The Bridge', color:'#26428B', colorDark:'#162A5C',
+    tagline:"You speak everyone's language. Even when they're speaking the same one.",
+    desc:'You move across cultures, contexts, and communication styles without losing yourself. You translate not words, but worlds.',
+    inTeam:'The one who finds the thread everyone else dropped.',
+    edge:'You make diverse teams actually function as diverse teams.',
+    oneLine:'Where others see difference, you see opportunity.',
+    quirky:"Fluent in vibes, dialects, and everyone's love language.",
+  },
+  'Eager Cultural Bridge-Builder': {
+    emoji:'🌙', gem:'MOONSTONE', title:'The Diplomat', color:'#9C97C7', colorDark:'#635E8A',
+    tagline:"You bring people in. That's your gift, and it's rarer than you think.",
+    desc:"You lead with warmth. You notice who's left out. You make people feel welcome before they've said a word.",
+    inTeam:'The reason new people settle fast.',
+    edge:'Heart is a leadership skill. Yours is already exceptional.',
+    oneLine:'Still becoming, and already making a difference.',
+    quirky:'Walks in, and suddenly nobody feels awkward anymore.',
+  },
+  'Ethics-Driven Executor': {
+    emoji:'⬛', gem:'ONYX', title:'The Backbone', color:'#2A2A2A', colorDark:'#111111',
+    tagline:'You do what you said you would. Every single time.',
+    desc:"No shortcuts. No cutting corners. You hold yourself to a standard others quietly try to match. Integrity isn't something you perform, it's how you operate.",
+    inTeam:'The one who brings credibility to everything they touch.',
+    edge:'In a world full of noise, you deliver. Quietly. Consistently.',
+    oneLine:'The standard others try to meet.',
+    quirky:'Shows up. Delivers. Says nothing about it.',
+  },
+  'Learning Champion': {
+    emoji:'💙', gem:'SAPPHIRE', title:'The Champion', color:'#0F52BA', colorDark:'#0A3576',
+    tagline:'You are the most curious person in the room. Own it.',
+    desc:"You ask questions others don't think to ask. You come back having figured things out. Your growth mindset isn't a trait, it's a practice that compounds.",
+    inTeam:'The one who makes everyone around them smarter over time.',
+    edge:'Curiosity is contagious. Yours is exceptional.',
+    oneLine:'The person who makes the whole team better.',
+    quirky:"Turns 'why' into a personality trait, in the best way.",
+  },
+  'Strategic Pivoter': {
+    emoji:'🌈', gem:'OPAL', title:'The Pivot', color:'#8B6FCB', colorDark:'#5A4785',
+    tagline:"You don't get stuck. You get strategic.",
+    desc:"When the plan changes, and it always does, you don't freeze. You read the room, let go of what's not working, and redirect before others have noticed the shift.",
+    inTeam:'The one who stops everyone from throwing good effort after bad plans.',
+    edge:"Adaptability at speed. That's not common. That's you.",
+    oneLine:'Wired for the world that keeps changing.',
+    quirky:'Plot twist? Already three moves ahead of it.',
+  },
+  'High-Capability, Under Strain': {
+    emoji:'🖤', gem:'OBSIDIAN', title:'The Resilient', color:'#1A1A1A', colorDark:'#000000',
+    tagline:"You're carrying more than most people know, and still delivering.",
+    desc:"Formed under pressure. Razor sharp. You perform at a level others can't sustain, even when the weight is real. That's not just capability. That's character.",
+    inTeam:'The most dependable person in the room.',
+    edge:'High performance is your baseline. Sustainability is your next level.',
+    oneLine:"Pressure didn't break you. It made you sharper.",
+    quirky:'Runs on fumes, still outperforms everyone on a full tank.',
+  },
+  'Strategic Integrity Leader': {
+    emoji:'🔴', gem:'CARNELIAN', title:'The Architect', color:'#B01C24', colorDark:'#6B0E13',
+    tagline:"This is the stone the brand is named after. You've earned it.",
+    desc:"You see the full picture and you build it properly. Strategic thinking. Principled execution. You don't just know what to do, you care deeply about how it gets done.",
+    inTeam:'The one whose judgment people trust without needing to ask why.',
+    edge:'You carry both the vision and the values. That combination is rare.',
+    oneLine:'Where strategy meets substance.',
+    quirky:'Builds the plane while flying it. Zero turbulence.',
+  },
+  'Generous Under Pressure': {
+    emoji:'🌸', gem:'ROSE QUARTZ', title:'The Heartbeat', color:'#D98C9A', colorDark:'#9C5865',
+    tagline:'Even at full capacity, you show up for others.',
+    desc:"When pressure hits, most people turn inward. You check on someone first. That's not naivety, that's emotional strength at its most powerful.",
+    inTeam:'The reason morale holds when things get hard.',
+    edge:'The kind of person every team needs and not every team has.',
+    oneLine:'The warmth that keeps everything else going.',
+    quirky:'Checks on you before checking their own inbox.',
+  },
+  'Emerging Professional': {
+    emoji:'🟢', gem:'PERIDOT', title:'The Contender', color:'#7CB342', colorDark:'#4E7228',
+    tagline:"You're at the start of something real.",
+    desc:"Fresh eyes. Genuine hunger. The willingness to show up and figure it out. You haven't developed the assumptions that come with years in an industry, and that makes you more valuable than you realise.",
+    inTeam:'The energy. The questions nobody else is asking. The future.',
+    edge:"You're not here for an easy ride. You're here for a real one.",
+    oneLine:"The beginning is not a limitation. It's a launchpad.",
+    quirky:'New here. Already asking the question everyone else was scared to.',
+  },
+};
+
 const QS = [
   // ─── PART A: HOW YOU WORK (11) ───
   {ch:'A',d:'C',r:false,t:"When assigned a task I find tedious, I complete it to the same standard as work I find engaging."},
@@ -2355,7 +2475,8 @@ const ResultsPage = ({reportData}) => {
   const [batchData, setBatchData] = useState([]);
   const [promoRole, setPromoRole] = useState(0);
   const [evState, setEvState] = useState({});
-const [expandedSteps, setExpandedSteps] = useState({});
+  const [expandedSteps, setExpandedSteps] = useState({});
+  const [personaSlide, setPersonaSlide] = useState(0);
 
   useEffect(() => {
     if (reportData?.docId) {
@@ -3039,36 +3160,52 @@ for (const d of devAreas) {
     pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
   };
 
-  // ─── PNG DOWNLOAD (Persona Card) ───
-  const downloadPersonaPNG = async () => {
-    const loadScript = (src) => new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-      const s = document.createElement('script');
-      s.src = src; s.onload = resolve; s.onerror = reject;
-      document.body.appendChild(s);
-    });
+  // ─── PDF DOWNLOAD (Gemstone Carousel, one page per slide) ───
+  const loadScriptOnce = (src, flag) => new Promise((resolve, reject) => {
+    if (window[flag]) { resolve(); return; }
+    const existing = document.querySelector(`script[data-${flag}]`);
+    if (existing) {
+      const check = setInterval(() => { if (window[flag]) { clearInterval(check); resolve(); } }, 50);
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = src;
+    s.setAttribute(`data-${flag}`, '1');
+    s.onload = () => { window[flag] = true; resolve(); };
+    s.onerror = reject;
+    document.body.appendChild(s);
+  });
 
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    
-    const cardElement = document.getElementById('persona-capture-card');
-    if (!cardElement) return;
+  const loadHtml2Canvas = () => loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', '__h2c_ready');
+  const loadJsPDF = () => loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', '__jspdf_ready');
+  const waitForRender = () => new Promise(r => setTimeout(r, 150));
 
-    // Temporarily adjust styles for perfect capture
-    const originalTransform = cardElement.style.transform;
-    cardElement.style.transform = 'none';
+  const captureSlideCanvas = async () => {
+    const el = document.getElementById('persona-capture-card');
+    if (!el) return null;
+    return window.html2canvas(el, { scale: 2, useCORS: true, backgroundColor: T.bg0 });
+  };
 
-    const canvas = await window.html2canvas(cardElement, {
-      scale: 3, // High resolution for LinkedIn
-      useCORS: true,
-      backgroundColor: T.bg0
-    });
+  const downloadCarouselPDF = async () => {
+    await loadHtml2Canvas();
+    await loadJsPDF();
+    const { jsPDF } = window.jspdf;
+    const originalSlide = personaSlide;
+    const totalSlides = 4;
+    const pdf = new jsPDF({ unit: 'px', format: [1080, 1350], orientation: 'portrait' });
 
-    cardElement.style.transform = originalTransform;
-
-    const link = document.createElement('a');
-    link.download = `${R.name?.replace(/\s+/g,'_') || 'CORE'}_Persona.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    for (let i = 0; i < totalSlides; i++) {
+      setPersonaSlide(i);
+      await waitForRender();
+      const canvas = await captureSlideCanvas();
+      if (canvas) {
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) pdf.addPage([1080, 1350], 'portrait');
+        pdf.addImage(imgData, 'JPEG', 0, 0, 1080, 1350);
+      }
+    }
+    setPersonaSlide(originalSlide);
+    pdf.save(`${R.name?.replace(/\s+/g,'_') || 'CORE'}_Gemstone_Carousel.pdf`);
   };
 
   // ── RESOURCES & PROTOCOLS ──
@@ -4615,167 +4752,159 @@ for (const d of devAreas) {
         );
       })()}
 
-      {/* ─── TAB 6: MY PERSONA (SHAREABLE CARD) ─── */}
+      {/* ─── TAB 6: MY GEMSTONE (SHAREABLE CAROUSEL) ─── */}
       {resTab === 'persona' && (() => {
-        // Get top 3 strengths for the card
-        const top3 = allDims.slice(0, 3);
-        
-        // Map archetypes to specific Material UI Icons
-        const iconMap = {
-          'High-Capability, Under Strain': <Bolt fontSize="inherit" />,
-          'Strategic Integrity Leader': <WorkspacePremium fontSize="inherit" />,
-          'Institutional Anchor': <AccountBalance fontSize="inherit" />,
-          'Adaptive Innovator': <Lightbulb fontSize="inherit" />,
-          'Ethics-Driven Executor': <Balance fontSize="inherit" />,
-          'Cross-Cultural Bridge': <Public fontSize="inherit" />,
-          'Collaborative Team Leader': <Groups fontSize="inherit" />,
-          'Visionary Sprinter': <RocketLaunch fontSize="inherit" />,
-          'Eager Cultural Bridge-Builder': <Diversity3 fontSize="inherit" />,
-          'Generous Under Pressure': <Shield fontSize="inherit" />,
-          'Strategic Pivoter': <AltRoute fontSize="inherit" />,
-          'Learning Champion': <MenuBook fontSize="inherit" />,
-          'Emerging Professional': <TrendingUp fontSize="inherit" />
-        };
-        
-        // Fallback icon just in case
-        const archIcon = iconMap[profile.name] || <WorkspacePremium fontSize="inherit" />;
+        const gem = GEMSTONES[profile.name] || GEMSTONES['Emerging Professional'];
+        const TOTAL_SLIDES = 4;
 
-        return (
-          <div className="anim-fadeUp" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-            
-            <div style={{textAlign: 'center', marginBottom: '24px'}}>
-              <h2 className="serif" style={{fontSize: '2rem', fontWeight: '700', color: T.t0}}>Share Your Persona</h2>
-              <p style={{color: T.t2, fontSize: '14px'}}>Download your high-resolution persona card to share on LinkedIn or with your team.</p>
+        const SlideShell = ({ children, index }) => (
+          <div style={{
+            width:'1080px', height:'1350px', background:T.bg0, position:'relative', overflow:'hidden',
+            display:'flex', flexDirection:'column', boxSizing:'border-box',
+          }}>
+            {/* Ambient glows, two corners for more visual depth */}
+            <div style={{position:'absolute', top:'-14%', right:'-14%', width:'760px', height:'760px', borderRadius:'50%', background:`radial-gradient(circle, ${gem.color}28 0%, transparent 65%)`, pointerEvents:'none'}} />
+            <div style={{position:'absolute', bottom:'-10%', left:'-12%', width:'560px', height:'560px', borderRadius:'50%', background:`radial-gradient(circle, ${gem.color}18 0%, transparent 65%)`, pointerEvents:'none'}} />
+            {/* Giant faint watermark emoji for texture */}
+            <div style={{position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%) rotate(-8deg)', fontSize:'620px', opacity:0.035, pointerEvents:'none', lineHeight:1}}>{gem.emoji}</div>
+
+            <div style={{height:'7px', background:`linear-gradient(90deg, ${gem.color}, ${gem.colorDark}, transparent)`, flexShrink:0, position:'relative', zIndex:2}} />
+
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'44px 72px 0', flexShrink:0, position:'relative', zIndex:2}}>
+              <img src="/logo.svg" alt="CORE" style={{height:'60px', objectFit:'contain'}} />
+              <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
+                <div style={{fontFamily:"'JetBrains Mono',monospace", color:gem.color, fontSize:'22px', fontWeight:'800', letterSpacing:'0.16em'}}>CORE ASSESSMENT</div>
+                <div style={{background:gem.color, color:'#fff', fontFamily:"'JetBrains Mono',monospace", fontSize:'18px', fontWeight:'800', padding:'6px 16px', borderRadius:'100px', letterSpacing:'0.05em'}}>{index+1} / {TOTAL_SLIDES}</div>
+              </div>
             </div>
 
-            {/* The Card Container (Responsive preview, but fixed aspect ratio for capture) */}
-            <div style={{
-              width: '100%', maxWidth: '500px', 
-              background: T.bg1, border: `1px solid ${T.b2}`, 
-              borderRadius: '16px', padding: '24px',
-              boxShadow: `0 20px 40px rgba(0,0,0,0.2)`
-            }}>
-              
-              {/* THE ACTUAL CAPTURE ELEMENT */}
-<div id="persona-capture-card" style={{
-  width: '1080px', height: '1350px',
-  background: T.bg0,
-  position: 'relative', overflow: 'hidden',
-  display: 'flex', flexDirection: 'column',
-  boxSizing: 'border-box',
-  transform: 'scale(0.41)',
-  transformOrigin: 'top left',
-  marginBottom: '-796px'
-}}>
-  {/* Ambient glows */}
-  <div style={{position:'absolute',top:'-10%',right:'-10%',width:'700px',height:'700px',borderRadius:'50%',background:`radial-gradient(circle,${T.cGlow} 0%,transparent 65%)`,pointerEvents:'none'}} />
-  <div style={{position:'absolute',bottom:'5%',left:'-10%',width:'500px',height:'500px',borderRadius:'50%',background:`radial-gradient(circle,${T.goldP} 0%,transparent 65%)`,pointerEvents:'none'}} />
-
-  {/* Top accent bar */}
-  <div style={{height:'6px',background:`linear-gradient(90deg,${T.c},${T.gold},transparent)`,flexShrink:0,position:'relative',zIndex:2}} />
-
-  {/* Header */}
-  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'44px 72px 0',flexShrink:0,position:'relative',zIndex:2}}>
-    <img src="/logo.svg" alt="CORE" style={{height:'72px',objectFit:'contain'}} />
-<div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.gold,fontSize:'28px',fontWeight:'800',letterSpacing:'0.18em'}}>CORE ASSESSMENT</div>
-  </div>
-
-  {/* Main content */}
-<div style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',textAlign:'center',padding:'40px 72px 0',position:'relative',zIndex:2}}>
-
-    {/* Icon in circle */}
-    <div style={{
-      width:'148px',height:'148px',borderRadius:'50%',
-      border:`2px solid ${T.gold}50`,
-      background:T.goldP,
-      display:'flex',alignItems:'center',justifyContent:'center',
-      marginBottom:'40px',
-      color:T.gold,fontSize:'72px',
-      boxShadow:`0 0 48px ${T.goldP}`,
-    }}>
-      {archIcon}
-    </div>
-
-    {/* Labels */}
-    <div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.t2,fontSize:'26px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'10px',textTransform:'uppercase'}}>
-                    YOUR CORE PERSONA
-                  </div>
-                  <div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.t0,fontSize:'40px',fontWeight:'800',letterSpacing:'0.08em',marginBottom:'26px',textTransform:'uppercase'}}>
-                    {R.name}
-                  </div>
-
-    {/* Accent divider */}
-    <div style={{width:'64px',height:'5px',background:`linear-gradient(90deg,${T.c},${T.gold})`,borderRadius:'3px',marginBottom:'30px'}} />
-
-    {/* Profile name */}
-<h1 style={{fontFamily:"'Crimson Pro',serif",fontSize:'90px',fontWeight:'700',color:T.gold,lineHeight:'1.05',margin:'0 0 28px',letterSpacing:'-0.02em',maxWidth:'920px'}}>
-        {profile.name}
-    </h1>
-
-    {/* Description */}
-<p style={{fontFamily:"'Public Sans',sans-serif",fontSize:'30px',color:T.t2,lineHeight:'1.65',maxWidth:'880px',fontWeight:'600'}}>
-        {profile.desc}
-    </p>
-  </div>
-
-  {/* Superpowers panel */}
-  <div style={{
-    background:T.bg2,borderTop:`1px solid ${T.b2}`,
-    padding:'44px 72px 40px',
-    flexShrink:0,position:'relative',zIndex:2,
-  }}>
-    <div style={{fontFamily:"'IBM Plex Mono',monospace",color:T.c,fontSize:'20px',fontWeight:'800',letterSpacing:'0.14em',marginBottom:'32px'}}>
-      CORE SUPERPOWERS
-    </div>
-    <div style={{display:'flex',flexDirection:'column',gap:'22px'}}>
-      {top3.map((s,i) => (
-        <div key={i}>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:'10px'}}>
-            <span style={{fontFamily:"'Public Sans',sans-serif",fontSize:'28px',color:T.t0,fontWeight:'700'}}>{s.l}</span>
-            <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:'28px',color:T.gold,fontWeight:'800'}}>{s.v}/100</span>
-          </div>
-          <div style={{height:'10px',background:T.b1,borderRadius:'20px',overflow:'hidden'}}>
-            <div style={{width:`${s.v}%`,height:'100%',background:`linear-gradient(90deg,${T.c},${T.gold})`,borderRadius:'20px'}} />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-
-  {/* Footer */}
-  <div style={{
-    display:'flex',justifyContent:'space-between',alignItems:'center',
-    padding:'26px 72px',borderTop:`1px solid ${T.b2}`,
-    flexShrink:0,position:'relative',zIndex:2,
-    background:T.bg1,
-  }}>
-    <div style={{fontFamily:"'Public Sans',sans-serif",fontSize:'22px',color:T.t3,fontWeight:'600'}}>
-Discover yours at <strong style={{color:T.t0}}>CORE by Carnelian</strong>
-    </div>
-    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:'20px',color:T.t3}}>{date}</div>
-  </div>
-
-  {/* Bottom accent bar */}
-  <div style={{height:'5px',background:`linear-gradient(90deg,transparent,${T.c},${T.gold},transparent)`,flexShrink:0,position:'relative',zIndex:2}} />
-</div>
+            <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center', padding:'40px 72px', position:'relative', zIndex:2}}>
+              {children}
             </div>
 
-            <button onClick={downloadPersonaPNG} style={{
-              marginTop: '40px', padding: '16px 44px', borderRadius: '100px',
-              background: T.c, color: '#fff', border: 'none', cursor: 'pointer',
-              fontFamily: "'Public Sans',sans-serif", fontSize: '14px', fontWeight: '800',
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-              boxShadow: `0 10px 28px ${T.cGlow}`, transition: 'all 0.2s',
-            }}
-            onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.background = T.cDark; }}
-            onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.background = T.c; }}>
-              ⬇ Download Persona Card
-            </button>
-            <p style={{marginTop: '12px', fontSize: '13px', color: T.t3, fontWeight: '500'}}>Share on LinkedIn, Instagram, or WhatsApp.</p>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'26px 72px', borderTop:`1px solid ${T.b2}`, flexShrink:0, position:'relative', zIndex:2, background:T.bg1}}>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'20px', color:T.t3, fontWeight:'600'}}>
+                Discover yours at <strong style={{color:T.t0}}>CORE by Carnelian</strong>
+              </div>
+              <div className="mono" style={{fontSize:'18px', color:T.t3}}>{gem.gem}</div>
+            </div>
+            <div style={{height:'6px', background:`linear-gradient(90deg, transparent, ${gem.colorDark}, ${gem.color}, transparent)`, flexShrink:0, position:'relative', zIndex:2}} />
           </div>
         );
-      })()}
 
+        const Slide0 = (
+          <SlideShell index={0}>
+            <div style={{textAlign:'center'}}>
+              <div style={{width:'168px', height:'168px', borderRadius:'50%', border:`3px solid ${gem.color}55`, background:`radial-gradient(circle, ${gem.color}28 0%, ${gem.color}10 70%)`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 40px', fontSize:'80px', boxShadow:`0 0 60px ${gem.color}35`}}>
+                {gem.emoji}
+              </div>
+              <div style={{fontFamily:"'JetBrains Mono',monospace", color:T.t2, fontSize:'24px', fontWeight:'800', letterSpacing:'0.14em', marginBottom:'8px', textTransform:'uppercase'}}>YOUR CORE IDENTITY</div>
+              <div style={{fontFamily:"'JetBrains Mono',monospace", color:T.t0, fontSize:'36px', fontWeight:'800', letterSpacing:'0.06em', marginBottom:'30px', textTransform:'uppercase'}}>{R.name}</div>
+              <div style={{width:'80px', height:'6px', background:`linear-gradient(90deg, ${gem.color}, ${gem.colorDark})`, borderRadius:'3px', margin:'0 auto 34px'}} />
+              <h1 style={{fontFamily:"'Playfair Display',serif", fontSize:'104px', fontWeight:'700', color:gem.color, lineHeight:'1.0', margin:'0 0 14px', letterSpacing:'-0.01em', textShadow:`0 0 60px ${gem.color}40`}}>{gem.gem}</h1>
+              <div style={{fontFamily:"'Playfair Display',serif", fontStyle:'italic', fontSize:'42px', color:T.t1, fontWeight:'600', marginBottom:'34px'}}>{gem.title}</div>
+              <p style={{fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'29px', color:T.t2, lineHeight:'1.6', maxWidth:'840px', margin:'0 auto', fontWeight:'600'}}>{gem.tagline}</p>
+            </div>
+          </SlideShell>
+        );
+
+        const Slide1 = (
+          <SlideShell index={1}>
+            <div style={{fontFamily:"'Playfair Display',serif", fontSize:'160px', color:`${gem.color}45`, lineHeight:0.6, marginBottom:'-10px'}}>"</div>
+            <div className="mono" style={{fontSize:'22px', fontWeight:'800', color:gem.color, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:'22px'}}>What This Means</div>
+            <p style={{fontFamily:"'Playfair Display',serif", fontSize:'48px', color:T.t0, lineHeight:'1.45', fontWeight:'600', marginBottom:'48px'}}>{gem.desc}</p>
+            <div style={{background:`${gem.color}16`, borderLeft:`7px solid ${gem.color}`, borderRadius:'0 14px 14px 0', padding:'32px 36px'}}>
+              <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'17px', fontWeight:'800', color:gem.color, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'12px'}}>In One Line</div>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'32px', color:T.t0, fontWeight:'700'}}>{gem.quirky}</div>
+            </div>
+          </SlideShell>
+        );
+
+        const Slide2 = (
+          <SlideShell index={2}>
+            <div style={{display:'flex', flexDirection:'column', gap:'46px'}}>
+              <div>
+                <div style={{display:'flex', alignItems:'center', gap:'14px', marginBottom:'16px'}}>
+                  <div style={{width:'46px', height:'46px', borderRadius:'50%', background:`${gem.color}22`, border:`2px solid ${gem.color}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'22px'}}>👥</div>
+                  <div className="mono" style={{fontSize:'22px', fontWeight:'800', color:gem.color, textTransform:'uppercase', letterSpacing:'0.12em'}}>In A Team</div>
+                </div>
+                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'44px', color:T.t0, fontWeight:'600', lineHeight:'1.4'}}>{gem.inTeam}</div>
+              </div>
+              <div style={{height:'2px', background:`linear-gradient(90deg, ${gem.color}50, transparent)`}} />
+              <div>
+                <div style={{display:'flex', alignItems:'center', gap:'14px', marginBottom:'16px'}}>
+                  <div style={{width:'46px', height:'46px', borderRadius:'50%', background:`${gem.color}22`, border:`2px solid ${gem.color}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'22px'}}>⚡</div>
+                  <div className="mono" style={{fontSize:'22px', fontWeight:'800', color:gem.color, textTransform:'uppercase', letterSpacing:'0.12em'}}>Your Edge</div>
+                </div>
+                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'40px', color:T.t1, fontWeight:'600', lineHeight:'1.45'}}>{gem.edge}</div>
+              </div>
+            </div>
+          </SlideShell>
+        );
+
+        const Slide3 = (
+          <SlideShell index={3}>
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:'72px', marginBottom:'32px'}}>{gem.emoji}</div>
+              <p style={{fontFamily:"'Playfair Display',serif", fontSize:'56px', color:gem.color, fontWeight:'700', lineHeight:'1.35', marginBottom:'44px'}}>{gem.oneLine}</p>
+              <div style={{width:'80px', height:'6px', background:`linear-gradient(90deg, ${gem.color}, ${gem.colorDark})`, borderRadius:'3px', margin:'0 auto 36px'}} />
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'27px', color:T.t2, fontWeight:'600', marginBottom:'12px'}}>Every professional has a gemstone.</div>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'32px', color:T.t0, fontWeight:'800'}}>Find yours at CORE by Carnelian.</div>
+              <div className="mono" style={{fontSize:'18px', color:T.t3, marginTop:'32px'}}>{docId} · {date}</div>
+            </div>
+          </SlideShell>
+        );
+
+        const slides = [Slide0, Slide1, Slide2, Slide3];
+        const total = slides.length;
+        const goToSlide = (i) => setPersonaSlide(((i % total) + total) % total);
+
+        return (
+          <div className="anim-fadeUp" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+
+            <div style={{textAlign:'center', marginBottom:'24px'}}>
+              <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0}}>Share Your Gemstone</h2>
+              <p style={{color:T.t2, fontSize:'14px'}}>A 4-slide carousel built for Instagram or LinkedIn. Swipe through, then download.</p>
+            </div>
+
+            <div style={{position:'relative', width:'100%', maxWidth:'420px'}}>
+              <div style={{
+                width:'100%', aspectRatio:'1080 / 1350',
+                background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'16px',
+                overflow:'hidden', position:'relative', boxShadow:'0 20px 40px rgba(0,0,0,0.2)',
+              }}>
+                <div style={{width:'1080px', height:'1350px', transform:'scale(0.3889)', transformOrigin:'top left'}}>
+                  {slides[personaSlide]}
+                </div>
+
+                <button onClick={()=>goToSlide(personaSlide-1)} style={{position:'absolute', left:'10px', top:'50%', transform:'translateY(-50%)', width:'34px', height:'34px', borderRadius:'50%', background:'rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.3)', color:'#fff', cursor:'pointer', fontSize:'18px', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10}}>‹</button>
+                <button onClick={()=>goToSlide(personaSlide+1)} style={{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', width:'34px', height:'34px', borderRadius:'50%', background:'rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.3)', color:'#fff', cursor:'pointer', fontSize:'18px', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10}}>›</button>
+              </div>
+            </div>
+
+            <div style={{display:'flex', gap:'8px', marginTop:'18px'}}>
+              {slides.map((s,i)=>(
+                <button key={i} onClick={()=>goToSlide(i)} style={{
+                  width: personaSlide===i ? '22px' : '8px', height:'8px', borderRadius:'4px', border:'none', cursor:'pointer', padding:0,
+                  background: personaSlide===i ? gem.color : T.b2, transition:'all .3s ease',
+                }} />
+              ))}
+            </div>
+
+            {/* Hidden full-resolution capture target, mirrors the active slide during export */}
+            <div id="persona-capture-card" style={{position:'fixed', top:'-9999px', left:'-9999px', pointerEvents:'none'}}>
+              {slides[personaSlide]}
+            </div>
+
+            <button onClick={downloadCarouselPDF} style={{
+              marginTop:'32px', padding:'16px 40px', borderRadius:'100px', background:gem.color, color:'#fff', border:'none', cursor:'pointer',
+              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'14px', fontWeight:'800', letterSpacing:'0.05em', textTransform:'uppercase',
+              boxShadow:`0 10px 28px ${gem.color}40`,
+            }}>⬇ Download Gemstone Carousel (PDF)</button>
+            <p style={{marginTop:'12px', fontSize:'12px', color:T.t3}}>4 pages, one per slide. Perfect for an Instagram or LinkedIn carousel post.</p>
+          </div> 
+        );
+      })()}
     </div>
   );
 };

@@ -1963,28 +1963,9 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
       <div style={{maxWidth:'600px', margin:'0 auto', animation:'fadeUp 0.6s ease forwards'}}>
         <h2 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginBottom:'8px'}}>Before We Begin</h2>
         <p style={{fontSize:'14px',color:T.t2,lineHeight:'1.65',marginBottom:'24px',fontWeight:'500'}}>Carnelian takes your privacy seriously. Please read this short summary before you start.</p>
-        
-        <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
-          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>What we collect and why</div>
-          <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.t1,lineHeight:'1.6',fontWeight:'500'}}>
-            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your name, email, phone number, and professional details to generate your personalised report.</span>
-            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Your assessment responses scored by our engine to produce dimension profiles.</span>
-            <span style={{color:T.gn,fontWeight:'800'}}>✓</span><span>Aggregated, anonymised data may be used solely to improve the accuracy and quality of future assessments.</span>
-          </div>
-        </div>
 
-        <div style={{background:T.gnP,border:`1px solid ${T.gn}40`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
-          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.gn}}>What we will never do</div>
-          <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.gn,lineHeight:'1.6',fontWeight:'600'}}>
-            <span style={{fontWeight:'800'}}>✗</span><span>Sell your data to any third party.</span>
-            <span style={{fontWeight:'800'}}>✗</span><span>Share your identifiable results with anyone outside your assessment process.</span>
-            <span style={{fontWeight:'800'}}>✗</span><span>Make your individual responses or scores publicly accessible.</span>
-            <span style={{fontWeight:'800'}}>✗</span><span>Use your contact details for any purpose other than assessment delivery and progress tracking</span>
-          </div>
-        </div>
-
-        {/* NEW SEPARATE BLOCK FOR LEGAL & DATA PROCESSING */}
-        <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'24px'}}>
+        {/* LEGAL & DATA PROCESSING */}
+        <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px',marginBottom:'16px'}}>
           <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.t0}}>Legal Disclaimer & Data Processing</div>
           <div style={{display:'flex', flexDirection:'column', gap:'12px', fontSize:'12.5px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>
             <p style={{margin:0}}><strong>Disclaimer:</strong> The information, materials, and assessments provided in this module are for educational, illustrative, and informational purposes only. We make no representations or warranties of any kind, express or implied.</p>
@@ -1993,17 +1974,15 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
           </div>
         </div>
 
-        <div style={{background:`${T.am}12`,border:`1px solid ${T.am}35`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
-          <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
-            <strong style={{color:T.am}}>Validity Alert System is always active.</strong> Ten L-scale items and four validity indices run automatically for every assessment regardless of configuration. Candidates are never informed of validity checks. The Validity Index appears only in the Technical Report.
-          </p>
-        </div>
-
-        <div style={{background:`${T.c}10`,border:`1px solid ${T.c}30`,borderRadius:'12px',padding:'20px',marginBottom:'24px'}}>
-          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'8px',color:T.c}}>Complete in One Session</div>
-          <p style={{fontSize:'13px',color:T.t1,lineHeight:'1.65',fontWeight:'500',margin:0}}>
-            For the most accurate results, please complete the assessment in one uninterrupted session, this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths, making the feedback genuinely useful.
-          </p>
+        {/* WHAT WE WILL NEVER DO */}
+        <div style={{background:T.gnP,border:`1px solid ${T.gn}40`,borderRadius:'12px',padding:'24px',marginBottom:'24px'}}>
+          <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.1rem',fontWeight:'700',marginBottom:'12px',color:T.gn}}>What we will never do</div>
+          <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'8px 14px',fontSize:'13px',color:T.gn,lineHeight:'1.6',fontWeight:'600'}}>
+            <span style={{fontWeight:'800'}}>✗</span><span>Sell your data to any third party.</span>
+            <span style={{fontWeight:'800'}}>✗</span><span>Share your identifiable results with anyone outside your assessment process.</span>
+            <span style={{fontWeight:'800'}}>✗</span><span>Make your individual responses or scores publicly accessible.</span>
+            <span style={{fontWeight:'800'}}>✗</span><span>Use your contact details for any purpose other than assessment delivery and progress tracking</span>
+          </div>
         </div>
 
         <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'10px',padding:'16px 20px',marginBottom:'24px',display:'flex',alignItems:'flex-start',gap:'12px'}}>
@@ -2135,9 +2114,17 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               </div>
 
               {/* Blue Info Box */}
-              <div style={{background:'rgba(59, 130, 246, 0.1)', border:'1px solid rgba(59, 130, 246, 0.3)', borderRadius:'10px', padding:'16px 20px', marginBottom:'24px'}}>
+              <div style={{background:'rgba(59, 130, 246, 0.1)', border:'1px solid rgba(59, 130, 246, 0.3)', borderRadius:'10px', padding:'16px 20px', marginBottom:'16px'}}>
                 <div style={{fontSize:'13px', fontWeight:'800', color:'#3B82F6', marginBottom:'6px'}}>💡 Why honest answers give you better results</div>
                 <div style={{fontSize:'12.5px', color:T.t1, lineHeight:'1.6', fontWeight:'500'}}>Your results generate a personalised development plan built around your actual profile. Presenting an idealised version of yourself produces a generic plan that tells you nothing you do not already know. Honest answers produce specific, actionable guidance that is genuinely useful.</div>
+              </div>
+
+              {/* Complete in One Session Box */}
+              <div style={{background:`${T.c}10`,border:`1px solid ${T.c}30`,borderRadius:'10px',padding:'16px 20px',marginBottom:'24px'}}>
+                <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.05rem',fontWeight:'700',marginBottom:'6px',color:T.c}}>Complete in One Session</div>
+                <p style={{fontSize:'12.5px',color:T.t1,lineHeight:'1.6',fontWeight:'500',margin:0}}>
+                  For the most accurate results, please complete the assessment in one uninterrupted session, this usually takes about <strong style={{color:T.t0}}>20 minutes.</strong> Psychological fatigue, time gaps, and shifting mental states can subtly affect how you respond. Completing it in one go ensures a true, consistent snapshot of your strengths, making the feedback genuinely useful.
+                </p>
               </div>
 
               {/* Buttons */}

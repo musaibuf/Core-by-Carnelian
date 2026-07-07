@@ -3322,19 +3322,21 @@ for (const d of devAreas) {
         <button onClick={()=>setResTab('persona')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='persona'?T.gold:T.b2}`, background:resTab==='persona'?T.gold:'transparent', color:resTab==='persona'?'#fff':T.t1, transition:'all 0.2s'}}>
           📸 My Persona
         </button>
-        <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.gold:T.b2}`, background:resTab==='tech'?T.gold:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
-          📊 Technical Report
+        
+        {/* Locked Reports */}
+        <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
+          🔒 Technical Report
         </button>
-        <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
-          🎮 Player Report
+        <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
+          🔒 Player Report
         </button>
         {R.purpose !== 'Personal Development Planning' && (
           <>
-            <button onClick={()=>setResTab('team')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='team'?T.gold:T.b2}`, background:resTab==='team'?T.gold:'transparent', color:resTab==='team'?'#fff':T.t1, transition:'all 0.2s'}}>
-              👥 Team Aggregate
+            <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
+              🔒 Team Aggregate
             </button>
-            <button onClick={()=>setResTab('comp')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='comp'?T.gold:T.b2}`, background:resTab==='comp'?T.gold:'transparent', color:resTab==='comp'?'#fff':T.t1, transition:'all 0.2s'}}>
-              🧩 Team Composition
+            <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
+              🔒 Team Composition
             </button>
           </>
         )}

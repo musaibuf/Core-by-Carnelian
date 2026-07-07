@@ -4936,8 +4936,11 @@ const handleSearch = async () => {
     const res = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(term)}`);
     if (res.ok) {
       const data = await res.json();
-      serverMatches = (Array.isArray(data) ? data : []).map(r => {
-        const resp = r.report_data?.respondent || {};
+      // Force filter on the frontend to guarantee only the searched email is shown
+      serverMatches = (Array.isArray(data) ? data : [])
+        .filter(r => r.email && r.email.toLowerCase() === term)
+        .map(r => {
+          const resp = r.report_data?.respondent || {};
         return {
           docId: r.doc_id,
           date: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}) : (r.report_data?.date || ''),

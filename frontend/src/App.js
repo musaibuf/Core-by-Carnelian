@@ -5278,7 +5278,7 @@ export default function App() {
   const [reportData, setReportData] = useState(null);
   const [hasHistory, setHasHistory] = useState(false);
   const [mode, setMode] = useState(() => {
-    try { return localStorage.getItem('themeMode') || 'dark'; } catch(e) { return 'light'; }
+    try { return localStorage.getItem('themeMode') || 'light'; } catch(e) { return 'light'; }
   });
 
   // Update T synchronously so all child renders use the correct theme

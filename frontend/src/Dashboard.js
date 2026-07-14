@@ -505,8 +505,8 @@ const TechnicalReport = ({ candidate, T }) => {
               <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'6px', marginTop:'12px' }}>
                 {MODULE_KEYS.map(({ k, l, c }) => (
                   <div key={k} style={{ background:T.bg3, borderRadius:'6px', padding:'8px', textAlign:'center' }}>
-                    <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:c, fontWeight:'700' }}>{S[k]||'—'}</div>
-                    <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600', lineHeight:'1.3' }}>{l.split(' ')[0]}</div>
+                    <div style={{ fontFamily:"'Crimson Pro',serif", fontSize:'1.3rem', color:c, fontWeight:'700' }}>{S[k]||'—'}</div>
+                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600', lineHeight:'1.3' }}>{l.split(' ')[0]}</div>
                   </div>
                 ))}
               </div>
@@ -533,8 +533,8 @@ const TechnicalReport = ({ candidate, T }) => {
             { n:`${validity.conScore}/100`, l:'Consistency' },
           ].map((v,i) => (
             <div key={i} style={{ background:'rgba(255,255,255,0.35)', borderRadius:'6px', padding:'10px', textAlign:'center' }}>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontWeight:'700', fontSize:'1.1rem', color:T.t0 }}>{v.n}</div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t2, marginTop:'2px', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:'600' }}>{v.l}</div>
+              <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:'700', fontSize:'1.1rem', color:T.t0 }}>{v.n}</div>
+              <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'8px', color:T.t2, marginTop:'2px', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:'600' }}>{v.l}</div>
             </div>
           ))}
         </div>
@@ -554,14 +554,17 @@ const TechnicalReport = ({ candidate, T }) => {
               <thead>
                 <tr style={{ borderBottom:`2px solid ${T.b2}` }}>
                   {['Index','Score','Profile','Risk Level','What it measures'].map(h => (
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'JetBrains Mono',monospace" }}>{h}</th>
+                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'IBM Plex Mono',monospace" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {COMPOSITE_KEYS.map(({ k, l, green, amber }) => {
                   const val  = CI[k] || S[k] || 0;
-                  const col  = bCol(val,T);
+                  // FIX: Use the custom thresholds for color mapping, not the default 75/50
+                  const col  = val >= green ? T.gn : val >= amber ? T.am : T.rd;
+                  const bg   = val >= green ? T.gnP : val >= amber ? T.amP : T.rdP;
+                  const barColor = val >= green ? `linear-gradient(90deg, ${darkTheme.gn}, #4ade80)` : val >= amber ? `linear-gradient(90deg, ${darkTheme.am}, #fcd34d)` : `linear-gradient(90deg, ${darkTheme.rd}, #f87171)`;
                   const rat  = val>=green ? 'LOW RISK' : val>=amber ? 'MODERATE' : 'HIGH RISK';
                   const desc = {
                     CII:'Primary screen for treasury, audit, procurement, and any fiduciary role.',
@@ -575,10 +578,12 @@ const TechnicalReport = ({ candidate, T }) => {
                   return (
                     <tr key={k} style={{ borderBottom:`1px solid ${T.b1}` }}>
                       <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{l}</td>
-                      <td style={{ padding:'10px 10px' }}><ScoreBadge score={val} T={T} /></td>
+                      <td style={{ padding:'10px 10px' }}>
+                        <span style={{ display:'inline-block', padding:'3px 10px', borderRadius:'3px', fontSize:'11px', fontWeight:'700', fontFamily:"'IBM Plex Mono',monospace", background:bg, color:col, border:`1px solid ${col}40` }}>{val}/100</span>
+                      </td>
                       <td style={{ padding:'10px 10px', width:'120px' }}>
                         <div style={{ height:'6px', background:T.b1, borderRadius:'3px', overflow:'hidden' }}>
-                          <div style={{ width:`${val}%`, height:'100%', background:barGrad(val) }} />
+                          <div style={{ width:`${val}%`, height:'100%', background:barColor }} />
                         </div>
                       </td>
                       <td style={{ padding:'10px 10px', fontSize:'11px', fontWeight:'800', color:col }}>{rat}</td>
@@ -639,8 +644,7 @@ const TechnicalReport = ({ candidate, T }) => {
               <thead>
                 <tr style={{ borderBottom:`2px solid ${T.b2}` }}>
                   {['Role Family','Score','Profile','Verdict','Guidance / Probes'].map(h => (
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'JetBrains Mono',monospace" }}>{h}</th>
-                  ))}
+<th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'IBM Plex Mono',monospace" }}>{h}</th>                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -767,8 +771,7 @@ const TechnicalReport = ({ candidate, T }) => {
               <thead>
                 <tr style={{ borderBottom:`1px solid ${T.b2}` }}>
                   {['Challenge','Type','Performance','Modifier','Dimensions Affected'].map(h => (
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'JetBrains Mono',monospace" }}>{h}</th>
-                  ))}
+<th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'IBM Plex Mono',monospace" }}>{h}</th>                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -948,16 +951,41 @@ const ActionPlanReport = ({ candidate, T }) => {
   if(S.ES<60) programs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools."});
   if(programs.length===0) programs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile."});
 
-  const relapse = [];
-  const ssVal = gs?.seesaw?.val || 50;
-  const sc1 = gs?.scenario1?.raw || 0;
-  const sc2 = gs?.scenario2?.raw || 0;
-  if(ssVal>65) relapse.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?" If you are explaining rather than defending, say no — or ask for it in writing first.'});
-  if(sc1<=0) relapse.push({trigger:'When you feel the urge to delay or withhold information that others need', response:"Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure."});
-  if(sc2<0) relapse.push({trigger:"When someone you respect asks you to approve something that does not feel right", response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"});
-  if(S.C<55) relapse.push({trigger:'When you find yourself approaching a deadline without having started', response:"Use the 2-minute rule: if you can do any meaningful piece of this task in 2 minutes right now, start immediately. Momentum from even a tiny start breaks the avoidance cycle."});
-  if(S.ES<55) relapse.push({trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:"Name it to yourself first: 'I am currently [stressed / frustrated / overwhelmed].' Research shows labelling an emotional state reduces its intensity significantly. Then delay any non-urgent decision by at least 20 minutes."});
-  if(relapse.length===0) relapse.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
+  const R = candidate; // Map candidate to R for shared logic
+
+  const getRelapse = () => {
+    const protocols = [];
+    const ssVal = gs?.seesaw?.val || 50;
+    const sc1 = gs?.scenario1?.raw || 0;
+
+    const protoMap = {
+      'Conscientiousness': {trigger:`When a deadline is approaching for your ${R.role || 'role'} and you have not started`, response:'Use the 2-minute rule: if any piece of this task takes 2 minutes, do it right now. Momentum from a tiny start breaks the avoidance cycle.'},
+      'Openness to Ideas': {trigger:'When a new tool, method or idea is proposed and your first reaction is to reject it', response:"Say 'tell me more' before you say 'but'. Give the idea 24 hours before deciding it will not work."},
+      'Social Confidence': {trigger:'When you have something to say in a meeting but decide to stay quiet', response:'Say it in the first 5 minutes of the meeting, before the window to speak up closes. Exposure, not preparation, is what builds this.'},
+      'Collaborative Spirit': {trigger:'When a colleague challenges your position and your instinct is to defend rather than listen', response:'Repeat their point back to them before responding to it. Only then give your view.'},
+      'Emotional Resilience': {trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:'Name it to yourself first: "I am currently stressed, frustrated, or overwhelmed." Labelling an emotional state reduces its intensity. Delay any non-urgent decision by at least 20 minutes.'},
+      'Cultural Intelligence': {trigger:'When a colleague from a different background behaves in a way you do not expect', response:'Ask what normal looks like in their context before assuming they are wrong. Curiosity first, judgment second.'},
+      'Team Citizenship': {trigger:'When something needs doing that is not technically your job', response:"Ask 'what can I take off someone else's plate this week' once, and act on the answer."},
+      'Learning Agility': {trigger:'When you are handed a task in an area you have not worked in before', response:'Give yourself 48 hours to learn before deciding it is not for you. Write down one thing you learned at the end of it.'},
+      'Ethical Integrity': {trigger:'When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right', response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"},
+    };
+
+    bot2.forEach(d => { if (protoMap[d.l]) protocols.push(protoMap[d.l]); });
+
+    if (ssVal > 65 && !protocols.find(p => p.trigger.includes('bypass a process'))) {
+      protocols.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it, or explain it away?" If you are explaining rather than defending, say no, or ask for it in writing first.'});
+    }
+    if (sc1 <= 0 && !protocols.find(p => p.trigger.includes('withhold information'))) {
+      protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:'Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure.'});
+    }
+
+    if (protocols.length === 0) {
+      protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
+    }
+    return protocols.slice(0, 4);
+  };
+
+  const relapse = getRelapse();
 
   const card = (children, style={}) => (
     <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
@@ -1001,7 +1029,7 @@ const ActionPlanReport = ({ candidate, T }) => {
                     <span style={{display:'inline-block', width:'6px', height:'6px', borderRadius:'50%', background:pCol, marginRight:'6px'}}></span>
                     {d.l}
                   </span>
-                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:bCol(d.v,T), fontWeight:'700' }}>{d.v}/100 · {d.v>=75?'Strong':d.v>=55?'Developing':'Priority'}</span>
+                  <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:bCol(d.v,T), fontWeight:'700' }}>{d.v}/100 · {d.v>=75?'Strong':d.v>=50?'Developing':'Priority'}</span>
                 </div>
                 <div style={{ height:'7px', background:T.b1, borderRadius:'100px', overflow:'hidden' }}>
                   <div style={{ height:'100%', width:`${d.v}%`, background:barGrad(d.v), borderRadius:'100px', transition:'width 0.8s ease' }} />
@@ -1160,21 +1188,22 @@ const ActionPlanReport = ({ candidate, T }) => {
         </>
       )}
 
-      {/* PRIORITY MATRIX */}
+     {/* PRIORITY MATRIX */}
       {card(
         <>
           <SectionHead label="Priority Action Matrix" T={T} />
+          <p style={{color:T.t2, fontSize:'12px', lineHeight:'1.6', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted relatively by urgency based on the candidate's unique score profile.</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
             {[
-              { label:'🔴 Act Now (0–30 Days)',  items:allDims.filter(d=>d.v<45),  bg:T.rdP, bc:T.rd  },
-              { label:'🟡 Build Soon (30–90 Days)', items:allDims.filter(d=>d.v>=45&&d.v<60), bg:T.amP, bc:T.am },
-              { label:'🟢 Sustain & Expand',    items:allDims.filter(d=>d.v>=75),  bg:T.gnP, bc:T.gn  },
-              { label:'🔵 Monitor Progress',    items:allDims.filter(d=>d.v>=60&&d.v<75), bg:T.b0,  bc:T.b2  },
+              { label:'🔴 Act Now (Priority)',  items:allDims.slice(7, 9),  bg:T.rdP, bc:T.rd  },
+              { label:'🟡 Build Soon (Secondary)', items:allDims.slice(5, 7), bg:T.amP, bc:T.am },
+              { label:'🟢 Sustain & Expand (Strengths)', items:allDims.slice(0, 2),  bg:T.gnP, bc:T.gn  },
+              { label:'🔵 Monitor Progress (Balanced)', items:allDims.slice(2, 5), bg:T.b0,  bc:T.b2  },
             ].map(({ label, items, bg, bc }) => (
               <div key={label} style={{ background:bg, border:`1px solid ${bc}40`, borderRadius:'10px', padding:'16px' }}>
                 <div style={{ fontSize:'12px', fontWeight:'800', color:T.t1, marginBottom:'8px' }}>{label}</div>
                 <ul style={{ paddingLeft:'18px', margin:0, color:T.t0, fontSize:'12px', lineHeight:'1.7', fontWeight:'600' }}>
-                  {items.length ? items.map(d => <li key={d.k}>{d.l}</li>) : <li style={{ color:T.t3 }}>None identified</li>}
+                  {items.map(d => <li key={d.k}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
             ))}

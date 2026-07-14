@@ -2578,8 +2578,7 @@ const allDims = [
   const getDimContent = (dim) => {
     const map = {
       'Conscientiousness': {
-        why: ctxAction("Consistent delivery is the foundation of professional credibility. Missed deadlines or incomplete work creates friction that compounds over time.", "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),
-        now: ctxAction("Agree a weekly check-in with your supervisor on 3 explicit priority deliverables.","Book a 30-minute weekly slot with your line manager to review your open regulatory deliverables.","Schedule a weekly meeting with your supervisor to review your progress against departmental KPIs.","Set up a shared milestone tracker with your programme coordinator this week.","Send your team a written commitment list every Monday.","Have an honest conversation with your line manager this week about which current commitments you are most at risk of missing."),
+        why: ctxAction(`Consistent delivery is the foundation of professional credibility${R.role ? ` in your role as ${R.role}` : ''}. Missed deadlines or incomplete work creates friction that compounds over time.`, "In banking, your reliability directly affects your institution's regulatory standing and client trust.", "In the civil service, your output accountability shapes public outcomes.", "Development sector programmes are accountable to donors, beneficiaries, and communities simultaneously.", "At your seniority level, your delivery sets the standard for the entire team.", "Early in your career, delivery reliability is how you build the professional reputation that opens every future door."),        now: ctxAction("Agree a weekly check-in with your supervisor on 3 explicit priority deliverables.","Book a 30-minute weekly slot with your line manager to review your open regulatory deliverables.","Schedule a weekly meeting with your supervisor to review your progress against departmental KPIs.","Set up a shared milestone tracker with your programme coordinator this week.","Send your team a written commitment list every Monday.","Have an honest conversation with your line manager this week about which current commitments you are most at risk of missing."),
         soon: ctxAction("Enrol in a personal productivity workshop or study one methodology (GTD, Agile personal planning).","Complete a structured time management or professional effectiveness programme.","Attend a civil service effectiveness workshop through your Training Institute.","Enrol in a project management short course.","Commission a team productivity audit to understand where delivery bottlenecks are systemic.","Attend a productivity and professional effectiveness workshop."),
         fut: ctxAction("Lead a project end-to-end within 6 months to build delivery confidence with structured accountability.","Take ownership of an end-to-end compliance or regulatory project.","Lead a cross-departmental working group to demonstrate sustained delivery over a 6-month period.","Lead a full programme cycle from design to donor reporting.","Commission an organisational review of how delivery accountability is structured across your team.","Ask to lead a complete project or initiative end-to-end."),
         acts: ["Use a weekly priority matrix every Monday.","Break large projects into milestone check-ins.","Track one commitment per week that you made and actually completed."],
@@ -2589,8 +2588,7 @@ const allDims = [
         retake: `Retake CORE, your Conscientiousness baseline was ${S.C}/100. A 6-point rise here is achievable with consistent habit practice.`
       },
       'Emotional Resilience': {
-        why: ctxAction("High-stakes professional environments involve pressure cycles. Your ability to remain clear-headed under pressure is career-determining.", "Banking environments are characterised by regulatory cycles, audit periods, and market pressure.", "Civil service reform creates sustained pressure on officers at all levels.", "Development sector professionals work in environments of resource constraints, community pressure, and donor scrutiny.", "At senior level, your emotional state sets the emotional tone for the entire team.", "Early career is when pressure tolerance is built."),
-        now: ctxAction("Identify one specific pressure source in your current role and have a direct conversation with your leadership about managing it structurally.","Ask your institution's HR team this week about EAP access and stress management resources.","Contact your Training Institute about resilience coaching resources available to civil service officers.","Speak to your programme director about workload distribution.","Identify one specific pressure source in your current role and have a direct conversation with your leadership.","Talk to your line manager this week about one specific pressure point in your role and what support is available."),
+why: ctxAction(`High-stakes professional environments involve pressure cycles${R.role ? ` in a ${R.role} position` : ''}. Your ability to remain clear-headed under pressure is career-determining.`, "Banking environments are characterised by regulatory cycles, audit periods, and market pressure.", "Civil service reform creates sustained pressure on officers at all levels.", "Development sector professionals work in environments of resource constraints, community pressure, and donor scrutiny.", "At senior level, your emotional state sets the emotional tone for the entire team.", "Early career is when pressure tolerance is built."),        now: ctxAction("Identify one specific pressure source in your current role and have a direct conversation with your leadership about managing it structurally.","Ask your institution's HR team this week about EAP access and stress management resources.","Contact your Training Institute about resilience coaching resources available to civil service officers.","Speak to your programme director about workload distribution.","Identify one specific pressure source in your current role and have a direct conversation with your leadership.","Talk to your line manager this week about one specific pressure point in your role and what support is available."),
         soon: ctxAction("Attend a resilience or emotional intelligence workshop this quarter.","Attend a professional resilience workshop — specifically one designed for high-accountability financial environments.","Attend a public sector leadership and resilience programme.","Attend an NGO or development sector leadership workshop.","Commission an executive coaching engagement for yourself.","Attend an emotional intelligence or resilience workshop."),
         fut: ctxAction("Seek a role with progressively increasing accountability to build resilience through real-world exposure.","Seek out a role rotation that includes a high-pressure function.","Pursue a secondment or cross-posting to a reform-facing role.","Accept an assignment in a resource-constrained or high-stakes programme context.","Build a senior leadership resilience programme for your team.","Ask to be included in high-stakes projects where you will be stretched."),
         acts: ["Build a 10-minute daily decompression practice.","Write a post-incident reflection after a stressful event.","Identify 2 trusted sounding boards."],
@@ -2600,8 +2598,7 @@ const allDims = [
         retake: `Retake CORE, your Emotional Stability baseline was ${S.ES}/100. Stability is measurable and it does move with deliberate practice.`
       },
       'Learning Agility': {
-        why: ctxAction("The professionals who rise are those who learn and adapt fastest. Current knowledge has a shelf life.", "Pakistan's banking sector is changing faster than almost any other.", "Pakistan's civil service is in active reform.", "The development sector's evidence base evolves continuously.", "At your seniority level, your learning agility determines whether you remain strategically relevant.", "The first decade of a career is where learning habits are formed."),
-        now: ctxAction("Subscribe to one sector publication you do not currently follow.","Subscribe today to SBP's official regulatory updates.","Subscribe to an international public administration publication.","Subscribe to an international development sector publication.","Audit your team's current knowledge sources.","Identify one technical skill gap holding you back and find a resource for it."),
+why: ctxAction(`The professionals who rise are those who learn and adapt fastest${R.role ? `, and this is especially true as a ${R.role}` : ''}. Current knowledge has a shelf life.`, "Pakistan's banking sector is changing faster than almost any other.", "Pakistan's civil service is in active reform.", "The development sector's evidence base evolves continuously.", "At your seniority level, your learning agility determines whether you remain strategically relevant.", "The first decade of a career is where learning habits are formed."),        now: ctxAction("Subscribe to one sector publication you do not currently follow.","Subscribe today to SBP's official regulatory updates.","Subscribe to an international public administration publication.","Subscribe to an international development sector publication.","Audit your team's current knowledge sources.","Identify one technical skill gap holding you back and find a resource for it."),
         soon: ctxAction("Build a 90-day self-directed learning plan on one topic outside your current expertise.","Build a 90-day learning plan on one banking domain outside your specialty.","Build a 90-day learning plan on one reform area relevant to your department.","Build a 90-day learning plan on a new methodology.","Implement a team-wide knowledge sharing protocol.","Complete a short certification in a new skill."),
         fut: ctxAction("Apply to facilitate or co-design a training or knowledge-sharing session.","Apply to co-design an internal knowledge-sharing session at your institution.","Apply to deliver a session at your Training Institute.","Apply to design a staff capacity building session for your programme team.","Sponsor an innovation initiative within your department.","Ask to present a new concept to the broader team."),
         acts: ["Dedicate 30 mins a week to reading an industry report.","Ask yourself what you learned after every major task.","Request candid feedback from a supervisor."],
@@ -2611,7 +2608,7 @@ const allDims = [
         retake: `Retake CORE, your Learning Agility baseline was ${S.LAavg}/100. This dimension responds fastest to deliberate habit change.`
       },
       'Social Confidence': {
-        why: ctxAction("Social confidence is a professional skill. Your ability to assert your perspective determines your influence.","In banking, stakeholder presence is a career-defining skill.","In government, your ability to communicate clearly determines your influence.","In the development sector, donor presentations require professionals who can project confidence.","At your seniority level, social confidence is the multiplier on every other strength you have.","Early in your career, social confidence determines whether your ideas get heard."),
+        why: ctxAction(`Social confidence is a professional skill${R.role ? ` that shapes how far your work travels in a ${R.role} role` : ''}. Your ability to assert your perspective determines your influence.`,"In banking, stakeholder presence is a career-defining skill.","In government, your ability to communicate clearly determines your influence.","In the development sector, donor presentations require professionals who can project confidence.","At your seniority level, social confidence is the multiplier on every other strength you have.","Early in your career, social confidence determines whether your ideas get heard."),
         now: ctxAction("Have one conversation this week that you have been avoiding.","Schedule one client or regulatory conversation you have been postponing.","Initiate one interaction with a senior officer you have been avoiding.","Initiate one donor or partner conversation you have been postponing.","Have one high-visibility conversation this week that you would normally delegate.","Speak up in a meeting where you would normally stay silent."),
         soon: ctxAction("Enrol in a communication and influence workshop.","Attend a professional communication workshop designed for financial professionals.","Attend a public speaking programme through your Training Institute.","Attend a facilitation workshop for development sector professionals.","Commission an executive presence coaching engagement.","Join a public speaking group like Toastmasters."),
         fut: ctxAction("Seek a role or assignment that requires regular public speaking or stakeholder presentations.","Ask to lead the next client presentation.","Apply to represent your department at a public forum.","Apply to lead the next donor presentation.","Commit to speak at one external event or industry forum.","Ask to present in the next team meeting."),
@@ -2622,7 +2619,7 @@ const allDims = [
         retake: `Retake CORE, your Social Confidence baseline was ${S.E}/100. This dimension responds measurably to deliberate practice.`
       },
       'Team Citizenship': {
-        why: ctxAction("Institutions are sustained by discretionary effort. Moving beyond your formal job description builds the social capital necessary for leadership.", "In banking, siloed departments create massive inefficiency; citizenship bridges those gaps.", "In the civil service, cross-departmental cooperation is the only way complex policies are implemented.", "In NGOs, mission success relies heavily on team members supporting each other beyond their TORs.", "At the executive level, your citizenship sets the culture. If you don't collaborate, your team won't.", "Building a reputation as an institutional citizen early in your career makes you indispensable."),
+        why: ctxAction(`Institutions are sustained by discretionary effort${R.role ? `, and in a ${R.role} role that effort is highly visible` : ''}. Moving beyond your formal job description builds the social capital necessary for leadership.`, "In banking, siloed departments create massive inefficiency; citizenship bridges those gaps.", "In the civil service, cross-departmental cooperation is the only way complex policies are implemented.", "In NGOs, mission success relies heavily on team members supporting each other beyond their TORs.", "At the executive level, your citizenship sets the culture. If you don't collaborate, your team won't.", "Building a reputation as an institutional citizen early in your career makes you indispensable."),
         now: ctxAction("Identify one institutional frustration and present a constructive solution instead of complaining.", "Identify a bottleneck between your unit and another, and propose a fix.", "Draft a one-page improvement proposal for a broken bureaucratic process.", "Offer to take one administrative burden off a stressed colleague this week.", "Praise a colleague's unseen work in front of the broader leadership team.", "Volunteer for an unglamorous task that helps the whole team."),
         soon: ctxAction("Volunteer for an internal committee or improvement initiative.", "Join a cross-functional working group.", "Participate in a departmental reform committee.", "Take the lead on organizing a team-building or knowledge-sharing event.", "Establish a formal recognition system within your department.", "Shadow a colleague in a different role to understand their challenges."),
         fut: ctxAction("Lead a process improvement workstream for your department.", "Take ownership of an initiative that benefits the entire branch, not just your KPIs.", "Lead a policy implementation working group.", "Design and lead a new capacity-building initiative for your NGO.", "Sponsor a cross-departmental integration project.", "Become the go-to person for onboarding new team members."),
@@ -2633,7 +2630,7 @@ const allDims = [
         retake: `Retake CORE, your Team Citizenship baseline was ${S.OCBavg}/100. Citizenship is what separates individual contributors from true institutional anchors.`
       },
       'Collaborative Spirit': {
-        why: ctxAction("High performance in modern institutions is team-based. Friction, defensiveness, and lack of empathy destroy psychological safety and derail projects.", "In high-stakes finance, adversarial relationships between front-office and risk/audit destroy institutional value.", "In government, territorial disputes between departments halt public service delivery.", "In the development sector, failing to build consensus with communities or partners leads to programme failure.", "As a senior leader, a lack of collaborative spirit creates a culture of fear and information hoarding.", "Learning to disagree without damaging relationships is the most critical soft skill you can build right now."),
+               why: ctxAction(`High performance in modern institutions is team-based${R.role ? `, and that is especially true in a ${R.role} role` : ''}. Friction, defensiveness, and lack of empathy destroy psychological safety and derail projects.`, "In high-stakes finance, adversarial relationships between front-office and risk/audit destroy institutional value.", "In government, territorial disputes between departments halt public service delivery.", "In the development sector, failing to build consensus with communities or partners leads to programme failure.", "As a senior leader, a lack of collaborative spirit creates a culture of fear and information hoarding.", "Learning to disagree without damaging relationships is the most critical soft skill you can build right now."),
         now: ctxAction("Identify a strained workplace relationship and initiate a reset conversation.", "Reach out to a colleague in Risk, Audit, or Compliance to understand their perspective on a recent friction point.", "Schedule a coffee with a counterpart in a rival department to build rapport.", "Ask a community partner or stakeholder for their honest feedback on your approach.", "Publicly acknowledge a mistake you made to normalize vulnerability in your team.", "Ask a colleague you disagreed with recently for their perspective, and just listen."),
         soon: ctxAction("Complete a course on active listening or conflict resolution.", "Attend a stakeholder negotiation workshop focused on interest-based outcomes.", "Take a public administration course on consensus building.", "Enrol in a partnership management or mediation workshop.", "Commission a 360-degree feedback review for yourself and share the results with your team.", "Read and apply the frameworks from 'Getting to Yes' in your daily interactions."),
         fut: ctxAction("Mentor a junior colleague or lead a cross-functional initiative requiring high diplomacy.", "Lead a project that requires deep collaboration between sales and risk/compliance.", "Manage a multi-stakeholder policy rollout.", "Take the lead on a complex consortium or multi-partner grant proposal.", "Mediate a long-standing departmental dispute.", "Volunteer to manage a project with a notoriously difficult stakeholder."),
@@ -2644,7 +2641,7 @@ const allDims = [
         retake: `Retake CORE, your Agreeableness baseline was ${S.A}/100. This dimension is directly observable by colleagues and measurable through 360 feedback.`
       },
       'Openness to Ideas': {
-        why: ctxAction("In a rapidly evolving market, relying solely on established methods leads to obsolescence. Innovation requires deliberate exposure to new frameworks.", "The financial sector is being disrupted by fintech and changing regulations; rigid thinking is a liability.", "Bureaucratic inertia is the enemy of reform. Openness is required to modernize civil service delivery.", "The development sector demands continuous adaptation to new evidence and changing ground realities.", "As a leader, if you immediately shoot down unconventional ideas, your team will stop bringing them to you.", "Building a reputation as an adaptable, open-minded professional accelerates your career trajectory."),
+       why: ctxAction(`In a rapidly evolving market, relying solely on established methods leads to obsolescence${R.role ? `, and this risk applies directly to a ${R.role}` : ''}. Innovation requires deliberate exposure to new frameworks.`, "The financial sector is being disrupted by fintech and changing regulations; rigid thinking is a liability.", "Bureaucratic inertia is the enemy of reform. Openness is required to modernize civil service delivery.", "The development sector demands continuous adaptation to new evidence and changing ground realities.", "As a leader, if you immediately shoot down unconventional ideas, your team will stop bringing them to you.", "Building a reputation as an adaptable, open-minded professional accelerates your career trajectory."),
         now: ctxAction("Identify one process you follow blindly and write down three ways it could be optimized.", "Review a legacy banking process and propose a digital or streamlined alternative.", "Look at one standard operating procedure in your department and draft a modernization proposal.", "Review your programme's M&E framework and suggest one innovative way to capture impact.", "In your next meeting, force yourself to say 'Tell me more' instead of 'But...'", "Ask a colleague from a completely different department how they would solve a problem you are facing."),
         soon: ctxAction("Present a new tool or methodology to your team that you researched independently.", "Attend a workshop on digital transformation or agile methodologies.", "Participate in a design-thinking workshop for public sector innovation.", "Enrol in a course on human-centered design or innovative financing.", "Host a 'reverse mentoring' session where junior staff pitch ideas to you.", "Take a short online course in a subject entirely outside your field."),
         fut: ctxAction("Lead a pilot project testing a completely new approach to a legacy problem.", "Sponsor a sandbox initiative for a new financial product or service.", "Lead the implementation of a new e-governance tool in your department.", "Design a pilot intervention using a completely untested methodology.", "Allocate budget and time for an internal innovation incubator.", "Volunteer to be the early adopter for a new company-wide software or process."),
@@ -2655,7 +2652,7 @@ const allDims = [
         retake: `Retake CORE, your Openness baseline was ${S.O}/100. Expanding this dimension prevents career stagnation.`
       },
       'Cultural Intelligence': {
-        why: ctxAction("Pakistan's professional landscape is highly diverse. Navigating regional, linguistic, and institutional differences is essential for multi-stakeholder success.", "In national banks, you must seamlessly navigate interactions from corporate head offices to rural agricultural branches.", "Civil servants are posted across diverse provinces and must adapt to local cultural and power dynamics instantly.", "Development work spans international donors in capital cities to deeply conservative rural communities.", "Senior leaders must build inclusive cultures that leverage diversity rather than demanding conformity.", "Demonstrating respect and adaptability across cultures marks you as leadership material early on."),
+        why: ctxAction(`Pakistan's professional landscape is highly diverse${R.role ? `, and a ${R.role} regularly works across that diversity` : ''}. Navigating regional, linguistic, and institutional differences is essential for multi-stakeholder success.`, "In national banks, you must seamlessly navigate interactions from corporate head offices to rural agricultural branches.", "Civil servants are posted across diverse provinces and must adapt to local cultural and power dynamics instantly.", "Development work spans international donors in capital cities to deeply conservative rural communities.", "Senior leaders must build inclusive cultures that leverage diversity rather than demanding conformity.", "Demonstrating respect and adaptability across cultures marks you as leadership material early on."),
         now: ctxAction("Identify a miscommunication caused by cultural or departmental differences and clarify it.", "Adjust your communication style deliberately in your next email to a regional branch.", "Have a conversation with a local stakeholder purely to understand their context, without an agenda.", "Ask a community mobilizer to explain the unspoken norms of the district you are working in.", "Review your leadership team's composition and ask whose perspective is missing.", "Ask a colleague from a different background about their perspective on a workplace norm."),
         soon: ctxAction("Attend an intercultural communication workshop.", "Participate in a diversity and inclusion training focused on the Pakistani context.", "Study the regional history and administrative nuances of your current posting.", "Complete a course on culturally responsive programming or participatory development.", "Implement an inclusive meeting protocol that ensures minority voices are heard.", "Read 'The Culture Map' and map your own communication style against it."),
         fut: ctxAction("Take an assignment that requires deep engagement with a new region or stakeholder group.", "Volunteer for a rotation in a province or division you have never worked in.", "Request a field posting or secondment to a culturally distinct region.", "Lead a project that requires managing a highly diverse, multi-ethnic consortium.", "Sponsor an organizational initiative that promotes regional diversity in hiring.", "Lead a cross-regional project team."),
@@ -2666,7 +2663,7 @@ const allDims = [
         retake: `Retake CORE, your Cultural Intelligence baseline was ${S.CQavg}/100. This is increasingly critical for senior leadership in Pakistan.`
       },
       'Ethical Integrity': {
-        why: ctxAction("In environments with high fiduciary or public accountability, transparency and rule compliance are non-negotiable trust metrics.", "In banking, ethical breaches lead to regulatory sanctions, reputational ruin, and criminal liability.", "In government, transparent decision-making is the bulwark against corruption allegations and audit paras.", "In the NGO sector, fiduciary integrity is the absolute baseline for donor trust and organizational survival.", "As a leader, your minor compromises become your team's major breaches. You set the ethical ceiling.", "Your professional reputation is built in decades and destroyed in a single compromised decision."),
+        why: ctxAction(`In environments with high fiduciary or public accountability${R.role ? ` such as your work as a ${R.role}` : ''}, transparency and rule compliance are non-negotiable trust metrics.`, "In banking, ethical breaches lead to regulatory sanctions, reputational ruin, and criminal liability.", "In government, transparent decision-making is the bulwark against corruption allegations and audit paras.", "In the NGO sector, fiduciary integrity is the absolute baseline for donor trust and organizational survival.", "As a leader, your minor compromises become your team's major breaches. You set the ethical ceiling.", "Your professional reputation is built in decades and destroyed in a single compromised decision."),
         now: ctxAction("Identify a process where you cut corners and realign it with official policy today.", "Review your recent approvals and ensure every single one has complete, transparent documentation.", "Audit your last three decisions for strict compliance with PPRA or departmental rules.", "Disclose a minor error or variance to a donor/partner immediately rather than hiding it.", "Publicly state your commitment to a specific compliance standard in your next team meeting.", "Consult a peer or mentor on an ethically ambiguous choice you are currently facing."),
         soon: ctxAction("Attend a professional ethics and values workshop.", "Complete an advanced anti-money laundering (AML) or compliance certification.", "Attend a workshop on public procurement rules and administrative transparency.", "Enrol in a course on fiduciary risk management and donor compliance.", "Commission an independent audit of your department's decision-making processes.", "Read and discuss a case study on corporate ethics with your team."),
         fut: ctxAction("Take ownership of a high-compliance or audit-facing project.", "Volunteer to serve on the institution's internal audit or risk committee.", "Lead a departmental initiative to rewrite and modernize standard operating procedures for transparency.", "Design and enforce a new anti-fraud and safeguarding framework for your organization.", "Champion a whistleblower protection or transparency initiative across the company.", "Become the compliance champion for your unit."),
@@ -2702,8 +2699,8 @@ const buildHabits = (content, dim, profile, R) => {
     const formatHow = (tool, method, context = '') => 
   `<strong style="color:${T.t0}">${tool}</strong> <strong style="color:${T.t0}">Methodology:</strong> ${method}${context ? ` <span style="font-style:italic;color:${T.t2}">${context}</span>` : ''}`;
 
-    const hows = {
-      'Conscientiousness & Delivery': [
+   const hows = {
+      'Conscientiousness': [
         formatHow('Tool: Stop-Start-Continue Audit.', 'Draw three columns. List exactly what behaviors you must Stop, Start, and Continue regarding your task delivery. Each must be a single, measurable sentence.', profileContext),
         formatHow('Framework: The Eisenhower Matrix.', 'Force yourself to select only 3 non-negotiable, high-impact tasks per day. Do them before opening your email inbox.', industryContextWeek2),
         formatHow('Tool: The 5 Whys Root Cause Analysis.', 'When you miss a deadline, ask "Why?" 5 times to uncover if it was a time-estimation error, a resource bottleneck, or a focus error.', seniorContextWeek3),
@@ -2739,7 +2736,7 @@ const buildHabits = (content, dim, profile, R) => {
         formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Learning Agility is the #1 predictor of executive potential and responds fastest to habit change.'),
         formatHow('Framework: The Feynman Technique.', 'Every Friday, ask yourself: "What did I learn this week, and could I explain it simply to a junior colleague?"')
       ],
-      'Social Confidence & Extraversion': [
+     'Social Confidence': [
         formatHow('Tool: The Avoidance Audit.', 'Write down every meeting or conversation where you held back this week. Identify if the barrier was fear of being wrong or fear of the spotlight.', profileContext),
         formatHow('Framework: The "First 5 Minutes" Rule.', 'Force yourself to speak, agree, or ask a question in the first 5 minutes of every meeting to break the psychological barrier of entry.', industryContextWeek2),
         formatHow('Methodology: The Wingman Protocol.', 'Privately ask a peer to actively prompt you for your opinion in a group setting.', seniorContextWeek3),
@@ -2751,7 +2748,7 @@ const buildHabits = (content, dim, profile, R) => {
         formatHow('Process: Psychometric Recalibration.', 'Book the CORE retake. Extraversion can be learned as a behavioral skill, even if it is not your natural state.'),
         formatHow('Tool: Weekly Ratio Log.', 'Tally the ratio of times you spoke up vs. held back. Watch the ratio flip over time as the habit solidifies.')
       ],
-      'Agreeableness & Collaboration': [
+     'Collaborative Spirit': [
         formatHow('Tool: The Interruption Audit.', 'Keep a tally of how many times you cut someone off or dismiss their idea this week. Awareness of the micro-behavior is the first step.', profileContext),
         formatHow('Framework: The "Playback" Protocol.', 'Before responding in a disagreement, you must repeat the other person\'s point back to them to their satisfaction.', industryContextWeek2),
         formatHow('Methodology: The Empathy Check.', 'Ask a peer you recently clashed with how they experienced the interaction. Listen entirely to understand, not to rebut.', seniorContextWeek3),
@@ -2886,7 +2883,7 @@ const buildHabits = (content, dim, profile, R) => {
       container.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:794px; min-height:1122px; background:${bgColor}; font-family:'Public Sans',sans-serif; -webkit-print-color-adjust:exact;`;
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 650));
       const canvas = await window.html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: bgColor, width: 794, windowWidth: 794 });
       document.body.removeChild(container);
       const canvasH = canvas.height;
@@ -2962,15 +2959,15 @@ const buildHabits = (content, dim, profile, R) => {
 
     // Page 4: Composite Indices (With Descriptions, Validity Removed)
     const compHTML = [
-      ['CII','Compliance & Integrity',CI.CII, 'Primary screen for fiduciary and compliance roles.'],
-      ['LRS','Leadership Readiness',CI.LRS, 'Predicts senior leadership performance and readiness.'],
-      ['TVS','Team Value',CI.TVS, 'Predicts team cohesion and collaborative contribution.'],
-      ['ADS','Adaptability',CI.ADS, 'Suitability for change, reform, and innovation roles.'],
-      ['SES','Stakeholder Effectiveness',CI.SES, 'Effectiveness with clients, donors, and external partners.'],
-      ['OPS','Operational Reliability',CI.OPS, 'Sustained delivery and reliability under pressure.'],
-      ['PMS','People Management',CI.PMS, 'Interpersonal and ethical readiness for people management.']
-    ].map(([k,l,v,d])=>{
-      const col = v>=70?'#16A34A':v>=54?'#D97706':'#DC2626';
+      ['CII','Compliance & Integrity',CI.CII, 'Primary screen for fiduciary and compliance roles.', 70, 54],
+      ['LRS','Leadership Readiness',CI.LRS, 'Predicts senior leadership performance and readiness.', 72, 55],
+      ['TVS','Team Value',CI.TVS, 'Predicts team cohesion and collaborative contribution.', 68, 51],
+      ['ADS','Adaptability',CI.ADS, 'Suitability for change, reform, and innovation roles.', 67, 50],
+      ['SES','Stakeholder Effectiveness',CI.SES, 'Effectiveness with clients, donors, and external partners.', 68, 52],
+      ['OPS','Operational Reliability',CI.OPS, 'Sustained delivery and reliability under pressure.', 67, 51],
+      ['PMS','People Management',CI.PMS, 'Interpersonal and ethical readiness for people management.', 67, 51]
+    ].map(([k,l,v,d,g,a])=>{
+      const col = v>=g?'#16A34A':v>=a?'#D97706':'#DC2626';
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #F3F4F6;"><div><div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:4px;">${l} (${k})</div><div style="font-size:11px;color:#6B7280;">${d}</div></div><div style="font-size:16px;font-weight:800;color:${col};">${v}/100</div></div>`;
     }).join('');
 
@@ -3013,9 +3010,10 @@ const buildHabits = (content, dim, profile, R) => {
 
     const habitCard = h => `<li style="padding:8px 0;font-size:12px;color:#374151;line-height:1.55;font-weight:500;"><div style="display:flex;gap:10px;"><span style="color:#D97706;font-weight:800;flex-shrink:0;">→</span><span><strong style="color:#111827;">${h.h}</strong> ${h.t}</span></div>${h.how ? `<div style="margin:6px 0 0 20px;padding:8px 10px;background:#F9FAFB;border-left:3px solid #D97706;border-radius:4px;font-size:11px;color:#4B5563;line-height:1.6;">${h.how}</div>` : ''}</li>`;
 for (const d of devAreas) {
+ try {
+  console.log('Generating roadmap pages for:', d.dim);
   const dimCol = d.v<45?'#DC2626':d.v<60?'#D97706':'#16A34A';
-  const habitChunks = chunk(d.habits, 5); // Changed to 5 to fit better on pages
-
+  const habitChunks = chunk(d.habits && d.habits.length ? d.habits : [{h:'Week 1', t:'Begin tracking this dimension.'}], 5);
   for (let ci = 0; ci < habitChunks.length; ci++) {
     const isFirst = ci === 0;
     const header = isFirst ? `
@@ -3051,6 +3049,8 @@ for (const d of devAreas) {
       </div>
     </div>
   `));
+  console.log('Completed roadmap pages for:', d.dim);
+ } catch (e) { console.error('❌ Roadmap generation FAILED for dimension:', d.dim, e); }
 }
 
    // Resources (Condensed to 5 per page)
@@ -3083,11 +3083,11 @@ for (const d of devAreas) {
       </div>
     `));
     
-    // Priority Action Matrix (4-Box Layout)
-    const actNowList = devAreas.filter(d=>d.v<45).map(d=>`<li style="margin-bottom:4px;">${d.dim}</li>`).join('') || '<li>No critical gaps — focus on elevation</li>';
-    const buildSoonList = devAreas.filter(d=>d.v>=45&&d.v<60).map(d=>`<li style="margin-bottom:4px;">${d.dim}</li>`).join('') || '<li>No short-term gaps identified</li>';
-    const sustainList = allDims.filter(d=>d.v>=75).map(d=>`<li style="margin-bottom:4px;">${d.l}</li>`).join('') || '<li>Continue balanced development</li>';
-    const monitorList = allDims.filter(d=>d.v>=60&&d.v<75).map(d=>`<li style="margin-bottom:4px;">${d.l}</li>`).join('') || '<li>Review all dimensions at 6-month CORE retake</li>';
+    // Priority Action Matrix (Relative 4-Box Layout)
+    const actNowList = allDims.slice(7, 9).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
+    const buildSoonList = allDims.slice(5, 7).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
+    const sustainList = allDims.slice(0, 2).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
+    const monitorList = allDims.slice(2, 5).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
 
     await addPageFromHTML(wrap(`
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
@@ -3278,22 +3278,48 @@ for (const d of devAreas) {
     return progs.slice(0,5);
   };
 
-  const getRelapse = () => {
+const getRelapse = () => {
     const protocols = [];
     const ssVal = gameSummary?.seesaw?.val || 50;
     const sc1 = gameSummary?.scenario1?.raw || 0;
-    const sc2 = gameSummary?.scenario2?.raw || 0;
-    
+
+    // Built directly from this person's own 2 lowest dimensions!
+    const protoMap = {
+      'Conscientiousness': {trigger:`When a deadline is approaching for your ${R.role || 'role'} and you have not started`, response:'Use the 2-minute rule: if any piece of this task takes 2 minutes, do it right now. Momentum from a tiny start breaks the avoidance cycle.'},
+      'Openness to Ideas': {trigger:'When a new tool, method or idea is proposed and your first reaction is to reject it', response:"Say 'tell me more' before you say 'but'. Give the idea 24 hours before deciding it will not work."},
+      'Social Confidence': {trigger:'When you have something to say in a meeting but decide to stay quiet', response:'Say it in the first 5 minutes of the meeting, before the window to speak up closes. Exposure, not preparation, is what builds this.'},
+      'Collaborative Spirit': {trigger:'When a colleague challenges your position and your instinct is to defend rather than listen', response:'Repeat their point back to them before responding to it. Only then give your view.'},
+      'Emotional Resilience': {trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:'Name it to yourself first: "I am currently stressed, frustrated, or overwhelmed." Labelling an emotional state reduces its intensity. Delay any non-urgent decision by at least 20 minutes.'},
+      'Cultural Intelligence': {trigger:'When a colleague from a different background behaves in a way you do not expect', response:'Ask what normal looks like in their context before assuming they are wrong. Curiosity first, judgment second.'},
+      'Team Citizenship': {trigger:'When something needs doing that is not technically your job', response:"Ask 'what can I take off someone else's plate this week' once, and act on the answer."},
+      'Learning Agility': {trigger:'When you are handed a task in an area you have not worked in before', response:'Give yourself 48 hours to learn before deciding it is not for you. Write down one thing you learned at the end of it.'},
+      'Ethical Integrity': {trigger:'When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right', response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"},
+    };
+
+    // Push the exact protocols for their specific weaknesses
+    bot2.forEach(d => {
+      if (protoMap[d.l]) protocols.push(protoMap[d.l]);
+    });
+
+    // Add game-based behavioral flags
     if(ssVal>65) protocols.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?" If you are explaining rather than defending, say no — or ask for it in writing first.'});
-    if(sc1<=0) protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:"Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure. Information withheld under pressure is almost always discovered — and the delay compounds the problem."});
-    if(sc2<0) protocols.push({trigger:"When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right", response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?' This gives the relationship a chance before escalation — and it documents your position."});
-    if(S.C<55) protocols.push({trigger:'When you find yourself approaching a deadline without having started', response:"Use the 2-minute rule: if you can do any meaningful piece of this task in 2 minutes right now, start immediately. Momentum from even a tiny start breaks the avoidance cycle more reliably than any motivational technique."});
-    if(S.ES<55) protocols.push({trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:"Name it to yourself first: 'I am currently [stressed / frustrated / overwhelmed].' Research shows labelling an emotional state reduces its intensity significantly. Then delay any non-urgent decision by at least 20 minutes."});
-    if(protocols.length===0) protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
-    return protocols;
+    if(sc1<=0) protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:"Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure."});
+
+    // Fallback if somehow we don't have enough
+    if(protocols.length < 3) {
+       protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
+    }
+    return protocols.slice(0, 4); // Keep it to top 3-4 so it's not overwhelming
   };
 
-  const resources = getResources();
+const roleIndustryNote = (role, industry) => {
+    const indShort = IND[industry]?.short || industry;
+    if (role && industry) return ` Particularly relevant for a ${role} working in ${indShort}.`;
+    if (role) return ` Particularly relevant given your role as ${role}.`;
+    if (industry) return ` Particularly relevant in ${indShort}.`;
+    return '';
+  };
+  const resources = getResources().map(r => ({ ...r, why: `${r.why}${roleIndustryNote(R.role, R.industry)}` }));
   const programs = getPrograms();
   const relapse = getRelapse();
 
@@ -3362,12 +3388,14 @@ for (const d of devAreas) {
                 <div key={l} style={{marginBottom:'8px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'4px'}}>
                     <span style={{fontSize:'13px',color:T.t0,fontWeight:'700',display:'flex',alignItems:'center'}}>
-                      <span style={{display:'inline-block', width:'8px', height:'8px', borderRadius:'50%', background:pCol, marginRight:'8px'}}></span>
+                      <span style={{display:'inline-block', width:'6px', height:'6px', borderRadius:'50%', background:pCol, marginRight:'6px'}}></span>
                       {l}
                     </span>
-                    <span className="mono" style={{fontSize:'11px',color:bCol(v),fontWeight:'800'}}>{v}/100 · {v>=75?'Strong':v>=55?'Developing':'Priority'}</span>
+                    <span className="mono" style={{fontSize:'10px',color:bCol(v,T),fontWeight:'800'}}>{v}/100 · {v>=75?'Strong':v>=50?'Developing':'Priority'}</span>
                   </div>
-                  <Bar score={v} w="100%" h={8} />
+                  <div style={{ height:'7px', background:T.b1, borderRadius:'100px', overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:`${v}%`, background:barGrad(v), borderRadius:'100px', transition:'width 0.8s ease' }} />
+                  </div>
                 </div>
               )})}
             </div>
@@ -3577,38 +3605,34 @@ for (const d of devAreas) {
           {/* Priority Matrix */}
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
-            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted relatively by urgency based on your unique score profile.</p>
             <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
-              <strong style={{color:T.t2}}>Where these come from:</strong> The bars above show module-level composites. This matrix goes one level deeper — it sorts the individual dimensions that make up those composites by urgency, so you know exactly which specific behaviour to focus on, not just which broad module to work on.
+              <strong style={{color:T.t2}}>Where these come from:</strong> This matrix sorts the 9 core behavioural dimensions from your lowest scores (Act Now) to your highest scores (Sustain & Expand), giving you a perfectly personalized roadmap.
             </div>
             
             <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
-              <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'12px'}}>🔴 Act Now (0–30 Days)</div>
+             <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'10px', padding:'20px'}}>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'12px'}}>🔴 Act Now (Priority)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {devAreas.filter(d=>d.v<45).map(d=><li key={d.dim}>{d.dim}</li>)}
-                  {devAreas.filter(d=>d.v<45).length===0 && <li>No critical gaps — focus on elevation</li>}
+                  {allDims.slice(7, 9).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
               <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'12px'}}>🟡 Build Soon (30–90 Days)</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'12px'}}>🟡 Build Soon (Secondary)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {devAreas.filter(d=>d.v>=45&&d.v<60).map(d=><li key={d.dim}>{d.dim}</li>)}
-                  {devAreas.filter(d=>d.v>=45&&d.v<60).length===0 && <li>No short-term gaps identified</li>}
+                  {allDims.slice(5, 7).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
               <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.gn, marginBottom:'12px'}}>🟢 Sustain & Expand</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.gn, marginBottom:'12px'}}>🟢 Sustain & Expand (Strengths)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.filter(d=>d.v>=75).map(d=><li key={d.l}>{d.l}</li>)}
-                  {allDims.filter(d=>d.v>=75).length===0 && <li>Continue balanced development</li>}
+                  {allDims.slice(0, 2).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
               <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.t2, marginBottom:'12px'}}>🔵 Monitor Progress</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.t2, marginBottom:'12px'}}>🔵 Monitor Progress (Balanced)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.filter(d=>d.v>=60&&d.v<75).map(d=><li key={d.l}>{d.l}</li>)}
-                  {allDims.filter(d=>d.v>=60&&d.v<75).length===0 && <li>Review all dimensions at 6-month CORE retake</li>}
+                  {allDims.slice(2, 5).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
             </div>

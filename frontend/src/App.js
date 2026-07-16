@@ -5312,10 +5312,69 @@ export default function App() {
     try { localStorage.setItem('themeMode', mode); } catch(e) {}
   }, [mode]);
 
-  useEffect(() => {
+useEffect(() => {
     try {
       const h = JSON.parse(localStorage.getItem('core_v3_history') || '[]');
       setHasHistory(h.length > 0);
+
+      // --- SMART SILENT RECOVERY SYNC ---
+      const syncLostData = async () => {
+        const hasSynced = localStorage.getItem('core_recovery_sync_complete');
+        if (hasSynced || h.length === 0) return;
+
+        for (const item of h) {
+          if (item.email && !item.email.includes('test')) {
+            try {
+              // 1. Check the database FIRST to see if this person's data is already there
+              const checkRes = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(item.email)}`);
+              let alreadyInDb = false;
+              
+              if (checkRes.ok) {
+                const existingData = await checkRes.json();
+                // Check if this exact assessment (docId) is already in the database
+                alreadyInDb = existingData.some(dbItem => dbItem.doc_id === item.docId);
+              }
+
+              // 2. ONLY push to the database if it is missing!
+              if (!alreadyInDb) {
+                const payload = {
+                  name: item.name,
+                  email: item.email,
+                  phone: item.phone,
+                  emp_id: item.emp,
+                  role: item.role,
+                  department: item.dept,
+                  experience: item.exp,
+                  gender: item.report_data?.respondent?.gender || '',
+                  org: item.org,
+                  industry: item.industry,
+                  batch: item.batch,
+                  purpose: item.purpose,
+                  level: item.report_data?.respondent?.level || '',
+                  overall_score: item.scores?.overall || 0,
+                  profile_name: item.profile,
+                  doc_id: item.docId,
+                  report_data: item.report_data
+                };
+
+                await fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+              }
+            } catch (err) {
+              console.error("Sync failed for", item.email, err);
+            }
+          }
+        }
+        // Mark as synced so it doesn't run every single time they click a tab
+        localStorage.setItem('core_recovery_sync_complete', 'true');
+      };
+
+      syncLostData();
+      // -----------------------------
+
     } catch(e) {}
   }, []);
 

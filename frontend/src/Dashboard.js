@@ -916,66 +916,102 @@ const ActionPlanReport = ({ candidate, T }) => {
     ctxAction("Volunteer to lead a process improvement initiative — channelling frustration into change is the most effective long-term strategy","Volunteer to lead a process improvement workstream in your institution","Apply to join a civil service reform working group or departmental improvement committee","Apply to lead a programme process improvement review")
   );
 
-  const resources = [];
-  if(S.C<65){
-    if(S.O>=65) resources.push({type:'book', title:'The 12 Week Year', author:'Brian Moran & Michael Lennington', url:'', why:'Sprint-based system designed for high-idea, lower-routine professionals. Replaces annual goals with 12-week cycles — each with a single concrete deliverable.'});
-    else resources.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:'The most evidence-grounded system for building reliable delivery habits through small compounding commitments.'});
-    resources.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban · TED2016', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Explains the psychology of task-avoidance and deadline-dependency with disarming honesty.'});
-  }
-  if(S.ES<65){
-    resources.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'', why:"Evidence-based techniques for managing the inner critical voice under pressure."});
-    resources.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal · TEDGlobal 2013', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'Stanford psychologist explains research showing the relationship with stress predicts health and performance.'});
-  }
-  if(S.CQavg<65){
-    resources.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:"The most practically applicable cultural intelligence book for Pakistani professionals."});
-    resources.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Ngozi Adichie · TEDGlobal 2009', url:'https://www.youtube.com/watch?v=D9Ihs241zeg', why:"Directly addresses the CQ-Knowledge gap — how limited exposure creates incomplete mental models."});
-  }
-  if(S.LAavg<65){
-    resources.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:"Research on fixed vs. growth mindset — the belief system that determines whether challenges are threats or opportunities."});
-    resources.push({type:'ted', title:'How to Get Better at the Things You Care About', author:'Eduardo Briceno', url:'https://www.youtube.com/watch?v=YKACzIrog24', why:"Explains why professionals who are always performing never improve."});
-  }
-  if(S.EOavg<65 || (gs?.seesaw?.val > 65)){
-    resources.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'', why:"Explains why people who make ethical lapses are not usually dishonest by nature — they are following intuitions that feel justified."});
-    resources.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely · TED2009', url:'https://www.youtube.com/watch?v=MxiT42BFWOA', why:"Behavioural economics research on how good people consistently make small unethical decisions."});
-  }
-  if(resources.length===0){
-    resources.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:'Foundational text on professional effectiveness.'});
-    resources.push({type:'ted', title:'How Great Leaders Inspire Action', author:'Simon Sinek', url:'https://www.youtube.com/watch?v=qp0HIF3SfI4', why:"The Golden Circle framework is applicable to how you communicate your professional value."});
-  }
+const R = candidate; 
 
-  const programs = [];
-  if(S.E<60||S.A<60||S.OCBavg<60) programs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging."});
-  if(S.EOavg<65||(gs?.seesaw?.val>60)) programs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency."});
-  if(S.LAavg<65||S.O<60) programs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits that accelerate professional development."});
-  if(S.CQavg<65) programs.push({name:'Intercultural Communication & Collaboration', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional contexts."});
-  if(S.ES<60) programs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools."});
-  if(programs.length===0) programs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile."});
+  const getResources = () => {
+    const res = [];
+    const gapKeys = bot2.map(d => d.k); 
+    const indText = R.industry || 'your sector';
+    const roleText = R.role || 'professional';
+    const expText = R.exp || R.experience ? `at ${R.exp || R.experience} of experience` : 'at your career stage';
+    const profileText = profile?.name || candidate?.profile_name || 'professional';
 
-  const R = candidate; // Map candidate to R for shared logic
+    if(gapKeys.includes('C')){
+      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran', url:'', why:`As a ${profileText} ${expText}, standard to-do lists will fail your creative drive. This sprint-based system replaces annual goals with 12-week cycles, ensuring your ideas actually execute in ${indText}.`});
+      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:`In ${indText}, delivery reliability is your primary currency. This is the most evidence-grounded system for building reliable execution habits through small, compounding daily commitments.`});
+      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Before you can fix your delivery gap, you must understand the psychology of task-avoidance. Highly recommended before starting your action plan.'});
+    }
+    if(gapKeys.includes('ES')){
+      res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'', why:`As a ${roleText} ${expText}, pressure is inevitable. This provides evidence-based techniques for managing your inner critical voice when stakes are high in ${indText}.`});
+      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'Stanford psychologist explains research showing the relationship with stress predicts health and performance.'});
+    }
+    if(gapKeys.includes('CQavg')){
+      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:`The most practically applicable cultural intelligence book for Pakistani professionals. Essential for a ${profileText} navigating diverse stakeholders in ${indText}.`});
+    }
+    if(gapKeys.includes('LAavg')){
+      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:`Research on fixed vs. growth mindset. As the landscape of ${indText} evolves, your ability to learn faster than your peers is your ultimate competitive advantage ${expText}.`});
+    }
+    if(gapKeys.includes('EOavg')){
+      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'', why:`Explains why professionals who make ethical lapses are not usually dishonest by nature. Critical reading for high-accountability roles in ${indText}.`});
+    }
+    if(gapKeys.includes('A')){
+      res.push({type:'book', title:'Getting to Yes', author:'Fisher & Ury', url:'', why:`The foundational text on principled negotiation. Helps you disagree and influence stakeholders in ${indText} without damaging long-term relationships.`});
+    }
+    if(gapKeys.includes('O')){
+      res.push({type:'book', title:'A Whole New Mind', author:'Daniel Pink', url:'', why:`A powerful argument for why creative and conceptual thinking is increasingly critical. Essential for breaking out of rigid procedural thinking ${expText}.`});
+    }
+    if(gapKeys.includes('E')){
+      res.push({type:'book', title:'Quiet', author:'Susan Cain', url:'', why:`A research-backed argument that introversion is a professional asset when deployed deliberately. Learn how to hold presence as a ${profileText} without faking extraversion.`});
+    }
+    if(gapKeys.includes('OCBavg')){
+      res.push({type:'book', title:'Give and Take', author:'Adam Grant', url:'', why:`Explains how contributing to the success of your colleagues and the institution ultimately accelerates your own trajectory in ${indText}.`});
+    }
+
+    if(res.length===0){
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:`Foundational text on professional effectiveness. Highly relevant for sustaining your balanced profile as a ${profileText} ${expText}.`});
+    }
+    return res.slice(0, 4); 
+  };
+
+  const getPrograms = () => {
+    const progs = [];
+    const gapKeys = bot2.map(d => d.k);
+    const profileText = profile?.name || candidate?.profile_name || 'professional';
+
+    if(gapKeys.includes('E') || gapKeys.includes('A') || gapKeys.includes('OCBavg')) 
+      progs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging.", match:`Directly targets the interpersonal gaps in your ${profileText} profile.`});
+    
+    if(gapKeys.includes('EOavg') || (gs?.seesaw?.val>60)) 
+      progs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency.", match:`Recommended based on your Ethical Orientation scores and Values Seesaw responses.`});
+    
+    if(gapKeys.includes('LAavg') || gapKeys.includes('O')) 
+      progs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits that accelerate professional development.", match:`Directly targets your priority development area in adaptive learning.`});
+    
+    if(gapKeys.includes('CQavg')) 
+      progs.push({name:'Intercultural Communication & Collaboration', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional contexts.", match:`Recommended to help you navigate diverse stakeholders in ${R.industry || 'your sector'}.`});
+    
+    if(gapKeys.includes('ES')) 
+      progs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools.", match:`Directly targets your priority development area in Emotional Resilience.`});
+    
+    if(progs.length===0) 
+      progs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile.", match:`Recommended to help you leverage your balanced strengths as a ${profileText}.`});
+
+    return progs.slice(0, 3);
+  };
 
   const getRelapse = () => {
     const protocols = [];
-    const ssVal = gs?.seesaw?.val || 50;
-    const sc1 = gs?.scenario1?.raw || 0;
+    const gapKeys = bot2.map(d => d.k);
+    const roleText = R.role || 'role';
 
     const protoMap = {
-      'Conscientiousness': {trigger:`When a deadline is approaching for your ${R.role || 'role'} and you have not started`, response:'Use the 2-minute rule: if any piece of this task takes 2 minutes, do it right now. Momentum from a tiny start breaks the avoidance cycle.'},
-      'Openness to Ideas': {trigger:'When a new tool, method or idea is proposed and your first reaction is to reject it', response:"Say 'tell me more' before you say 'but'. Give the idea 24 hours before deciding it will not work."},
-      'Social Confidence': {trigger:'When you have something to say in a meeting but decide to stay quiet', response:'Say it in the first 5 minutes of the meeting, before the window to speak up closes. Exposure, not preparation, is what builds this.'},
-      'Collaborative Spirit': {trigger:'When a colleague challenges your position and your instinct is to defend rather than listen', response:'Repeat their point back to them before responding to it. Only then give your view.'},
-      'Emotional Resilience': {trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:'Name it to yourself first: "I am currently stressed, frustrated, or overwhelmed." Labelling an emotional state reduces its intensity. Delay any non-urgent decision by at least 20 minutes.'},
-      'Cultural Intelligence': {trigger:'When a colleague from a different background behaves in a way you do not expect', response:'Ask what normal looks like in their context before assuming they are wrong. Curiosity first, judgment second.'},
-      'Team Citizenship': {trigger:'When something needs doing that is not technically your job', response:"Ask 'what can I take off someone else's plate this week' once, and act on the answer."},
-      'Learning Agility': {trigger:'When you are handed a task in an area you have not worked in before', response:'Give yourself 48 hours to learn before deciding it is not for you. Write down one thing you learned at the end of it.'},
-      'Ethical Integrity': {trigger:'When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right', response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"},
+      'C': {trigger:`When a deadline is approaching for your ${roleText} and you have not started`, response:'Use the 2-minute rule: if any piece of this task takes 2 minutes, do it right now. Momentum from a tiny start breaks the avoidance cycle.'},
+      'O': {trigger:'When a new tool, method or idea is proposed and your first reaction is to reject it', response:"Say 'tell me more' before you say 'but'. Give the idea 24 hours before deciding it will not work."},
+      'E': {trigger:'When you have something to say in a meeting but decide to stay quiet', response:'Say it in the first 5 minutes of the meeting, before the window to speak up closes. Exposure, not preparation, is what builds this.'},
+      'A': {trigger:'When a colleague challenges your position and your instinct is to defend rather than listen', response:'Repeat their point back to them before responding to it. Only then give your view.'},
+      'ES': {trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:'Name it to yourself first: "I am currently stressed, frustrated, or overwhelmed." Labelling an emotional state reduces its intensity. Delay any non-urgent decision by at least 20 minutes.'},
+      'CQavg': {trigger:'When a colleague from a different background behaves in a way you do not expect', response:'Ask what normal looks like in their context before assuming they are wrong. Curiosity first, judgment second.'},
+      'OCBavg': {trigger:'When something needs doing that is not technically your job', response:"Ask 'what can I take off someone else's plate this week' once, and act on the answer."},
+      'LAavg': {trigger:'When you are handed a task in an area you have not worked in before', response:'Give yourself 48 hours to learn before deciding it is not for you. Write down one thing you learned at the end of it.'},
+      'EOavg': {trigger:'When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right', response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"},
     };
 
-    bot2.forEach(d => { if (protoMap[d.l]) protocols.push(protoMap[d.l]); });
+    gapKeys.forEach(k => { if (protoMap[k]) protocols.push(protoMap[k]); });
 
-    if (ssVal > 65 && !protocols.find(p => p.trigger.includes('bypass a process'))) {
+    if ((gs?.seesaw?.val > 65) && protocols.length < 4) {
       protocols.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it, or explain it away?" If you are explaining rather than defending, say no, or ask for it in writing first.'});
     }
-    if (sc1 <= 0 && !protocols.find(p => p.trigger.includes('withhold information'))) {
+    if ((gs?.scenario1?.raw <= 0) && protocols.length < 4) {
       protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:'Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure.'});
     }
 
@@ -985,6 +1021,8 @@ const ActionPlanReport = ({ candidate, T }) => {
     return protocols.slice(0, 4);
   };
 
+  const resources = getResources();
+  const programs = getPrograms();
   const relapse = getRelapse();
 
   const card = (children, style={}) => (
@@ -1852,7 +1890,8 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
                     {scored.map((c, i) => {
-                      const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+                      // If there is an experience warning, force the color to Red
+                      const col = c.expWarning ? T.rd : (c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd);
                       return (
                         <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'6px' }}>
                           <div>
@@ -1860,7 +1899,10 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
                             <div style={{ fontSize:'10px', color:T.t2 }}>{c.profile_name}</div>
                           </div>
                           <div style={{ textAlign:'right' }}>
-                            <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:col }}>{c.fitPct}%</div>
+                            {/* Show the Warning Text if it exists, otherwise show the Percentage */}
+                            <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:col }}>
+                              {c.expWarning ? c.expWarning : `${c.fitPct}%`}
+                            </div>
                           </div>
                         </div>
                       );

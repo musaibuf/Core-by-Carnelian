@@ -506,21 +506,31 @@ const computeValidity = (answers) => {
 };
 
 const getProfile = (s) => {
-  const {O,C,E,A,ES,CQavg,OCBavg,LAavg,EOavg,CQ_M,CQ_B,OCB_A,LA_CA,LA_RA,OCB_S}=s;
+  const {O,C,E,A,ES,CQavg,OCBavg,LAavg,EOavg,CQ_M,CQ_B,OCB_A,LA_CA,LA_RA,OCB_S} = s;
+  
+  // 1. Burnout Gate (Keep strict to catch genuine risk)
   const burnoutRisk = ES<50 && C>=68;
   if(burnoutRisk && ((C>=76&&E>=68&&EOavg>=74&&LAavg>=65) || (C>=70&&OCBavg>=74&&EOavg>=68) || (EOavg>=75&&C>=65)))
     return {name:'High-Capability, Under Strain',tier:3,desc:"Strong delivery or ethical orientation combined with signs of reduced emotional stability. The capability is real, but sustained high performance is at risk without deliberate recovery practices."};
+  
+  // 2. Tier 1 (Elite - Keep strict)
   if(C>=76&&E>=68&&EOavg>=74&&LAavg>=65) return {name:'Strategic Integrity Leader',tier:1,desc:"A high-performance profile combining delivery drive, social presence, strong ethical orientation, and adaptive learning. Ready for senior leadership in high-accountability environments."};
   if(C>=70&&OCBavg>=74&&EOavg>=68) return {name:'Institutional Anchor',tier:1,desc:"Conscientious, ethical, and deeply invested in organisational citizenship. The institutional backbone delivers consistently, supports colleagues, and upholds institutional norms."};
-  if(O>=65&&LAavg>=70&&CQavg>=65) return {name:'Adaptive Innovator',tier:2,desc:"High intellectual curiosity combined with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
-  if(EOavg>=75&&C>=65) return {name:'Ethics-Driven Executor',tier:2,desc:"A reliable and principled professional with strong compliance orientation and consistent delivery. Excellent for audit, compliance, and risk management."};
-  if(CQavg>=70&&E>=65&&A>=65) return {name:'Cross-Cultural Bridge',tier:2,desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
-  if(OCBavg>=70&&A>=65&&EOavg>=65) return {name:'Collaborative Team Leader',tier:2,desc:"An empathetic, cooperative, and institutionally committed professional who strengthens team cohesion. Brings out the best in colleagues."};
-  if(O>=70&&C<52&&LAavg>=62) return {name:'Visionary Sprinter',tier:3,desc:"High intellectual energy and idea generation combined with lower structured delivery. Most effective in short-burst, project-based environments."};
-  if(CQ_M>=70&&CQ_B<55&&CQavg<65) return {name:'Eager Cultural Bridge-Builder',tier:3,desc:"Strong motivation to engage across cultural contexts combined with a gap in behavioural flexibility. The enthusiasm is genuine, but the toolkit needs development."};
-  if(OCB_A>=75&&E<48&&OCBavg>=68&&OCB_S<52) return {name:'Generous Under Pressure',tier:3,desc:"Exceptionally strong team support orientation combined with lower social assertiveness and signs of accumulated frustration with institutional demands."};
-  if(LA_CA>=72&&LA_RA<52&&LAavg>=62) return {name:'Strategic Pivoter',tier:3,desc:"Strong capacity to identify when a direction needs to change, combining with a gap in driving initiatives through to completion."};
-  if(LAavg>=70&&O>=65) return {name:'Learning Champion',tier:2,desc:"A fast learner who thrives on intellectual challenge and new knowledge. Strong asset in research, training design, and capacity building."};
+  
+  // 3. Tier 2 (Relaxed thresholds to properly categorize mid-range scorers)
+  if(O>=62&&LAavg>=65&&CQavg>=62) return {name:'Adaptive Innovator',tier:2,desc:"High intellectual curiosity combined with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
+  if(EOavg>=70&&C>=62) return {name:'Ethics-Driven Executor',tier:2,desc:"A reliable and principled professional with strong compliance orientation and consistent delivery. Excellent for audit, compliance, and risk management."};
+  if(CQavg>=65&&E>=60&&A>=60) return {name:'Cross-Cultural Bridge',tier:2,desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
+  if(OCBavg>=65&&A>=60&&EOavg>=60) return {name:'Collaborative Team Leader',tier:2,desc:"An empathetic, cooperative, and institutionally committed professional who strengthens team cohesion. Brings out the best in colleagues."};
+  if(LAavg>=65&&O>=62) return {name:'Learning Champion',tier:2,desc:"A fast learner who thrives on intellectual challenge and new knowledge. Strong asset in research, training design, and capacity building."};
+  
+  // 4. Tier 3 (Catch specific developmental patterns)
+  if(O>=65&&C<55&&LAavg>=60) return {name:'Visionary Sprinter',tier:3,desc:"High intellectual energy and idea generation combined with lower structured delivery. Most effective in short-burst, project-based environments."};
+  if(CQ_M>=65&&CQ_B<58&&CQavg<68) return {name:'Eager Cultural Bridge-Builder',tier:3,desc:"Strong motivation to engage across cultural contexts combined with a gap in behavioural flexibility. The enthusiasm is genuine, but the toolkit needs development."};
+  if(OCB_A>=70&&E<52&&OCBavg>=65&&OCB_S<55) return {name:'Generous Under Pressure',tier:3,desc:"Exceptionally strong team support orientation combined with lower social assertiveness and signs of accumulated frustration with institutional demands."};
+  if(LA_CA>=68&&LA_RA<55&&LAavg>=60) return {name:'Strategic Pivoter',tier:3,desc:"Strong capacity to identify when a direction needs to change, combining with a gap in driving initiatives through to completion."};
+  
+  // 5. Fallback (Only for truly flat/undeveloped profiles)
   return {name:'Emerging Professional',tier:4,desc:"A profile with clear foundations and specific dimensions ready for focused development. Structured development investment here creates measurable change."};
 };
 
@@ -1726,14 +1736,22 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
     if(S.CQavg>=72&&S.E>=68&&S.A>=68) patterns.push({sev:'pos', name:'Cross-Cultural Bridge', headline:'Strong Cultural Intelligence + Social Effectiveness', detail:'Best suited for multi-stakeholder, multi-cultural, and relationship-intensive professional environments.'});
     if(S.LAavg>=75&&S.O>=70) patterns.push({sev:'pos', name:'Learning Champion', headline:'High Learning Agility + Intellectual Openness', detail:'Will outgrow their current role faster than peers. Strong training investment.'});
 
-    const roles=[
+    const isJunior = resp.exp === '0–2 years' || resp.exp === '3–5 years' || resp.level?.includes('Entry') || resp.level?.includes('Junior');
+
+    const roles = [
       {name:'Compliance / Audit / Risk',score:CII,g:70,a:54,redNote:'CII below threshold. Do not place in treasury, procurement, audit, or unsupervised fiduciary roles without mandatory ethics intervention.',probeQ:['Describe a time following a rule precisely would have produced a worse outcome. What did you do and why?','Have you ever been asked by a superior to do something conflicting with policy? Walk me through exactly what happened.','Tell me about a decision that no one would have known about if you had decided differently. What did you do?']},
-      {name:'Senior Leadership / Executive',score:LRS,g:72,a:55,redNote:'LRS below threshold. Not ready for senior leadership without structured development in the low-scoring composite dimensions.',probeQ:['Describe a time making a high-stakes decision with incomplete information. What was your process?','How do you manage your own performance and accountability? Give me a specific system.','Tell me about a time your team underperformed. What was your role, and what did you change?']},
       {name:'Client-Facing / Stakeholder Management',score:SES,g:68,a:52,redNote:'SES below threshold. Risk of damaged client relationships. Also verify EO_AI ≥ 55 before any role with unsupervised client fund access.',probeQ:['Tell me about the most difficult client or stakeholder relationship you have managed. How did you handle cultural differences?','Describe a time you had to say something a client did not want to hear. How did you frame it?']},
       {name:'Operations / Technical Specialist',score:OPS,g:67,a:51,redNote:'OPS below threshold. May struggle with sustained delivery and process adherence under pressure.',probeQ:['Walk me through how you organise your work when you have multiple competing deadlines.','Tell me about a time you had to maintain quality standards under significant time pressure.']},
-      {name:'Change / Reform / Innovation',score:ADS,g:67,a:50,redNote:'ADS below threshold. Not suited for reform, transformation, or ambiguity-heavy roles without learning agility development.',probeQ:['Tell me about a time you had to work effectively without clear guidelines or established procedures.','Describe something you taught yourself in the last 12 months. How did you apply it?']},
-      {name:'People Management / Team Lead',score:PMS,g:67,a:51,redNote:'PMS below threshold. Interpersonal, ethical, or team cohesion dimensions insufficiently developed for people management.',probeQ:['Tell me about a team member you had difficulty with. How did you manage that relationship?','Describe a time you had to give critical feedback to someone. How did you approach it?']},
+      {name:'Change / Reform / Innovation',score:ADS,g:67,a:50,redNote:'ADS below threshold. Not suited for reform, transformation, or ambiguity-heavy roles without learning agility development.',probeQ:['Tell me about a time you had to work effectively without clear guidelines or established procedures.','Describe something you taught yourself in the last 12 months. How did you apply it?']}
     ];
+
+    if (!isJunior) {
+      roles.push({name:'Senior Leadership / Executive',score:LRS,g:72,a:55,redNote:'LRS below threshold. Not ready for senior leadership without structured development.',probeQ:['Describe a time making a high-stakes decision with incomplete information. What was your process?','How do you manage your own performance and accountability? Give me a specific system.','Tell me about a time your team underperformed. What was your role, and what did you change?']});
+      roles.push({name:'People Management / Team Lead',score:PMS,g:67,a:51,redNote:'PMS below threshold. Interpersonal or ethical dimensions insufficiently developed for people management.',probeQ:['Tell me about a team member you had difficulty with. How did you manage that relationship?','Describe a time you had to give critical feedback to someone. How did you approach it?']});
+    } else {
+      roles.push({name:'Future Leadership Potential',score:LRS,g:65,a:50,redNote:'LRS below threshold for future leadership track. Focus on core delivery and learning agility first.',probeQ:['Tell me about a time you took initiative on something outside your job description.','How do you handle situations where you do not know the answer?']});
+      roles.push({name:'Peer Coordination / Project Support',score:PMS,g:60,a:45,redNote:'PMS below threshold. May struggle to coordinate tasks with peers effectively.',probeQ:['Tell me about a time you had to rely on a peer who was not delivering. How did you handle it?','Describe a time you helped a colleague succeed on their project.']});
+    }
 
 // Generate Programs to save to DB for the Dashboard
     const progs = [];
@@ -1745,8 +1763,8 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
     if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:'Flagship leadership development pathway.'});
     const programs = progs.slice(0,4);
 
-    // Define reportDataObj FIRST so the database payload can use it
-    const reportDataObj = { scores: S, profile, validity, CI, gameSummary, patterns, programs, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles, completionTime, completionFlag };
+   // Define reportDataObj FIRST so the database payload can use it
+    const reportDataObj = { answers: answers, scores: S, profile, validity, CI, gameSummary, patterns, programs, respondent: resp, cfg: { org: resp.org, industry: resp.industry, batch: resp.batch, purpose: resp.purpose, level: resp.level, conf: resp.conf }, docId, date, roles, completionTime, completionFlag };
 
     // --- SEND DATA TO BACKEND DATABASE ---
     const actualDept = resp.dept === 'Other' ? resp.deptOther : resp.dept;
@@ -3196,130 +3214,110 @@ for (const d of devAreas) {
   };
 
   // ── RESOURCES & PROTOCOLS ──
-  const getResources = () => {
+const getResources = () => {
     const res = [];
-    if(S.C<65){
-      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran & Michael Lennington', url:'', why:'Sprint-based system designed for high-idea, lower-routine professionals. Replaces annual goals with 12-week cycles — each with a single concrete deliverable. Works with your natural rhythm, not against it.'});
-      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:'The most evidence-grounded system for building reliable delivery habits through small compounding commitments. 15+ million copies sold.'});
-      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban · TED2016', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'19 million views. Explains the psychology of task-avoidance and deadline-dependency with disarming honesty. Watch this before starting your 30-day delivery log.'});
-      res.push({type:'research', title:'Conscientiousness and Performance: A Meta-Analytic Review', author:'Barrick & Mount (1991) — Journal of Applied Psychology', url:'', why:'85-year meta-analysis showing conscientiousness (r=.22) is the single most consistent personality predictor of job performance across all occupations. Read the abstract — understanding why this matters will change how you see this dimension.'});
+    const gapKeys = bot2.map(d => d.k); 
+    const indText = R.industry || 'your sector';
+    const roleText = R.role || 'professional';
+    const expText = R.exp || R.experience ? `at ${R.exp || R.experience} of experience` : 'at your career stage';
+    const profileText = profile?.name || 'professional';
+
+    if(gapKeys.includes('C')){
+      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran', url:'', why:`As a ${profileText} ${expText}, standard to-do lists will fail your creative drive. This sprint-based system replaces annual goals with 12-week cycles, ensuring your ideas actually execute in ${indText}.`});
+      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:`In ${indText}, delivery reliability is your primary currency. This is the most evidence-grounded system for building reliable execution habits through small, compounding daily commitments.`});
+      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Before you can fix your delivery gap, you must understand the psychology of task-avoidance. Highly recommended before starting your action plan.'});
     }
-    if(S.ES<65){
-      res.push({type:'book', title:'Chatter: The Voice in Our Head, Why It Matters, and How to Harness It', author:'Ethan Kross', url:'', why:"Evidence-based techniques for managing the inner critical voice under pressure. Kross's research at University of Michigan directly addresses the cognitive mechanism behind emotional instability. More practical than general resilience books."});
-      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal · TEDGlobal 2013', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'21 million views. Stanford psychologist explains research showing the relationship with stress — not stress itself — predicts health and performance. One of the most directly applicable TED talks to your profile.'});
-      res.push({type:'youtube', title:'How to Process Emotions — Dr. Marc Brackett (Yale)', author:'Huberman Lab Podcast', url:'https://www.youtube.com/watch?v=WBWOP9asMCg', why:'Yale Center for Emotional Intelligence. Practical framework for processing emotions under professional pressure. Free, evidence-grounded. Watch in segments.'});
-      res.push({type:'research', title:'Emotional Regulation and Job Performance: A Meta-Analysis', author:'Mesmer-Magnus et al. (2012) — Journal of Applied Psychology', url:'', why:'Meta-analysis of 245 studies demonstrating that emotional regulation — not emotional absence — predicts both individual performance and team outcomes.'});
+    if(gapKeys.includes('ES')){
+      res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'', why:`As a ${roleText} ${expText}, pressure is inevitable. This provides evidence-based techniques for managing your inner critical voice when stakes are high in ${indText}.`});
+      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'Stanford psychologist explains research showing the relationship with stress predicts health and performance.'});
     }
-    if(S.CQavg<65){
-      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:"The most practically applicable cultural intelligence book for Pakistani professionals. Meyer's eight-dimension framework directly covers communication, trust, and hierarchy styles you encounter across Pakistan's diverse institutional landscape."});
-      res.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Ngozi Adichie · TEDGlobal 2009', url:'https://www.youtube.com/watch?v=D9Ihs241zeg', why:"31 million views. The most-watched talk on cultural assumption and narrative bias. Directly addresses the CQ-Knowledge gap — how limited exposure creates incomplete mental models of people from other backgrounds."});
-      res.push({type:'youtube', title:'Cultural Intelligence: The Competitive Edge for Leaders', author:'David Livermore · TEDxMSU', url:'https://www.youtube.com/watch?v=cAsJOE1HExk', why:"Livermore — one of the world's leading CQ researchers — explains why cultural intelligence outperforms IQ in cross-cultural effectiveness. 20 minutes. Free."});
-      res.push({type:'research', title:'Cultural Intelligence: Its Measurement and Effects on Cultural Judgment', author:'Ang, Van Dyne et al. (2007) — Management and Organization Review', url:'', why:"Foundational academic paper establishing CQ's predictive validity for cross-cultural performance (β=.31) beyond personality and IQ. Cited 3,000+ times."});
+    if(gapKeys.includes('CQavg')){
+      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:`The most practically applicable cultural intelligence book for Pakistani professionals. Essential for a ${profileText} navigating diverse stakeholders in ${indText}.`});
     }
-    if(S.LAavg<65){
-      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:"Stanford psychologist Carol Dweck's research on fixed vs. growth mindset — the belief system that determines whether challenges are threats or opportunities. Directly addresses the cognitive roots of low learning agility."});
-      res.push({type:'ted', title:'How to Get Better at the Things You Care About', author:'Eduardo Briceno · TEDxManhattanBeach 2016', url:'https://www.youtube.com/watch?v=YKACzIrog24', why:"Briceno's distinction between learning mode and performance mode is directly applicable to low learning agility profiles. Explains why professionals who are always performing never improve. 12 minutes."});
-      res.push({type:'youtube', title:'Learning Agility: The Key to Leader Potential', author:'Robert Eichinger · Korn Ferry Institute', url:'https://www.youtube.com/watch?v=3WbMSyCOtmg', why:"Co-creator of the learning agility framework your assessment uses explains the research and what developing each dimension actually looks like in practice."});
-      res.push({type:'research', title:'Exploring the Construct Validity of Learning Agility', author:'DeRue, Ashford & Myers (2012) — Human Resource Management', url:'', why:"Peer-reviewed validation showing learning agility predicts leadership effectiveness beyond established personality and cognitive measures. The scientific basis for why this is the strongest predictor of leadership potential."});
+    if(gapKeys.includes('LAavg')){
+      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:`Research on fixed vs. growth mindset. As the landscape of ${indText} evolves, your ability to learn faster than your peers is your ultimate competitive advantage ${expText}.`});
     }
-    if(S.EOavg<65 || (gameSummary?.seesaw?.val > 65)){
-      res.push({type:'book', title:'The Righteous Mind: Why Good People Are Divided', author:'Jonathan Haidt', url:'', why:"Haidt's moral psychology research explains why people who make ethical lapses are not usually dishonest by nature — they are following intuitions that feel justified. Understanding your own moral intuition is the first step to building conscious ethical guardrails."});
-      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely · TED2009', url:'https://www.youtube.com/watch?v=MxiT42BFWOA', why:"Ariely's behavioural economics research on how good people consistently make small unethical decisions — and why. Directly mapped to what the seesaw and ethics challenge in your assessment measured. 16 minutes."});
-      res.push({type:'youtube', title:'Justice: What\'s the Right Thing to Do? — Episode 1', author:'Michael Sandel, Harvard Open Course', url:'https://www.youtube.com/watch?v=kBdfcR-8hEY', why:"Harvard's most popular course, now free. Episodes 1-3 introduce the ethical reasoning frameworks your EO score engages. Watch them as a professional development investment."});
-      res.push({type:'research', title:'A Meta-Analysis of Integrity Test Validities', author:'Ones, Viswesvaran & Schmidt (1993) — Journal of Applied Psychology', url:'', why:"Meta-analysis of 665 studies demonstrating integrity assessment predicts not only counterproductive work behaviour but overall job performance (rho=.41). The most-cited paper in integrity measurement."});
+    if(gapKeys.includes('EOavg')){
+      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'', why:`Explains why professionals who make ethical lapses are not usually dishonest by nature. Critical reading for high-accountability roles in ${indText}.`});
     }
-    if(S.OCB_S<55){
-      res.push({type:'book', title:'Radical Candor: Be a Kick-Ass Boss Without Losing Your Humanity', author:'Kim Scott', url:'', why:"Kim Scott's framework for channelling honest frustration into constructive feedback. Directly applicable to professionals who struggle to manage workplace frustrations without affecting team morale."});
-      res.push({type:'ted', title:'Why Good Leaders Make You Feel Safe', author:'Simon Sinek · TED2014', url:'https://www.youtube.com/watch?v=lmyZMtPVodo', why:"Sinek's talk on how leaders who channel difficulty constructively create team environments where people perform better. Reframes constructive attitude as a leadership superpower."});
+    if(gapKeys.includes('A')){
+      res.push({type:'book', title:'Getting to Yes', author:'Fisher & Ury', url:'', why:`The foundational text on principled negotiation. Helps you disagree and influence stakeholders in ${indText} without damaging long-term relationships.`});
     }
-    if(S.LA_PA<55){
-      res.push({type:'book', title:'Thanks for the Feedback: The Science and Art of Receiving Feedback Well', author:'Douglas Stone & Sheila Heen', url:'', why:"Harvard Negotiation Project research explaining why people resist feedback even when they want to improve — and specific tools to receive it accurately."});
-      res.push({type:'ted', title:'Increase Your Self-Awareness with One Simple Fix', author:'Tasha Eurich · TEDxMileHigh 2017', url:'https://www.youtube.com/watch?v=tGdsOXZpyWE', why:"Eurich's research on self-awareness shows most people who think they are self-aware are not — and which introspection habits actually work. Directly targeted at People Agility."});
+    if(gapKeys.includes('O')){
+      res.push({type:'book', title:'A Whole New Mind', author:'Daniel Pink', url:'', why:`A powerful argument for why creative and conceptual thinking is increasingly critical. Essential for breaking out of rigid procedural thinking ${expText}.`});
     }
-    if(S.A<60){
-      res.push({type:'book', title:'Getting to Yes: Negotiating Agreement Without Giving In', author:'Fisher, Ury & Patton', url:'', why:"The foundational text on principled negotiation — relevant because low Agreeableness often manifests as positional rather than interest-based conflict. Fisher and Ury's framework helps you disagree and influence without damaging relationships."});
-      res.push({type:'ted', title:'10 Ways to Have a Better Conversation', author:'Celeste Headlee · TEDxCreativeCoast 2015', url:'https://www.youtube.com/watch?v=R1vskiVDwl4', why:"21 million views. Headlee's talk targets the specific habits that prevent genuine listening — the same mechanisms that drive low Agreeableness scores. Practical, behavioural, immediately applicable."});
-      res.push({type:'research', title:'Agreeableness and Job Performance: A Meta-Analytic Review', author:'Mount, Barrick & Stewart (1998) — Personnel Psychology', url:'', why:"Meta-analysis demonstrating Agreeableness (r=.34) is the strongest personality predictor of performance in team-based and interpersonal jobs. Directly relevant to your dimension score and its career implications."});
+    if(gapKeys.includes('E')){
+      res.push({type:'book', title:'Quiet', author:'Susan Cain', url:'', why:`A research-backed argument that introversion is a professional asset when deployed deliberately. Learn how to hold presence as a ${profileText} without faking extraversion.`});
     }
-    if(S.O<60){
-      res.push({type:'book', title:'A Whole New Mind: Why Right-Brainers Will Rule the Future', author:'Daniel H. Pink', url:'', why:"Pink's accessible argument for why creative, design, and conceptual thinking is increasingly critical in professional roles — directly targeted at professionals who have built strong careers on technical and procedural competence and now need to expand their range."});
-      res.push({type:'ted', title:'Do Schools Kill Creativity?', author:'Sir Ken Robinson · TED2006', url:'https://www.youtube.com/watch?v=iG9CE55wbtY', why:"The most-watched TED talk of all time (75+ million views). Robinson's argument about why creative thinking gets suppressed — and how to recover it — is directly relevant to low Openness profiles. Starting point for understanding why your natural instinct is to refine rather than reinvent."});
+    if(gapKeys.includes('OCBavg')){
+      res.push({type:'book', title:'Give and Take', author:'Adam Grant', url:'', why:`Explains how contributing to the success of your colleagues and the institution ultimately accelerates your own trajectory in ${indText}.`});
     }
-    if(S.E<50){
-      res.push({type:'book', title:"Quiet: The Power of Introverts in a World That Can't Stop Talking", author:'Susan Cain', url:'', why:"Susan Cain's research-backed argument that introversion is a professional asset — not a deficit — when deployed deliberately. Directly relevant to low Extraversion profiles who work in visible or client-facing roles."});
-      res.push({type:'ted', title:'The Power of Introverts', author:'Susan Cain · TED2012', url:'https://www.youtube.com/watch?v=c0KYU2j0TM4', why:"28 million views. Cain's argument for why introverts make exceptional leaders and contributors when they understand and leverage their natural working style rather than performing extroversion."});
-    }
-    if(S.C>=75&&S.EOavg>=75&&S.LAavg>=70){
-      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:"Drucker's foundational text on how high-performing professionals make their strengths productive and time purposeful. For your profile the work is not fixing gaps — it is deploying strengths deliberately."});
-      res.push({type:'ted', title:'The Puzzle of Motivation', author:'Dan Pink · TED2009', url:'https://www.youtube.com/watch?v=rrkrvAUbU9Y', why:"Pink's talk on what drives sustained high performance at the mastery level — autonomy, mastery, and purpose. Directly applicable to your profile stage."});
-    }
-    if(profile.name==='Visionary Sprinter'){
-      res.push({type:'method', title:'6-Week Sprint Cycle (Carnelian Recommendation)', author:'', url:'', why:'Do not attempt daily habit systems. Structure your work in 6-week intensive cycles with one concrete deliverable at the end of each. Reset fully between cycles. Novelty drives your best work — routine kills it.'});
-    }
+
     if(res.length===0){
-      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:'Foundational text on professional effectiveness. Useful for consolidating a balanced, multi-dimensional profile.'});
-      res.push({type:'ted', title:'How Great Leaders Inspire Action', author:'Simon Sinek · TEDxPugetSound 2009', url:'https://www.youtube.com/watch?v=qp0HIF3SfI4', why:"The most-watched leadership TED talk. Sinek's Golden Circle framework is applicable to how you communicate your professional value."});
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:`Foundational text on professional effectiveness. Highly relevant for sustaining your balanced profile as a ${profileText} ${expText}.`});
     }
-    return res;
+    return res.slice(0, 4); 
   };
 
   const getPrograms = () => {
     const progs = [];
-    if(S.E<60||S.A<60||S.OCBavg<60) progs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging. Covers assertive communication, active listening, and managing difficult conversations.", match:'Recommended based on your Social Confidence and Agreeableness scores.'});
-    if(S.EOavg<65||(gameSummary?.seesaw?.val>60)) progs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency. Uses real Pakistani workplace case studies.", match:'Recommended based on your Ethical Orientation scores and Values Seesaw responses.'});
-    if(S.LAavg<65||S.O<60) progs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits — feedback-seeking, reflection, cross-domain application — that accelerate professional development. Grounded in Dweck, Eichinger, and DeRue's frameworks.", match:'Recommended based on your Learning Agility profile.'});
-    if(S.CQavg<65) progs.push({name:'Intercultural Communication & Collaboration Workshop', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional and cross-provincial professional contexts. Covers all three CQ dimensions in practical workplace scenarios.", match:'Recommended based on your Cultural Intelligence scores.'});
-    if(S.ES<60) progs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools for high-stakes Pakistani professional environments.", match:'Recommended based on your Emotional Stability score.'});
-    if(CI.LRS>=55) progs.push({name:'Leadership Development Programme (LDP)', desc:"Carnelian's flagship leadership development pathway — covering strategic thinking, stakeholder management, team leadership, and executive presence. Modular delivery over 3–6 months.", match:'Your Leadership Readiness Score suggests readiness for structured leadership investment.'});
-    if(S.C<60||CI.OPS<60) progs.push({name:'Personal Effectiveness & Productivity Workshop', desc:"A Carnelian half-day programme built around sprint planning, priority management, and delivery accountability. Uses CORE dimension scores as the diagnostic foundation.", match:'Recommended based on your Conscientiousness and Operational Reliability scores.'});
-    progs.push({name:'CORE Coaching Session — 1:1 Debrief with Carnelian Consultant', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile, clarify your development priorities, and co-design a personalised 90-day action plan. Online or in-person.", match:'Recommended for all CORE participants who want expert guidance on their results.'});
-    if(profile.tier<=2) progs.push({name:'Train the Trainer (TTT) Programme', desc:"Carnelian's TTT certification programme for professionals developing their facilitation, coaching, and knowledge transfer skills. Particularly valuable for mid-to-senior professionals building internal capability.", match:'Your profile suggests capacity for peer learning and knowledge transfer roles.'});
-    if(S.A<60||CI.SES<60) progs.push({name:'Negotiation & Stakeholder Management Workshop', desc:"A practical one-day Carnelian programme covering principled negotiation, stakeholder mapping, managing resistance, and building influence without formal authority. Real Pakistani sectoral case studies.", match:'Recommended based on your Stakeholder Effectiveness and Agreeableness scores.'});
-    return progs.slice(0,5);
+    const gapKeys = bot2.map(d => d.k);
+    const profileText = profile?.name || 'professional';
+
+    if(gapKeys.includes('E') || gapKeys.includes('A') || gapKeys.includes('OCBavg')) 
+      progs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging.", match:`Directly targets the interpersonal gaps in your ${profileText} profile.`});
+    
+    if(gapKeys.includes('EOavg') || (gameSummary?.seesaw?.val>60)) 
+      progs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency.", match:`Recommended based on your Ethical Orientation scores and Values Seesaw responses.`});
+    
+    if(gapKeys.includes('LAavg') || gapKeys.includes('O')) 
+      progs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits that accelerate professional development.", match:`Directly targets your priority development area in adaptive learning.`});
+    
+    if(gapKeys.includes('CQavg')) 
+      progs.push({name:'Intercultural Communication & Collaboration', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional contexts.", match:`Recommended to help you navigate diverse stakeholders in ${R.industry || 'your sector'}.`});
+    
+    if(gapKeys.includes('ES')) 
+      progs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools.", match:`Directly targets your priority development area in Emotional Resilience.`});
+    
+    if(progs.length===0) 
+      progs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile.", match:`Recommended to help you leverage your balanced strengths as a ${profileText}.`});
+
+    return progs.slice(0, 3);
   };
 
-const getRelapse = () => {
+  const getRelapse = () => {
     const protocols = [];
-    const ssVal = gameSummary?.seesaw?.val || 50;
-    const sc1 = gameSummary?.scenario1?.raw || 0;
+    const gapKeys = bot2.map(d => d.k);
+    const roleText = R.role || 'role';
 
-    // Built directly from this person's own 2 lowest dimensions!
     const protoMap = {
-      'Conscientiousness': {trigger:`When a deadline is approaching for your ${R.role || 'role'} and you have not started`, response:'Use the 2-minute rule: if any piece of this task takes 2 minutes, do it right now. Momentum from a tiny start breaks the avoidance cycle.'},
-      'Openness to Ideas': {trigger:'When a new tool, method or idea is proposed and your first reaction is to reject it', response:"Say 'tell me more' before you say 'but'. Give the idea 24 hours before deciding it will not work."},
-      'Social Confidence': {trigger:'When you have something to say in a meeting but decide to stay quiet', response:'Say it in the first 5 minutes of the meeting, before the window to speak up closes. Exposure, not preparation, is what builds this.'},
-      'Collaborative Spirit': {trigger:'When a colleague challenges your position and your instinct is to defend rather than listen', response:'Repeat their point back to them before responding to it. Only then give your view.'},
-      'Emotional Resilience': {trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:'Name it to yourself first: "I am currently stressed, frustrated, or overwhelmed." Labelling an emotional state reduces its intensity. Delay any non-urgent decision by at least 20 minutes.'},
-      'Cultural Intelligence': {trigger:'When a colleague from a different background behaves in a way you do not expect', response:'Ask what normal looks like in their context before assuming they are wrong. Curiosity first, judgment second.'},
-      'Team Citizenship': {trigger:'When something needs doing that is not technically your job', response:"Ask 'what can I take off someone else's plate this week' once, and act on the answer."},
-      'Learning Agility': {trigger:'When you are handed a task in an area you have not worked in before', response:'Give yourself 48 hours to learn before deciding it is not for you. Write down one thing you learned at the end of it.'},
-      'Ethical Integrity': {trigger:'When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right', response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"},
+      'C': {trigger:`When a deadline is approaching for your ${roleText} and you have not started`, response:'Use the 2-minute rule: if any piece of this task takes 2 minutes, do it right now. Momentum from a tiny start breaks the avoidance cycle.'},
+      'O': {trigger:'When a new tool, method or idea is proposed and your first reaction is to reject it', response:"Say 'tell me more' before you say 'but'. Give the idea 24 hours before deciding it will not work."},
+      'E': {trigger:'When you have something to say in a meeting but decide to stay quiet', response:'Say it in the first 5 minutes of the meeting, before the window to speak up closes. Exposure, not preparation, is what builds this.'},
+      'A': {trigger:'When a colleague challenges your position and your instinct is to defend rather than listen', response:'Repeat their point back to them before responding to it. Only then give your view.'},
+      'ES': {trigger:'When you feel your emotional state affecting your decision-making or relationships at work', response:'Name it to yourself first: "I am currently stressed, frustrated, or overwhelmed." Labelling an emotional state reduces its intensity. Delay any non-urgent decision by at least 20 minutes.'},
+      'CQavg': {trigger:'When a colleague from a different background behaves in a way you do not expect', response:'Ask what normal looks like in their context before assuming they are wrong. Curiosity first, judgment second.'},
+      'OCBavg': {trigger:'When something needs doing that is not technically your job', response:"Ask 'what can I take off someone else's plate this week' once, and act on the answer."},
+      'LAavg': {trigger:'When you are handed a task in an area you have not worked in before', response:'Give yourself 48 hours to learn before deciding it is not for you. Write down one thing you learned at the end of it.'},
+      'EOavg': {trigger:'When someone you respect asks you to approve, sign off on, or stay silent about something that does not feel right', response:"Name it directly but privately first: 'I want to support you, but I am not comfortable with this because [specific reason]. What can we do instead?'"},
     };
 
-    // Push the exact protocols for their specific weaknesses
-    bot2.forEach(d => {
-      if (protoMap[d.l]) protocols.push(protoMap[d.l]);
-    });
+    gapKeys.forEach(k => { if (protoMap[k]) protocols.push(protoMap[k]); });
 
-    // Add game-based behavioral flags
-    if(ssVal>65) protocols.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it — or explain it away?" If you are explaining rather than defending, say no — or ask for it in writing first.'});
-    if(sc1<=0) protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:"Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure."});
-
-    // Fallback if somehow we don't have enough
-    if(protocols.length < 3) {
-       protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
+    if ((gameSummary?.seesaw?.val > 65) && protocols.length < 4) {
+      protocols.push({trigger:'When a trusted colleague or manager asks you to bypass a process', response:'Pause before responding. Ask yourself: "If this decision were reviewed publicly tomorrow, would I defend it, or explain it away?" If you are explaining rather than defending, say no, or ask for it in writing first.'});
     }
-    return protocols.slice(0, 4); // Keep it to top 3-4 so it's not overwhelming
+    if ((gameSummary?.scenario1?.raw <= 0) && protocols.length < 4) {
+      protocols.push({trigger:'When you feel the urge to delay or withhold information that others need', response:'Send one sentence now rather than a perfect explanation later. Early, imperfect disclosure builds more trust than late, polished disclosure.'});
+    }
+
+    if (protocols.length === 0) {
+      protocols.push({trigger:'When you face a situation where the right and the convenient path diverge', response:"Use the clarity test: 'What would I tell a junior colleague to do in this situation?' The answer you give them is usually the answer you already know for yourself. Then do that."});
+    }
+    return protocols.slice(0, 4);
   };
 
-const roleIndustryNote = (role, industry) => {
-    const indShort = IND[industry]?.short || industry;
-    if (role && industry) return ` Particularly relevant for a ${role} working in ${indShort}.`;
-    if (role) return ` Particularly relevant given your role as ${role}.`;
-    if (industry) return ` Particularly relevant in ${indShort}.`;
-    return '';
-  };
-  const resources = getResources().map(r => ({ ...r, why: `${r.why}${roleIndustryNote(R.role, R.industry)}` }));
+  const resources = getResources();
   const programs = getPrograms();
   const relapse = getRelapse();
 
@@ -4656,10 +4654,25 @@ const roleIndustryNote = (role, industry) => {
         const scoredCandidates = valid.map(b => {
           let match = 0, count = 0;
           Object.entries(targetRole.targets).forEach(([k, [min, max]]) => {
-            const v = b?.scores?.[k] || (b?.composites && b?.composites?.[k]);
+            const v = b?.scores?.[k] || (b?.composites && b?.composites?.[k]) || b?.report_data?.CI?.[k] || b?.report_data?.scores?.[k];
             if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
           });
-          return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
+          
+          let fitPct = count>0 ? Math.round((match/count)*100) : 0;
+          
+          // Experience Reality Check
+          const cExp = b?.report_data?.respondent?.exp || b?.experience || '';
+          const isTooJunior = cExp === '0–2 years' || cExp === '3–5 years';
+          const isMidLevel = cExp === '6–10 years';
+          
+          let expWarning = null;
+          if (targetRole.name === 'Senior Manager' && (isTooJunior || isMidLevel)) {
+            fitPct = 0; expWarning = 'Ineligible (Exp)';
+          } else if (targetRole.name === 'Team Lead' && cExp === '0–2 years') {
+            fitPct = 0; expWarning = 'Too Junior';
+          }
+
+          return { ...b, fitPct, expWarning };
         }).sort((a,b) => b.fitPct - a.fitPct);
 
         return (
@@ -4744,7 +4757,8 @@ const roleIndustryNote = (role, industry) => {
             </div>
             <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
               {scoredCandidates.map((c, i) => {
-                const col = c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd;
+                // If there is an experience warning, force the color to Red
+                const col = c.expWarning ? T.rd : (c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd);
                 return (
                   <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px'}}>
                     <div>
@@ -4752,8 +4766,13 @@ const roleIndustryNote = (role, industry) => {
                       <div style={{fontSize:'12px', color:T.t2}}>{c?.profile || 'Unknown Profile'}</div>
                     </div>
                     <div style={{textAlign:'right'}}>
-                      <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:col}}>{c.fitPct}%</div>
-                      <div style={{fontSize:'10px', fontWeight:'700', color:col, textTransform:'uppercase', letterSpacing:'0.05em'}}>Fit Match</div>
+                      {/* Show the Warning Text if it exists, otherwise show the Percentage */}
+                      <div className="mono" style={{fontSize: c.expWarning ? '14px' : '18px', fontWeight:'800', color:col}}>
+                        {c.expWarning ? c.expWarning : `${c.fitPct}%`}
+                      </div>
+                      <div style={{fontSize:'10px', fontWeight:'700', color:col, textTransform:'uppercase', letterSpacing:'0.05em'}}>
+                        {c.expWarning ? 'Experience Flag' : 'Fit Match'}
+                      </div>
                     </div>
                   </div>
                 );

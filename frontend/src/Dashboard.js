@@ -1493,7 +1493,7 @@ const PlayerReport = ({ candidate, T }) => {
   );
 };
 
-// ─── TEAM REPORT PLACEHOLDER ──────────────────────────────────
+// ─── TEAM REPORT ──────────────────────────────────
 const TeamReport = ({ candidate, allData, T }) => {
   const batch = candidate.batch;
   if (!batch) {
@@ -1506,7 +1506,10 @@ const TeamReport = ({ candidate, allData, T }) => {
     );
   }
 
-  const batchData = allData.filter(r => r.batch === batch && r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  const normBatch = String(batch || '').trim().toLowerCase();
+  const allBatchData = allData.filter(r => String(r.batch || '').trim().toLowerCase() === normBatch);
+  const batchData = allBatchData.filter(r => r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  
   if (batchData.length < 2) {
     return (
       <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
@@ -1540,7 +1543,7 @@ const TeamReport = ({ candidate, allData, T }) => {
 
   const nGreen = batchData.filter(b=>b.report_data?.validity?.overall==='green').length;
   const nAmber = batchData.filter(b=>b.report_data?.validity?.overall==='amber').length;
-  const nRed   = allData.filter(r=>r.batch===batch&&r.report_data?.validity?.overall==='red').length;
+  const nRed   = allBatchData.filter(r=>r.report_data?.validity?.overall==='red').length;
 
   const card = (children, style={}) => (
     <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
@@ -1556,7 +1559,7 @@ const TeamReport = ({ candidate, allData, T }) => {
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Aggregate Report · Batch: {batch}</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', marginBottom:'16px' }}>
           {[
-            [allData.filter(r=>r.batch===batch).length, 'Responses'],
+            [allBatchData.length, 'Responses'],
             [n, 'Valid'],
             [nRed, 'Invalid'],
             [archSorted.length, 'Archetypes'],
@@ -1645,7 +1648,7 @@ const TeamReport = ({ candidate, allData, T }) => {
       {/* ARCHETYPE DISTRIBUTION */}
       {card(
         <>
-          <SectionHead label={`Profile Distribution — ${allData.filter(r=>r.batch===batch).length} Respondents`} T={T} />
+          <SectionHead label={`Profile Distribution — ${batchData.length} Valid Respondents`} T={T} />
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:'10px' }}>
             {archSorted.map(([name, count]) => {
               const pct = Math.round((count/n)*100);
@@ -1724,7 +1727,7 @@ const TeamReport = ({ candidate, allData, T }) => {
                 </tr>
               </thead>
               <tbody>
-                {batchData.sort((a,b)=>(b.overall_score||0)-(a.overall_score||0)).map((b,i) => (
+                {allBatchData.sort((a,b)=>(b.overall_score||0)-(a.overall_score||0)).map((b,i) => (
                   <tr key={b.id||i} style={{ borderBottom:`1px solid ${T.b1}` }}>
                     <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{b.name}</td>
                     <td style={{ padding:'10px 10px', fontSize:'11px', color:T.c, fontWeight:'700' }}>{b.profile_name}</td>
@@ -1747,7 +1750,7 @@ const TeamReport = ({ candidate, allData, T }) => {
 
 // ─── TEAM COMPOSITION REPORT ──────────────────────────────────
 const TeamCompositionReport = ({ candidate, allData, T }) => {
-    const batch = candidate.batch;
+  const batch = candidate.batch;
   
   if (!batch) {
     return (
@@ -1759,7 +1762,10 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
     );
   }
 
-  const batchData = allData.filter(r => r.batch === batch && r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  const normBatch = String(batch || '').trim().toLowerCase();
+  const allBatchData = allData.filter(r => String(r.batch || '').trim().toLowerCase() === normBatch);
+  const batchData = allBatchData.filter(r => r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+
   if (batchData.length < 2) {
     return (
       <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
@@ -1834,7 +1840,7 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
             {dimGaps.map((g, i) => (
               <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px' }}>
                 <div style={{ fontSize:'11px', fontWeight:'700', color:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px' }}>{g.l}</div>
-                <div className="mono" style={{ fontSize:'16px', fontWeight:'800', color:T.t0 }}>≥ {Math.min(80, 75 - g.v + 10)} / 100</div>
+                <div className="mono" style={{ fontSize:'18px', fontWeight:'800', color:T.t0 }}>≥ {g.v < 50 ? 80 : 75} / 100</div>
                 <div style={{ fontSize:'10px', color:T.t2, marginTop:'4px' }}>Current team avg: <span style={{ color:T.rd, fontWeight:'700' }}>{g.v}</span></div>
               </div>
             ))}
@@ -1880,7 +1886,23 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
                   const v = b.report_data?.scores?.[k] || b.report_data?.CI?.[k];
                   if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
                 });
-                return { ...b, fitPct: count>0 ? Math.round((match/count)*100) : 0 };
+                
+                let fitPct = count>0 ? Math.round((match/count)*100) : 0;
+                
+                // Robust Experience Guardrails
+                const expStr = String(b.report_data?.respondent?.exp || b.experience || '').toLowerCase();
+                const isAbsBeginner = expStr.includes('0') || expStr.includes('1') || expStr.includes('2') || expStr.includes('entry');
+                const isJunior = isAbsBeginner || expStr.includes('3') || expStr.includes('4') || expStr.includes('5') || expStr.includes('junior');
+                const isMid = expStr.includes('6') || expStr.includes('7') || expStr.includes('8') || expStr.includes('9') || expStr.includes('10');
+
+                let expWarning = null;
+                if (role.name === 'Senior Manager' && (isJunior || isMid)) {
+                  fitPct = 0; expWarning = 'Lacks Exp';
+                } else if (role.name === 'Team Lead' && isAbsBeginner) {
+                  fitPct = 0; expWarning = 'Too Junior';
+                }
+
+                return { ...b, fitPct, expWarning };
               }).sort((a,b) => b.fitPct - a.fitPct);
 
               return (
@@ -1890,7 +1912,6 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
                     {scored.map((c, i) => {
-                      // If there is an experience warning, force the color to Red
                       const col = c.expWarning ? T.rd : (c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd);
                       return (
                         <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'6px' }}>
@@ -1899,7 +1920,6 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
                             <div style={{ fontSize:'10px', color:T.t2 }}>{c.profile_name}</div>
                           </div>
                           <div style={{ textAlign:'right' }}>
-                            {/* Show the Warning Text if it exists, otherwise show the Percentage */}
                             <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:col }}>
                               {c.expWarning ? c.expWarning : `${c.fitPct}%`}
                             </div>

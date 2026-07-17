@@ -4658,15 +4658,16 @@ const getResources = () => {
           
           let fitPct = count>0 ? Math.round((match/count)*100) : 0;
           
-          // Experience Reality Check
-          const cExp = b?.report_data?.respondent?.exp || b?.experience || '';
-          const isTooJunior = cExp === '0–2 years' || cExp === '3–5 years';
-          const isMidLevel = cExp === '6–10 years';
-          
+         // Robust Experience Reality Check
+          const expStr = String(b?.report_data?.respondent?.exp || b?.experience || '').toLowerCase();
+          const isAbsBeginner = expStr.includes('0') || expStr.includes('1') || expStr.includes('2') || expStr.includes('entry');
+          const isJunior = isAbsBeginner || expStr.includes('3') || expStr.includes('4') || expStr.includes('5') || expStr.includes('junior');
+          const isMid = expStr.includes('6') || expStr.includes('7') || expStr.includes('8') || expStr.includes('9') || expStr.includes('10');
+
           let expWarning = null;
-          if (targetRole.name === 'Senior Manager' && (isTooJunior || isMidLevel)) {
-            fitPct = 0; expWarning = 'Ineligible (Exp)';
-          } else if (targetRole.name === 'Team Lead' && cExp === '0–2 years') {
+          if (targetRole.name === 'Senior Manager' && (isJunior || isMid)) {
+            fitPct = 0; expWarning = 'Lacks Exp';
+          } else if (targetRole.name === 'Team Lead' && isAbsBeginner) {
             fitPct = 0; expWarning = 'Too Junior';
           }
 
@@ -4713,7 +4714,7 @@ const getResources = () => {
               {dimGaps.map((g, i) => (
                 <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px'}}>
                   <div style={{fontSize:'12px', fontWeight:'700', color:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>{g.l}</div>
-                  <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:T.t0}}>≥ {Math.min(80, 75 - g.v + 10)} / 100</div>
+                <div className="mono" style={{fontSize:'18px', fontWeight:'800', color:T.t0}}>≥ {g.v < 50 ? 80 : 75} / 100</div>
                   <div style={{fontSize:'11px', color:T.t2, marginTop:'4px'}}>Current team avg: <span style={{color:T.rd, fontWeight:'700'}}>{g.v}</span></div>
                 </div>
               ))}

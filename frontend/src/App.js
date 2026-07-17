@@ -2944,11 +2944,13 @@ const buildHabits = (content, dim, profile, R) => {
       </div>
     `, '#F8F7F5', '56px 64px'), '#F8F7F5');
 
-    // Page 2: Welcome + Scores
-    const barsHTML = bars.map(([l, v], i) => {
-      const color = v >= 70 ? '#16A34A' : v >= 50 ? '#D97706' : '#DC2626';
-      const grad = v >= 70 ? 'linear-gradient(90deg,#16A34A,#22C55E)' : v >= 50 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#DC2626,#EF4444)';
-      return `<div style="display:flex;align-items:center;gap:14px;padding-bottom:${i===0?'14px':'0'};margin-bottom:${i===0?'6px':'0'};border-bottom:${i===0?'1px solid #F3F4F6':'none'}"><div style="width:170px;flex-shrink:0;font-size:12px;color:${i===0?'#111827':'#4B5563'};font-weight:${i===0?'800':'700'};">${l}</div><div style="flex:1;background:#F3F4F6;height:${i===0?'9px':'5px'};border-radius:4px;overflow:hidden;"><div style="width:${Math.max(0,Math.min(100,v))}%;height:100%;background:${grad};border-radius:4px;"></div></div><div class="mono" style="width:36px;text-align:right;font-size:11px;color:${color};font-weight:800;">${v}</div></div>`;
+   // Page 2: Welcome + Scores
+    const barsHTML = allDims.map((d, i) => {
+      const l = d.l;
+      const v = d.v;
+      const color = v >= 75 ? '#16A34A' : v >= 50 ? '#D97706' : '#DC2626';
+      const grad = v >= 75 ? 'linear-gradient(90deg,#16A34A,#22C55E)' : v >= 50 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#DC2626,#EF4444)';
+      return `<div style="display:flex;align-items:center;gap:14px;padding-bottom:0;margin-bottom:8px;border-bottom:none"><div style="width:170px;flex-shrink:0;font-size:12px;color:#4B5563;font-weight:700;">${l}</div><div style="flex:1;background:#F3F4F6;height:5px;border-radius:4px;overflow:hidden;"><div style="width:${Math.max(0,Math.min(100,v))}%;height:100%;background:${grad};border-radius:4px;"></div></div><div class="mono" style="width:36px;text-align:right;font-size:11px;color:${color};font-weight:800;">${v}</div></div>`;
     }).join('');
     await addPageFromHTML(wrap(`
       <div style="background:#1A1A1A;border-radius:12px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;">
@@ -2968,9 +2970,6 @@ const buildHabits = (content, dim, profile, R) => {
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 32px;">
         <h3 class="serif" style="font-size:1.35rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Score Profile at a Glance</h3>
         <p style="color:#4B5563; font-size:12px; line-height:1.7; margin-bottom:12px; font-weight:500;">Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
-        <div style="font-size:11px; color:#6B7280; margin-bottom:24px; padding:10px 14px; background:#F9FAFB; border-radius:6px; line-height:1.6; font-weight:500;">
-          <strong style="color:#4B5563;">Note on groupings:</strong> Personality & Drive is the average of 5 individual traits. Cultural Agility, Team Citizenship, Learning Agility, and Ethical Integrity are each averages of 3–5 sub-dimensions. The development areas and priority matrix below drill into the individual dimensions within these groups.
-        </div>
         <div style="display:flex;flex-direction:column;gap:10px;">${barsHTML}</div>
       </div>
     `));
@@ -3376,14 +3375,13 @@ const getResources = () => {
           <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.35rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Score Profile at a Glance</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
-<div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
-  <strong style={{color:T.t2}}>Note on groupings:</strong> Personality & Drive is the average of 5 individual traits — Openness, Conscientiousness, Social Confidence, Collaborative Spirit, and Emotional Resilience. Cultural Agility, Team Citizenship, Learning Agility, and Ethical Integrity are each averages of 3–5 sub-dimensions. The development areas and priority matrix below drill into the individual dimensions within these groups — which is why you may see names that differ from the bars above.
-</div>
-           <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px'}}>
-              {bars.slice(1).map(([l,v],i)=>{
-                const pCol = l.includes('Personality')||l.includes('Conscientiousness')||l.includes('Emotional') ? '#EC4899' : l.includes('Cultural') ? '#06B6D4' : l.includes('Citizenship') ? '#F97316' : l.includes('Learning') ? '#3B82F6' : l.includes('Integrity') ? '#7C3AED' : T.t0;
+<div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px', marginTop:'24px'}}>
+              {allDims.map(d => {
+                const l = d.l;
+                const v = d.v;
+                const pCol = l.includes('Openness')||l.includes('Social')||l.includes('Collaborative')||l.includes('Conscientiousness')||l.includes('Emotional') ? '#EC4899' : l.includes('Cultural') ? '#06B6D4' : l.includes('Citizenship') ? '#F97316' : l.includes('Learning') ? '#3B82F6' : l.includes('Integrity') ? '#7C3AED' : T.t0;
                 return (
-                <div key={l} style={{marginBottom:'8px'}}>
+                <div key={d.k} style={{marginBottom:'8px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'4px'}}>
                     <span style={{fontSize:'13px',color:T.t0,fontWeight:'700',display:'flex',alignItems:'center'}}>
                       <span style={{display:'inline-block', width:'6px', height:'6px', borderRadius:'50%', background:pCol, marginRight:'6px'}}></span>

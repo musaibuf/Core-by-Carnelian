@@ -414,16 +414,12 @@ const Sidebar = ({ activeTab, setActiveTab, T, total }) => (
     width:'240px', flexShrink:0, background:T.bg1, borderRight:`1px solid ${T.b2}`,
     display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', overflow:'auto',
   }}>
-    <div style={{ padding:'28px 24px 20px' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'4px' }}>
-        <img src="/logo.png" alt="Carnelian" style={{ height:'26px', objectFit:'contain' }}
+   <div style={{ padding:'28px 24px 20px' }}>
+      <div style={{ display:'flex', alignItems:'center', marginBottom:'12px' }}>
+        <img src={T.bg0 === '#0A0808' ? "/core-logo-for-dark-mode.svg" : "/core-logo-for-light-mode.svg"} alt="CORE by Carnelian" style={{ height:'42px', width:'auto', objectFit:'contain' }}
           onError={e=>{ e.target.style.display='none'; }} />
-        <div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'20px', fontWeight:'700', color:T.gold, letterSpacing:'-0.02em', lineHeight:'0.95' }}>CORE</div>
-          <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.c, letterSpacing:'0.18em', marginTop:'2px', fontWeight:'800' }}>BY CARNELIAN</div>
-        </div>
       </div>
-      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, letterSpacing:'0.14em', textTransform:'uppercase', marginTop:'10px', fontWeight:'600' }}>Admin Dashboard</div>
+      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, letterSpacing:'0.14em', textTransform:'uppercase', fontWeight:'600' }}>Admin Dashboard</div>
       <GoldLine style={{ marginTop:'16px' }} />
     </div>
     <nav style={{ padding:'8px 12px', flex:1 }}>
@@ -2126,7 +2122,7 @@ const PersonaCard = ({ candidate, T }) => {
       <div style={{height:'7px', background:`linear-gradient(90deg, ${gem.color}, ${gem.colorDark}, transparent)`, flexShrink:0, position:'relative', zIndex:2}} />
 
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'44px 72px 0', flexShrink:0, position:'relative', zIndex:2}}>
-        <img src="/logo.svg" alt="CORE" style={{height:'60px', objectFit:'contain'}} />
+     <img src={T.bg0 === '#0A0808' ? "/core-logo-for-dark-mode.svg" : "/core-logo-for-light-mode.svg"} alt="CORE" style={{height:'60px', width:'auto'}} />
         <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
           <div style={{fontFamily:"'IBM Plex Mono',monospace", color:gem.color, fontSize:'22px', fontWeight:'800', letterSpacing:'0.16em'}}>CORE ASSESSMENT</div>
           <div style={{background:gem.color, color:'#fff', fontFamily:"'IBM Plex Mono',monospace", fontSize:'18px', fontWeight:'800', padding:'6px 16px', borderRadius:'100px', letterSpacing:'0.05em'}}>{index+1} / {TOTAL_SLIDES}</div>

@@ -659,7 +659,7 @@ const Nav = ({tab, setTab, hasResults, hasHistory, mode, setMode}) => {
         }}>
           {/* Logo */}
           <div style={{display:'flex', alignItems:'center', cursor:'pointer', flexShrink:0}} onClick={()=>setTab('home')}>
-        <img src="/logo.svg" alt="CORE by Carnelian" style={{height:'48px', width:'auto', objectFit:'contain'}} />
+        <img src={mode === 'dark' ? "/core-logo-for-dark-mode.svg" : "/core-logo-for-light-mode.svg"} alt="CORE by Carnelian" style={{height:'48px', width:'auto', objectFit:'contain'}} />
       </div>
 
           {/* Desktop nav */}
@@ -2894,7 +2894,7 @@ const buildHabits = (content, dim, profile, R) => {
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
     const A4_W = 210, A4_H = 297;
     const firstName = R.name?.split(' ')[0] || 'Professional';
-    const logoURL = `${window.location.origin}/logo.svg`;
+    const logoURL = `${window.location.origin}/core-logo-for-light-mode.svg`;
 
     const addPageFromHTML = async (htmlContent, bgColor = '#F8F7F5') => {
       const container = document.createElement('div');
@@ -2930,8 +2930,7 @@ const buildHabits = (content, dim, profile, R) => {
     await addPageFromHTML(wrap(`
       <div style="position:absolute;top:0;left:0;right:0;height:6px;background:#B01C24;"></div>
       <div style="position:absolute;top:-100px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.09) 0%,transparent 72%);"></div>
-      <div style="display:flex;align-items:center;margin-bottom:auto;position:relative;z-index:2;">
-        <img src="${logoURL}" style="height:48px;width:180px;object-fit:contain;display:block;" crossorigin="anonymous" onerror="this.style.display='none'"/>
+    <div style="margin-bottom:auto; position:relative; z-index:2; height:85px; width:350px; background-image:url('${logoURL}'); background-size:contain; background-repeat:no-repeat; background-position:left center;">
       </div>
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 0 40px;position:relative;z-index:2;">
         <div class="mono" style="font-size:10px;font-weight:800;color:#B01C24;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;">Personal Action Plan</div>
@@ -3655,7 +3654,7 @@ const getResources = () => {
           {/* Close Note */}
           <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>A Note to Close</h3>
-            <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>“This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that.</p>
+            <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that.</p>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:`1px solid ${T.b1}`, paddingTop:'20px', flexWrap:'wrap', gap:'12px'}}>
               <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>CORE · {docId} · Carnelian Pvt Ltd · {date}</div>
               <div style={{fontSize:'12px', color:T.gn, fontWeight:'700'}}>Questions? hello@carnelianco.com</div>
@@ -4820,7 +4819,7 @@ const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type
             <div style={{height:'7px', background:`linear-gradient(90deg, ${gem.color}, ${gem.colorDark}, transparent)`, flexShrink:0, position:'relative', zIndex:2}} />
 
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'44px 72px 0', flexShrink:0, position:'relative', zIndex:2}}>
-              <img src="/logo.svg" alt="CORE" style={{height:'60px', objectFit:'contain'}} />
+             <div style={{ height: '80px', width: '320px', backgroundImage: `url(${T.bg0 === '#0A0808' ? "/core-logo-for-dark-mode.svg" : "/core-logo-for-light-mode.svg"})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'left center' }} />
               <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
                 <div style={{fontFamily:"'JetBrains Mono',monospace", color:gem.color, fontSize:'22px', fontWeight:'800', letterSpacing:'0.16em'}}>CORE ASSESSMENT</div>
                 <div style={{background:gem.color, color:'#fff', fontFamily:"'JetBrains Mono',monospace", fontSize:'18px', fontWeight:'800', padding:'6px 16px', borderRadius:'100px', letterSpacing:'0.05em'}}>{index+1} / {TOTAL_SLIDES}</div>

@@ -3212,7 +3212,6 @@ for (const d of devAreas) {
     pdf.save(`${R.name?.replace(/\s+/g,'_') || 'CORE'}_Gemstone_Carousel.pdf`);
   };
 
-  // ── RESOURCES & PROTOCOLS ──
 const getResources = () => {
     const res = [];
     const gapKeys = bot2.map(d => d.k); 
@@ -3222,40 +3221,59 @@ const getResources = () => {
     const profileText = profile?.name || 'professional';
 
     if(gapKeys.includes('C')){
-      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran', url:'', why:`As a ${profileText} ${expText}, standard to-do lists will fail your creative drive. This sprint-based system replaces annual goals with 12-week cycles, ensuring your ideas actually execute in ${indText}.`});
-      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'', why:`In ${indText}, delivery reliability is your primary currency. This is the most evidence-grounded system for building reliable execution habits through small, compounding daily commitments.`});
-      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Before you can fix your delivery gap, you must understand the psychology of task-avoidance. Highly recommended before starting your action plan.'});
+      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran', url:'https://www.amazon.com/12-Week-Year-Others-Months/dp/1118509234', why:`As a ${profileText} ${expText}, standard to-do lists will fail your creative drive. This sprint-based system replaces annual goals with 12-week cycles.`});
+      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'https://www.amazon.com/Atomic-Habits-Proven-Build-Break/dp/0735211299', why:`In ${indText}, delivery reliability is your primary currency. This is the most evidence-grounded system for building reliable execution habits.`});
+      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Before you can fix your delivery gap, you must understand the psychology of task-avoidance.'});
+      res.push({type:'course', title:'Time Management Fundamentals', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/time-management-fundamentals', why:'A highly practical, structured course on optimizing your daily workflow and eliminating bottlenecks.'});
     }
     if(gapKeys.includes('ES')){
-      res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'', why:`As a ${roleText} ${expText}, pressure is inevitable. This provides evidence-based techniques for managing your inner critical voice when stakes are high in ${indText}.`});
+      res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'https://www.amazon.com/Chatter-Voice-Head-Matters-Harness/dp/0525575235', why:`As a ${roleText} ${expText}, pressure is inevitable. This provides evidence-based techniques for managing your inner critical voice.`});
       res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'Stanford psychologist explains research showing the relationship with stress predicts health and performance.'});
+      res.push({type:'article', title:'How Resilience Works', author:'Diane Coutu (HBR)', url:'https://hbr.org/2002/05/how-resilience-works', why:'A foundational Harvard Business Review article on the three traits of highly resilient professionals.'});
     }
     if(gapKeys.includes('CQavg')){
-      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'', why:`The most practically applicable cultural intelligence book for Pakistani professionals. Essential for a ${profileText} navigating diverse stakeholders in ${indText}.`});
+      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'https://www.amazon.com/Culture-Map-Breaking-Invisible-Boundaries/dp/1610392507', why:`The most practically applicable cultural intelligence book. Essential for a ${profileText} navigating diverse stakeholders in ${indText}.`});
+      res.push({type:'ted', title:'Cross Cultural Communication', author:'Pellegrino Riccardi', url:'https://www.youtube.com/watch?v=YMyofREc5Jk', why:'A brilliant, entertaining breakdown of how cultural assumptions derail professional communication.'});
+      res.push({type:'course', title:'Cultural Intelligence for Leaders', author:'Coursera', url:'https://www.coursera.org/learn/cultural-intelligence', why:'A structured academic approach to building CQ, highly relevant for senior cross-provincial roles.'});
     }
     if(gapKeys.includes('LAavg')){
-      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'', why:`Research on fixed vs. growth mindset. As the landscape of ${indText} evolves, your ability to learn faster than your peers is your ultimate competitive advantage ${expText}.`});
+      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'https://www.amazon.com/Mindset-Psychology-Carol-S-Dweck/dp/0345472322', why:`As the landscape of ${indText} evolves, your ability to learn faster than your peers is your ultimate competitive advantage.`});
+      res.push({type:'article', title:'Improve Your Ability to Learn', author:'Harvard Business Review', url:'https://hbr.org/2015/06/improve-your-ability-to-learn', why:'A concise framework for accelerating your learning agility in fast-changing corporate environments.'});
+      res.push({type:'course', title:'Learning How to Learn', author:'Deep Teaching Solutions', url:'https://www.coursera.org/learn/learning-how-to-learn', why:'One of the most popular courses in the world on the neuroscience of absorbing new information quickly.'});
     }
     if(gapKeys.includes('EOavg')){
-      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'', why:`Explains why professionals who make ethical lapses are not usually dishonest by nature. Critical reading for high-accountability roles in ${indText}.`});
+      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'https://www.amazon.com/Righteous-Mind-Divided-Politics-Religion/dp/0307455777', why:`Explains why professionals who make ethical lapses are not usually dishonest by nature. Critical reading in ${indText}.`});
+      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely', url:'https://www.youtube.com/watch?v=16BOUxGkOgc', why:'A behavioral economist explains the hidden forces that cause good professionals to cut corners.'});
+      res.push({type:'article', title:'Ethical Breakdowns', author:'Max H. Bazerman (HBR)', url:'https://hbr.org/2011/04/ethical-breakdowns', why:'Examines the systemic and psychological reasons why compliance fails in high-pressure environments.'});
     }
     if(gapKeys.includes('A')){
-      res.push({type:'book', title:'Getting to Yes', author:'Fisher & Ury', url:'', why:`The foundational text on principled negotiation. Helps you disagree and influence stakeholders in ${indText} without damaging long-term relationships.`});
+      res.push({type:'book', title:'Getting to Yes', author:'Fisher & Ury', url:'https://www.amazon.com/Getting-Yes-Negotiating-Agreement-Without/dp/0143118757', why:`The foundational text on principled negotiation. Helps you disagree and influence stakeholders without damaging relationships.`});
+      res.push({type:'ted', title:'The Power of Vulnerability', author:'Brené Brown', url:'https://www.youtube.com/watch?v=iCvmsMzlF7o', why:'Essential viewing for building psychological safety and trust within your immediate team.'});
+      res.push({type:'course', title:'Conflict Resolution Foundations', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/conflict-resolution-foundations', why:'Practical frameworks for de-escalating workplace friction and finding consensus.'});
     }
     if(gapKeys.includes('O')){
-      res.push({type:'book', title:'A Whole New Mind', author:'Daniel Pink', url:'', why:`A powerful argument for why creative and conceptual thinking is increasingly critical. Essential for breaking out of rigid procedural thinking ${expText}.`});
+      res.push({type:'book', title:'A Whole New Mind', author:'Daniel Pink', url:'https://www.amazon.com/Whole-New-Mind-Right-Brainers-Future/dp/1594481717', why:`A powerful argument for why creative and conceptual thinking is increasingly critical ${expText}.`});
+      res.push({type:'ted', title:'Where Good Ideas Come From', author:'Steven Johnson', url:'https://www.youtube.com/watch?v=NugRZGDbHbc', why:'Explores how innovation actually happens in professional environments through "liquid networks".'});
+      res.push({type:'article', title:'The Innovator’s DNA', author:'Harvard Business Review', url:'https://hbr.org/2009/12/the-innovators-dna', why:'Breaks down the five specific habits of highly innovative professionals.'});
     }
     if(gapKeys.includes('E')){
-      res.push({type:'book', title:'Quiet', author:'Susan Cain', url:'', why:`A research-backed argument that introversion is a professional asset when deployed deliberately. Learn how to hold presence as a ${profileText} without faking extraversion.`});
+      res.push({type:'book', title:'Quiet', author:'Susan Cain', url:'https://www.amazon.com/Quiet-Power-Introverts-World-Talking/dp/0307352153', why:`A research-backed argument that introversion is a professional asset when deployed deliberately.`});
+      res.push({type:'ted', title:'Your Body Language May Shape Who You Are', author:'Amy Cuddy', url:'https://www.youtube.com/watch?v=Ks-_Mh1QhMc', why:'Practical techniques for holding physical presence in high-stakes meetings.'});
+      res.push({type:'course', title:'Executive Presence on Video Calls', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/executive-presence-on-video-calls', why:'Crucial modern skills for projecting confidence and authority in digital environments.'});
     }
     if(gapKeys.includes('OCBavg')){
-      res.push({type:'book', title:'Give and Take', author:'Adam Grant', url:'', why:`Explains how contributing to the success of your colleagues and the institution ultimately accelerates your own trajectory in ${indText}.`});
+      res.push({type:'book', title:'Give and Take', author:'Adam Grant', url:'https://www.amazon.com/Give-Take-Helping-Others-Success/dp/0143124986', why:`Explains how contributing to the success of your colleagues ultimately accelerates your own trajectory in ${indText}.`});
+      res.push({type:'ted', title:'Are You a Giver or a Taker?', author:'Adam Grant', url:'https://www.youtube.com/watch?v=YyXRYgjQXX0', why:'A quick, powerful breakdown of workplace citizenship and its impact on team culture.'});
+      res.push({type:'article', title:'In Praise of the Incomplete Leader', author:'Harvard Business Review', url:'https://hbr.org/2007/02/in-praise-of-the-incomplete-leader', why:'Why trying to be perfect fails, and why supporting your team’s gaps is true leadership.'});
     }
 
     if(res.length===0){
-      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'', why:`Foundational text on professional effectiveness. Highly relevant for sustaining your balanced profile as a ${profileText} ${expText}.`});
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'https://www.amazon.com/Effective-Executive-Definitive-Harperbusiness-Essentials/dp/0060833459', why:`Foundational text on professional effectiveness. Highly relevant for sustaining your balanced profile.`});
+      res.push({type:'course', title:'Strategic Thinking', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/strategic-thinking-3', why:'A broad, high-impact course for balanced professionals looking to elevate their perspective.'});
     }
-    return res.slice(0, 4); 
+    
+    // Return 5 diverse resources instead of 4
+    return res.slice(0, 5); 
   };
 
   const getPrograms = () => {
@@ -3532,9 +3550,9 @@ const getResources = () => {
               <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Every resource below was selected for your specific psychometric profile and dimension scores — not a generic reading list.</p>
               <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
                 {resources.map((r, i) => {
-                  const tCol = r.type==='book'?'#3B82F6':r.type==='ted'?'#EF4444':r.type==='youtube'?'#10B981':'#8B5CF6';
-                  const tBg = r.type==='book'?'#DBEAFE':r.type==='ted'?'#FEE2E2':r.type==='youtube'?'#D1FAE5':'#EDE9FE';
-                  const tLbl = r.type==='book'?'📖 Book':r.type==='ted'?'🎬 TED Talk':r.type==='youtube'?'▶ YouTube':'🔬 Research';
+                  const tCol = r.type==='book'?'#3B82F6':r.type==='ted'?'#EF4444':r.type==='youtube'?'#10B981':r.type==='article'?'#F59E0B':r.type==='course'?'#8B5CF6':'#6B7280';
+                  const tBg = r.type==='book'?'rgba(59,130,246,0.15)':r.type==='ted'?'rgba(239,68,68,0.15)':r.type==='youtube'?'rgba(16,185,129,0.15)':r.type==='article'?'rgba(245,158,11,0.15)':r.type==='course'?'rgba(139,92,246,0.15)':'rgba(107,114,128,0.15)';
+                  const tLbl = r.type==='book'?'📖 Book':r.type==='ted'?'🎬 TED Talk':r.type==='youtube'?'▶ YouTube':r.type==='article'?'📄 Article':r.type==='course'?'🎓 Course':'🔬 Research';
                   return (
                   <div key={i} style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
                     <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:tCol, background:tBg, padding:'4px 8px', borderRadius:'4px', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap'}}>{tLbl}</div>
@@ -4078,7 +4096,7 @@ const getResources = () => {
 
         // Calculate max possible XP for the Command Centre
         const maxQuestXP = devAreas.length * 500;
-        const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='research'?500:r.type==='book'?300:200), 0);
+const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type==='book'?300:r.type==='article'?150:200), 0);
         const maxBadgeXP = [
           {cond:S.C>=75, xp:300}, {cond:S.O>=75, xp:300}, {cond:S.E>=75, xp:200}, {cond:S.A>=75, xp:200},
           {cond:S.ES>=75, xp:300}, {cond:S.CQavg>=75, xp:400}, {cond:S.OCBavg>=75, xp:300}, {cond:S.LAavg>=75, xp:400},
@@ -4260,12 +4278,12 @@ const getResources = () => {
             <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
               {resources.map((r, i) => {
                 const isCollected = !!evState[`pu_${i}`];
-                const xpReward = r.type==='research'?500:r.type==='book'?300:200;
+                const xpReward = r.type==='course'?400:r.type==='book'?300:r.type==='article'?150:200;
                 return (
                   <div key={i} onClick={()=>openEvidenceModal(`pu_${i}`, xpReward, r.type, r.title, r.author, r.why)} style={{background:isCollected?T.gnP:T.bg2, border:`1px solid ${isCollected?T.gn:T.b1}`, borderRadius:'10px', padding:'16px', cursor:'pointer', transition:'all 0.2s', opacity:isCollected?0.6:1}}>
                     <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
                       <div>
-                        <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:isCollected?T.gn:T.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>{r.type} · {r.type==='research'?'LEGENDARY':r.type==='book'?'RARE':'UNCOMMON'}</div>
+                       <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:isCollected?T.gn:T.c, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>{r.type} · {r.type==='course'?'LEGENDARY':r.type==='book'?'RARE':r.type==='article'?'UNCOMMON':'COMMON'}</div>
                         <div style={{fontSize:'14px', fontWeight:'700', color:isCollected?T.gn:T.t0, marginBottom:'4px'}}>{isCollected?'✅ ':''}{r.title}</div>
                         <div style={{fontSize:'12px', color:T.t1, lineHeight:'1.5'}}>{r.why}</div>
                       </div>

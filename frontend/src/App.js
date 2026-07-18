@@ -1938,28 +1938,16 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               ))}
             </div>
 
-            <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'24px'}}>
-              <div>
-                <label style={lbl}>Role Level Being Assessed</label>
-                <select value={resp.level} onChange={e=>setResp(r=>({...r,level:e.target.value}))} style={selStyle}>
-                  <option value="">All Levels</option>
-                  <option>Entry Level (0–3 years)</option>
-                  <option>Junior Officer (3–7 years)</option>
-                  <option>Mid-Level Manager (7–12 years)</option>
-                  <option>Senior Manager / Head</option>
-                  <option>Executive / Director+</option>
-                </select>
-              </div>
-              {assessmentType === 'org' && (
-                <div>
-                  <label style={lbl}>Confidentiality Level</label>
-                  <select value={resp.conf} onChange={e=>setResp(r=>({...r,conf:e.target.value}))} style={selStyle}>
-                    <option>Restricted — HR Leadership Only</option>
-                    <option>Internal — Management & Candidate</option>
-                    <option>Candidate-Visible — Both Reports</option>
-                  </select>
-                </div>
-              )}
+            <div style={{marginBottom:'24px'}}>
+              <label style={lbl}>Role Level Being Assessed</label>
+              <select value={resp.level} onChange={e=>setResp(r=>({...r,level:e.target.value}))} style={selStyle}>
+                <option value="">All Levels</option>
+                <option>Entry Level (0–3 years)</option>
+                <option>Junior Officer (3–7 years)</option>
+                <option>Mid-Level Manager (7–12 years)</option>
+                <option>Senior Manager / Head</option>
+                <option>Executive / Director+</option>
+              </select>
             </div>
 
             <button onClick={()=>{

@@ -207,6 +207,69 @@ const GEMSTONES = {
   },
 };
 
+const IND = {
+  'Banking & Financial Services':{ short:'Banking & Finance', icon:'🏦',
+    lens:`In banking, <strong>Ethical Orientation</strong> is the highest-stakes dimension. Regulatory compliance, fiduciary duty, and prudential standards demand authentic integrity. Low EO scores — especially in Rule Compliance and Authentic Integrity — carry material regulatory risk before placement in treasury, audit, or credit functions. <strong>Conscientiousness</strong> and <strong>Emotional Stability</strong> are the strongest performance predictors under regulatory scrutiny. Cultural Intelligence is increasingly critical for institutions engaging across Pakistan's diverse regional footprint and with international regulators.`,
+    hiPotential:`Candidates showing C ≥ 75, ES ≥ 70, EOavg ≥ 75, LAavg ≥ 65.`,
+    riskNote:`EO_RC or EO_AI below 50 → do not place in treasury, audit, credit, or unsupervised customer-fund roles without mandatory ethics coaching.`
+  },
+  'Insurance & Takaful':{ short:'Insurance & Takaful', icon:'📋',
+    lens:`Insurance and Takaful require <strong>Conscientiousness</strong> (policy accuracy), <strong>Agreeableness</strong> (claims empathy), and <strong>Transparent Ethics</strong> (EO_T). Cultural Knowledge is critical in Takaful contexts where Shariah compliance and community trust are foundational. Low EO_T in underwriting or claims represents significant fraud risk.`,
+    hiPotential:`Candidates showing A ≥ 70, C ≥ 72, EOavg ≥ 72. Sales leadership additionally needs E ≥ 65.`,
+    riskNote:`Low EO_T in claims or underwriting roles → trigger structured supervision before independent case handling.`
+  },
+  'Government & Civil Service':{ short:'Government / Civil Service', icon:'🏛',
+    lens:`Pakistan's civil service has the highest social desirability inflation of any sector — the Validity Index is especially important here. <strong>Learning Agility</strong> is the most under-measured dimension in civil service promotion systems, yet it is the strongest predictor of success in reform and policy roles. Low CQ in senior officers overseeing multi-provincial programmes carries significant implementation risk. Traditional seniority-based promotion misses all four of CORE's most predictive dimensions.`,
+    hiPotential:`Candidates for BPS-18+ roles: LAavg ≥ 65, CQavg ≥ 62, EOavg ≥ 75, C ≥ 70.`,
+    riskNote:`Pay extra attention to Validity Index. Social desirability inflation is significantly more common in hierarchical bureaucratic cultures. Also flag LAavg < 45 before reform-facing appointments.`
+  },
+  'FMCG & Consumer Goods':{ short:'FMCG / Consumer Goods', icon:'🛒',
+    lens:`FMCG depends on professionals combining <strong>social confidence</strong> (Extraversion) with <strong>adaptive thinking</strong> (Learning Agility) and cultural fluency to engage Pakistan's enormously diverse consumer base — from boardroom to kiryana. <strong>CQ_B</strong> (behavioural flexibility) is critical because commercial professionals must be equally effective across every register of Pakistani social interaction. Openness predicts innovation in brand and product development.`,
+    hiPotential:`Commercial leadership: E ≥ 70, LAavg ≥ 68, CQavg ≥ 65, O ≥ 68. Supply chain leadership substitutes C ≥ 78 for Extraversion.`,
+    riskNote:`Low OCB_S in sales teams creates cultural toxicity during high-pressure cycles (Ramzan, Eid, year-end). Monitor and address proactively.`
+  },
+  'Telecommunications & Technology':{ short:'Telecom & Technology', icon:'📡',
+    lens:`Pakistan's tech sector requires the highest <strong>Learning Agility</strong> concentration of any CORE sector. Technical knowledge depreciates rapidly in this environment. <strong>Openness</strong> and <strong>Results Agility</strong> (cross-domain learning) are the strongest sustained performance predictors. CQ is particularly important for teams bridging Pakistan's urban-rural digital divide, where user empathy requires genuine cultural knowledge.`,
+    hiPotential:`LAavg ≥ 75, O ≥ 72, LA_CA ≥ 70. Commercial and product roles add CQ_M ≥ 68, E ≥ 65.`,
+    riskNote:`EO_T below 55 in data-handling or user-facing tech roles represents data privacy risk. Screen carefully before access to personal customer data.`
+  },
+  'Energy & Utilities':{ short:'Energy & Utilities', icon:'⚡',
+    lens:`Energy and utilities demand exceptional <strong>procedural conscientiousness</strong> and <strong>safety-oriented ethics</strong>. In Pakistan's energy sector — where infrastructure failures carry public safety and national economic consequences — EO_RC and Conscientiousness are the highest-stakes dimensions. The renewable transition is increasing the importance of <strong>Learning Agility</strong> for technical leadership. Emotional Stability is critical for operational roles managing emergency response.`,
+    hiPotential:`C ≥ 78, ES ≥ 72, EOavg ≥ 72. Renewable transition roles add LAavg ≥ 68, O ≥ 65.`,
+    riskNote:`EO_RC below 50 in operational, maintenance, or control-room roles carries safety risk. Preclude unsupervised responsibility for critical infrastructure.`
+  },
+  'Healthcare & Pharmaceuticals':{ short:'Healthcare & Pharma', icon:'🏥',
+    lens:`Healthcare requires extraordinary <strong>Agreeableness</strong> (patient empathy), <strong>Ethical Reasoning</strong> (consent and resource allocation decisions), and <strong>Emotional Stability</strong> (managing trauma and high-stakes pressure). In pharma, EO_RC and EO_T are defining ethical dimensions. Cultural Knowledge (CQ_K) is critical for professionals engaging rural, conservative, or socioeconomically vulnerable patient populations across Pakistan.`,
+    hiPotential:`A ≥ 72, ES ≥ 72, EOavg ≥ 75, C ≥ 73. Training and education leadership adds LAavg ≥ 68.`,
+    riskNote:`EO_ER below 60 in any role with patient contact or prescriber influence represents patient safety risk.`
+  },
+  'Manufacturing & Industrial':{ short:'Manufacturing & Industrial', icon:'🏭',
+    lens:`Manufacturing prizes <strong>procedural conscientiousness</strong>, <strong>rule compliance</strong> (quality standards, ISO, safety protocols), and <strong>consistent institutional citizenship</strong>. In export-oriented manufacturing — textiles, chemicals, surgical instruments — CQ is increasingly relevant for international buyer relationships and compliance audits. Emotional Stability is critical for operations leadership managing production pressure, labour relations, and supply chain disruption.`,
+    hiPotential:`C ≥ 78, ES ≥ 72, EOavg ≥ 70, OCB_Cn ≥ 72. Export-facing roles add CQ_B ≥ 65.`,
+    riskNote:`EO_RC below 50 in QA, safety, or compliance roles carries product liability and regulatory risk. Screen before certification or inspection authority.`
+  },
+  'Development Sector & NGOs':{ short:'Development / NGOs', icon:'🌍',
+    lens:`The development sector requires the highest Cultural Intelligence of any CORE sector — professionals work across Pakistan's full ethnolinguistic and socioeconomic spectrum while managing international donor, government, and community relationships simultaneously. The sector's most common organisational failure is low <strong>Conscientiousness</strong> — high-empathy professionals who struggle with M&E documentation and financial accountability. EO_T is non-negotiable for donor-funded roles.`,
+    hiPotential:`CQavg ≥ 72, A ≥ 72, LAavg ≥ 65, EOavg ≥ 70. Programme management adds C ≥ 68.`,
+    riskNote:`Low C in programme management creates donor accountability risk. Low EO_T in financial management is a fiduciary risk to the organisation and its funding relationships.`
+  },
+  'Education & Academia':{ short:'Education & Academia', icon:'🎓',
+    lens:`Education professionals require strong <strong>Agreeableness</strong> (learner relationship), <strong>Openness</strong> (curriculum innovation), and <strong>Results Agility</strong> (translating knowledge from diverse domains into effective instruction). Civic Virtue (OCB_CV) is a strong predictor of faculty quality and departmental health. Cultural Intelligence is critical in diverse student populations and for institutions with international academic partnerships.`,
+    hiPotential:`O ≥ 72, A ≥ 70, LAavg ≥ 70, OCB_CV ≥ 70. Administration adds C ≥ 72, EOavg ≥ 70.`,
+    riskNote:`EO_AI below 50 in faculty or administrative roles creates academic integrity risk — especially in assessment, grading, or research oversight.`
+  },
+  'Real Estate & Construction':{ short:'Real Estate & Construction', icon:'🏗',
+    lens:`Pakistan's real estate and construction sector has significant compliance challenges under RERA reform and anti-money laundering regulations. <strong>Rule Compliance</strong> (EO_RC) and <strong>Transparent Disclosure</strong> (EO_T) are the highest-stakes dimensions — particularly for project directors, procurement officers, and client relationship managers. Learning Agility (LA_CA) is critical as the regulatory landscape continues to evolve.`,
+    hiPotential:`C ≥ 75, EOavg ≥ 70, LA_CA ≥ 65. Client-facing roles add SES ≥ 65, CQ_B ≥ 62.`,
+    riskNote:`Low EO_RC or EO_T in procurement, land acquisition, or client fund management represents significant corruption and regulatory risk.`
+  },
+  'Retail & Distribution':{ short:'Retail & Distribution', icon:'🛍',
+    lens:`Retail requires <strong>social energy</strong> (Extraversion) combined with <strong>cultural behavioural flexibility</strong> (CQ_B) to engage Pakistan's enormously diverse consumer segments — from premium urban to peri-urban and rural. Agreeableness predicts customer relationship quality and complaint resolution effectiveness. Conscientiousness is critical for inventory management and operational compliance. Sportsmanship (OCB_S) is the strongest predictor of retail team culture quality.`,
+    hiPotential:`E ≥ 68, A ≥ 68, CQ_B ≥ 65, C ≥ 72. Regional distribution leadership adds LA_CA ≥ 65.`,
+    riskNote:`Low OCB_S in retail or distribution teams creates cultural toxicity during peak seasons. Low EO_T in inventory or cash-handling roles represents shrinkage risk.`
+  },
+};
+
 // ─── GLOBAL STYLES ───────────────────────────────────────────
 const DashStyles = ({ T }) => (
   <style>{`
@@ -259,8 +322,8 @@ const downloadAsPDF = async (elementId, filename, T) => {
   });
 
   try {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    // Load html2pdf.js which has the Smart Page Breaking engine
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
 
     const element = document.getElementById(elementId);
     if (!element) return;
@@ -271,38 +334,22 @@ const downloadAsPDF = async (elementId, filename, T) => {
     element.style.height = 'auto';
     element.style.overflow = 'visible';
 
-    const canvas = await window.html2canvas(element, { 
-      scale: 2, 
-      useCORS: true, 
-      backgroundColor: T.bg1 
-    });
+    // The 'pagebreak' setting prevents elements from being cut in half
+    const opt = {
+      margin:       [10, 10, 10, 10],
+      filename:     filename,
+      image:        { type: 'jpeg', quality: 1 },
+      html2canvas:  { scale: 2, useCORS: true, backgroundColor: T.bg1 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } 
+    };
 
+    await window.html2pdf().set(opt).from(element).save();
+
+    // Restore styles
     element.style.height = originalHeight;
     element.style.overflow = originalOverflow;
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-    
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    
-    let heightLeft = pdfHeight;
-    let position = 0;
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-    }
-
-    pdf.save(filename);
   } catch (err) {
     console.error("PDF Generation failed", err);
     alert("Failed to generate PDF. Please try again.");
@@ -464,7 +511,7 @@ const TechnicalReport = ({ candidate, T }) => {
   const gs      = rd.gameSummary || {};
 
   const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
+    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
       {children}
     </div>
   );
@@ -478,14 +525,18 @@ const TechnicalReport = ({ candidate, T }) => {
           <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
             <div>
-             <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name}</div>
+             <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name || rd.respondent?.name}</div>
               <div style={{ fontSize:'12px', color:T.t2, fontWeight:'600', marginBottom:'8px', lineHeight:'1.6' }}>
-                <span style={{color:T.gold}}>{candidate.assessment_type === 'org' ? '🏢 Assigned by Organization' : candidate.assessment_type === 'ind' ? '👤 Individual' : 'Assessment Type Unspecified'}</span><br/>
-                {candidate.role}{candidate.department ? ` · ${candidate.department}` : ''}<br/>
-                {candidate.email && <span>{candidate.email}</span>}
-                {candidate.phone && <span> · {candidate.phone}</span>}<br/>
-                {candidate.emp_id && <span>ID: {candidate.emp_id} · </span>}
-                Experience: {candidate.experience}{candidate.gender && candidate.gender !== 'Prefer not to say' ? ` · ${candidate.gender}` : ''}
+                <span style={{color:T.gold}}>
+                  {(candidate.purpose || rd.respondent?.purpose) === 'Personal Development Planning' 
+                    ? '👤 Individual (Personal Development)' 
+                    : `🏢 Org Assigned (${candidate.purpose || rd.respondent?.purpose || 'Unspecified Purpose'})`}
+                </span><br/>
+                {candidate.role || rd.respondent?.role}{(candidate.department || rd.respondent?.dept) ? ` · ${candidate.department || rd.respondent?.dept}` : ''}<br/>
+                {(candidate.email || rd.respondent?.email) && <span>{candidate.email || rd.respondent?.email}</span>}
+                {(candidate.phone || rd.respondent?.phone) && <span> · {candidate.phone || rd.respondent?.phone}</span>}<br/>
+                {(candidate.emp_id || rd.respondent?.emp) && <span>ID: {candidate.emp_id || rd.respondent?.emp} · </span>}
+                Experience: {candidate.experience || rd.respondent?.exp || 'Unspecified'}{((candidate.gender || rd.respondent?.gender) && (candidate.gender || rd.respondent?.gender) !== 'Prefer not to say') ? ` · ${candidate.gender || rd.respondent?.gender}` : ''}
               </div>
               <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                 <ScoreBadge score={S.overall || candidate.overall_score} T={T} />
@@ -816,10 +867,12 @@ const TechnicalReport = ({ candidate, T }) => {
       )}
 
      {/* INDUSTRY LENS */}
-      {candidate.industry && rd.cfg?.industry && (
+      {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
         <div style={{ background:T.bg3, borderRadius:'10px', padding:'16px 18px', border:`1px solid ${T.b2}`, marginBottom:'14px' }}>
           <SectionHead label={`Industry Lens — ${candidate.industry}`} T={T} />
-          {rd.cfg?.industryLens && <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.65' }} dangerouslySetInnerHTML={{ __html: rd.cfg.industryLens }} />}
+          <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.65', marginBottom:'10px' }} dangerouslySetInnerHTML={{ __html: IND[candidate.industry].lens }} />
+          <div style={{ fontSize:'12px', color:T.t1, marginBottom:'4px' }}><strong>High Potential Benchmark:</strong> {IND[candidate.industry].hiPotential}</div>
+          <div style={{ fontSize:'12px', color:T.rd }}><strong>Industry Risk Note:</strong> {IND[candidate.industry].riskNote}</div>
         </div>
       )}
       </div>
@@ -1095,7 +1148,7 @@ const ActionPlanReport = ({ candidate, T }) => {
   const relapse = getRelapse();
 
   const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
+    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
       {children}
     </div>
   );
@@ -1103,6 +1156,7 @@ const ActionPlanReport = ({ candidate, T }) => {
   return (
     <div>
       <div id={`action-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
+      
       {/* HEADER */}
       {card(
         <>
@@ -1126,11 +1180,11 @@ const ActionPlanReport = ({ candidate, T }) => {
       {card(
         <>
           <SectionHead label="Score Profile at a Glance" T={T} />
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 28px', marginBottom:'20px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'12px 28px', marginBottom:'20px' }}>
             {allDims.map(d => {
               const pCol = d.l.includes('Personality')||d.l.includes('Conscientiousness')||d.l.includes('Emotional')||d.l.includes('Openness')||d.l.includes('Social')||d.l.includes('Collaborative') ? '#EC4899' : d.l.includes('Cultural') ? '#06B6D4' : d.l.includes('Citizenship') ? '#F97316' : d.l.includes('Learning') ? '#3B82F6' : d.l.includes('Integrity') ? '#7C3AED' : T.t0;
               return (
-              <div key={d.k} style={{ marginBottom:'4px' }}>
+              <div key={d.k} style={{ width:'calc(50% - 14px)', marginBottom:'4px' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'3px' }}>
                   <span style={{ fontSize:'12px', color:T.t0, fontWeight:'700', display:'flex', alignItems:'center' }}>
                     <span style={{display:'inline-block', width:'6px', height:'6px', borderRadius:'50%', background:pCol, marginRight:'6px'}}></span>
@@ -1144,15 +1198,16 @@ const ActionPlanReport = ({ candidate, T }) => {
               </div>
             )})}
           </div>
+          
           {/* Composite ring display */}
           <div style={{ background:T.bg3, borderRadius:'10px', padding:'16px' }}>
             <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:'700', marginBottom:'12px' }}>7 Composite Indices</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'6px', textAlign:'center' }}>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:'6px', justifyContent:'space-between', textAlign:'center' }}>
               {COMPOSITE_KEYS.map(({ k, l, green }) => {
                 const v = CI[k] || 0;
                 const col = bCol(v,T);
                 return (
-                  <div key={k}>
+                  <div key={k} style={{ flex: 1 }}>
                     <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'1.2rem', fontWeight:'800', color:col, marginBottom:'2px' }}>{v}</div>
                     <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.gold, fontWeight:'700' }}>{k}</div>
                     <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'6px', color:T.t3, lineHeight:'1.3', marginTop:'2px' }}>{l.split(' ')[0]}</div>
@@ -1168,9 +1223,9 @@ const ActionPlanReport = ({ candidate, T }) => {
       {card(
         <>
           <SectionHead label="Core Strengths & Priority Development Areas" T={T} />
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'12px' }}>
             {top2.map(d => (
-              <div key={d.k} style={{ padding:'18px', borderRadius:'10px', background:T.gnP, border:`1px solid ${T.gn}40`, borderLeft:`5px solid ${T.gn}` }}>
+              <div key={d.k} style={{ width:'calc(50% - 6px)', padding:'18px', borderRadius:'10px', background:T.gnP, border:`1px solid ${T.gn}40`, borderLeft:`5px solid ${T.gn}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.gn, marginBottom:'6px' }}>✦ Core Strength</div>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', marginBottom:'6px', color:T.gn }}>{d.l}</div>
                 <div style={{ fontSize:'12px', color:T.gn, lineHeight:'1.6', marginBottom:'10px' }}>{d.str}</div>
@@ -1178,7 +1233,7 @@ const ActionPlanReport = ({ candidate, T }) => {
               </div>
             ))}
             {bot2.map(d => (
-              <div key={d.k} style={{ padding:'18px', borderRadius:'10px', background:T.rdP, border:`1px solid ${T.rd}40`, borderLeft:`5px solid ${T.rd}` }}>
+              <div key={d.k} style={{ width:'calc(50% - 6px)', padding:'18px', borderRadius:'10px', background:T.rdP, border:`1px solid ${T.rd}40`, borderLeft:`5px solid ${T.rd}` }}>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.1em', color:T.rd, marginBottom:'6px' }}>◈ Priority Development</div>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', marginBottom:'6px', color:T.rd }}>{d.l}</div>
                 <div style={{ fontSize:'12px', color:T.rd, lineHeight:'1.6', marginBottom:'10px' }}>Your development investment here creates the greatest career impact.</div>
@@ -1190,13 +1245,15 @@ const ActionPlanReport = ({ candidate, T }) => {
       )}
 
       {/* DEVELOPMENT ROADMAP */}
-      {devAreas.length > 0 && card(
-        <>
-          <SectionHead label={`Development Roadmap${candidate.industry ? ` — ${candidate.industry}` : ''}`} T={T} />
+      {devAreas.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ paddingLeft: '4px', marginBottom: '12px' }}>
+            <SectionHead label={`Development Roadmap${candidate.industry ? ` — ${candidate.industry}` : ''}`} T={T} />
+          </div>
           {devAreas.map((d, i) => {
             const dimCol = d.v < 45 ? T.rd : d.v < 60 ? T.am : T.gn;
-            return (
-              <div key={i} style={{ border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px', marginBottom:'12px', background:T.bg3 }}>
+            return card(
+              <div key={i}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
                   <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.1rem', fontWeight:'700', color:T.t0 }}>{d.dim}</div>
                   <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:'800', color:dimCol }}>{d.v}/100</div>
@@ -1242,45 +1299,70 @@ const ActionPlanReport = ({ candidate, T }) => {
               </div>
             );
           })}
-        </>
+        </div>
       )}
 
       {/* RESOURCES & PROTOCOLS */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px' }}>
-        {card(
-          <>
-            <SectionHead label="Profile-Matched Toolkit" T={T} />
-            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {resources.map((r, i) => {
-                const tCol = r.type==='book'?'#3B82F6':r.type==='ted'?'#EF4444':r.type==='youtube'?'#10B981':r.type==='article'?'#F59E0B':r.type==='course'?'#8B5CF6':'#6B7280';
-                const tBg = r.type==='book'?'rgba(59,130,246,0.15)':r.type==='ted'?'rgba(239,68,68,0.15)':r.type==='youtube'?'rgba(16,185,129,0.15)':r.type==='article'?'rgba(245,158,11,0.15)':r.type==='course'?'rgba(139,92,246,0.15)':'rgba(107,114,128,0.15)';
-                return (
-                  <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
-                    <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', color:tCol, background:tBg, padding:'4px 6px', borderRadius:'4px', textTransform:'uppercase', whiteSpace:'nowrap' }}>{r.type}</div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{r.title}</div>
-                      <div style={{ fontSize:'11px', color:T.t1, lineHeight:'1.5', marginBottom:r.url?'6px':'0' }}>{r.why}</div>
-                      {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', fontWeight:'700', color:tCol, textDecoration:'none' }}>→ Watch / Access ↗</a>}
+      <div style={{ display:'flex', flexWrap:'wrap', gap:'14px', alignItems:'flex-start' }}>
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          {card(
+            <>
+              <SectionHead label="Profile-Matched Toolkit" T={T} />
+              <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                {resources.map((r, i) => {
+                  const tCol = r.type==='book'?'#3B82F6':r.type==='ted'?'#EF4444':r.type==='youtube'?'#10B981':r.type==='article'?'#F59E0B':r.type==='course'?'#8B5CF6':'#6B7280';
+                  const tBg = r.type==='book'?'rgba(59,130,246,0.15)':r.type==='ted'?'rgba(239,68,68,0.15)':r.type==='youtube'?'rgba(16,185,129,0.15)':r.type==='article'?'rgba(245,158,11,0.15)':r.type==='course'?'rgba(139,92,246,0.15)':'rgba(107,114,128,0.15)';
+                  return (
+                    <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', fontWeight:'800', color:tCol, background:tBg, padding:'4px 6px', borderRadius:'4px', textTransform:'uppercase', whiteSpace:'nowrap' }}>{r.type}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{r.title}</div>
+                        <div style={{ fontSize:'11px', color:T.t1, lineHeight:'1.5', marginBottom:r.url?'6px':'0' }}>{r.why}</div>
+                        {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', fontWeight:'700', color:tCol, textDecoration:'none' }}>→ Watch / Access ↗</a>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>, { marginBottom: 0 }
+          )}
+        </div>
+        
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          {card(
+            <>
+              <SectionHead label="If-Then Protocol — When Habits Break" T={T} />
+              <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                {relapse.map((p, i) => (
+                  <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px' }}>
+                    <div style={{ display:'flex', gap:'8px', marginBottom:'8px', alignItems:'baseline' }}>
+                      <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', color:T.rd, background:T.rdP, padding:'2px 6px', borderRadius:'4px' }}>IF →</span>
+                      <span style={{ fontSize:'12px', fontWeight:'700', color:T.t0 }}>{p.trigger}</span>
+                    </div>
+                    <div style={{ display:'flex', gap:'8px', alignItems:'baseline' }}>
+                      <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', color:T.gn, background:T.gnP, padding:'2px 6px', borderRadius:'4px' }}>THEN →</span>
+                      <span style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500' }}>{p.response}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                ))}
+              </div>
+            </>, { marginBottom: 0 }
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginTop: '14px' }}>
+        {/* PROGRAMS */}
         {card(
           <>
-            <SectionHead label="If-Then Protocol — When Habits Break" T={T} />
+            <SectionHead label="Recommended Training — Carnelian Programmes" T={T} />
             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {relapse.map((p, i) => (
-                <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px' }}>
-                  <div style={{ display:'flex', gap:'8px', marginBottom:'8px', alignItems:'baseline' }}>
-                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', color:T.rd, background:T.rdP, padding:'2px 6px', borderRadius:'4px' }}>IF →</span>
-                    <span style={{ fontSize:'12px', fontWeight:'700', color:T.t0 }}>{p.trigger}</span>
-                  </div>
-                  <div style={{ display:'flex', gap:'8px', alignItems:'baseline' }}>
-                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:'800', color:T.gn, background:T.gnP, padding:'2px 6px', borderRadius:'4px' }}>THEN →</span>
-                    <span style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5', fontWeight:'500' }}>{p.response}</span>
+              {programs.map((p, i) => (
+                <div key={i} style={{ background:`linear-gradient(135deg, ${T.bg2} 0%, ${T.bg3} 100%)`, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                  <div style={{ width:'28px', height:'28px', borderRadius:'50%', background:T.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'800', flexShrink:0 }}>C</div>
+                  <div>
+                    <div style={{ fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'4px' }}>{p.name}</div>
+                    <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5' }}>{p.desc}</div>
                   </div>
                 </div>
               ))}
@@ -1289,37 +1371,19 @@ const ActionPlanReport = ({ candidate, T }) => {
         )}
       </div>
 
-      {/* PROGRAMS */}
-      {card(
-        <>
-          <SectionHead label="Recommended Training — Carnelian Programmes" T={T} />
-          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-            {programs.map((p, i) => (
-              <div key={i} style={{ background:`linear-gradient(135deg, ${T.bg2} 0%, ${T.bg3} 100%)`, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
-                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background:T.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'800', flexShrink:0 }}>C</div>
-                <div>
-                  <div style={{ fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'4px' }}>{p.name}</div>
-                  <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5' }}>{p.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
      {/* PRIORITY MATRIX */}
       {card(
         <>
           <SectionHead label="Priority Action Matrix" T={T} />
           <p style={{color:T.t2, fontSize:'12px', lineHeight:'1.6', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted relatively by urgency based on the candidate's unique score profile.</p>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'12px' }}>
             {[
               { label:'🔴 Act Now (Priority)',  items:allDims.slice(7, 9),  bg:T.rdP, bc:T.rd  },
               { label:'🟡 Build Soon (Secondary)', items:allDims.slice(5, 7), bg:T.amP, bc:T.am },
               { label:'🟢 Sustain & Expand (Strengths)', items:allDims.slice(0, 2),  bg:T.gnP, bc:T.gn  },
               { label:'🔵 Monitor Progress (Balanced)', items:allDims.slice(2, 5), bg:T.b0,  bc:T.b2  },
             ].map(({ label, items, bg, bc }) => (
-              <div key={label} style={{ background:bg, border:`1px solid ${bc}40`, borderRadius:'10px', padding:'16px' }}>
+              <div key={label} style={{ width:'calc(50% - 6px)', background:bg, border:`1px solid ${bc}40`, borderRadius:'10px', padding:'16px' }}>
                 <div style={{ fontSize:'12px', fontWeight:'800', color:T.t1, marginBottom:'8px' }}>{label}</div>
                 <ul style={{ paddingLeft:'18px', margin:0, color:T.t0, fontSize:'12px', lineHeight:'1.7', fontWeight:'600' }}>
                   {items.map(d => <li key={d.k}>{d.l} ({d.v}/100)</li>)}
@@ -1627,7 +1691,7 @@ const TeamReport = ({ candidate, allData, T }) => {
   const nRed   = allBatchData.filter(r=>r.report_data?.validity?.overall==='red').length;
 
   const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>
+    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
       {children}
     </div>
   );
@@ -1636,9 +1700,9 @@ const TeamReport = ({ candidate, allData, T }) => {
     <div>
       <div id={`team-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
       {/* HEADER */}
-      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}` }}>
+      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Aggregate Report · Batch: {batch}</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', marginBottom:'16px' }}>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'16px', justifyContent:'space-between' }}>
           {[
             [allBatchData.length, 'Responses'],
             [n, 'Valid'],
@@ -1646,18 +1710,18 @@ const TeamReport = ({ candidate, allData, T }) => {
             [archSorted.length, 'Archetypes'],
             [riskEntries.length, 'Risk Flags'],
           ].map(([v,l],i) => (
-            <div key={i} style={{ textAlign:'center' }}>
+            <div key={i} style={{ textAlign:'center', flex:1, minWidth:'60px' }}>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.gold }}>{v}</div>
               <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600' }}>{l}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg1, borderRadius:'8px', padding:'16px', border:`1px solid ${T.b1}` }}>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', background:T.bg1, borderRadius:'8px', padding:'16px', border:`1px solid ${T.b1}`, justifyContent:'space-between' }}>
           {MODULE_KEYS.map(({ k, l, c }) => {
             const avg = Math.round(batchData.reduce((sum, b) => sum + (b.report_data?.scores?.[k] || 0), 0) / (batchData.length || 1));
             return (
-              <div key={k} style={{textAlign:'center'}}>
+              <div key={k} style={{textAlign:'center', flex:1, minWidth:'50px'}}>
                 <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:c}}>{avg}</div>
                 <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px', fontWeight:'600'}}>{l.split(' ')[0]}</div>
               </div>
@@ -1670,12 +1734,12 @@ const TeamReport = ({ candidate, allData, T }) => {
       {card(
         <>
           <SectionHead label={`Team Dimension Averages (n=${n} valid)`} T={T} />
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px 24px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'12px 24px' }}>
             {dimKeys.map(k => {
               const v = dimAvgs[k];
               const col = v>=75?T.gn:v>=55?T.am:T.rd;
               return (
-                <div key={k} style={{ marginBottom:'6px' }}>
+                <div key={k} style={{ width:'calc(50% - 12px)', marginBottom:'6px' }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'3px' }}>
                     <span style={{ fontSize:'11px', color:T.t0, fontWeight:'700' }}>{dimLabels[k]}</span>
                     <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:col, fontWeight:'700' }}>{v}/100</span>
@@ -1730,11 +1794,11 @@ const TeamReport = ({ candidate, allData, T }) => {
       {card(
         <>
           <SectionHead label={`Profile Distribution — ${batchData.length} Valid Respondents`} T={T} />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:'10px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'10px' }}>
             {archSorted.map(([name, count]) => {
               const pct = Math.round((count/n)*100);
               return (
-                <div key={name} style={{ border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'12px', borderLeft:`3px solid ${T.c}` }}>
+                <div key={name} style={{ flex:'1 1 180px', border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'12px', borderLeft:`3px solid ${T.c}` }}>
                   <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>{name}</div>
                   <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
                     <div style={{ flex:1, height:'5px', background:T.b1, borderRadius:'100px', overflow:'hidden' }}>
@@ -1779,13 +1843,13 @@ const TeamReport = ({ candidate, allData, T }) => {
       {card(
         <>
           <SectionHead label="Validity Summary" T={T} />
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'10px' }}>
             {[
               [nGreen,'Valid (Green)',T.gn],
               [nAmber,'Caution (Amber)',T.am],
               [nRed,'Invalid (Red)',T.rd],
             ].map(([v,l,c]) => (
-              <div key={l} style={{ background:T.bg3, borderRadius:'9px', padding:'14px', textAlign:'center', border:`1px solid ${c}28` }}>
+              <div key={l} style={{ flex:1, minWidth:'120px', background:T.bg3, borderRadius:'9px', padding:'14px', textAlign:'center', border:`1px solid ${c}28` }}>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:c }}>{v}</div>
                 <div style={{ fontSize:'11px', fontWeight:'700', color:c, marginTop:'3px' }}>{l}</div>
               </div>
@@ -1873,21 +1937,37 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
 
   const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-teamAvg[k])})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
 
+  // Dynamic Hiring Insights based on the specific gap
+  const hiringInsights = {
+    O: "The team risks stagnation. Look for candidates who challenge the status quo and bring innovative frameworks.",
+    C: "The team risks dropped balls. Prioritize candidates with rigorous execution, high reliability, and strong organizational habits.",
+    E: "The team lacks vocal presence. Seek candidates who can confidently represent the team to external stakeholders and leadership.",
+    A: "The team risks internal friction. Look for highly collaborative candidates who build psychological safety and bridge divides.",
+    ES: "The team is vulnerable to stress. Prioritize candidates who demonstrate exceptional composure and steady decision-making under pressure.",
+    CQavg: "The team lacks cultural fluidity. Look for candidates who can seamlessly navigate diverse regional, linguistic, or institutional boundaries.",
+    OCBavg: "The team lacks glue. Seek candidates with a track record of supporting peers and taking on tasks outside their formal TORs.",
+    LAavg: "The team risks obsolescence. Prioritize candidates who demonstrate rapid self-directed learning and adaptability to new systems.",
+    EOavg: "The team has a collective compliance vulnerability. Strict adherence to transparency and rule compliance is non-negotiable for the next hire."
+  };
+
+  // Expanded Roles with Experience Requirements
   const ROLE_TARGETS = [
-    {name:'Senior Manager', targets:{LRS:[65,95],ES:[60,90],C:[60,90],EOavg:[60,90]}},
-    {name:'Team Lead', targets:{OCBavg:[60,95],A:[60,90],C:[55,85],E:[55,85]}},
-    {name:'Compliance Officer', targets:{CII:[70,100],EOavg:[70,95],C:[65,95]}},
-    {name:'Client-Facing Manager', targets:{E:[65,95],CQavg:[60,90],A:[60,90],SES:[60,95]}},
-    {name:'Change Leader', targets:{ADS:[65,95],O:[65,95],LAavg:[65,95]}}
+    {name:'Executive / C-Suite', targets:{LRS:[75,100], ES:[70,100], EOavg:[75,100], LAavg:[70,100]}, reqExp:'senior'},
+    {name:'Senior Manager / Head', targets:{LRS:[65,95], ES:[60,90], C:[65,95], EOavg:[60,90]}, reqExp:'mid'},
+    {name:'Team Lead', targets:{OCBavg:[65,100], A:[60,90], C:[60,90], E:[55,85]}, reqExp:'junior_plus', overqual:'senior'},
+    {name:'Compliance / Audit Head', targets:{CII:[75,100], EOavg:[75,100], C:[70,100]}, reqExp:'mid'},
+    {name:'Client-Facing Director', targets:{E:[70,100], CQavg:[65,100], A:[65,95], SES:[70,100]}, reqExp:'mid'},
+    {name:'Change / Innovation Lead', targets:{ADS:[70,100], O:[70,100], LAavg:[70,100]}, reqExp:'mid'}
   ];
+  
   const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', ...style }}>{children}</div>
+    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>{children}</div>
   );
 
   return (
     <div>
       <div id={`comp-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
-      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}` }}>
+      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
         <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Composition Report · Batch: {batch}</div>
         <div style={{ fontSize:'12px', color:T.t2 }}>{n} valid responses analyzed for HR Strategy.</div>
       </div>
@@ -1917,12 +1997,17 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
         <>
           <SectionHead label="2. Hiring Profile Specification" T={T} />
           <p style={{ fontSize:'12px', color:T.t2, marginBottom:'16px' }}>Target these dimension ranges for your next hire to balance the team's current blind spots.</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:'10px', marginBottom:'24px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'24px' }}>
             {dimGaps.map((g, i) => (
-              <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'14px' }}>
-                <div style={{ fontSize:'11px', fontWeight:'700', color:T.t3, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px' }}>{g.l}</div>
-                <div className="mono" style={{ fontSize:'18px', fontWeight:'800', color:T.t0 }}>≥ {g.v < 50 ? 80 : 75} / 100</div>
-                <div style={{ fontSize:'10px', color:T.t2, marginTop:'4px' }}>Current team avg: <span style={{ color:T.rd, fontWeight:'700' }}>{g.v}</span></div>
+              <div key={i} style={{ flex:'1 1 240px', background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px' }}>
+                  <div style={{ fontSize:'12px', fontWeight:'800', color:T.t0, textTransform:'uppercase', letterSpacing:'0.05em' }}>{g.l}</div>
+                  <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:T.gold }}>≥ {g.v < 50 ? 80 : 75}</div>
+                </div>
+                <div style={{ fontSize:'11.5px', color:T.t1, lineHeight:'1.5', marginBottom:'10px' }}>{hiringInsights[g.k]}</div>
+                <div style={{ fontSize:'10px', color:T.t3, background:T.bg2, padding:'4px 8px', borderRadius:'4px', display:'inline-block' }}>
+                  Current team avg: <span style={{ color:T.rd, fontWeight:'700' }}>{g.v}/100</span>
+                </div>
               </div>
             ))}
           </div>
@@ -1956,58 +2041,91 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
 
       {card(
         <>
-          <SectionHead label="3. Promotion Fit Check" T={T} />
-          <p style={{ fontSize:'12px', color:T.t2, marginBottom:'20px' }}>Candidate fit percentages mapped against target dimension ranges for key organisational roles.</p>
+          <SectionHead label="3. Promotion Fit & Talent Grid" T={T} />
+          <p style={{ fontSize:'12px', color:T.t2, marginBottom:'20px' }}>Candidate fit mapped against target dimension ranges and experience requirements for key organisational roles.</p>
           
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', gap:'20px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'20px' }}>
             {ROLE_TARGETS.map((role, idx) => {
               const scored = batchData.map(b => {
                 let match = 0, count = 0;
+                let highestKey = null, lowestKey = null;
+                let highestVal = -1, lowestVal = 101;
+
                 Object.entries(role.targets).forEach(([k, [min, max]]) => {
                   const v = b.report_data?.scores?.[k] || b.report_data?.CI?.[k];
-                  if(v != null) { count++; if(v >= min && v <= max) match++; else if(v >= min-10) match+=0.5; }
+                  if(v != null) { 
+                    count++; 
+                    if(v >= min && v <= max) match++; 
+                    else if(v >= min-10) match+=0.5; 
+                    
+                    if (v > highestVal) { highestVal = v; highestKey = k; }
+                    if (v < lowestVal) { lowestVal = v; lowestKey = k; }
+                  }
                 });
                 
                 let fitPct = count>0 ? Math.round((match/count)*100) : 0;
                 
-                // Robust Experience Guardrails
-                const expStr = String(b.report_data?.respondent?.exp || b.experience || '').toLowerCase();
-                const isAbsBeginner = expStr.includes('0') || expStr.includes('1') || expStr.includes('2') || expStr.includes('entry');
-                const isJunior = isAbsBeginner || expStr.includes('3') || expStr.includes('4') || expStr.includes('5') || expStr.includes('junior');
-                const isMid = expStr.includes('6') || expStr.includes('7') || expStr.includes('8') || expStr.includes('9') || expStr.includes('10');
+                // Fixed Experience Logic (Exact String Matching)
+                const expStr = String(b.report_data?.respondent?.exp || b.experience || '').toLowerCase().trim();
+                const isAbsBeginner = expStr === '0–2 years' || expStr.includes('entry');
+                const isJunior = isAbsBeginner || expStr === '3–5 years' || expStr.includes('junior');
+                const isMid = expStr === '6–10 years' || expStr === '11–15 years' || expStr.includes('mid');
+                const isSenior = expStr === '16+ years' || expStr.includes('senior') || expStr.includes('executive') || expStr.includes('director');
 
                 let expWarning = null;
-                if (role.name === 'Senior Manager' && (isJunior || isMid)) {
-                  fitPct = 0; expWarning = 'Lacks Exp';
-                } else if (role.name === 'Team Lead' && isAbsBeginner) {
-                  fitPct = 0; expWarning = 'Too Junior';
-                }
+                if (role.reqExp === 'senior' && !isSenior) expWarning = isMid ? 'Lacks Exec Exp' : 'Too Junior';
+                if (role.reqExp === 'mid' && (isAbsBeginner || isJunior)) expWarning = isAbsBeginner ? 'Too Junior' : 'Lacks Exp';
+                if (role.reqExp === 'junior_plus' && isAbsBeginner) expWarning = 'Too Junior';
+                if (role.overqual === 'senior' && isSenior) expWarning = 'Overqualified';
 
-                return { ...b, fitPct, expWarning };
-              }).sort((a,b) => b.fitPct - a.fitPct);
+                let fitLabel = '';
+                let fitCol = T.t0;
+                if (expWarning) { fitLabel = expWarning; fitCol = T.rd; }
+                else if (fitPct >= 75) { fitLabel = 'Strong Fit'; fitCol = T.gn; }
+                else if (fitPct >= 50) { fitLabel = 'Potential Fit'; fitCol = T.am; }
+                else { fitLabel = 'Not a Fit'; fitCol = T.rd; }
+
+                // Generate dynamic breakdown
+                const keyNames = { LRS:'Leadership', ES:'Resilience', C:'Delivery', EOavg:'Integrity', OCBavg:'Citizenship', A:'Collaboration', E:'Presence', CII:'Compliance', CQavg:'Cultural IQ', SES:'Stakeholder', ADS:'Adaptability', O:'Innovation', LAavg:'Learning' };
+                let breakdown = '';
+                if (expWarning) breakdown = `Experience mismatch (${b.report_data?.respondent?.exp || 'Unknown'})`;
+                else if (fitPct >= 75) breakdown = `Excellent match across required dimensions.`;
+                else if (fitPct >= 50) breakdown = `Strong on ${keyNames[highestKey]}, needs development in ${keyNames[lowestKey]}.`;
+                else breakdown = `Critical gap in ${keyNames[lowestKey]} (${lowestVal}/100).`;
+
+                return { ...b, fitPct, fitLabel, fitCol, breakdown };
+              }).sort((a,b) => {
+                // Sort by Fit Percentage, but push warnings to the bottom
+                if (a.fitLabel === 'Overqualified' || a.fitLabel.includes('Junior') || a.fitLabel.includes('Lacks')) return 1;
+                if (b.fitLabel === 'Overqualified' || b.fitLabel.includes('Junior') || b.fitLabel.includes('Lacks')) return -1;
+                return b.fitPct - a.fitPct;
+              });
 
               return (
-                <div key={idx} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'16px' }}>
+                <div key={idx} style={{ flex:'1 1 300px', background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'16px' }}>
                   <div style={{ fontSize:'14px', fontWeight:'800', color:T.gold, marginBottom:'12px', borderBottom:`1px solid ${T.b2}`, paddingBottom:'8px' }}>
                     {role.name}
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-                    {scored.map((c, i) => {
-                      const col = c.expWarning ? T.rd : (c.fitPct >= 70 ? T.gn : c.fitPct >= 50 ? T.am : T.rd);
-                      return (
-                        <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'6px' }}>
+                    {scored.map((c, i) => (
+                      <div key={i} style={{ padding:'12px', background:T.bg2, border:`1px solid ${c.fitCol}40`, borderLeft:`4px solid ${c.fitCol}`, borderRadius:'6px' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'4px' }}>
                           <div>
-                            <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'2px' }}>{c.name}</div>
+                            <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0 }}>{c.name}</div>
                             <div style={{ fontSize:'10px', color:T.t2 }}>{c.profile_name}</div>
                           </div>
                           <div style={{ textAlign:'right' }}>
-                            <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:col }}>
-                              {c.expWarning ? c.expWarning : `${c.fitPct}%`}
+                            <div className="mono" style={{ fontSize:'13px', fontWeight:'800', color:c.fitCol }}>
+                              {c.fitLabel}
                             </div>
+                            {!c.expWarning && <div style={{ fontSize:'10px', color:c.fitCol, fontWeight:'700' }}>{c.fitPct}% MATCH</div>}
                           </div>
                         </div>
-                      );
-                    })}
+                        <div style={{ fontSize:'11px', color:T.t3, lineHeight:'1.4', marginTop:'6px', paddingTop:'6px', borderTop:`1px solid ${T.b1}` }}>
+                          {c.breakdown}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
@@ -2492,7 +2610,7 @@ const OverviewTab = ({ data, T, onSelect }) => {
               {[...data].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).map((r,i) => (
                 <tr key={r.id||i} className="row-hover" onClick={()=>onSelect(r)} style={{ borderBottom:`1px solid ${T.b1}` }}>
                   <td style={{ padding:'12px 14px', fontSize:'13px', fontWeight:'700', color:T.t0 }}>{r.name}</td>
-                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.assessment_type === 'org' ? '🏢 Org' : r.assessment_type === 'ind' ? '👤 Ind' : '—'}</td>
+                <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{(r.purpose || r.report_data?.respondent?.purpose) === 'Personal Development Planning' ? '👤 Ind' : '🏢 Org'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.role}{r.department?` · ${r.department}`:''}</td>
                   <td style={{ padding:'12px 14px' }}><ScoreBadge score={r.overall_score} T={T} /></td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.c, fontWeight:'700' }}>{r.profile_name}</td>
@@ -2587,7 +2705,7 @@ const ProfilesTab = ({ data, T, onSelect }) => {
               {filtered.map((r,i) => (
                 <tr key={r.id||i} className="row-hover" onClick={()=>onSelect(r)} style={{ borderBottom:`1px solid ${T.b1}` }}>
                   <td style={{ padding:'12px 14px', fontSize:'13px', fontWeight:'700', color:T.t0, whiteSpace:'nowrap' }}>{r.name}</td>
-                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.assessment_type === 'org' ? '🏢 Org' : r.assessment_type === 'ind' ? '👤 Ind' : '—'}</td>
+                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{(r.purpose || r.report_data?.respondent?.purpose) === 'Personal Development Planning' ? '👤 Ind' : '🏢 Org'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.email}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.phone || '—'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.batch || '—'}</td>

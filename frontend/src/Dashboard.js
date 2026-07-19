@@ -528,9 +528,9 @@ const TechnicalReport = ({ candidate, T }) => {
              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name || rd.respondent?.name}</div>
               <div style={{ fontSize:'12px', color:T.t2, fontWeight:'600', marginBottom:'8px', lineHeight:'1.6' }}>
                 <span style={{color:T.gold}}>
-                  {(candidate.purpose || rd.respondent?.purpose) === 'Personal Development Planning' 
-                    ? '👤 Individual (Personal Development)' 
-                    : `🏢 Org Assigned (${candidate.purpose || rd.respondent?.purpose || 'Unspecified Purpose'})`}
+                  {(candidate.batch || rd.respondent?.batch) 
+                    ? `🏢 Org Assigned (${candidate.purpose || rd.respondent?.purpose || 'Unspecified Purpose'})`
+                    : '👤 Individual (Personal Development)'}
                 </span><br/>
                 {candidate.role || rd.respondent?.role}{(candidate.department || rd.respondent?.dept) ? ` · ${candidate.department || rd.respondent?.dept}` : ''}<br/>
                 {(candidate.email || rd.respondent?.email) && <span>{candidate.email || rd.respondent?.email}</span>}
@@ -2610,7 +2610,7 @@ const OverviewTab = ({ data, T, onSelect }) => {
               {[...data].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).map((r,i) => (
                 <tr key={r.id||i} className="row-hover" onClick={()=>onSelect(r)} style={{ borderBottom:`1px solid ${T.b1}` }}>
                   <td style={{ padding:'12px 14px', fontSize:'13px', fontWeight:'700', color:T.t0 }}>{r.name}</td>
-                <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{(r.purpose || r.report_data?.respondent?.purpose) === 'Personal Development Planning' ? '👤 Ind' : '🏢 Org'}</td>
+                <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{(r.batch || r.report_data?.respondent?.batch) ? '🏢 Org' : '👤 Ind'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.role}{r.department?` · ${r.department}`:''}</td>
                   <td style={{ padding:'12px 14px' }}><ScoreBadge score={r.overall_score} T={T} /></td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.c, fontWeight:'700' }}>{r.profile_name}</td>
@@ -2705,7 +2705,7 @@ const ProfilesTab = ({ data, T, onSelect }) => {
               {filtered.map((r,i) => (
                 <tr key={r.id||i} className="row-hover" onClick={()=>onSelect(r)} style={{ borderBottom:`1px solid ${T.b1}` }}>
                   <td style={{ padding:'12px 14px', fontSize:'13px', fontWeight:'700', color:T.t0, whiteSpace:'nowrap' }}>{r.name}</td>
-                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{(r.purpose || r.report_data?.respondent?.purpose) === 'Personal Development Planning' ? '👤 Ind' : '🏢 Org'}</td>
+                  <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{(r.batch || r.report_data?.respondent?.batch) ? '🏢 Org' : '👤 Ind'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{r.email}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.phone || '—'}</td>
                   <td style={{ padding:'12px 14px', fontSize:'11px', color:T.t2, fontWeight:'600', whiteSpace:'nowrap' }}>{r.batch || '—'}</td>

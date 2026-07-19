@@ -1890,7 +1890,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
                   <div>
                     <label style={lbl}>Assessment Batch Name</label>
-                    <input value={resp.batch} onChange={e=>setResp(r=>({...r,batch:e.target.value}))} placeholder="e.g. Q2 2026 Leadership Cohort" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>setFocused(f=>({...f,batch:false}))} />
+                    <input value={resp.batch} onChange={e=>setResp(r=>({...r,batch:e.target.value.toUpperCase()}))} placeholder="e.g. Q1-001-2026" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>setFocused(f=>({...f,batch:false}))} />
                   </div>
                   <div>
                     <label style={lbl}>Primary Assessment Purpose</label>
@@ -1952,6 +1952,13 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
             <button onClick={()=>{
               if(assessmentType === 'ind' && !resp.name){alert('Please enter your Full Name.');return;}
+              if(assessmentType === 'org') {
+                if(!resp.batch) { alert('Please enter an Assessment Batch Name.'); return; }
+                if(!/^Q[1-4]-\d{3}-\d{4}$/.test(resp.batch)) { 
+                  alert('Batch Name must be in the exact format QX-XXX-XXXX (e.g., Q1-005-2026).'); 
+                  return; 
+                }
+              }
               if(!resp.industry){alert('Please select an industry sector.');return;} 
               setStep('consent');
             }} style={{width:'100%',padding:'14px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'14px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>

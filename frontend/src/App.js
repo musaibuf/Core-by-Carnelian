@@ -2071,7 +2071,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address containing an @ symbol.');return;} 
                 if(!/^\d{4}-\d{7}$/.test(resp.phone)){alert('Please enter a valid phone number in the format 0000-0000000.');return;}
                 
-                // Gamified Retake Prevention for Organizations (75% Task Completion)
+                // 4-Month Retake Prevention for Organizations
                 if (assessmentType === 'org') {
                   setCheckingEmail(true);
                   try {
@@ -2082,18 +2082,9 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                       const exactMatches = data.filter(r => r.email && r.email.toLowerCase() === resp.email.toLowerCase());
                       if (exactMatches.length > 0) {
                         exactMatches.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-                        const latestDocId = exactMatches[0].doc_id || exactMatches[0].docId;
-                        
-                        // Check local evidence state for this candidate's last assessment
-                        const evState = JSON.parse(localStorage.getItem(`core_ev_${latestDocId}`) || '{}');
-                        const completedTasks = Object.keys(evState).length;
-                        
-                        // 2 priority areas * 10 steps + 5 resources = 25 tasks total. 75% = 18 tasks.
-                        const totalTasks = 25; 
-                        const requiredTasks = Math.floor(totalTasks * 0.75);
-
-                        if (completedTasks < requiredTasks) {
-                          alert(`You have already completed this assessment.\n\nFor organizational batches, re-assessment is unlocked ONLY after you complete at least 75% of the action items in your Gamified Player Report.\n\nYou have completed ${completedTasks} out of ${requiredTasks} required tasks.\n\nPlease go to your Player Report and submit evidence for your Quests and Power-Ups to unlock your retake!`);
+                        const daysSince = (Date.now() - new Date(exactMatches[0].created_at).getTime()) / (1000 * 60 * 60 * 24);
+                        if (daysSince < 120) {
+                          alert(`You have already completed this assessment. For organizational batches, re-assessment is only permitted after 4 months (120 days) to accurately measure development.\n\nYou have ${Math.ceil(120 - daysSince)} days remaining.`);
                           setCheckingEmail(false);
                           return;
                         }
@@ -2102,12 +2093,9 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                   } catch (e) {
                     // Fallback to local storage if DB is unreachable
                     if (priorFound) {
-                      const evState = JSON.parse(localStorage.getItem(`core_ev_${priorFound.docId}`) || '{}');
-                      const completedTasks = Object.keys(evState).length;
-                      const requiredTasks = Math.floor(25 * 0.75);
-
-                      if (completedTasks < requiredTasks) {
-                        alert(`You have already completed this assessment.\n\nFor organizational batches, re-assessment is unlocked ONLY after you complete at least 75% of the action items in your Gamified Player Report.\n\nYou have completed ${completedTasks} out of ${requiredTasks} required tasks.\n\nPlease go to your Player Report and submit evidence for your Quests and Power-Ups to unlock your retake!`);
+                      const daysSince = (Date.now() - priorFound.timestamp) / (1000 * 60 * 60 * 24);
+                      if (daysSince < 120) {
+                        alert(`You have already completed this assessment. For organizational batches, re-assessment is only permitted after 4 months (120 days).\n\nYou have ${Math.ceil(120 - daysSince)} days remaining.`);
                         setCheckingEmail(false);
                         return;
                       }
@@ -3387,7 +3375,7 @@ const getResources = () => {
   return (
     <div style={{maxWidth:'1000px', margin:'0 auto', padding:'40px 24px'}}>
       
-     {/* Tab Navigation */}
+    {/* Tab Navigation */}
       <div className="no-print" style={{display:'flex', gap:'8px', marginBottom:'32px', flexWrap:'wrap'}}>
         <button onClick={()=>setResTab('action')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='action'?T.gold:T.b2}`, background:resTab==='action'?T.gold:'transparent', color:resTab==='action'?'#fff':T.t1, transition:'all 0.2s'}}>
           🧭 Candidate Action Plan
@@ -3395,33 +3383,15 @@ const getResources = () => {
         <button onClick={()=>setResTab('persona')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='persona'?T.gold:T.b2}`, background:resTab==='persona'?T.gold:'transparent', color:resTab==='persona'?'#fff':T.t1, transition:'all 0.2s'}}>
           📸 My Persona
         </button>
-        
-        {/* Player Report: Unlocked for Org, Locked for Ind */}
-        {R.batch ? (
-          <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
-            🎮 Player Report
-          </button>
-        ) : (
-          <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-            🔒 Player Report
-          </button>
-        )}
 
-        {/* Technical Report: Hidden for Org, Locked for Ind */}
+        {/* For Individuals (!R.batch), show the locked tabs. For Orgs, show nothing else. */}
         {!R.batch && (
-          <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-            🔒 Technical Report
-          </button>
-        )}
-        
-        {/* Team Reports: Locked for Org, Hidden for Ind */}
-        {R.batch && (
           <>
             <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-              🔒 Team Aggregate
+              🔒 Technical Report
             </button>
             <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-              🔒 Team Composition
+              🔒 Player Report
             </button>
           </>
         )}

@@ -1583,6 +1583,7 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
   ];
   const [gameLocked, setGameLocked] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [gameChoice, setGameChoice] = useState(null);
   const [priorFound, setPriorFound] = useState(null);
 const [consentChecked, setConsentChecked] = useState(false);
@@ -2065,13 +2066,47 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               <div style={{background:`${T.gold}10`,border:`1px solid ${T.gold}25`,borderRadius:'7px',padding:'12px 16px',marginBottom:'20px',fontSize:'12px',color:T.t1,fontWeight:'600'}}>
   <span style={{color:T.gold,fontWeight:'700'}}>→ Progress Tracking:</span> Your email is used to link your results across retakes and generate progress comparisons.
 </div>
-              <button onClick={()=>{
+              <button disabled={checkingEmail} onClick={async ()=>{
                 if(!resp.name||!resp.email||!resp.phone||!resp.exp){alert('Please enter your Full Name, Email Address, Phone Number, and Years of Experience.');return;}
                 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address containing an @ symbol.');return;} 
                 if(!/^\d{4}-\d{7}$/.test(resp.phone)){alert('Please enter a valid phone number in the format 0000-0000000.');return;}
+                
+                // 4-Month Retake Prevention for Organizations
+                if (assessmentType === 'org') {
+                  setCheckingEmail(true);
+                  try {
+                    // Check the remote database first
+                    const res = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(resp.email)}`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      const exactMatches = data.filter(r => r.email && r.email.toLowerCase() === resp.email.toLowerCase());
+                      if (exactMatches.length > 0) {
+                        exactMatches.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+                        const daysSince = (Date.now() - new Date(exactMatches[0].created_at).getTime()) / (1000 * 60 * 60 * 24);
+                        if (daysSince < 120) {
+                          alert(`You have already completed this assessment. For organizational batches, re-assessment is only permitted after 4 months (120 days) to accurately measure development.\n\nYou have ${Math.ceil(120 - daysSince)} days remaining.`);
+                          setCheckingEmail(false);
+                          return;
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    // Fallback to local storage if DB is unreachable
+                    if (priorFound) {
+                      const daysSince = (Date.now() - priorFound.timestamp) / (1000 * 60 * 60 * 24);
+                      if (daysSince < 120) {
+                        alert(`You have already completed this assessment. For organizational batches, re-assessment is only permitted after 4 months (120 days).\n\nYou have ${Math.ceil(120 - daysSince)} days remaining.`);
+                        setCheckingEmail(false);
+                        return;
+                      }
+                    }
+                  }
+                  setCheckingEmail(false);
+                }
+                
                 setIntakeStage(2);
-              }} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:'pointer',background:T.c,color:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>e.target.style.background=T.cDark} onMouseOut={e=>e.target.style.background=T.c}>
-                Continue →
+              }} style={{width:'100%',padding:'13px',borderRadius:'7px',border:'none',cursor:checkingEmail?'not-allowed':'pointer',background:checkingEmail?T.bg3:T.c,color:checkingEmail?T.t3:'#fff',fontFamily:"'Public Sans',sans-serif",fontSize:'13px',fontWeight:'800',letterSpacing:'0.03em',transition:'all 0.2s'}} onMouseOver={e=>{if(!checkingEmail) e.target.style.background=T.cDark}} onMouseOut={e=>{if(!checkingEmail) e.target.style.background=T.c}}>
+                {checkingEmail ? 'Verifying...' : 'Continue →'}
               </button>
             </div>
           )}
@@ -3345,14 +3380,26 @@ const getResources = () => {
           📸 My Persona
         </button>
         
-        {/* Locked Reports */}
-        <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-          🔒 Technical Report
-        </button>
-        <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-          🔒 Player Report
-        </button>
-        {R.purpose !== 'Personal Development Planning' && (
+        {/* Player Report: Unlocked for Org, Locked for Ind */}
+        {R.batch ? (
+          <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
+            🎮 Player Report
+          </button>
+        ) : (
+          <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
+            🔒 Player Report
+          </button>
+        )}
+
+        {/* Technical Report: Hidden for Org, Locked for Ind */}
+        {!R.batch && (
+          <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
+            🔒 Technical Report
+          </button>
+        )}
+        
+        {/* Team Reports: Locked for Org, Hidden for Ind */}
+        {R.batch && (
           <>
             <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
               🔒 Team Aggregate

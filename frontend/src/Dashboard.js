@@ -1629,6 +1629,41 @@ const PlayerReport = ({ candidate, T }) => {
         </div>
       </div>
 
+      {/* RE-ASSESSMENT READINESS */}
+      <div className="g-card-inner">
+        <div className="g-section-hd-inner">🚀 RE-ASSESSMENT READINESS</div>
+        {(() => {
+          const completedTasks = Object.keys(evState).length;
+          const requiredTasks = 18; // 75% of 25 total tasks
+          const isReady = completedTasks >= requiredTasks;
+          const readinessPct = Math.min(100, Math.round((completedTasks / requiredTasks) * 100));
+          
+          return (
+            <div>
+              <p style={{fontSize:'12px', color:'#94a3b8', marginBottom:'16px', lineHeight:'1.5'}}>Re-assessment is unlocked based on action, not time. The candidate must complete at least 75% of their gamified tasks to prove development before testing again.</p>
+              <div style={{background:'rgba(255,255,255,.02)', border:`1px solid ${isReady ? T.gn : T.am}40`, borderRadius:'8px', padding:'16px'}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}}>
+                  <div style={{fontSize:'14px', fontWeight:'700', color:isReady ? T.gn : T.am}}>
+                    {isReady ? '✅ Ready to Re-assess' : '⏳ Action Required'}
+                  </div>
+                  <div className="mono" style={{fontSize:'11px', fontWeight:'800', color:isReady ? T.gn : T.am}}>
+                    {completedTasks} / {requiredTasks} TASKS
+                  </div>
+                </div>
+                <div style={{height:'6px', background:'rgba(255,255,255,.07)', borderRadius:'100px', overflow:'hidden', marginBottom:'12px'}}>
+                  <div style={{height:'100%', width:`${readinessPct}%`, background:isReady ? T.gn : T.am, borderRadius:'100px', transition:'width 0.5s ease'}} />
+                </div>
+                <div style={{fontSize:'12px', color:'#cbd5e1', lineHeight:'1.5'}}>
+                  {isReady 
+                    ? 'Candidate has submitted enough evidence and is eligible to retake the CORE assessment.' 
+                    : `Candidate needs to submit evidence for ${requiredTasks - completedTasks} more Quests or Power-Ups to unlock their next assessment.`}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+
       <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:'#1e2a3a', textAlign:'center', padding:'12px 0' }}>
         CORE· {candidate.doc_id} · Carnelian Pvt Ltd
       </div>

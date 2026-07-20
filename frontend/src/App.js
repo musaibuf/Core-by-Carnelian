@@ -2071,7 +2071,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address containing an @ symbol.');return;} 
                 if(!/^\d{4}-\d{7}$/.test(resp.phone)){alert('Please enter a valid phone number in the format 0000-0000000.');return;}
                 
-                // 4-Month Retake Prevention for Organizations
+                // Gamified Retake Prevention for Organizations (75% Task Completion)
                 if (assessmentType === 'org') {
                   setCheckingEmail(true);
                   try {
@@ -2082,9 +2082,18 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                       const exactMatches = data.filter(r => r.email && r.email.toLowerCase() === resp.email.toLowerCase());
                       if (exactMatches.length > 0) {
                         exactMatches.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-                        const daysSince = (Date.now() - new Date(exactMatches[0].created_at).getTime()) / (1000 * 60 * 60 * 24);
-                        if (daysSince < 120) {
-                          alert(`You have already completed this assessment. For organizational batches, re-assessment is only permitted after 4 months (120 days) to accurately measure development.\n\nYou have ${Math.ceil(120 - daysSince)} days remaining.`);
+                        const latestDocId = exactMatches[0].doc_id || exactMatches[0].docId;
+                        
+                        // Check local evidence state for this candidate's last assessment
+                        const evState = JSON.parse(localStorage.getItem(`core_ev_${latestDocId}`) || '{}');
+                        const completedTasks = Object.keys(evState).length;
+                        
+                        // 2 priority areas * 10 steps + 5 resources = 25 tasks total. 75% = 18 tasks.
+                        const totalTasks = 25; 
+                        const requiredTasks = Math.floor(totalTasks * 0.75);
+
+                        if (completedTasks < requiredTasks) {
+                          alert(`You have already completed this assessment.\n\nFor organizational batches, re-assessment is unlocked ONLY after you complete at least 75% of the action items in your Gamified Player Report.\n\nYou have completed ${completedTasks} out of ${requiredTasks} required tasks.\n\nPlease go to your Player Report and submit evidence for your Quests and Power-Ups to unlock your retake!`);
                           setCheckingEmail(false);
                           return;
                         }
@@ -2093,9 +2102,12 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                   } catch (e) {
                     // Fallback to local storage if DB is unreachable
                     if (priorFound) {
-                      const daysSince = (Date.now() - priorFound.timestamp) / (1000 * 60 * 60 * 24);
-                      if (daysSince < 120) {
-                        alert(`You have already completed this assessment. For organizational batches, re-assessment is only permitted after 4 months (120 days).\n\nYou have ${Math.ceil(120 - daysSince)} days remaining.`);
+                      const evState = JSON.parse(localStorage.getItem(`core_ev_${priorFound.docId}`) || '{}');
+                      const completedTasks = Object.keys(evState).length;
+                      const requiredTasks = Math.floor(25 * 0.75);
+
+                      if (completedTasks < requiredTasks) {
+                        alert(`You have already completed this assessment.\n\nFor organizational batches, re-assessment is unlocked ONLY after you complete at least 75% of the action items in your Gamified Player Report.\n\nYou have completed ${completedTasks} out of ${requiredTasks} required tasks.\n\nPlease go to your Player Report and submit evidence for your Quests and Power-Ups to unlock your retake!`);
                         setCheckingEmail(false);
                         return;
                       }
@@ -4414,20 +4426,40 @@ const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type
           </div>
 
           {/* Re-assessment Readiness */}
-          <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
-            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
-              <span style={{fontSize:'20px'}}>⏰</span>
-              <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>RE-ASSESSMENT READINESS</h3>
-            </div>
-            <p style={{fontSize:'13px', color:T.t2, marginBottom:'20px', lineHeight:'1.6'}}>Retaking too soon produces measurement noise. Retaking too late means your development investment goes unmeasured.</p>
-            <div style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'24px'}}>
-              <div style={{fontSize:'16px', fontWeight:'700', color:T.rd, marginBottom:'12px'}}>⏳ Too Early to Re-assess</div>
-              <div style={{height:'8px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'16px'}}>
-                <div style={{height:'100%', width:'10%', background:T.rd, borderRadius:'100px'}} />
+          {(() => {
+            const completedTasks = Object.keys(evState).length;
+            const requiredTasks = 18; // 75% of 25 total tasks
+            const isReady = completedTasks >= requiredTasks;
+            const readinessPct = Math.min(100, Math.round((completedTasks / requiredTasks) * 100));
+            
+            return (
+              <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+                <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+                  <span style={{fontSize:'20px'}}>🚀</span>
+                  <h3 className="serif" style={{fontSize:'1.3rem', fontWeight:'700', color:T.t0}}>RE-ASSESSMENT READINESS</h3>
+                </div>
+                <p style={{fontSize:'13px', color:T.t2, marginBottom:'20px', lineHeight:'1.6'}}>Re-assessment is unlocked based on action, not time. You must complete at least 75% of your gamified tasks to prove development before testing again.</p>
+                <div style={{background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'24px'}}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}}>
+                    <div style={{fontSize:'16px', fontWeight:'700', color:isReady ? T.gn : T.am}}>
+                      {isReady ? '✅ Ready to Re-assess' : '⏳ Action Required'}
+                    </div>
+                    <div className="mono" style={{fontSize:'12px', fontWeight:'800', color:isReady ? T.gn : T.am}}>
+                      {completedTasks} / {requiredTasks} TASKS
+                    </div>
+                  </div>
+                  <div style={{height:'8px', background:T.b1, borderRadius:'100px', overflow:'hidden', marginBottom:'16px'}}>
+                    <div style={{height:'100%', width:`${readinessPct}%`, background:isReady ? T.gn : T.am, borderRadius:'100px', transition:'width 0.5s ease'}} />
+                  </div>
+                  <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6'}}>
+                    {isReady 
+                      ? 'Congratulations! You have submitted enough evidence of your development. You are now eligible to retake the CORE assessment to measure your actual growth.' 
+                      : `You need to submit evidence for ${requiredTasks - completedTasks} more Quests or Power-Ups to unlock your next assessment. Keep executing your Action Plan!`}
+                  </div>
+                </div>
               </div>
-              <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6'}}>Re-assessment requires a minimum 4-month gap from your original assessment. Re-testing sooner produces noise rather than real change signal. Keep submitting evidence.</div>
-            </div>
-          </div>
+            );
+          })()}
 
         </div>
         );

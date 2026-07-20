@@ -3244,64 +3244,68 @@ for (const d of devAreas) {
 const getResources = () => {
     const res = [];
     const gapKeys = bot2.map(d => d.k); 
-    const indText = R.industry || 'your sector';
-    const roleText = R.role || 'professional';
-    const expText = R.exp || R.experience ? `at ${R.exp || R.experience} of experience` : 'at your career stage';
-    const profileText = profile?.name || 'professional';
 
     if(gapKeys.includes('C')){
-      if(S.O>=65) res.push({type:'book', title:'The 12 Week Year', author:'Brian Moran', url:'https://www.amazon.com/12-Week-Year-Others-Months/dp/1118509234', why:`As a ${profileText} ${expText}, standard to-do lists will fail your creative drive. This sprint-based system replaces annual goals with 12-week cycles.`});
-      else res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'https://www.amazon.com/Atomic-Habits-Proven-Build-Break/dp/0735211299', why:`In ${indText}, delivery reliability is your primary currency. This is the most evidence-grounded system for building reliable execution habits.`});
-      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'Before you can fix your delivery gap, you must understand the psychology of task-avoidance.'});
-      res.push({type:'course', title:'Time Management Fundamentals', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/time-management-fundamentals', why:'A highly practical, structured course on optimizing your daily workflow and eliminating bottlenecks.'});
+      res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'https://www.amazon.com/Atomic-Habits-Proven-Build-Break/dp/0735211299', why:'Shifts the focus from "trying harder" to building foolproof, microscopic systems that guarantee execution.'});
+      res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'A hilarious but painfully accurate breakdown of why we delay tasks and how the "Panic Monster" takes over.'});
+      res.push({type:'article', title:"Management Time: Who's Got the Monkey?", author:'William Oncken Jr. (HBR)', url:'https://hbr.org/1999/11/management-time-whos-got-the-monkey', why:'One of the most famous HBR articles ever written. It teaches you how to stop dropping the ball on tasks and how to manage dependencies effectively.'});
+      res.push({type:'course', title:'Time Management Fundamentals', author:'Dave Crenshaw', url:'https://www.linkedin.com/learning/time-management-fundamentals', why:'A highly practical, structured course on optimizing your daily workflow, managing your calendar, and eliminating bottlenecks.'});
     }
     if(gapKeys.includes('ES')){
-      res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'https://www.amazon.com/Chatter-Voice-Head-Matters-Harness/dp/0525575235', why:`As a ${roleText} ${expText}, pressure is inevitable. This provides evidence-based techniques for managing your inner critical voice.`});
-      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'Stanford psychologist explains research showing the relationship with stress predicts health and performance.'});
-      res.push({type:'article', title:'How Resilience Works', author:'Diane Coutu (HBR)', url:'https://hbr.org/2002/05/how-resilience-works', why:'A foundational Harvard Business Review article on the three traits of highly resilient professionals.'});
+      res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'https://www.amazon.com/Chatter-Voice-Head-Matters-Harness/dp/0525575235', why:'Written by a neuroscientist, it provides evidence-based techniques for managing your inner critical voice when stakes are high.'});
+      res.push({type:'ted', title:'How to Make Stress Your Friend', author:'Kelly McGonigal', url:'https://www.youtube.com/watch?v=RcGyVTAoXEU', why:'A Stanford psychologist explains research showing that how you think about stress dictates whether it breaks you or fuels you.'});
+      res.push({type:'article', title:'How Resilience Works', author:'Diane Coutu (HBR)', url:'https://hbr.org/2002/05/how-resilience-works', why:'A foundational read on the three specific traits that allow highly resilient professionals to bounce back from failure.'});
+      res.push({type:'course', title:'Building Resilience', author:'Tatiana Kolovou', url:'https://www.linkedin.com/learning/building-resilience', why:'Teaches actionable "bounce-back" strategies to recover quickly from workplace setbacks and difficult feedback.'});
     }
     if(gapKeys.includes('CQavg')){
-      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'https://www.amazon.com/Culture-Map-Breaking-Invisible-Boundaries/dp/1610392507', why:`The most practically applicable cultural intelligence book. Essential for a ${profileText} navigating diverse stakeholders in ${indText}.`});
-      res.push({type:'ted', title:'Cross Cultural Communication', author:'Pellegrino Riccardi', url:'https://www.youtube.com/watch?v=YMyofREc5Jk', why:'A brilliant, entertaining breakdown of how cultural assumptions derail professional communication.'});
-      res.push({type:'course', title:'Cultural Intelligence for Leaders', author:'Coursera', url:'https://www.coursera.org/learn/cultural-intelligence', why:'A structured academic approach to building CQ, highly relevant for senior cross-provincial roles.'});
+      res.push({type:'book', title:'The Culture Map', author:'Erin Meyer', url:'https://www.amazon.com/Culture-Map-Breaking-Invisible-Boundaries/dp/1610392507', why:'The absolute gold standard for understanding how different cultures view hierarchy, feedback, and time.'});
+      res.push({type:'ted', title:'The Danger of a Single Story', author:'Chimamanda Ngozi Adichie', url:'https://www.youtube.com/watch?v=D9Ihs241zeg', why:'A powerful talk on how making assumptions about people based on their background leads to massive professional and personal blind spots.'});
+      res.push({type:'article', title:'Cultural Intelligence', author:'P.C. Earley & E. Mosakowski (HBR)', url:'https://hbr.org/2004/10/cultural-intelligence', why:'Breaks down CQ into three actionable components (head, body, and heart) that you can practice immediately.'});
+      res.push({type:'course', title:'Cultural Intelligence for Leaders', author:'Coursera', url:'https://www.coursera.org/learn/cultural-intelligence', why:'A structured approach to building CQ, highly relevant for leaders managing diverse, cross-provincial, or international teams.'});
     }
     if(gapKeys.includes('LAavg')){
-      res.push({type:'book', title:'Mindset: The New Psychology of Success', author:'Carol S. Dweck', url:'https://www.amazon.com/Mindset-Psychology-Carol-S-Dweck/dp/0345472322', why:`As the landscape of ${indText} evolves, your ability to learn faster than your peers is your ultimate competitive advantage.`});
-      res.push({type:'article', title:'Improve Your Ability to Learn', author:'Harvard Business Review', url:'https://hbr.org/2015/06/improve-your-ability-to-learn', why:'A concise framework for accelerating your learning agility in fast-changing corporate environments.'});
-      res.push({type:'course', title:'Learning How to Learn', author:'Deep Teaching Solutions', url:'https://www.coursera.org/learn/learning-how-to-learn', why:'One of the most popular courses in the world on the neuroscience of absorbing new information quickly.'});
+      res.push({type:'book', title:'Think Again', author:'Adam Grant', url:'https://www.amazon.com/Think-Again-Power-Knowing-What/dp/1984878107', why:"Learning agility isn't just about learning new things; it's about the willingness to unlearn old habits that no longer serve you."});
+      res.push({type:'ted', title:'The Power of Believing That You Can Improve', author:'Carol Dweck', url:'https://www.youtube.com/watch?v=_X0mgOOSpLU', why:'The pioneer of the "Growth Mindset" explains the neuroscience behind why some people adapt and others stagnate.'});
+      res.push({type:'article', title:'Improve Your Ability to Learn', author:'Matthew Mullane (HBR)', url:'https://hbr.org/2015/06/improve-your-ability-to-learn', why:'A concise framework for accelerating your learning agility in fast-changing corporate environments.'});
+      res.push({type:'course', title:'Learning How to Learn', author:'Barbara Oakley (Coursera)', url:'https://www.coursera.org/learn/learning-how-to-learn', why:'One of the most popular courses in the world. It teaches the actual neuroscience of absorbing new, complex information quickly.'});
     }
     if(gapKeys.includes('EOavg')){
-      res.push({type:'book', title:'The Righteous Mind', author:'Jonathan Haidt', url:'https://www.amazon.com/Righteous-Mind-Divided-Politics-Religion/dp/0307455777', why:`Explains why professionals who make ethical lapses are not usually dishonest by nature. Critical reading in ${indText}.`});
-      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely', url:'https://www.youtube.com/watch?v=16BOUxGkOgc', why:'A behavioral economist explains the hidden forces that cause good professionals to cut corners.'});
-      res.push({type:'article', title:'Ethical Breakdowns', author:'Max H. Bazerman (HBR)', url:'https://hbr.org/2011/04/ethical-breakdowns', why:'Examines the systemic and psychological reasons why compliance fails in high-pressure environments.'});
+      res.push({type:'book', title:'Blind Spots', author:'Max Bazerman', url:'https://www.amazon.com/Blind-Spots-Fail-Right-about/dp/0691156220', why:'Explains "ethical fade"—how good professionals slowly start making compromised decisions under corporate pressure without realizing it.'});
+      res.push({type:'ted', title:'Our Buggy Moral Code', author:'Dan Ariely', url:'https://www.youtube.com/watch?v=16BOUxGkOgc', why:'A behavioral economist explains the hidden, subconscious forces that cause professionals to cheat or cut corners.'});
+      res.push({type:'article', title:'Ethical Breakdowns', author:'Max H. Bazerman (HBR)', url:'https://hbr.org/2011/04/ethical-breakdowns', why:'Examines the systemic and psychological reasons why compliance fails in high-pressure environments, and how to safeguard yourself.'});
+      res.push({type:'course', title:'Business Ethics for the Real World', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/business-ethics-for-the-real-world', why:'Moves beyond theoretical philosophy and focuses on how to handle real-world ethical dilemmas and pushback from managers.'});
     }
     if(gapKeys.includes('A')){
-      res.push({type:'book', title:'Getting to Yes', author:'Fisher & Ury', url:'https://www.amazon.com/Getting-Yes-Negotiating-Agreement-Without/dp/0143118757', why:`The foundational text on principled negotiation. Helps you disagree and influence stakeholders without damaging relationships.`});
-      res.push({type:'ted', title:'The Power of Vulnerability', author:'Brené Brown', url:'https://www.youtube.com/watch?v=iCvmsMzlF7o', why:'Essential viewing for building psychological safety and trust within your immediate team.'});
-      res.push({type:'course', title:'Conflict Resolution Foundations', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/conflict-resolution-foundations', why:'Practical frameworks for de-escalating workplace friction and finding consensus.'});
+      res.push({type:'book', title:'Crucial Conversations', author:'Patterson, Grenny, et al.', url:'https://www.amazon.com/Crucial-Conversations-Talking-Stakes-Second/dp/0071771328', why:'The ultimate guide to disagreeing with colleagues and stakeholders without triggering defensiveness or damaging the relationship.'});
+      res.push({type:'ted', title:'Dare to Disagree', author:'Margaret Heffernan', url:'https://www.youtube.com/watch?v=PY_kd46RcRM', why:"Shows how the best teams don't avoid conflict—they use \"constructive conflict\" to build better ideas together."});
+      res.push({type:'article', title:'How to Navigate Conflict with a Coworker', author:'Amy Gallo (HBR)', url:'https://hbr.org/2022/09/how-to-navigate-conflict-with-a-coworker', why:'A highly practical guide to de-escalating workplace friction and finding consensus when you fundamentally disagree.'});
+      res.push({type:'course', title:'Conflict Resolution Foundations', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/conflict-resolution-foundations', why:'Teaches the exact phrasing and frameworks needed to turn an adversarial argument into a collaborative problem-solving session.'});
     }
     if(gapKeys.includes('O')){
-      res.push({type:'book', title:'A Whole New Mind', author:'Daniel Pink', url:'https://www.amazon.com/Whole-New-Mind-Right-Brainers-Future/dp/1594481717', why:`A powerful argument for why creative and conceptual thinking is increasingly critical ${expText}.`});
-      res.push({type:'ted', title:'Where Good Ideas Come From', author:'Steven Johnson', url:'https://www.youtube.com/watch?v=NugRZGDbHbc', why:'Explores how innovation actually happens in professional environments through "liquid networks".'});
-      res.push({type:'article', title:'The Innovator’s DNA', author:'Harvard Business Review', url:'https://hbr.org/2009/12/the-innovators-dna', why:'Breaks down the five specific habits of highly innovative professionals.'});
+      res.push({type:'book', title:'Originals', author:'Adam Grant', url:'https://www.amazon.com/Originals-How-Non-Conformists-Move-World/dp/014312885X', why:'Explores how to recognize good ideas, speak up without getting silenced, and champion innovation in bureaucratic environments.'});
+      res.push({type:'ted', title:'Where Good Ideas Come From', author:'Steven Johnson', url:'https://www.youtube.com/watch?v=NugRZGDbHbc', why:'Explores how innovation actually happens in professional environments through "liquid networks" rather than isolated genius.'});
+      res.push({type:'article', title:'The Innovator’s DNA', author:'Dyer, Gregersen, Christensen (HBR)', url:'https://hbr.org/2009/12/the-innovators-dna', why:'Breaks down the five specific, learnable habits of highly innovative professionals (Associating, Questioning, Observing, Networking, Experimenting).'});
+      res.push({type:'course', title:'Design Thinking for Innovation', author:'Coursera', url:'https://www.coursera.org/learn/uva-darden-design-thinking-innovation', why:'Provides a structured, step-by-step process for creative problem solving that you can apply to any rigid corporate process.'});
     }
     if(gapKeys.includes('E')){
-      res.push({type:'book', title:'Quiet', author:'Susan Cain', url:'https://www.amazon.com/Quiet-Power-Introverts-World-Talking/dp/0307352153', why:`A research-backed argument that introversion is a professional asset when deployed deliberately.`});
-      res.push({type:'ted', title:'Your Body Language May Shape Who You Are', author:'Amy Cuddy', url:'https://www.youtube.com/watch?v=Ks-_Mh1QhMc', why:'Practical techniques for holding physical presence in high-stakes meetings.'});
-      res.push({type:'course', title:'Executive Presence on Video Calls', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/executive-presence-on-video-calls', why:'Crucial modern skills for projecting confidence and authority in digital environments.'});
+      res.push({type:'book', title:'Quiet', author:'Susan Cain', url:'https://www.amazon.com/Quiet-Power-Introverts-World-Talking/dp/0307352153', why:'Teaches you how to hold presence and influence rooms as an introvert, without exhausting yourself trying to fake extraversion.'});
+      res.push({type:'ted', title:'Your Body Language May Shape Who You Are', author:'Amy Cuddy', url:'https://www.youtube.com/watch?v=Ks-_Mh1QhMc', why:'Practical, physiological techniques for projecting confidence and authority in high-stakes meetings before you even open your mouth.'});
+      res.push({type:'article', title:'How Introverts Can Step Up as Leaders', author:'Francesca Gino (HBR)', url:'https://hbr.org/2022/03/how-introverts-can-step-up-as-leaders', why:'Actionable strategies for ensuring your ideas are heard and credited in environments dominated by loud voices.'});
+      res.push({type:'course', title:'Executive Presence on Video Calls', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/executive-presence-on-video-calls', why:'Crucial modern skills for projecting confidence, authority, and engagement in digital and hybrid environments.'});
     }
     if(gapKeys.includes('OCBavg')){
-      res.push({type:'book', title:'Give and Take', author:'Adam Grant', url:'https://www.amazon.com/Give-Take-Helping-Others-Success/dp/0143124986', why:`Explains how contributing to the success of your colleagues ultimately accelerates your own trajectory in ${indText}.`});
-      res.push({type:'ted', title:'Are You a Giver or a Taker?', author:'Adam Grant', url:'https://www.youtube.com/watch?v=YyXRYgjQXX0', why:'A quick, powerful breakdown of workplace citizenship and its impact on team culture.'});
-      res.push({type:'article', title:'In Praise of the Incomplete Leader', author:'Harvard Business Review', url:'https://hbr.org/2007/02/in-praise-of-the-incomplete-leader', why:'Why trying to be perfect fails, and why supporting your team’s gaps is true leadership.'});
+      res.push({type:'book', title:'Give and Take', author:'Adam Grant', url:'https://www.amazon.com/Give-Take-Helping-Others-Success/dp/0143124986', why:'Proves with data that professionals who act as "Givers" (supporting colleagues beyond their KPIs) ultimately achieve the highest career success.'});
+      res.push({type:'ted', title:'Are You a Giver or a Taker?', author:'Adam Grant', url:'https://www.youtube.com/watch?v=YyXRYgjQXX0', why:'A quick, powerful breakdown of workplace citizenship and how "Takers" destroy team culture while "Givers" elevate it.'});
+      res.push({type:'article', title:'In Praise of the Incomplete Leader', author:'Ancona, Malone, et al. (HBR)', url:'https://hbr.org/2007/02/in-praise-of-the-incomplete-leader', why:'Explains why trying to be the perfect individual contributor fails, and why supporting your team’s gaps is the true mark of leadership.'});
+      res.push({type:'course', title:'Servant Leadership', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/servant-leadership', why:'Teaches the mindset shift from "what can my team do for my KPIs" to "how can I remove roadblocks for my team."'});
     }
 
     if(res.length===0){
-      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'https://www.amazon.com/Effective-Executive-Definitive-Harperbusiness-Essentials/dp/0060833459', why:`Foundational text on professional effectiveness. Highly relevant for sustaining your balanced profile.`});
-      res.push({type:'course', title:'Strategic Thinking', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/strategic-thinking-3', why:'A broad, high-impact course for balanced professionals looking to elevate their perspective.'});
+      res.push({type:'book', title:'The Effective Executive', author:'Peter Drucker', url:'https://www.amazon.com/Effective-Executive-Definitive-Harperbusiness-Essentials/dp/0060833459', why:'Foundational text on professional effectiveness.'});
+      res.push({type:'course', title:'Strategic Thinking', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/strategic-thinking-3', why:'A broad, high-impact course for balanced professionals.'});
     }
     
-    // Return 5 diverse resources instead of 4
+    // Limits the output to 5 items so the PDF layout doesn't break/overflow
     return res.slice(0, 5); 
   };
 
@@ -5136,9 +5140,7 @@ const pid_email = latest.email||'';
               <div>
                 <div style={{fontFamily:"'Crimson Pro',serif", fontSize:'1.6rem', color:T.t0, fontWeight:'700', marginBottom:'4px'}}>{latest.name}</div>
                 <div className="mono" style={{fontSize:'10px', color:T.t3, fontWeight:'600'}}>
-                  {latest.role&&`${latest.role} · `}
-                  {latest.dept&&`${latest.dept} · `}
-                  CNIC: {latest.cnic}
+                  {[latest.role, latest.dept].filter(Boolean).join(' · ')}
                 </div>
               </div>
               <div style={{textAlign:'right'}}>

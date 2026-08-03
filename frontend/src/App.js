@@ -963,8 +963,8 @@ const StatsStrip = () => {
           'Candidate Action Plan: a personal development roadmap with a 10 step plan for each priority area',
           'Technical Report: the full psychometric breakdown for HR, including composite indices, validity analysis and role suitability',
           'Player Report: a gamified version with levels, XP, badges and quests, designed to make development feel rewarding',
-          'Team Aggregate Report: generated automatically once 2 or more people complete the assessment under the same batch',
-          'Team Composition Report: a strategic HR view of role balance, skill distribution and hiring gaps across the team',
+          'Team Insight Report: generated automatically for single-department teams to show group strengths, watch areas, and hiring priorities',
+          'Culture Pulse Report: a strategic, multi-department HR view of organizational culture, learning preferences, and leadership fit',
         ]},
         { heading:'Built for different audiences', points:[
           'The Candidate Action Plan never contains HR risk language, since it belongs to the individual',
@@ -1390,12 +1390,12 @@ const ReportsSlideshow = () => {
     { i:'🎮', c:'#E879F9', t:'Player Report',           s:'Gamified',
       d:'Dark RPG aesthetic. Game class, XP, 10 levels, achievement badges, quest objectives with progress saved, power-up armory for every resource. Makes development feel like a game.',
       tags:['10 Levels','Achievement Badges','Quest Objectives','Power-Up Armory'] },
-    { i:'👥', c:'#FBBF24', t:'Team Aggregate Report',  s:'Batch-level',
-      d:'Appears automatically when you run 2+ assessments in a batch. Team dimension averages, composite benchmarks, archetype distribution, collective risk pattern frequency, validity summary.',
-      tags:['Team Averages','Archetype Distribution','Risk Frequency','Auto-Generated'] },
-      { i:'🏢', c:'#6366F1', t:'Team Composition Report', s:'HR Strategy',
-  d:'Strategic workforce mapping. Highlights team role balance, skill distribution, leadership pipeline strength, and succession readiness. Identifies gaps in composition that affect long-term organisational resilience and provides recommendations for HR strategy.',
-  tags:['Role Balance','Skill Distribution','Leadership Pipeline','Succession Readiness'] },
+    { i:'👥', c:'#FBBF24', t:'Team Insight Report',  s:'Single-Dept',
+      d:'Reveals the team\'s geological persona, collective strengths, blind spots, development roadmap, and specific interview probes for future hiring.',
+      tags:['Team Persona','Collective Strengths','Hiring Probes','Auto-Generated'] },
+    { i:'🌍', c:'#6366F1', t:'Culture Pulse Report', s:'Multi-Dept Org',
+      d:'Strategic organizational mapping. Highlights the dominant cultural persona, cross-departmental strengths, archetype distribution, learning preferences, and leadership style fit.',
+      tags:['Culture Persona','Archetype Spread','Learning Prefs','Leadership Fit'] },
   ];
 
   const goTo = i => {
@@ -1440,8 +1440,7 @@ const ReportsSlideshow = () => {
             <em style={{color:T.gold, fontStyle:'italic'}}>purpose-built reports</em>
           </h2>
           <p style={{fontSize:'13px', color:T.t2, maxWidth:'560px', lineHeight:1.7, fontWeight:'500'}}>
-            Each report is written for a specific reader. HR gets technical depth, individuals get a roadmap,
-            teams get aggregate insights, candidates get a gamified experience.
+            Each report is written for a specific reader. HR gets technical depth, individuals get a roadmap, candidates get a gamified experience, and group reports dynamically scale from single-team insights to multi-department cultural trends.
           </p>
         </div>
         {/* dot indicators */}
@@ -2046,6 +2045,23 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 <div><label style={lbl}>Phone Number *</label><input value={resp.phone||''} onChange={e=>{ let val = e.target.value.replace(/\D/g, ''); if (val.length > 4) val = val.substring(0, 4) + '-' + val.substring(4, 11); setResp(r=>({...r,phone:val})); }} placeholder="e.g. 0300-1234567" maxLength="12" style={inp(focused.phone)} onFocus={()=>setFocused(f=>({...f,phone:true}))} onBlur={()=>setFocused(f=>({...f,phone:false}))} /></div>
   <div><label style={lbl}>Employee / Roll No. (Optional)</label><input value={resp.emp} onChange={e=>setResp(r=>({...r,emp:e.target.value}))} placeholder="Optional" style={inp(focused.emp)} onFocus={()=>setFocused(f=>({...f,emp:true}))} onBlur={()=>setFocused(f=>({...f,emp:false}))} /></div>
 
+                <div>
+                  <label style={lbl}>Department *</label>
+                  <select value={resp.dept} onChange={e=>setResp(r=>({...r,dept:e.target.value}))} style={selStyle}>
+                    <option value="">Select Department…</option>
+                    <option value="Human Resources">Human Resources</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Supply Chain / Procurement">Supply Chain / Procurement</option>
+                    <option value="Finance / Treasury">Finance / Treasury</option>
+                    <option value="IT / Technology">IT / Technology</option>
+                    <option value="Operations / Production">Operations / Production</option>
+                    <option value="Customer Service">Customer Service</option>
+                    <option value="Legal / Compliance">Legal / Compliance</option>
+                    <option value="MTO (Management Trainee)">MTO (Management Trainee)</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
                 <div><label style={lbl}>Current Role</label><input value={resp.role} onChange={e=>setResp(r=>({...r,role:e.target.value}))} placeholder="e.g. Deputy Manager" style={inp(focused.role)} onFocus={()=>setFocused(f=>({...f,role:true}))} onBlur={()=>setFocused(f=>({...f,role:false}))} /></div>
                 {resp.dept === 'Other' && (
                   <div style={{gridColumn: '1 / -1'}}><label style={lbl}>Please Specify Department</label><input value={resp.deptOther} onChange={e=>setResp(r=>({...r,deptOther:e.target.value}))} placeholder="e.g. Quality Assurance" style={inp(focused.deptOther)} onFocus={()=>setFocused(f=>({...f,deptOther:true}))} onBlur={()=>setFocused(f=>({...f,deptOther:false}))} /></div>
@@ -2067,7 +2083,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
   <span style={{color:T.gold,fontWeight:'700'}}>→ Progress Tracking:</span> Your email is used to link your results across retakes and generate progress comparisons.
 </div>
               <button disabled={checkingEmail} onClick={async ()=>{
-                if(!resp.name||!resp.email||!resp.phone||!resp.exp){alert('Please enter your Full Name, Email Address, Phone Number, and Years of Experience.');return;}
+               if(!resp.name||!resp.email||!resp.phone||!resp.exp||(assessmentType==='org' && !resp.dept)){alert('Please fill in all required fields including Department.');return;}
                 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resp.email)){alert('Please enter a valid email address containing an @ symbol.');return;} 
                 if(!/^\d{4}-\d{7}$/.test(resp.phone)){alert('Please enter a valid phone number in the format 0000-0000000.');return;}
                 
@@ -4528,11 +4544,11 @@ const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type
           return (
             <div className="anim-fadeUp">
               <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
-                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Team Aggregate Profile</h2>
+                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Team Insight Report</h2>
                 <div style={{padding:'24px', background:T.amP, borderRadius:'8px', border:`1px solid ${T.am}40`, color:T.am, fontSize:'14px', fontWeight:'600', lineHeight:'1.6'}}>
                   <span style={{fontSize:'24px', display:'block', marginBottom:'12px'}}>👥</span>
                   <strong>Not enough data to generate this report.</strong><br/><br/>
-                  The Team Aggregate Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
+                  The Team Insight Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
                 </div>
               </div>
             </div>
@@ -4562,14 +4578,14 @@ const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
               <div>
                 <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>CORE · Carnelian Pvt Ltd</div>
-                <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM AGGREGATE REPORT · Batch: {R.batch}</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM INSIGHT REPORT · Batch: {R.batch}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
                 <div>{safeBatch.length} total responses</div>
                 {R.industry && <div>{IND[R.industry]?.icon} {IND[R.industry]?.short}</div>}
               </div>
             </div>
-            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Aggregate Profile</h2>
+            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Insight Profile</h2>
             
 <div className="grid-5-col" style={{display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'10px', background:T.bg2, borderRadius:'10px', padding:'20px', marginBottom:'32px'}}>              {['OCEANavg', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'].map((k, i) => {
                 const avg = Math.round(safeBatch.reduce((sum, b) => sum + (b?.scores?.[k] || 0), 0) / (safeBatch.length || 1));
@@ -4676,11 +4692,11 @@ const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type
           return (
             <div className="anim-fadeUp">
               <div style={{background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'36px', marginBottom:'24px'}}>
-                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Team Composition & Hiring Intelligence</h2>
+                <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'16px'}}>Organizational Culture Pulse</h2>
                 <div style={{padding:'24px', background:T.amP, borderRadius:'8px', border:`1px solid ${T.am}40`, color:T.am, fontSize:'14px', fontWeight:'600', lineHeight:'1.6'}}>
-                  <span style={{fontSize:'24px', display:'block', marginBottom:'12px'}}>🧩</span>
+                  <span style={{fontSize:'24px', display:'block', marginBottom:'12px'}}>🌍</span>
                   <strong>Not enough data to generate this report.</strong><br/><br/>
-                  The Team Composition Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
+                  The Culture Pulse Report requires at least <strong>2 valid assessments</strong> from the same batch. To see this report, make sure you enter an "Assessment Batch Name" on the first screen, and have multiple people complete the assessment on this device.
                 </div>
               </div>
             </div>
@@ -4745,13 +4761,13 @@ const maxPowerUpXP = resources.reduce((a,r) => a + (r.type==='course'?400:r.type
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
               <div>
                 <div className="serif" style={{fontSize:'16px', color:T.gold, letterSpacing:'0.06em', marginBottom:'4px'}}>CORE · Carnelian Pvt Ltd</div>
-                <div className="mono" style={{fontSize:'10px', color:T.t3}}>TEAM COMPOSITION REPORT · Batch: {R.batch}</div>
+                <div className="mono" style={{fontSize:'10px', color:T.t3}}>CULTURE PULSE REPORT · Batch: {R.batch}</div>
               </div>
               <div style={{textAlign:'right', fontSize:'12px', color:T.t2}}>
                 <div>{valid.length} valid responses</div>
               </div>
             </div>
-            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Team Composition & Hiring Intelligence</h2>
+            <h2 className="serif" style={{fontSize:'2rem', fontWeight:'700', color:T.t0, marginBottom:'24px'}}>Organizational Culture Pulse</h2>
             <p style={{fontSize:'13px', color:T.t2, marginBottom:'32px', lineHeight:'1.6'}}>HR-only strategic report — composition diagnosis, hiring profile generation, and promotion fit analysis.</p>
             
             {/* 1. Diagnostic */}

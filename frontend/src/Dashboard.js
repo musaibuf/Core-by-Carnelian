@@ -1,9 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Bolt, WorkspacePremium, AccountBalance, Lightbulb,
-  Balance, Public, Groups, RocketLaunch,
-  Diversity3, Shield, AltRoute, MenuBook, TrendingUp
-} from '@mui/icons-material';
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────
 const darkTheme = {
@@ -322,34 +317,30 @@ const downloadAsPDF = async (elementId, filename, T) => {
   });
 
   try {
-    // Load html2pdf.js which has the Smart Page Breaking engine
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
-
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    // Temporarily adjust styles for full capture
+    // Wait for webfonts to finish loading before snapshotting, otherwise
+    // html2canvas can capture mid-swap and produce overlapping/garbled text.
+    if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
+    await new Promise(r => setTimeout(r, 300));
+
     const originalHeight = element.style.height;
     const originalOverflow = element.style.overflow;
     element.style.height = 'auto';
     element.style.overflow = 'visible';
 
-    // The 'pagebreak' setting prevents elements from being cut in half
     const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     filename,
-      image:        { type: 'jpeg', quality: 1 },
-      html2canvas:  { scale: 2, useCORS: true, backgroundColor: T.bg1 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } 
+      margin: [10, 10, 10, 10], filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 1.5, useCORS: true, backgroundColor: T.bg1 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] },
     };
-
     await window.html2pdf().set(opt).from(element).save();
-
-    // Restore styles
     element.style.height = originalHeight;
     element.style.overflow = originalOverflow;
-
   } catch (err) {
     console.error("PDF Generation failed", err);
     alert("Failed to generate PDF. Please try again.");
@@ -1673,503 +1664,2196 @@ const PlayerReport = ({ candidate, T }) => {
   );
 };
 
-// ─── TEAM REPORT ──────────────────────────────────
-const TeamReport = ({ candidate, allData, T }) => {
-  const batch = candidate.batch;
-  if (!batch) {
-    return (
-      <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
-        <div style={{ fontSize:'2rem', marginBottom:'12px' }}>👥</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', color:T.t2, marginBottom:'8px' }}>No Batch Assigned</div>
-        <div style={{ fontSize:'12px' }}>This candidate was not assessed as part of a named batch. The Team Aggregate Report is generated when 2+ assessments share the same batch name.</div>
-      </div>
-    );
-  }
+// ─── TEAM INSIGHT REPORT (High-Fidelity PDF Match) ────────────────────────
+const TEAM_PERSONAS = [
+  { cond: (s, variance) => variance < 8 && s.overall >= 70, name: 'The Batholith', desc: 'A group with very similar strengths across the board. Consistent and capable, but with less variety of approach.' },
+  { cond: (s, variance, profiles) => profiles.length > 5 && s.overall >= 65, name: 'The Conglomerate', desc: 'Many different individual profiles held together by something they share. Strong under steady demands, needs support when pressure comes from an unexpected direction.' },
+  { cond: (s, variance, profiles, top) => top.length < 3 && s.overall < 65, name: 'The Geode', desc: 'Quiet on the surface with real depth inside. A few exceptional people and a group still catching up.' },
+  { cond: (s, variance) => variance > 15 && s.overall < 60, name: 'The Breccia', desc: 'Plenty of variety but not much holding it together yet. Bringing the group together is the first job.' },
+  { cond: (s) => s.C >= 75 && s.LAavg < 65, name: 'The Basalt Column', desc: 'Regular, fast and high-output. Excellent at getting things done, less comfortable when things change.' },
+  { cond: (s) => s.LAavg >= 70 && s.C < 70, name: 'The Alluvial Fan', desc: 'Broad and adaptable, able to turn a hand to most things, without deep strength in any one area yet.' },
+  { cond: (s) => s.ES >= 70 && s.CQavg >= 65, name: 'The Metamorphic Belt', desc: 'A group already shaped by pressure. Resilient and experienced, and carrying some wear.' },
+  { cond: () => true, name: 'The Vein System', desc: 'A few standout individuals carrying much of the group\'s strength.' }
+];
 
-  const normBatch = String(batch || '').trim().toLowerCase();
-  const allBatchData = allData.filter(r => String(r.batch || '').trim().toLowerCase() === normBatch);
-  const batchData = allBatchData.filter(r => r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+const SUB_DIM_MAP = [
+  { k:'C', l:'Reliability and follow-through' },
+  { k:'LA_PA', l:'Learning from other people' },
+  { k:'CQ_K', l:'Understanding other cultures' },
+  { k:'CQ_B', l:'Adapting to different people' },
+  { k:'ES', l:'Holding the line under pressure' },
+  { k:'EO_ER', l:'Thinking through difficult decisions' },
+  { k:'A', l:'Working well with others' },
+  { k:'OCB_CV', l:'Involvement in wider organisation' },
+  { k:'OCB_CO', l:'Considerateness' },
+  { k:'LA_RA', l:'Delivering in new situations' },
+  { k:'CQ_M', l:'Willingness to engage across cultures' },
+  { k:'LA_CA', l:'Adapting to change' },
+  { k:'EO_RC', l:'Following process consistently' },
+  { k:'O', l:'Openness to new ideas' },
+  { k:'OCB_S', l:'Staying positive when things are hard' },
+  { k:'OCB_Cn', l:'Personal organisation' },
+  { k:'OCB_A', l:'Helping colleagues' },
+  { k:'E', l:'Visibility and presence' },
+  { k:'EO_T', l:'Speaking up about mistakes' },
+  { k:'LA_MA', l:'Thinking through new problems' },
+  { k:'EO_AI', l:'Authentic Integrity' }
+];
+
+// ─── SHARED CONTENT & CHART HELPERS (add once, above TeamInsightReport) ──────
+
+const CI_LABELS = {
+  CII: 'Trustworthiness', LRS: 'Readiness to lead', TVS: 'Contribution to the team',
+  ADS: 'Handling change', SES: 'Confidence with people', OPS: 'Getting work done',
+  PMS: 'Coping with pressure',
+};
+const CI_ORDER = ['SES', 'PMS', 'ADS', 'TVS', 'CII', 'OPS', 'LRS'];
+
+// One entry per measured quality. `why` is a function of orgName so the
+// "why it matters" line always names the actual organisation.
+const Q21_CONTENT = {
+  C: {
+    beh: "Turning up, being on time, following the process properly and doing a little more than the minimum without being asked. In practice: forms completed correctly first time, deadlines treated as real, and standards held even when nobody is watching.",
+    why: org => `In banking-style environments, and at ${org} generally, following procedure is not just tidiness, it is how the organisation stays safe. A team this reliable picks up requirements and routines with far less chasing than usual, freeing up supervisory time for higher-value work.`,
+    todo: "Give real responsibility early: reconciliations, file reviews, audit preparation. This group will handle it, and it builds the credibility that helps them later.",
+    owner: "Line manager",
+    resources: "Deep Work by Cal Newport · Getting Things Done by David Allen · short weekly delivery reviews",
+  },
+  LA_PA: {
+    beh: "Asking for feedback and then actually using it. Adjusting approach based on how someone reacted. Building working relationships quickly with people quite different from themselves.",
+    why: org => `Work at ${org} is learned from people far more than from manuals. Because this group takes so well to being taught, every hour a manager invests in them goes further than it usually would.`,
+    todo: "Set up mentor pairings formally rather than leaving them to chance. This is usually the single highest-return action available, because the willingness to learn is already there.",
+    owner: "HR / L&D",
+    resources: "Pair with a manager two levels up · structured feedback check-ins",
+  },
+  CQ_K: {
+    beh: "Picking up quickly on the unwritten norms of a new team, region or partner organisation, and asking good questions rather than assuming.",
+    why: org => `${org} works across different regions, departments and partners. A team that reads context well settles into new relationships faster and with fewer avoidable missteps.`,
+    todo: "Give early exposure to unfamiliar contexts, a new region, a different department, an external partner, so this strength keeps compounding.",
+    owner: "HR / L&D",
+    resources: "The Culture Map by Erin Meyer · a short reflection after any cross-context interaction",
+  },
+  CQ_B: {
+    beh: "Adjusting tone, pace and approach naturally depending on who is in the room, without losing their own voice.",
+    why: org => `This is what makes a team credible with a wide range of people at ${org}, from frontline colleagues to senior stakeholders.`,
+    todo: "Put this group in front of varied audiences early. It is a strength best used, not one that needs building.",
+    owner: "HR / L&D",
+    resources: "Protect this. No need to spend training budget here.",
+  },
+  ES: {
+    beh: "Staying clear-headed and consistent in a tense conversation or a busy period, rather than becoming defensive or short with people.",
+    why: org => `Pressure arrives at predictable moments for most teams at ${org}: deadlines, escalations, change. A team that holds steady here protects decision quality exactly when it matters most.`,
+    todo: "Notice who holds this well and let them anchor the busiest periods; match workload for anyone who finds it harder.",
+    owner: "Line manager",
+    resources: "Emotional Agility by Susan David · a structured mindfulness programme",
+  },
+  EO_ER: {
+    beh: "Working through a decision properly when the right answer is not obvious, rather than defaulting to whatever is easiest.",
+    why: org => `Good judgement in grey areas protects ${org}'s reputation and its relationships. It is one of the harder qualities to teach, so a team that already has it is worth building on.`,
+    todo: "Give real, ambiguous scenarios to work through together rather than only clear-cut policy questions.",
+    owner: "HR / L&D",
+    resources: "Giving Voice to Values by Mary Gentile (free curriculum)",
+  },
+  A: {
+    beh: "Cooperating readily, listening well, and resolving small friction before it grows.",
+    why: org => `This is the quiet infrastructure that keeps collaboration at ${org} running smoothly.`,
+    todo: "Protect this by continuing to give the team genuinely collaborative work, not just individual targets.",
+    owner: "Line manager",
+    resources: "Give and Take by Adam Grant",
+  },
+  OCB_CV: {
+    beh: "Taking an interest in how their work connects to the organisation as a whole, not just their own patch.",
+    why: org => `A team engaged beyond its own remit is easier to align behind ${org}'s wider priorities when they shift.`,
+    todo: "Invite this group into cross-team updates and wider strategy conversations, even briefly.",
+    owner: "HR / L&D",
+    resources: "Internal town halls · cross-team shadowing",
+  },
+  OCB_CO: {
+    beh: "Thinking ahead about how a decision or message will land on someone else before making it.",
+    why: org => `Considerate teams create fewer avoidable frictions inside ${org}, which saves management time.`,
+    todo: "Recognise this quality explicitly. It is easy to take for granted and rarely rewarded directly.",
+    owner: "Line manager",
+    resources: "Regular peer recognition moments",
+  },
+  LA_RA: {
+    beh: "Getting a result even when the situation is unfamiliar, rather than waiting until conditions are ideal.",
+    why: org => `This is what lets ${org} move people into new roles or projects with confidence.`,
+    todo: "Use this group for first-of-a-kind tasks; they are more likely to make early progress than most.",
+    owner: "Line manager",
+    resources: "Stretch assignments with a defined check-in point",
+  },
+  CQ_M: {
+    beh: "Choosing to lean into an unfamiliar context rather than avoiding it.",
+    why: org => `This willingness is what eventually turns into real cross-context skill at ${org}.`,
+    todo: "Keep offering these opportunities. Willingness fades if it is never used.",
+    owner: "HR / L&D",
+    resources: "Rotation into a different region or department",
+  },
+  LA_CA: {
+    beh: "Adjusting reasonably well when plans, tools or priorities shift.",
+    why: org => `Change is constant at most organisations; ${org} benefits from people who do not need to be walked through every shift.`,
+    todo: "Give early notice and a clear reason for change where possible. This is not resistance to manage, just context to provide.",
+    owner: "Line manager",
+    resources: "Clear, early change communication",
+  },
+  EO_RC: {
+    beh: "Sticking to agreed process even when it would be quicker to skip a step, particularly under time pressure.",
+    why: org => `Consistency here protects ${org} from the kind of small process drift that becomes a bigger issue later.`,
+    todo: "Build in periodic scenario practice where following the process is genuinely inconvenient, so the habit holds under pressure.",
+    owner: "HR / L&D",
+    resources: "Realistic process scenarios with genuine trade-offs",
+  },
+  O: {
+    beh: "Willingness to try an unfamiliar method or tool rather than defaulting to the one already known.",
+    why: org => `This shapes how quickly a team at ${org} takes up a new system, product or way of working.`,
+    todo: "Deliberately introduce one new approach at a time and give space to try it before judging it.",
+    owner: "HR / L&D",
+    resources: "Exposure to one unfamiliar approach at a time",
+  },
+  OCB_S: {
+    beh: "Keeping a constructive tone during a genuinely frustrating stretch, rather than visibly checking out.",
+    why: org => `This steadies the people around them, which matters more at ${org} during a difficult quarter than almost anything else.`,
+    todo: "Notice and thank this explicitly. It often goes unrewarded because it looks like nothing happened.",
+    owner: "Line manager",
+    resources: "Direct, specific recognition",
+  },
+  OCB_Cn: {
+    beh: "Planning their own workload rather than reacting to whatever arrives last.",
+    why: org => `Personal organisation is what keeps individual delivery steady even as ${org}'s demands on the team grow.`,
+    todo: "A simple weekly planning routine, reviewed briefly with a manager, builds this quickly.",
+    owner: "Line manager",
+    resources: "A simple weekly planning routine",
+  },
+  OCB_A: {
+    beh: "Stepping in to help a colleague who is struggling, or absorbing a small inconvenience without being asked.",
+    why: org => `Teams at ${org} rely on this kind of quiet mutual cover more than any policy captures. Without it, there is no slack when things get busy.`,
+    todo: "Build shared work where credit cannot be separated out, so helping becomes normal rather than exceptional.",
+    owner: "HR / L&D",
+    resources: "The Culture Code by Daniel Coyle · shared team goals",
+  },
+  E: {
+    beh: "Speaking up in meetings, being seen, and putting forward a view without needing to be asked directly.",
+    why: org => `A quieter team can still deliver excellent work at ${org}, but their contribution needs a bit more active surfacing by managers.`,
+    todo: "Create structured moments for everyone to contribute, rather than relying on people to volunteer.",
+    owner: "Line manager",
+    resources: "Structured go-arounds in meetings",
+  },
+  EO_T: {
+    beh: "Admitting a mistake, saying 'I don't know', or raising bad news early rather than waiting.",
+    why: org => `At ${org}, a problem raised early is far cheaper than one discovered late. A team whose instinct is to look composed may quietly sit on small issues.`,
+    todo: "Create an explicit no-penalty window for early disclosure, with senior people visibly doing the same.",
+    owner: "HR / L&D and line manager",
+    resources: "The Fearless Organization by Amy Edmondson",
+  },
+  LA_MA: {
+    beh: "Breaking an unfamiliar problem into parts and working through it, rather than looking for an existing template or asking what to do.",
+    why: org => `This is usually where a team can add the most future value at ${org}, because routine work is steadily being automated while judgement-based work keeps growing.`,
+    todo: "Build this through the work itself: regular real-problem discussions and rotation into non-standard cases, more than classroom training.",
+    owner: "HR / L&D and line manager",
+    resources: "Thinking in Bets by Annie Duke · a weekly real-problem discussion",
+  },
+  EO_AI: {
+    beh: "Acting the same way whether or not anyone is watching, and declining an inducement without needing a policy to justify it.",
+    why: org => `This is a foundation of trust at ${org}, especially anywhere the team touches money, decisions, or sensitive information.`,
+    todo: "Treat this as a genuine strength to place with confidence, while still having an individual conversation before any unsupervised high-trust responsibility.",
+    owner: "HR / L&D",
+    resources: "Blind Spots by Bazerman and Tenbrunsel",
+  },
+};
+
+const INTERVIEW_PROBES = {
+  C: "Tell me about a time you had to enforce a process that everyone else wanted to bypass.",
+  LA_PA: "Give me an example of a time you completely changed your approach based on someone else's feedback.",
+  CQ_K: "Describe a time you entered a completely unfamiliar work culture. How did you figure out the unwritten rules?",
+  CQ_B: "Tell me about a time you had to adjust your communication style to get through to a difficult stakeholder.",
+  ES: "Walk me through the most stressful professional week you've had recently. How did you keep things moving?",
+  EO_ER: "Tell me about a time you had to make a decision where the 'right' answer wasn't covered by company policy.",
+  A: "Give an example of a time you had to work closely with someone whose working style was the exact opposite of yours.",
+  OCB_CV: "Tell me about a time you volunteered for a project or committee that fell completely outside your job description.",
+  OCB_CO: "Describe a time you delayed your own work to help a colleague who was struggling.",
+  LA_RA: "Tell me about a project you were handed where you had absolutely no prior experience. Where did you start?",
+  CQ_M: "Describe a time you proactively sought out a project working with a demographic or region you knew nothing about.",
+  LA_CA: "Walk me through a time the strategy or tools changed halfway through a project. How did you adapt?",
+  EO_RC: "Tell me about a time a manager or client asked you to skip a standard procedure to save time.",
+  O: "Describe a time you pushed the team to adopt a new tool or method, even though the old one 'worked fine'.",
+  OCB_S: "Tell me about a time morale was low on your team. What did you specifically do about it?",
+  OCB_Cn: "Walk me through your personal system for ensuring you don't drop balls when you're managing 5+ competing priorities.",
+  OCB_A: "Tell me about a time you took over a task for a colleague because you noticed they were overwhelmed.",
+  E: "Describe a time you had to speak up in a room full of senior stakeholders to course-correct a project.",
+  EO_T: "Tell me about a time you made a significant mistake and realized it before anyone else did.",
+  LA_MA: "Walk me through a complex problem you solved where there was no playbook or existing template.",
+  EO_AI: "Tell me about a time doing the right thing cost you professionally or made your life significantly harder."
+};
+
+const getQualityInfo = (key, orgName, industry = '') => {
+  const meta = SUB_DIM_MAP.find(d => d.k === key) || {};
+  const label = meta.l || key;
+  const base = Q21_CONTENT[key];
   
-  if (batchData.length < 2) {
-    return (
-      <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
-        <div style={{ fontSize:'2rem', marginBottom:'12px' }}>⏳</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', color:T.t2, marginBottom:'8px' }}>Batch: {batch}</div>
-        <div style={{ fontSize:'12px' }}>Only {batchData.length} valid response{batchData.length!==1?'s':''} in this batch. The Team Report requires at least 2.</div>
-      </div>
-    );
+  // Dynamic Industry Staking
+  let indText = `At ${orgName}, this is critical.`;
+  const indLower = industry.toLowerCase();
+  if (indLower.includes('bank') || indLower.includes('financ') || indLower.includes('insurance')) indText = `In banking and finance, and at ${orgName} specifically, this protects regulatory standing and client trust.`;
+  else if (indLower.includes('tech') || indLower.includes('telecom')) indText = `In the tech sector, and at ${orgName}, this determines how fast the team ships and adapts to market shifts.`;
+  else if (indLower.includes('fmcg') || indLower.includes('retail')) indText = `In fast-moving consumer sectors like ${orgName}, this protects market share and drives rapid execution.`;
+  else if (indLower.includes('gov') || indLower.includes('civil')) indText = `In the public sector, and at ${orgName}, this ensures accountability and sustained service delivery under reform pressure.`;
+  else if (indLower.includes('ngo') || indLower.includes('development')) indText = `In the development sector, and at ${orgName}, this builds donor confidence and community trust.`;
+  else indText = `In your sector, and at ${orgName}, this directly impacts operational resilience.`;
+
+ if (base) {
+    // Replace the base copy's own sector framing with the dynamic industry framing, without doubling org mentions
+    const originalWhy = base.why(orgName);
+    const sentences = originalWhy.split('. ');
+    let dynamicWhy;
+    if (sentences.length > 1 && sentences[0].includes(orgName)) {
+      dynamicWhy = indText + ' ' + sentences.slice(1).join('. ');
+    } else if (sentences.length === 1) {
+      dynamicWhy = originalWhy;
+    } else {
+      dynamicWhy = indText + ' ' + originalWhy;
+    }
+
+    return {
+      label, beh: base.beh, why: dynamicWhy, todo: base.todo, owner: base.owner, resources: base.resources,
+      probe: INTERVIEW_PROBES[key] || "Walk me through a time you had to demonstrate this quality under pressure."
+    };
   }
-
-  const n = batchData.length;
-  const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];
-  const dimLabels = { O:'Openness',C:'Conscientiousness',E:'Extraversion',A:'Agreeableness',ES:'Emotional Stability',CQavg:'Cultural Intelligence',OCBavg:'Team Citizenship',LAavg:'Learning Agility',EOavg:'Ethical Orientation' };
-  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
-
-  const dimAvgs = {};
-  dimKeys.forEach(k => { dimAvgs[k] = avg(batchData.map(b => b.report_data?.scores?.[k]).filter(v=>v!=null)); });
-  const compAvgs = {};
-  COMPOSITE_KEYS.forEach(({ k }) => { compAvgs[k] = avg(batchData.map(b => b.report_data?.CI?.[k] || b.report_data?.scores?.[k]).filter(v=>v!=null)); });
-
-  const archCounts = {};
-  batchData.forEach(b => { archCounts[b.profile_name] = (archCounts[b.profile_name]||0)+1; });
-  const archSorted = Object.entries(archCounts).sort((a,b)=>b[1]-a[1]);
-
-  const riskFlags = {
-    'Performance-Ethics Disconnect': batchData.filter(b=>b.report_data?.scores?.C>=68&&b.report_data?.scores?.EOavg<=60).length,
-    'Direct Compliance Risk':        batchData.filter(b=>b.report_data?.scores?.EO_RC<55).length,
-    'Charismatic Integrity Risk':    batchData.filter(b=>b.report_data?.scores?.E>=70&&b.report_data?.scores?.EO_AI<=60).length,
+  return {
+    label, beh: `Shows up day to day as a noticeable pattern around ${label.toLowerCase()}.`,
+    why: `${indText} This shapes how smoothly things run, and is worth watching as the team develops.`,
+    todo: `Build this through regular, specific feedback and small stretch opportunities tied to ${label.toLowerCase()}.`,
+    owner: 'HR / L&D and line manager', resources: 'Ask HR / L&D for material tailored to this quality.',
+    probe: "Walk me through a time you had to demonstrate this quality under pressure."
   };
-  const riskEntries = Object.entries(riskFlags).filter(([,v])=>v>0);
+};
 
-  const nGreen = batchData.filter(b=>b.report_data?.validity?.overall==='green').length;
-  const nAmber = batchData.filter(b=>b.report_data?.validity?.overall==='amber').length;
-  const nRed   = allBatchData.filter(r=>r.report_data?.validity?.overall==='red').length;
+// Individual + team framing per gemstone archetype, all in development lens.
+const ARCHETYPE_GROWTH = {
+  'Institutional Anchor': {
+    individual: "The steady one. They hold the standard and stay level when everything around them is moving. Their growth comes from carrying that steadiness into new ways of working, and from putting their view forward earlier.",
+    team: "The point everyone else calibrates against. A team with an Anchor settles faster and argues less about basics. Give them a visible role in any change and the whole team follows more willingly.",
+  },
+  'Cross-Cultural Bridge': {
+    individual: "They move between people, places and communication styles without losing themselves. Their growth comes from spending that ability on fewer relationships more deeply, and from holding a firm position even when it makes the room briefly uncomfortable.",
+    team: "The one who finds the thread everyone else dropped. They make a mixed team genuinely function rather than simply coexist. Put them where two groups need to work together and have not yet found how.",
+  },
+  'Adaptive Innovator': {
+    individual: "They do not wait for the map, they make one. Their growth comes from bringing people with them rather than arriving first, and from giving process the same attention they give the idea.",
+    team: "The one who unsticks everybody else. They work best paired with someone steadier, who can turn the idea into something the team can actually deliver.",
+  },
+  'Strategic Integrity Leader': {
+    individual: "They see the whole picture and care as much about how the work gets done as whether it gets done. Their growth comes from handing work to others rather than absorbing it.",
+    team: "The person whose judgement the team trusts without needing it explained. The natural person to hand something to when it matters and nobody is quite sure how to approach it.",
+  },
+  'Ethics-Driven Executor': {
+    individual: "They do what they said they would, every time, without needing to be chased. Their growth comes from flexing when a situation genuinely calls for it, and from raising a concern while there is still time to act on it.",
+    team: "The person who brings credibility to whatever they are attached to. Ask for their view before decisions are final, they usually have one worth hearing.",
+  },
+  'Emerging Professional': {
+    individual: "At the beginning of something real. Fresh perspective and genuine appetite. Their growth is simply exposure and reps, where asking questions is welcomed rather than tolerated.",
+    team: "The energy in the room and the source of the questions nobody else thought to ask. They need more structure early on than the rest of the group, and they repay it quickly.",
+  },
+  'Collaborative Team Leader': {
+    individual: "They notice when someone has gone quiet and create the conditions in which other people do their best work. Their growth comes from protecting their own work alongside everyone else's.",
+    team: "The glue nobody notices until it is gone. Teams with a Weaver recover from setbacks faster and hide less from each other.",
+  },
+  'Visionary Sprinter': {
+    individual: "They see the destination before the plan exists, and bring genuine energy to getting there. Their growth comes from pairing that pace with patience for people who need more detail before they commit.",
+    team: "The one who raises the ambition in the room. Teams with a Sprinter aim higher than they otherwise would.",
+  },
+  'Eager Cultural Bridge-Builder': {
+    individual: "They lead with warmth and notice who has been left out. Their growth comes from building the same quality of relationship with people who take longer to warm up.",
+    team: "The reason a new joiner settles in fast. Early in their own development, and already changing how welcome the team feels.",
+  },
+  'Learning Champion': {
+    individual: "They ask the question nobody else thought to ask, and come back having actually looked into it. Their growth comes from applying that curiosity to their own blind spots too.",
+    team: "The person who quietly makes everyone around them a little sharper over time, just by asking good questions out loud.",
+  },
+  'Strategic Pivoter': {
+    individual: "They read a changing situation quickly and redirect before others notice the shift. Their growth comes from bringing people along with the pivot, not just making it themselves.",
+    team: "The one who stops the team throwing good effort after a plan that has stopped working.",
+  },
+  'High-Capability, Under Strain': {
+    individual: "They deliver at a high level even while carrying real pressure. Their growth comes from building in recovery time before it is forced on them, and asking for support before it is urgent.",
+    team: "The most dependable person in the room today. Worth checking in on regularly, since high performance under strain is not the same as sustainable performance.",
+  },
+  'Generous Under Pressure': {
+    individual: "Even at full capacity, they check on someone else first. Their growth comes from extending the same care to their own workload that they extend to everyone around them.",
+    team: "The reason morale holds when things get difficult. A quality every team needs and not every team has.",
+  },
+};
 
-  const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
-      {children}
-    </div>
-  );
+// Minimal, dependency-free radar chart.
+const RadarChart = ({ data, T, size = 380, color = '#B01C24' }) => {
+  const N = data.length;
+  const pad = 95;
+  const w = size + pad * 2, h = size + pad * 2;
+  const cx = w / 2, cy = h / 2, R = size * 0.34;
+  const angleFor = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
+  const pt = (i, frac) => {
+    const a = angleFor(i);
+    return [cx + Math.cos(a) * R * frac, cy + Math.sin(a) * R * frac];
+  };
+  const clamp = (v) => Math.max(0, Math.min(1, v / 100));
+  const poly = data.map((d, i) => pt(i, clamp(d.value)).join(',')).join(' ');
+  const anchorFor = (x) => (x < cx - 12 ? 'end' : x > cx + 12 ? 'start' : 'middle');
 
   return (
-    <div>
-      <div id={`team-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
-      {/* HEADER */}
-      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Aggregate Report · Batch: {batch}</div>
-        <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'16px', justifyContent:'space-between' }}>
-          {[
-            [allBatchData.length, 'Responses'],
-            [n, 'Valid'],
-            [nRed, 'Invalid'],
-            [archSorted.length, 'Archetypes'],
-            [riskEntries.length, 'Risk Flags'],
-          ].map(([v,l],i) => (
-            <div key={i} style={{ textAlign:'center', flex:1, minWidth:'60px' }}>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.gold }}>{v}</div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600' }}>{l}</div>
-            </div>
-          ))}
-        </div>
+    <svg width={w} height={h} style={{ overflow: 'visible', display: 'block', margin: '0 auto' }}>
+      {[0.25, 0.5, 0.75, 1].map((lvl, ri) => (
+        <polygon key={ri} points={data.map((_, i) => pt(i, lvl).join(',')).join(' ')}
+          fill="none" stroke={lvl === 0.75 ? '#22c55e80' : T.b2}
+          strokeDasharray={lvl === 0.75 ? '4 3' : undefined} strokeWidth={1} />
+      ))}
+      {data.map((d, i) => {
+        const [x2, y2] = pt(i, 1);
+        return <line key={i} x1={cx} y1={cy} x2={x2} y2={y2} stroke={T.b2} strokeWidth={1} />;
+      })}
+      <polygon points={poly} fill={`${color}22`} stroke={color} strokeWidth={2.5} />
+      {data.map((d, i) => {
+        const [x, y] = pt(i, clamp(d.value));
+        return <circle key={i} cx={x} cy={y} r={4} fill={color} />;
+      })}
+      {data.map((d, i) => {
+        const [lx, ly] = pt(i, 1.32);
+        return <text key={'l' + i} x={lx} y={ly} fontSize="12" fontWeight="700" fill={T.t1} textAnchor={anchorFor(lx)}>{d.label}</text>;
+      })}
+      {data.map((d, i) => {
+        const [vx, vy] = pt(i, clamp(d.value) + 0.12);
+        return <text key={'v' + i} x={vx} y={vy} fontSize="12" fontWeight="800" fill={color} textAnchor={anchorFor(vx)}>{d.value}</text>;
+      })}
+    </svg>
+  );
+};
 
-        <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', background:T.bg1, borderRadius:'8px', padding:'16px', border:`1px solid ${T.b1}`, justifyContent:'space-between' }}>
-          {MODULE_KEYS.map(({ k, l, c }) => {
-            const avg = Math.round(batchData.reduce((sum, b) => sum + (b.report_data?.scores?.[k] || 0), 0) / (batchData.length || 1));
-            return (
-              <div key={k} style={{textAlign:'center', flex:1, minWidth:'50px'}}>
-                <div style={{fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:c}}>{avg}</div>
-                <div style={{fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'4px', fontWeight:'600'}}>{l.split(' ')[0]}</div>
-              </div>
-            );
-          })}
-        </div>
+// SVG donut, renders correctly in html2canvas/PDF unlike CSS conic-gradient.
+const DonutChart = ({ segments, size = 240, hole = 160, T, centerTop, centerBottom }) => {
+  const total = segments.reduce((a, s) => a + s.value, 0) || 1;
+  const cx = size / 2, cy = size / 2, r = size / 2;
+  let angle = -90;
+  const paths = segments.map((s, i) => {
+    const frac = s.value / total;
+    if (frac >= 0.999) return <circle key={i} cx={cx} cy={cy} r={r} fill={s.color} />;
+    const a0 = angle * Math.PI / 180;
+    angle += frac * 360;
+    const a1 = angle * Math.PI / 180;
+    const large = frac > 0.5 ? 1 : 0;
+    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    return <path key={i} d={`M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`} fill={s.color} />;
+  });
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size}>{paths}<circle cx={cx} cy={cy} r={hole / 2} fill={T.bg1} /></svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {centerTop}{centerBottom}
       </div>
-
-      {/* DIMENSION AVERAGES */}
-      {card(
-        <>
-          <SectionHead label={`Team Dimension Averages (n=${n} valid)`} T={T} />
-          <div style={{ display:'flex', flexWrap:'wrap', gap:'12px 24px' }}>
-            {dimKeys.map(k => {
-              const v = dimAvgs[k];
-              const col = v>=75?T.gn:v>=55?T.am:T.rd;
-              return (
-                <div key={k} style={{ width:'calc(50% - 12px)', marginBottom:'6px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'3px' }}>
-                    <span style={{ fontSize:'11px', color:T.t0, fontWeight:'700' }}>{dimLabels[k]}</span>
-                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:col, fontWeight:'700' }}>{v}/100</span>
-                  </div>
-                  <div style={{ height:'8px', background:T.b1, borderRadius:'100px', overflow:'hidden' }}>
-                    <div style={{ height:'100%', width:`${v}%`, background:col, borderRadius:'100px' }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* COMPOSITE AVERAGES */}
-      {card(
-        <>
-          <SectionHead label="Team Composite Index Averages" T={T} />
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom:`1px solid ${T.b2}` }}>
-                  {['Index','Team Avg','Profile','% Below Threshold'].map(h => (
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'JetBrains Mono',monospace" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPOSITE_KEYS.map(({ k, l, green, amber }) => {
-                  const v = compAvgs[k] || 0;
-                  const pctBelow = Math.round((batchData.filter(b=>(b.report_data?.CI?.[k]||b.report_data?.scores?.[k]||0)<amber).length/n)*100);
-                  return (
-                    <tr key={k} style={{ borderBottom:`1px solid ${T.b1}` }}>
-                      <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{l}</td>
-                      <td style={{ padding:'10px 10px' }}><ScoreBadge score={v} T={T} /></td>
-                      <td style={{ padding:'10px 10px', width:'100px' }}>
-                        <div style={{ height:'5px', background:T.b1, borderRadius:'3px', overflow:'hidden' }}>
-                          <div style={{ width:`${v}%`, height:'100%', background:barGrad(v) }} />
-                        </div>
-                      </td>
-                      <td style={{ padding:'10px 10px', fontSize:'11px', fontWeight:'800', color:pctBelow>30?T.rd:pctBelow>15?T.am:T.gn }}>{pctBelow}%</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {/* ARCHETYPE DISTRIBUTION */}
-      {card(
-        <>
-          <SectionHead label={`Profile Distribution — ${batchData.length} Valid Respondents`} T={T} />
-          <div style={{ display:'flex', flexWrap:'wrap', gap:'10px' }}>
-            {archSorted.map(([name, count]) => {
-              const pct = Math.round((count/n)*100);
-              return (
-                <div key={name} style={{ flex:'1 1 180px', border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'12px', borderLeft:`3px solid ${T.c}` }}>
-                  <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>{name}</div>
-                  <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-                    <div style={{ flex:1, height:'5px', background:T.b1, borderRadius:'100px', overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${pct}%`, background:T.c, borderRadius:'100px' }} />
-                    </div>
-                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', color:T.c, fontWeight:'700' }}>{count} ({pct}%)</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* RISK FLAGS */}
-      {card(
-        <>
-          <SectionHead label={`Risk Pattern Frequency (n=${n} valid)`} T={T} />
-          {riskEntries.length > 0 ? riskEntries.map(([name, count]) => {
-            const pct = Math.round((count/n)*100);
-            return (
-              <div key={name} style={{ background:T.rdP, border:'1px solid rgba(239,68,68,0.3)', borderRadius:'9px', padding:'12px 14px', display:'flex', alignItems:'center', gap:'14px', marginBottom:'8px' }}>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:'13px', fontWeight:'700', color:T.rd }}>{name}</div>
-                  <div style={{ fontSize:'11px', color:T.t2, marginTop:'2px' }}>{pct>=20?'Programme-level intervention recommended':'Consider targeted coaching'}</div>
-                </div>
-                <div style={{ textAlign:'right' }}>
-                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'1.1rem', fontWeight:'800', color:T.rd }}>{count}</div>
-                  <div style={{ fontSize:'9px', color:T.t3 }}>{pct}% of valid</div>
-                </div>
-              </div>
-            );
-          }) : (
-            <div style={{ padding:'16px', background:T.gnP, borderRadius:'9px', color:T.gn, fontSize:'12px', fontWeight:'700' }}>
-              No risk patterns detected at alerting frequency.
-            </div>
-          )}
-        </>
-      )}
-
-      {/* VALIDITY SUMMARY */}
-      {card(
-        <>
-          <SectionHead label="Validity Summary" T={T} />
-          <div style={{ display:'flex', flexWrap:'wrap', gap:'10px' }}>
-            {[
-              [nGreen,'Valid (Green)',T.gn],
-              [nAmber,'Caution (Amber)',T.am],
-              [nRed,'Invalid (Red)',T.rd],
-            ].map(([v,l,c]) => (
-              <div key={l} style={{ flex:1, minWidth:'120px', background:T.bg3, borderRadius:'9px', padding:'14px', textAlign:'center', border:`1px solid ${c}28` }}>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:c }}>{v}</div>
-                <div style={{ fontSize:'11px', fontWeight:'700', color:c, marginTop:'3px' }}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* RESPONDENT SUMMARY */}
-      {card(
-        <>
-          <SectionHead label="Batch Respondent Summary" T={T} />
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom:`1px solid ${T.b2}` }}>
-                  {['Name','Profile','Overall','CII','LRS','Validity'].map(h => (
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'JetBrains Mono',monospace" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allBatchData.sort((a,b)=>(b.overall_score||0)-(a.overall_score||0)).map((b,i) => (
-                  <tr key={b.id||i} style={{ borderBottom:`1px solid ${T.b1}` }}>
-                    <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{b.name}</td>
-                    <td style={{ padding:'10px 10px', fontSize:'11px', color:T.c, fontWeight:'700' }}>{b.profile_name}</td>
-                    <td style={{ padding:'10px 10px' }}><ScoreBadge score={b.overall_score} T={T} /></td>
-                    <td style={{ padding:'10px 10px', fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', color:bCol(b.report_data?.CI?.CII||0,T), fontWeight:'700' }}>{b.report_data?.CI?.CII||'—'}</td>
-                    <td style={{ padding:'10px 10px', fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', color:bCol(b.report_data?.CI?.LRS||0,T), fontWeight:'700' }}>{b.report_data?.CI?.LRS||'—'}</td>
-                    <td style={{ padding:'10px 10px' }}><ValidityDot overall={b.report_data?.validity?.overall} T={T} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-      </div>
-      <DownloadBtn elementId={`team-report-${candidate.doc_id}`} filename={`${batch}_Team_Aggregate.pdf`} T={T} />
     </div>
   );
 };
 
-// ─── TEAM COMPOSITION REPORT ──────────────────────────────────
-const TeamCompositionReport = ({ candidate, allData, T }) => {
+// ─── CULTURE PULSE REPORT (Multi-Dept Org) ────────────────────────
+const CULTURE_PERSONAS = [
+  { cond: s => s.A >= 60 && s.EOavg >= 60, name: 'A Resilient, Relationship-First Culture', desc: 'High psychological safety and strong ethical guardrails. People trust each other and the institution.' },
+  { cond: s => s.O >= 60 && s.LAavg >= 60, name: 'An Agile, Innovation-Driven Culture', desc: 'Fast-moving and adaptable. The organization naturally absorbs new frameworks and challenges legacy thinking.' },
+  { cond: s => s.C >= 60 && s.ES >= 60, name: 'A Highly Reliable, Execution-Focused Culture', desc: 'Process-driven and steady under pressure. The organization excels at sustained, high-quality delivery.' },
+  { cond: s => s.E >= 60 && s.CQavg >= 60, name: 'A Dynamic, Externally-Oriented Culture', desc: 'Highly visible and culturally fluid. The organization is exceptionally strong at stakeholder and partner management.' },
+  { cond: () => true, name: 'A Balanced, Pragmatic Culture', desc: 'A steady organizational profile with distributed strengths across execution, relationships, and adaptability.' }
+];
+
+
+// Development-lens content per measured area. "buildReason" replaces the old
+// "risk" framing — same information, phrased as what's worth building rather
+// than what's dangerous.
+const CULTURE_DIM_CONTENT = {
+  C: {
+    hiring: "This organisation consistently attracts structured, reliable people who follow through.",
+    culture: "A process-respecting environment where deadlines are treated as real and quality standards hold.",
+    payoff: "Strong operational reliability and few dropped balls.",
+    structural: "Cross-departmental handoffs can slip when a process isn't explicitly defined.",
+    buildReason: "Making ownership visible across department boundaries would extend this strength further.",
+    intervention: "Introduce org-wide OKRs and a shared accountability dashboard so ownership is visible past team boundaries.",
+  },
+  O: {
+    hiring: "This organisation draws in intellectually curious people who like to question how things are done.",
+    culture: "An environment comfortable debating ideas and trying new workflows.",
+    payoff: "Strong organic innovation and less risk of getting stuck in old methods.",
+    structural: "Some teams may default to 'how we've always done it' more than others.",
+    buildReason: "A shared space for testing new approaches would let this curiosity travel further across the organisation.",
+    intervention: "Launch an internal sandbox initiative; recognise teams for testing and documenting new approaches, whether or not they land.",
+  },
+  E: {
+    hiring: "This organisation attracts confident, persuasive people who are comfortable being heard.",
+    culture: "A high-energy culture where visibility and influence matter.",
+    payoff: "Strong internal advocacy and a confident external presence.",
+    structural: "Quieter parts of the organisation may need more deliberate space to be heard.",
+    buildReason: "Structured turn-taking would help ideas surface evenly rather than by who speaks loudest.",
+    intervention: "Build rotational speaking roles into town halls and cross-department meetings so every group gets airtime.",
+  },
+  A: {
+    hiring: "This organisation attracts empathetic, cooperative people who work well together.",
+    culture: "A warm environment with real psychological safety and low friction.",
+    payoff: "Strong retention and smooth cross-functional collaboration.",
+    structural: "Some natural siloing can appear between departments that rarely interact directly.",
+    buildReason: "Rewarding collaboration explicitly would turn this natural warmth into deliberate cross-team practice.",
+    intervention: "Fold cross-departmental 360 feedback into leadership evaluation, so collaboration is recognised as much as individual output.",
+  },
+  ES: {
+    hiring: "This organisation attracts people who stay grounded and think clearly under stress.",
+    culture: "A calm, measured environment even during busy or high-stakes periods.",
+    payoff: "Consistent decision quality and lower burnout during turbulent stretches.",
+    structural: "Stress can still spread between people during sustained busy periods.",
+    buildReason: "Deliberate recovery time would help this steadiness hold even at the busiest points in the year.",
+    intervention: "Audit workload distribution and build in planned decompression periods after intense sprints.",
+  },
+  CQavg: {
+    hiring: "This organisation attracts people who move naturally across different backgrounds and norms.",
+    culture: "An inclusive, adaptable environment that respects regional and institutional differences.",
+    payoff: "Smooth expansion into new markets and strong multi-stakeholder relationships.",
+    structural: "Some parts of the organisation may be less exposed to external partners or regional offices.",
+    buildReason: "Wider rotation would spread this cultural fluency more evenly across levels.",
+    intervention: "Build cross-regional or cross-functional rotations into the path to senior leadership.",
+  },
+  OCBavg: {
+    hiring: "This organisation attracts people who look beyond their formal role to help where needed.",
+    culture: "A supportive environment where people naturally cover for each other.",
+    payoff: "Strong resilience — the organisation holds together even when formal process breaks down.",
+    structural: "Work that falls between two departments can still stall without a clear owner.",
+    buildReason: "Recognising this generosity explicitly would help it show up consistently rather than only when someone happens to notice.",
+    intervention: "Update the appraisal system to explicitly credit contributions made to other teams.",
+  },
+  LAavg: {
+    hiring: "This organisation attracts fast learners who actively seek out new skills.",
+    culture: "A growth-oriented environment where upskilling happens organically.",
+    payoff: "The organisation can shift strategy or adopt new tools with relatively little friction.",
+    structural: "New systems may still need more structured onboarding in some teams than others.",
+    buildReason: "Investing in self-directed learning would compound a strength that's already there.",
+    intervention: "Shift some L&D budget from mandatory compliance training toward self-directed learning stipends.",
+  },
+  EOavg: {
+    hiring: "This organisation attracts principled people who value transparency.",
+    culture: "A high-integrity environment where bad news travels quickly and rules are respected.",
+    payoff: "Strong compliance standing, solid audit performance, and real stakeholder trust.",
+    structural: "Under pressure, small workarounds can occasionally go unspoken rather than raised.",
+    buildReason: "A visible, no-penalty way to flag near-misses would make this openness even more reliable.",
+    intervention: "Introduce a visible, non-punitive near-miss reporting system so raising a small issue early is normal, not risky.",
+  },
+};
+
+// What a dominant or absent profile mix signals at organisation scale.
+const ORG_ARCHETYPE_TAG = {
+  'Adaptive Innovator': 'moving fast through ambiguity',
+  'Institutional Anchor': 'steady process discipline',
+  'Visionary Sprinter': 'big-picture momentum and pace',
+  'Collaborative Team Leader': 'quiet trust-building inside teams',
+  'Cross-Cultural Bridge': 'translating across different groups and contexts',
+  'Eager Cultural Bridge-Builder': 'warmly bringing new people in',
+  'Ethics-Driven Executor': 'consistent, principled follow-through',
+  'Learning Champion': 'curiosity that lifts everyone around them',
+  'Strategic Pivoter': 'reading a changing situation and redirecting early',
+  'High-Capability, Under Strain': 'sustained delivery even under real pressure',
+  'Strategic Integrity Leader': 'combining judgement with strong values',
+  'Generous Under Pressure': 'steadying morale when things get hard',
+  'Emerging Professional': 'fresh energy and real appetite to learn',
+};
+
+const getLearningPrefSoft = (s) => {
+  if (s.LAavg >= 60 && s.O >= 60) return {
+    mode: 'Self-Directed & Exploratory',
+    desc: 'This culture does well with autonomy: real tools, real problems, and room to work through them, rather than mandatory syllabus-style training.',
+    incentive: 'Recognise this with exposure to new projects and room to experiment.',
+    resist: 'Change lands best here with a reason attached rather than as a plain instruction. A little context up front goes a long way.',
+  };
+  if (s.C >= 60 && s.ES >= 60) return {
+    mode: 'Structured & Certification-Led',
+    desc: 'This culture responds well to clear syllabi, formal certifications, and expert-led instruction.',
+    incentive: 'Recognise this with formal credentials, titles, and visible career pathways.',
+    resist: 'Frequent, unexplained changes in direction take more to absorb here than a steady, well-sequenced plan.',
+  };
+  if (s.E >= 60 && s.A >= 60) return {
+    mode: 'Cohort-Based & Social',
+    desc: 'This culture learns best through interaction: workshops, peer mentoring, group problem-solving.',
+    incentive: 'Recognise this with public recognition and chances to lead or mentor others.',
+    resist: 'Solitary, self-paced modules with no interaction tend to get less engagement here.',
+  };
+  return {
+    mode: 'Pragmatic & On-the-Job',
+    desc: 'This culture wants practical, immediately usable skills tied directly to daily work.',
+    incentive: 'Recognise this with tools that make the job noticeably easier.',
+    resist: 'Long theoretical modules with no clear application tend to lose people here.',
+  };
+};
+
+const getLeadershipFitSoft = (s) => {
+  if (s.LAavg >= 60 && s.O >= 60) return {
+    succeeds: 'Visionary & Autonomy-Minded',
+    lessWell: 'Highly Directive & Process-Heavy',
+    desc: 'Leaders do best here by setting the direction and then stepping back. This group responds better to a clear why than to close oversight of exactly how the work gets done.',
+  };
+  if (s.C >= 60 && s.EOavg >= 60) return {
+    succeeds: 'Structured & Principled',
+    lessWell: 'Inconsistent or Reactive',
+    desc: 'Leaders do best here by being consistent and leading by example. Shifting priorities day to day is harder for this group to build trust around than a steady, principled approach.',
+  };
+  if (s.A >= 60 && s.OCBavg >= 60) return {
+    succeeds: 'Participative & Empathetic',
+    lessWell: 'Command-and-Control',
+    desc: 'Leaders do best here by building consensus and showing genuine care. A more directive, top-down style tends to land less naturally and can quietly cool engagement over time.',
+  };
+  return {
+    succeeds: 'Clear & Even-Handed',
+    lessWell: 'Ambiguous or Distant',
+    desc: 'This group does best with clear expectations and an approachable, visible leader.',
+  };
+};
+
+// ─── PRINT PALETTE (always light, regardless of dashboard theme) ────────────
+const PRT = {
+  c: '#B01C24', cDeep: '#6B0E13', cSoft: '#F8E9EA',
+  gold: '#A07830', goldSoft: '#F6EFE2',
+  ink: '#1A1414', sub: '#4A3F3F', faint: '#8C7F7F',
+  line: '#E5DEDE', lineSoft: '#F1ECEC', bg: '#FFFFFF', panel: '#FAF7F5',
+  gn: '#15803D', gnSoft: '#E9F4EC',
+  am: '#B45309', amSoft: '#FBF1E4',
+  rd: '#B91C1C', rdSoft: '#FBEAEA',
+};
+
+const PR_W = 794, PR_H = 1123, PR_PAD = 46;
+
+const prBandName = v => v >= 75 ? 'Strong' : v >= 60 ? 'Solid' : 'Still building';
+const prCol = v => v >= 75 ? PRT.gn : v >= 60 ? PRT.am : PRT.rd;
+const prSoft = v => v >= 75 ? PRT.gnSoft : v >= 60 ? PRT.amSoft : PRT.rdSoft;
+
+const prChunk = (arr, first, rest) => {
+  const out = [];
+  if (!arr.length) return out;
+  out.push(arr.slice(0, first));
+  let i = first;
+  while (i < arr.length) { out.push(arr.slice(i, i + rest)); i += rest; }
+  return out;
+};
+
+const prCap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+// ─── SHARED CONTENT MAPS ────────────────────────────────────────────────────
+const PR_FRIENDLY = {
+  CQavg: 'cultural intelligence', LAavg: 'learning agility', OCBavg: 'team citizenship',
+  EOavg: 'ethical orientation', C: 'reliability and follow-through', O: 'openness to new ideas',
+  E: 'visibility and presence', A: 'working well with others', ES: 'steadiness under pressure',
+};
+
+const PR_CAT = {
+  C: 'process', LA_PA: 'people', CQ_K: 'people', CQ_B: 'people', ES: 'steadiness',
+  EO_ER: 'judgement', A: 'people', OCB_CV: 'people', OCB_CO: 'people', LA_RA: 'judgement',
+  CQ_M: 'people', LA_CA: 'steadiness', EO_RC: 'process', O: 'judgement', OCB_S: 'steadiness',
+  OCB_Cn: 'process', OCB_A: 'people', E: 'people', EO_T: 'people', LA_MA: 'judgement', EO_AI: 'process',
+};
+const PR_CAT_LABEL = { people: 'relational', steadiness: 'resilience', judgement: 'judgement', process: 'process' };
+const PR_CAT_MEANING = {
+  people: 'how they work with people',
+  steadiness: 'how they hold up when things are hard',
+  judgement: 'how they think through the unfamiliar',
+  process: 'how consistently they run the basics',
+};
+
+const PR_CI_CONTAINS = {
+  SES: 'Working well with others, visibility and presence, and adapting to different people.',
+  PMS: 'Holding the line under pressure, staying steady, and staying positive when things are hard.',
+  ADS: 'Adapting to change, openness to new ideas, and delivering in unfamiliar situations.',
+  TVS: 'Helping colleagues, considerateness, and involvement beyond the immediate role.',
+  CII: 'Reliability and follow-through, following process consistently, and speaking up about mistakes.',
+  OPS: 'Personal organisation, reliability, and consistency of delivery week to week.',
+  LRS: 'Thinking through difficult decisions, thinking through new problems, and learning from others.',
+};
+
+const PR_LEAN = {
+  'Collaborative Team Leader': 'people', 'Cross-Cultural Bridge': 'people',
+  'Eager Cultural Bridge-Builder': 'people', 'Generous Under Pressure': 'people',
+  'Emerging Professional': 'change', 'Adaptive Innovator': 'change', 'Visionary Sprinter': 'change',
+  'Strategic Pivoter': 'change', 'Learning Champion': 'change',
+  'Institutional Anchor': 'process', 'Ethics-Driven Executor': 'process',
+  'Strategic Integrity Leader': 'process', 'High-Capability, Under Strain': 'process',
+};
+
+const PR_GEO = {
+  'The Batholith': 'A batholith is a single vast body of rock formed from one source. This group is unusually consistent: similar strengths, similar instincts, few surprises.',
+  'The Conglomerate': 'A conglomerate is a rock made of many different stones held together by one natural cement. The individuals here are varied, but they share a set of values that holds them together.',
+  'The Geode': 'A geode looks plain on the outside and holds crystal inside. This group has a few exceptional people and a wider group still catching up to them.',
+  'The Breccia': 'A breccia is made of sharp, varied fragments that have not yet been smoothed together. The variety is real; the cementing is the work ahead.',
+  'The Basalt Column': 'Basalt columns are regular, fast-formed and strong. This group is built for output and consistency, and is less comfortable when the shape of the work changes.',
+  'The Alluvial Fan': 'An alluvial fan spreads wide rather than cutting deep. This group can turn a hand to most things, and its next stage is depth in a few of them.',
+  'The Metamorphic Belt': 'Metamorphic rock has already been reshaped by pressure. This group carries real experience of hard periods, and some wear from them.',
+  'The Vein System': 'A vein system concentrates value in a few seams running through ordinary rock. A few standout individuals carry much of this group\'s strength.',
+};
+
+const TI_PAIRS = [
+  ['Adaptive Innovator', 'Institutional Anchor', 'Ideas meet delivery: one opens up the route, the other makes it stick.'],
+  ['Visionary Sprinter', 'Ethics-Driven Executor', 'Ambition meets follow-through: pace is kept honest by consistency.'],
+  ['Emerging Professional', 'Learning Champion', 'Appetite meets method: the newest member learns how to learn from the strongest learner.'],
+  ['Collaborative Team Leader', 'High-Capability, Under Strain', 'Care meets load: the person who notices people supports the person carrying the most.'],
+  ['Strategic Pivoter', 'Institutional Anchor', 'Change meets stability: pivots land better when anchored.'],
+  ['Cross-Cultural Bridge', 'Emerging Professional', 'Context meets curiosity: the bridge shows the new joiner how the wider world works.'],
+];
+
+const PR_ROLE_TARGETS = [
+  { name: 'Client-Facing / Stakeholder Mgmt', targets: { E: [65, 100], CQavg: [60, 100], A: [60, 100] } },
+  { name: 'Peer Coordination / Project Support', targets: { OCBavg: [65, 100], A: [60, 100], C: [60, 100] } },
+  { name: 'Change / Reform / Innovation', targets: { O: [65, 100], LAavg: [65, 100] } },
+  { name: 'Compliance / Audit / Risk', targets: { EOavg: [70, 100], C: [70, 100] } },
+  { name: 'Operations / Technical Specialist', targets: { C: [65, 100], ES: [60, 100] } },
+  { name: 'Future Leadership Potential', targets: { LAavg: [65, 100], EOavg: [65, 100], E: [60, 100] } },
+];
+
+const PR_ROLE_BUILT = {
+  'Client-Facing / Stakeholder Mgmt': 'Visibility and presence, cultural intelligence, working well with others',
+  'Peer Coordination / Project Support': 'Team citizenship, working well with others, reliability and follow-through',
+  'Change / Reform / Innovation': 'Openness to new ideas, learning agility',
+  'Compliance / Audit / Risk': 'Ethical orientation, reliability and follow-through',
+  'Operations / Technical Specialist': 'Reliability and follow-through, steadiness under pressure',
+  'Future Leadership Potential': 'Learning agility, ethical orientation, visibility and presence',
+};
+
+const PR_WHERE_FIRST = {
+  C: 'Cross-department handovers and month-end routines',
+  ES: 'The weeks after sustained busy periods',
+  O: 'Adoption of new tools and methods',
+  CQavg: 'Roles with little exposure outside their own area',
+  LAavg: 'First-of-a-kind tasks with no template to follow',
+  E: 'Large meetings and cross-team forums',
+  A: 'Friction between teams that rarely interact directly',
+  OCBavg: 'Work that falls between two owners',
+  EOavg: 'Small issues raised late rather than early',
+};
+
+const PR_WORKING_SIGNAL = {
+  C: 'Handoffs stop needing a chaser; ownership is named on both sides of every boundary.',
+  ES: 'The week after a peak is planned rather than absorbed.',
+  O: 'New approaches get a fair trial before being judged.',
+  CQavg: 'No one reaches leadership without exposure outside their own area.',
+  LAavg: 'People volunteer for unfamiliar work instead of routing around it.',
+  E: 'Quieter groups are heard without being asked twice.',
+  A: 'Cross-team friction is raised early and settled quickly.',
+  OCBavg: 'Help that crosses team lines is visible and credited.',
+  EOavg: 'Small issues surface early, without prompting.',
+};
+
+const PR_INT_TITLE = {
+  C: 'Make ownership visible past team boundaries',
+  ES: 'Protect recovery, not just delivery',
+  O: 'Give new approaches a sanctioned space',
+  CQavg: 'Build exposure into the promotion path',
+  LAavg: 'Move learning budget toward self-directed growth',
+  E: 'Create structured space for quieter voices',
+  A: 'Reward collaboration explicitly',
+  OCBavg: 'Credit help that crosses team lines',
+  EOavg: 'Make early disclosure safe and visible',
+};
+
+const PR_INT_OWNER = {
+  C: 'ExCo with HR', ES: 'HR with line managers', O: 'HR / L&D', CQavg: 'HR / L&D',
+  LAavg: 'HR / L&D', E: 'Line managers with HR', A: 'HR with ExCo', OCBavg: 'HR / L&D', EOavg: 'ExCo with HR',
+};
+
+const PR_SITUATIONS = {
+  'Self-Directed & Exploratory': [
+    ['Rolling out a new process', 'State the problem it solves, then let the team shape the steps.', 'Issuing the finished process as a compliance requirement.'],
+    ['Introducing a training programme', 'Real tools against a real problem, with room to experiment.', 'A mandatory syllabus with attendance as the measure of success.'],
+    ['Raising a performance concern', 'A direct conversation with the reason made explicit.', 'Escalating through process before anyone has said the thing out loud.'],
+  ],
+  'Structured & Certification-Led': [
+    ['Rolling out a new process', 'A clear written procedure, introduced step by step with named checkpoints.', 'A vague "figure it out as we go" rollout with shifting expectations.'],
+    ['Introducing a training programme', 'A formal syllabus with a recognised certificate at the end.', 'Loose self-paced material with no credential or visible finish line.'],
+    ['Raising a performance concern', 'A structured conversation against agreed, written expectations.', 'Ad-hoc feedback that changes depending on who is asking.'],
+  ],
+  'Cohort-Based & Social': [
+    ['Rolling out a new process', 'Workshop it with the group first, so the process arrives with buy-in attached.', 'A memo announcing the change with no discussion.'],
+    ['Introducing a training programme', 'Cohort sessions, peer mentoring and group problem-solving.', 'Solitary self-paced modules with no interaction.'],
+    ['Raising a performance concern', 'A private, relationship-first conversation before anything formal.', 'Public correction, or a formal letter as the first step.'],
+  ],
+  'Pragmatic & On-the-Job': [
+    ['Rolling out a new process', 'Show how it makes the daily work easier, then embed it in the routine.', 'Framing it as theory or strategy with no visible daily benefit.'],
+    ['Introducing a training programme', 'Short, practical sessions tied directly to this week\'s work.', 'Long theoretical modules with no clear application.'],
+    ['Raising a performance concern', 'A specific, example-based conversation about the work itself.', 'Abstract feedback about attitude with no concrete example.'],
+  ],
+};
+
+// ─── PRINT PRIMITIVES ───────────────────────────────────────────────────────
+const PrStyles = () => (
+  <style>{`
+    .pr-page { box-shadow: 0 6px 26px rgba(0,0,0,0.28); }
+    .pr-page * { box-sizing: border-box; }
+  `}</style>
+);
+
+const CoreLogo = ({ h = 36 }) => {
+  const [err, setErr] = useState(false);
+  if (err) return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+      <span style={{ fontFamily: "'Playfair Display',serif", fontSize: h * 0.72, fontWeight: 700, color: PRT.c, letterSpacing: '0.02em' }}>CORE</span>
+      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: h * 0.24, fontWeight: 700, color: PRT.faint, letterSpacing: '0.14em', textTransform: 'uppercase' }}>by Carnelian</span>
+    </div>
+  );
+  return <img src="/core-logo-for-light-mode.svg" alt="CORE by Carnelian" style={{ height: h, width: 'auto', objectFit: 'contain', display: 'block' }} onError={() => setErr(true)} />;
+};
+
+const PrLabel = ({ c = PRT.c, children, style = {} }) => (
+  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: c, ...style }}>{children}</div>
+);
+
+const PrHead = ({ children, size = 15, style = {} }) => (
+  <div style={{ fontFamily: "'Public Sans',sans-serif", fontSize: size, fontWeight: 800, color: PRT.ink, letterSpacing: '-0.01em', lineHeight: 1.2, ...style }}>{children}</div>
+);
+
+const PrBody = ({ children, size = 9.5, color = PRT.sub, style = {} }) => (
+  <div style={{ fontFamily: "'Public Sans',sans-serif", fontSize: size, color, lineHeight: 1.55, ...style }}>{children}</div>
+);
+
+const PrPage = ({ id, pageNo, total, footerLeft, footerRight, children }) => (
+  <div id={id} className="pr-page" style={{ width: PR_W, height: PR_H, background: PRT.bg, position: 'relative', overflow: 'hidden', margin: '0 auto 18px', borderRadius: 3 }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${PRT.c}, ${PRT.gold}, transparent 70%)` }} />
+    <div style={{ position: 'absolute', inset: 0, padding: `${PR_PAD + 8}px ${PR_PAD}px 58px`, display: 'flex', flexDirection: 'column' }}>
+      {children}
+    </div>
+    <div style={{ position: 'absolute', left: PR_PAD, right: PR_PAD, bottom: 20, borderTop: `1px solid ${PRT.line}`, paddingTop: 7, display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: 7, color: PRT.faint, letterSpacing: '0.06em' }}>
+      <span>{footerLeft}</span>
+      <span>{footerRight} · Page {pageNo} of {total}</span>
+    </div>
+  </div>
+);
+
+const PrSectionHead = ({ num, title, sub }) => (
+  <div style={{ marginBottom: 14, flexShrink: 0 }}>
+    {num != null && <PrLabel style={{ marginBottom: 3 }}>SECTION {num}</PrLabel>}
+    <PrHead size={17}>{title}</PrHead>
+    {sub && <PrBody size={9} color={PRT.faint} style={{ marginTop: 4 }}>{sub}</PrBody>}
+    <div style={{ height: 2, background: `linear-gradient(90deg, ${PRT.c}, ${PRT.gold}, transparent)`, marginTop: 8 }} />
+  </div>
+);
+
+const PrKey = ({ title = 'KEY FOR THIS SECTION', rows, style = {} }) => (
+  <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, borderLeft: `3px solid ${PRT.gold}`, padding: '10px 12px', marginBottom: 12, ...style }}>
+    <PrLabel c={PRT.gold} style={{ marginBottom: 7 }}>{title}</PrLabel>
+    {rows.map(([k, v], i) => (
+      <div key={i} style={{ display: 'flex', gap: 10, marginBottom: i < rows.length - 1 ? 5 : 0 }}>
+        <div style={{ width: 128, flexShrink: 0, fontFamily: "'Public Sans',sans-serif", fontSize: 8.5, fontWeight: 700, color: PRT.ink, lineHeight: 1.45 }}>{k}</div>
+        <PrBody size={8.5}>{v}</PrBody>
+      </div>
+    ))}
+  </div>
+);
+
+const PrLegend = ({ style = {} }) => (
+  <div style={{ display: 'flex', gap: 14, alignItems: 'center', ...style }}>
+    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em', color: PRT.faint }}>SCORE BANDS</span>
+    {[['Strong 75+', PRT.gn], ['Solid 60 to 74', PRT.am], ['Still building below 60', PRT.rd]].map(([t, c]) => (
+      <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <span style={{ width: 8, height: 8, background: c, borderRadius: 1, display: 'inline-block' }} />
+        <span style={{ fontFamily: "'Public Sans',sans-serif", fontSize: 8, color: PRT.sub, fontWeight: 600 }}>{t}</span>
+      </span>
+    ))}
+  </div>
+);
+
+const PrTable = ({ cols, widths, rows, fontSize = 8.8, style = {} }) => (
+  <table style={{ width: '100%', borderCollapse: 'collapse', border: `1px solid ${PRT.line}`, ...style }}>
+    <thead>
+      <tr style={{ background: PRT.panel }}>
+        {cols.map((c, i) => (
+          <th key={i} style={{ width: widths ? widths[i] : undefined, padding: '7px 9px', textAlign: 'left', fontFamily: "'IBM Plex Mono',monospace", fontSize: 7.2, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: PRT.sub, borderBottom: `2px solid ${PRT.line}` }}>{c}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r, ri) => (
+        <tr key={ri} style={{ borderBottom: ri < rows.length - 1 ? `1px solid ${PRT.lineSoft}` : 'none' }}>
+          {r.map((cell, ci) => (
+            <td key={ci} style={{ padding: '7px 9px', fontFamily: "'Public Sans',sans-serif", fontSize, color: PRT.sub, verticalAlign: 'top', lineHeight: 1.5 }}>{cell}</td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+const PrMeta = ({ rows }) => (
+  <table style={{ width: '100%', borderCollapse: 'collapse', border: `1px solid ${PRT.line}` }}>
+    <tbody>
+      {rows.map(([k, v], i) => (
+        <tr key={i} style={{ borderBottom: i < rows.length - 1 ? `1px solid ${PRT.lineSoft}` : 'none' }}>
+          <td style={{ width: 180, padding: '7px 12px', fontFamily: "'IBM Plex Mono',monospace", fontSize: 7.3, fontWeight: 700, letterSpacing: '0.12em', color: PRT.faint, textTransform: 'uppercase', borderRight: `1px solid ${PRT.lineSoft}`, verticalAlign: 'top' }}>{k}</td>
+          <td style={{ padding: '7px 12px', fontFamily: "'Public Sans',sans-serif", fontSize: 9.3, color: PRT.ink, fontWeight: 600, lineHeight: 1.45 }}>{v}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+const PrStats = ({ items }) => (
+  <div style={{ display: 'flex', border: `1px solid ${PRT.line}`, background: PRT.panel }}>
+    {items.map(([num, lab], i) => (
+      <div key={i} style={{ flex: 1, padding: '12px 8px', textAlign: 'center', borderRight: i < items.length - 1 ? `1px solid ${PRT.line}` : 'none' }}>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 23, fontWeight: 700, color: PRT.c, lineHeight: 1 }}>{num}</div>
+        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 6.8, letterSpacing: '0.1em', textTransform: 'uppercase', color: PRT.faint, marginTop: 5, lineHeight: 1.5 }}>{lab}</div>
+      </div>
+    ))}
+  </div>
+);
+
+const PrNote = ({ title, color = PRT.c, children, style = {} }) => (
+  <div style={{ border: `1px solid ${PRT.line}`, borderLeft: `3px solid ${color}`, background: PRT.bg, padding: '9px 12px', ...style }}>
+    <PrLabel c={color} style={{ marginBottom: 4 }}>{title}</PrLabel>
+    <PrBody size={8.8}>{children}</PrBody>
+  </div>
+);
+
+const PrPairNotes = ({ left, right, style = {} }) => (
+  <div style={{ display: 'flex', gap: 10, ...style }}>
+    <div style={{ flex: 1 }}><PrNote title={left[0]} color={left[2] || PRT.gn}>{left[1]}</PrNote></div>
+    <div style={{ flex: 1 }}><PrNote title={right[0]} color={right[2] || PRT.am}>{right[1]}</PrNote></div>
+  </div>
+);
+
+const PrBarRow = ({ label, v, labelW = 195, h = 11, mono = false }) => (
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }}>
+    <div style={{ width: labelW, paddingRight: 10, textAlign: 'right', fontFamily: "'Public Sans',sans-serif", fontSize: 8.4, color: PRT.sub, fontWeight: 600, lineHeight: 1.25, flexShrink: 0 }}>{label}</div>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ width: `${Math.max(2, Math.min(100, v)) * 0.8}%`, height: h, background: prCol(v), borderRadius: 1 }} />
+      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.4, fontWeight: 700, color: PRT.ink }}>{v}</span>
+    </div>
+  </div>
+);
+
+const PrQualityCard = ({ tag, tagColor, title, score, rows }) => (
+  <div style={{ border: `1px solid ${PRT.line}`, borderLeft: `4px solid ${tagColor}`, background: PRT.bg, padding: '10px 13px', marginBottom: 9 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <div>
+        <PrLabel c={tagColor}>{tag}</PrLabel>
+        <PrHead size={12.5} style={{ marginTop: 2 }}>{title}</PrHead>
+      </div>
+      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, fontWeight: 800, color: tagColor, flexShrink: 0 }}>
+        {score}<span style={{ fontSize: 8, color: PRT.faint }}>/100</span>
+      </div>
+    </div>
+    {rows.map(([k, v], i) => (
+      <div key={i} style={{ marginTop: 5, lineHeight: 1.5 }}>
+        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 7.3, fontWeight: 700, letterSpacing: '0.1em', color: PRT.c }}>{k}: </span>
+        <span style={{ fontFamily: "'Public Sans',sans-serif", fontSize: 8.8, color: PRT.sub }}>{v}</span>
+      </div>
+    ))}
+  </div>
+);
+
+const PrDonut = ({ segments, size = 150, hole = 96, centerTop, centerBottom }) => {
+  const total = segments.reduce((a, s) => a + s.value, 0) || 1;
+  const cx = size / 2, cy = size / 2, r = size / 2;
+  let angle = -90;
+  const paths = segments.map((s, i) => {
+    const frac = s.value / total;
+    if (frac >= 0.999) return <circle key={i} cx={cx} cy={cy} r={r} fill={s.color} />;
+    const a0 = angle * Math.PI / 180;
+    angle += frac * 360;
+    const a1 = angle * Math.PI / 180;
+    const large = frac > 0.5 ? 1 : 0;
+    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    return <path key={i} d={`M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`} fill={s.color} />;
+  });
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size}>{paths}<circle cx={cx} cy={cy} r={hole / 2} fill={PRT.bg} /></svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {centerTop}{centerBottom}
+      </div>
+    </div>
+  );
+};
+
+const PR_COLORS = ['#15803D', '#26428B', '#B45309', '#B01C24', '#6D28D9', '#0E7490', '#A07830', '#475569', '#BE185D', '#4D7C0F', '#7C2D12', '#1E3A8A', '#374151'];
+
+// ─── PAGE-BY-PAGE PDF EXPORTER ──────────────────────────────────────────────
+const prLoadScript = (src, flag) => new Promise((resolve, reject) => {
+  if (window[flag]) { resolve(); return; }
+  const existing = document.querySelector(`script[data-${flag}]`);
+  if (existing) {
+    const check = setInterval(() => { if (window[flag]) { clearInterval(check); resolve(); } }, 50);
+    return;
+  }
+  const s = document.createElement('script');
+  s.src = src;
+  s.setAttribute(`data-${flag}`, '1');
+  s.onload = () => { window[flag] = true; resolve(); };
+  s.onerror = reject;
+  document.body.appendChild(s);
+});
+
+const exportPrintPDF = async (ids, filename, setBusy) => {
+  try {
+    setBusy('Loading export engine…');
+    await prLoadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', '__h2c_ready');
+    await prLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', '__jspdf_ready');
+    if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
+    await new Promise(r => setTimeout(r, 200));
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'px', format: [PR_W, PR_H], orientation: 'portrait', hotfixes: ['px_scaling'] });
+    for (let i = 0; i < ids.length; i++) {
+      setBusy(`Rendering page ${i + 1} of ${ids.length}…`);
+      const el = document.getElementById(ids[i]);
+      if (!el) continue;
+      const canvas = await window.html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', logging: false });
+      const img = canvas.toDataURL('image/jpeg', 0.92);
+      if (i > 0) pdf.addPage([PR_W, PR_H], 'portrait');
+      pdf.addImage(img, 'JPEG', 0, 0, PR_W, PR_H);
+    }
+    pdf.save(filename);
+  } catch (e) {
+    console.error('Print export failed', e);
+    alert('Failed to generate the PDF. Please try again.');
+  } finally {
+    setBusy(null);
+  }
+};
+
+const PrDownloadBtn = ({ ids, filename }) => {
+  const [busy, setBusy] = useState(null);
+  return (
+    <button disabled={!!busy} onClick={() => exportPrintPDF(ids, filename, setBusy)} style={{
+      margin: '18px auto', padding: '13px 26px', borderRadius: 8, background: busy ? PRT.faint : PRT.gold,
+      color: '#fff', border: 'none', cursor: busy ? 'wait' : 'pointer',
+      fontFamily: "'Public Sans',sans-serif", fontSize: 13, fontWeight: 800, display: 'flex',
+      justifyContent: 'center', alignItems: 'center', gap: 8, width: '100%', maxWidth: PR_W, transition: 'all 0.2s',
+    }}>
+      {busy || '⬇ Download Report as PDF (A4)'}
+    </button>
+  );
+};
+
+const PrPreviewNote = ({ T, pages }) => (
+  <div style={{ textAlign: 'center', marginBottom: 12, fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: T.t3, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+    Print preview · A4 · {pages} page{pages !== 1 ? 's' : ''} · downloads exactly as shown
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEAM INSIGHT REPORT (print-authored)
+// ═══════════════════════════════════════════════════════════════════════════
+const TeamInsightReport = ({ candidate, allData, T }) => {
   const batch = candidate.batch;
-  
-  if (!batch) {
-    return (
-      <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
-        <div style={{ fontSize:'2rem', marginBottom:'12px' }}>🧩</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', color:T.t2, marginBottom:'8px' }}>No Batch Assigned</div>
-        <div style={{ fontSize:'12px' }}>This candidate was not assessed as part of a named batch. The Team Composition Report requires a batch.</div>
-      </div>
-    );
-  }
-
   const normBatch = String(batch || '').trim().toLowerCase();
-  const allBatchData = allData.filter(r => String(r.batch || '').trim().toLowerCase() === normBatch);
-  const batchData = allBatchData.filter(r => r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  const batchData = (allData || []).filter(r => String(r.batch || '').trim().toLowerCase() === normBatch && r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  if (!batch) return <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>No batch assigned.</div>;
+  if (batchData.length < 2) return <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>Only {batchData.length} valid response(s). Requires at least 2.</div>;
 
-  if (batchData.length < 2) {
-    return (
-      <div style={{ padding:'40px', textAlign:'center', color:T.t3, fontWeight:'600' }}>
-        <div style={{ fontSize:'2rem', marginBottom:'12px' }}>⏳</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.2rem', color:T.t2, marginBottom:'8px' }}>Batch: {batch}</div>
-        <div style={{ fontSize:'12px' }}>Only {batchData.length} valid response{batchData.length!==1?'s':''} in this batch. The Team Composition Report requires at least 2.</div>
-      </div>
-    );
-  }
-
+  // ── data prep ──
   const n = batchData.length;
-  const dimKeys = ['O','C','E','A','ES','CQavg','OCBavg','LAavg','EOavg'];
-  const dimLabels = {O:'Openness',C:'Conscientiousness',E:'Extraversion',A:'Agreeableness',ES:'Emotional Stability',CQavg:'Cultural Intelligence',OCBavg:'Team Citizenship',LAavg:'Learning Agility',EOavg:'Ethical Orientation'};
-  
-  const teamAvg = {};
-  dimKeys.forEach(k => { teamAvg[k] = Math.round(batchData.reduce((a,b)=>a+(b.report_data?.scores?.[k]||0),0)/n); });
+  const fmt = v => n < 12 ? Math.round(v * 10) / 10 : Math.round(v);
+  const orgName = candidate.org || batchData[0]?.org || 'the organisation';
+  const orgKnown = orgName !== 'the organisation';
+  const deptList = [...new Set(batchData.map(b => b.department).filter(Boolean))];
+  const cohortTitle = deptList.length ? `${deptList.join(', ')} cohort` : `Batch ${batch} cohort`;
+  const industry = candidate.industry || '';
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const qi = k => getQualityInfo(k, orgName, industry);
 
-  const findings = [];
-  dimKeys.forEach(k => {
-    if(teamAvg[k] < 50) findings.push({sev:'critical', t:`Team ${dimLabels[k]} is critically low (avg ${teamAvg[k]})`, d:`This is a collective gap. The team will struggle with tasks requiring ${dimLabels[k]}.`});
-    else if(teamAvg[k] < 60) findings.push({sev:'watch', t:`Team ${dimLabels[k]} is below optimal (avg ${teamAvg[k]})`, d:`Performance may be adequate today but fragile under pressure or change.`});
-    else if(teamAvg[k] >= 75) findings.push({sev:'strength', t:`Team ${dimLabels[k]} is a collective strength (avg ${teamAvg[k]})`, d:`This is a competitive advantage. Protect and leverage it.`});
+  const avgKey = k => {
+    const vals = batchData.map(b => b.report_data?.scores?.[k]).filter(v => v != null).map(Number);
+    return vals.length ? fmt(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  };
+  const dimKeys = ['O', 'C', 'E', 'A', 'ES', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'];
+  const teamAvg = {};
+  dimKeys.forEach(k => { teamAvg[k] = avgKey(k); });
+  teamAvg.overall = fmt(batchData.reduce((a, b) => a + Number(b.overall_score || 0), 0) / n);
+
+  const ciAvg = {};
+  Object.keys(CI_LABELS).forEach(k => {
+    const vals = batchData.map(b => b.report_data?.CI?.[k]).filter(v => v != null).map(Number);
+    ciAvg[k] = vals.length ? fmt(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  });
+  const ciSorted = CI_ORDER.map(k => ({ k, l: CI_LABELS[k], v: ciAvg[k] })).sort((a, b) => b.v - a.v);
+  const spread7 = fmt(ciSorted[0].v - ciSorted[ciSorted.length - 1].v);
+
+  const subAvgs = SUB_DIM_MAP.map(d => ({ ...d, v: avgKey(d.k) })).filter(d => d.v > 0).sort((a, b) => b.v - a.v);
+  if (subAvgs.length < 5) return <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>This batch's records do not carry enough scored qualities to build a Team Insight Report.</div>;
+  const top5 = subAvgs.slice(0, 5);
+  const bot5 = subAvgs.slice(-5).reverse();
+  const spread21 = fmt(subAvgs[0].v - subAvgs[subAvgs.length - 1].v);
+  const strongList = subAvgs.filter(d => d.v >= 75);
+  const solidList = subAvgs.filter(d => d.v >= 60 && d.v < 75);
+  const buildList = subAvgs.filter(d => d.v < 60);
+
+  const archCounts = {};
+  batchData.forEach(b => { archCounts[b.profile_name] = (archCounts[b.profile_name] || 0) + 1; });
+  const topProfiles = Object.entries(archCounts).sort((a, b) => b[1] - a[1]);
+  const variance = Math.max(...dimKeys.map(k => teamAvg[k])) - Math.min(...dimKeys.map(k => teamAvg[k]));
+  const persona = TEAM_PERSONAS.find(p => p.cond(teamAvg, variance, Object.keys(archCounts), topProfiles)) || TEAM_PERSONAS[TEAM_PERSONAS.length - 1];
+  const personaTagline = `Bonded by ${top5[0].l.toLowerCase()} and ${top5[1].l.toLowerCase()}, still growing into ${bot5[0].l.toLowerCase()}.`;
+  const geoWhy = PR_GEO[persona.name] || 'A name from geology for the group as a whole, so it is never confused with any individual\'s gemstone profile.';
+
+  const catCount = list => {
+    const c = {};
+    list.forEach(d => { const cat = PR_CAT[d.k] || 'people'; c[cat] = (c[cat] || 0) + 1; });
+    return Object.entries(c).sort((a, b) => b[1] - a[1]);
+  };
+  const topCats = catCount(top5), botCats = catCount(bot5);
+  const inCommonLine = `Of the five strengths, ${topCats.map(([c, ct]) => `${ct} ${ct === 1 ? 'is' : 'are'} ${PR_CAT_LABEL[c]}`).join(' and ')}. The development areas cluster around ${botCats.slice(0, 2).map(([c]) => PR_CAT_LABEL[c]).join(' and ')}, which is the mirror image: this group's strengths come from ${PR_CAT_MEANING[topCats[0][0]]}, and its growth comes from ${PR_CAT_MEANING[botCats[0][0]]}.`;
+  const PR_CAT_PLACE = { people: 'people-facing and coordination work', steadiness: 'work with real pressure and visible stakes', judgement: 'analysis and first-of-a-kind problems', process: 'work where consistency and accuracy carry the value' };
+  const PR_CAT_GIVE = { judgement: 'judgement-heavy work', process: 'process-owning responsibilities', steadiness: 'higher-pressure assignments, with support in place', people: 'people-facing exposure' };
+
+  // support list (uncapped, then grouped)
+  const supportRaw = batchData.map(b => {
+    const s = b.report_data?.scores || {}, ci = b.report_data?.CI || {};
+    const noticed = [], helps = [];
+    if ((s.ES || 0) < 60) { noticed.push('finds sustained pressure harder to absorb than most'); helps.push('a steadier first posting and regular check-ins through busy periods'); }
+    if ((s.LAavg || 0) < 65) { noticed.push('is still building confidence with unfamiliar work'); helps.push('a named mentor and early exposure to varied work'); }
+    if ((ci.OPS || 0) < 60) { noticed.push('gives a great deal to colleagues and needs help protecting their own workload'); helps.push('clear weekly priorities so their own tasks stay visible'); }
+    const count = noticed.length;
+    return {
+      name: b.name, profile: b.profile_name, count,
+      noticed: noticed.join('; '), helps: helps.join('; '),
+      tier: count >= 3 ? 'Priority for early support' : count === 2 ? 'Would benefit from support' : 'Worth a regular check-in',
+    };
+  }).filter(x => x.count > 0).sort((a, b) => b.count - a.count);
+
+  const patMap = {};
+  supportRaw.forEach(s => {
+    if (!patMap[s.noticed]) patMap[s.noticed] = { noticed: s.noticed, helps: s.helps, members: [] };
+    patMap[s.noticed].members.push(s);
+  });
+  const patterns = Object.values(patMap).sort((a, b) => b.members.length - a.members.length);
+  const showPatterns = n > 8 && patterns.some(p => p.members.length >= 3);
+  const soloNotes = patterns.filter(p => p.members.length === 1);
+  const shownIndividuals = supportRaw.slice(0, 14);
+  const hiddenSupport = supportRaw.length - shownIndividuals.length;
+
+  // graded role fit
+  const fitDim = (v, min) => Math.max(35, Math.min(97, Math.round((v / (min + 15)) * 100)));
+  const scoredCandidates = batchData.map(b => {
+    let best = { role: PR_ROLE_TARGETS[0].name, pct: 0, lowKey: '', lowVal: 101 };
+    PR_ROLE_TARGETS.forEach(role => {
+      let sum = 0, c = 0, lk = '', lv = 101;
+      Object.entries(role.targets).forEach(([k, [min]]) => {
+        const v = b.report_data?.scores?.[k] ?? b.report_data?.CI?.[k];
+        if (v != null) { c++; sum += fitDim(Number(v), min); if (v < lv) { lv = Number(v); lk = k; } }
+      });
+      const pct = c ? Math.round(sum / c) : 0;
+      if (pct > best.pct) best = { role: role.name, pct, lowKey: lk, lowVal: lv };
+    });
+    const band = best.pct >= 75 ? 'Comfortable fit' : best.pct >= 60 ? 'Structured start' : 'Conversation first';
+    const friendly = PR_FRIENDLY[best.lowKey] || 'the fundamentals';
+    const focus = band === 'Comfortable fit'
+      ? `Ready. Keep developing ${friendly}.`
+      : band === 'Structured start'
+        ? `Structured start, with a named mentor. Focus on ${friendly}.`
+        : `Talk it through before placing; ${friendly} is the area to build first.`;
+    return { name: b.name, profile: b.profile_name, role: best.role, pct: best.pct, band, focus };
+  }).sort((a, b) => b.pct - a.pct);
+  const bandCounts = {
+    comfy: scoredCandidates.filter(c => c.band === 'Comfortable fit').length,
+    struct: scoredCandidates.filter(c => c.band === 'Structured start').length,
+    conv: scoredCandidates.filter(c => c.band === 'Conversation first').length,
+  };
+  const roleFamilies = PR_ROLE_TARGETS.map(r => {
+    const inR = scoredCandidates.filter(c => c.role === r.name);
+    if (!inR.length) return null;
+    const avg = Math.round(inR.reduce((a, c) => a + c.pct, 0) / inR.length);
+    return {
+      name: r.name, built: PR_ROLE_BUILT[r.name] || '', avg, placed: inR.length,
+      comfy: inR.filter(c => c.band === 'Comfortable fit').length,
+      struct: inR.length - inR.filter(c => c.band === 'Comfortable fit').length,
+    };
+  }).filter(Boolean).sort((a, b) => b.avg - a.avg);
+
+  // validity
+  const validGreen = batchData.filter(b => b.report_data?.validity?.overall === 'green').length;
+  const validAmber = n - validGreen;
+  const presentingWell = batchData.filter(b => (b.report_data?.validity?.flags || []).some(f => f.key.toLowerCase().includes('l-scale') && f.type !== 'green')).length;
+  const balancedCount = batchData.filter(b => (b.report_data?.validity?.flags || []).every(f => !(f.key.toLowerCase().includes('acquiescence') && f.type !== 'green'))).length;
+  const measuredCount = batchData.filter(b => (b.report_data?.validity?.flags || []).every(f => !(f.key.toLowerCase().includes('extreme') && f.type !== 'green'))).length;
+
+  // combination reading
+  const leanCounts = { people: 0, change: 0, process: 0 };
+  topProfiles.forEach(([nm, c]) => { leanCounts[PR_LEAN[nm] || 'people'] += c; });
+  const processProfiles = topProfiles.filter(([nm]) => PR_LEAN[nm] === 'process');
+  const processTotal = processProfiles.reduce((a, [, c]) => a + c, 0);
+  const watchText = processTotal === 0
+    ? 'No profile in this mix leans toward system and control. Process discipline will need to come from structure rather than temperament, which is exactly what the roadmap in Section 5 provides.'
+    : processTotal <= 2
+      ? `Process discipline currently rests with ${processTotal} ${processTotal === 1 ? 'person' : 'people'} (${processProfiles.map(([nm, c]) => `${nm} x${c}`).join(', ')}). Worth protecting, and worth not overloading.`
+      : 'The mix carries its own balance of people, change and process orientations; no single person is the sole source of any of the three.';
+  const mixLine = `${leanCounts.people} of the group lean toward people, ${leanCounts.change} toward change, and ${leanCounts.process} toward system and control. ${leanCounts.people >= leanCounts.change && leanCounts.people >= leanCounts.process ? 'This is a group that will hold together socially without management effort; structure is where deliberate attention pays off.' : leanCounts.change >= leanCounts.process ? 'This is a group with natural momentum on new work; consistency is where deliberate attention pays off.' : 'This is a group with natural discipline; energy for the unfamiliar is where deliberate attention pays off.'}`;
+  const pairsPresent = TI_PAIRS.filter(([a, b]) => archCounts[a] && archCounts[b]);
+
+  const capital = [
+    { l: 'Cross-Functional Integration', v: fmt((Number(teamAvg.A) + Number(teamAvg.OCBavg)) / 2) },
+    { l: 'Negotiation and Influence', v: fmt((Number(teamAvg.E) + Number(teamAvg.A)) / 2) },
+    { l: 'Presentation and Projection', v: fmt((Number(teamAvg.E) + Number(teamAvg.CQavg)) / 2) },
+    { l: 'Pressure Tolerance', v: fmt((Number(teamAvg.ES) + Number(teamAvg.C)) / 2) },
+    { l: 'Governance and Control', v: fmt((Number(teamAvg.EOavg) + Number(teamAvg.C)) / 2) },
+    { l: 'Analytical Problem-Solving', v: fmt((Number(teamAvg.LAavg) + Number(teamAvg.O)) / 2) },
+  ].sort((a, b) => b.v - a.v);
+
+  const smallCohort = n <= 12;
+  const showSustain = teamAvg.ES < 60 && teamAvg.LAavg < 60;
+
+  // ── page assembly ──
+  const rest = [];
+  const add = (sec, body) => rest.push({ sec, body });
+
+  // SECTION 1
+  add('s1', (
+    <>
+      <PrSectionHead num={1} title="The Story in One Page" sub="The whole cohort in a single view, before any of the detail." />
+      <PrKey rows={[
+        ['What this is', 'A summary of Sections 2 to 6. Nothing appears here that is not evidenced later in the report.'],
+        ['How to use it', 'This is the page to bring to a leadership conversation. Everything after it is supporting detail.'],
+      ]} />
+      <PrLabel c={PRT.gold} style={{ marginBottom: 5 }}>THE COHORT IN A SENTENCE</PrLabel>
+      <PrBody size={11.5} color={PRT.ink} style={{ fontStyle: 'italic', marginBottom: 16 }}>
+        A group whose clearest strength is {top5[0].l.toLowerCase()}, supported by {top5[1].l.toLowerCase()}. What they are still growing into is {bot5[0].l.toLowerCase()}.
+      </PrBody>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <div style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${PRT.gn}`, padding: '10px 12px', background: PRT.gnSoft }}>
+          <PrLabel c={PRT.gn} style={{ marginBottom: 8 }}>TWO THINGS DONE WELL ALREADY</PrLabel>
+          {top5.slice(0, 2).map((d, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+              <PrBody size={9.5} color={PRT.ink} style={{ fontWeight: 700 }}>{d.l}</PrBody>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 800, color: PRT.gn }}>{d.v}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${PRT.am}`, padding: '10px 12px', background: PRT.amSoft }}>
+          <PrLabel c={PRT.am} style={{ marginBottom: 8 }}>TWO THINGS TO BUILD</PrLabel>
+          {bot5.slice(0, 2).map((d, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+              <PrBody size={9.5} color={PRT.ink} style={{ fontWeight: 700 }}>{d.l}</PrBody>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 800, color: PRT.am }}>{d.v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ border: `1px solid ${PRT.line}`, borderLeft: `4px solid ${PRT.c}`, padding: '11px 13px', marginBottom: 10 }}>
+        <PrLabel style={{ marginBottom: 4 }}>THE DEVELOPMENT PRIORITY</PrLabel>
+        <PrHead size={12}>{bot5[0].l}</PrHead>
+        <PrBody size={9} style={{ marginTop: 4 }}>{qi(bot5[0].k).todo} Section 5 sets out how, and Section 4 explains why this one comes first.</PrBody>
+        <PrBody size={8} color={PRT.faint} style={{ marginTop: 5, fontFamily: "'IBM Plex Mono',monospace", letterSpacing: '0.08em', textTransform: 'uppercase' }}>Owner: {qi(bot5[0].k).owner}</PrBody>
+      </div>
+      <div style={{ border: `1px solid ${PRT.line}`, borderLeft: `4px solid ${PRT.gold}`, padding: '11px 13px', marginBottom: 14 }}>
+        <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>THE HIRING PRIORITY</PrLabel>
+        <PrBody size={9} color={PRT.ink} style={{ fontWeight: 700 }}>Future hires should index high on {bot5[0].l.toLowerCase()} to balance the team's current distribution.</PrBody>
+        <PrBody size={8.8} style={{ marginTop: 4, fontStyle: 'italic' }}>"{qi(bot5[0].k).probe}"</PrBody>
+      </div>
+      <PrPairNotes
+        left={['WHAT TO DO WITH THIS GROUP NOW', `Place them into ${PR_CAT_PLACE[topCats[0][0]]} with confidence. Give ${PR_CAT_GIVE[botCats[0][0]]} deliberately rather than waiting for it to arrive, because that is how the gap in Section 4 closes.`, PRT.gn]}
+        right={['WHAT NOT TO CONCLUDE', 'Nothing here is a performance rating, and no one in this cohort is a concern. Everyone assessed passed selection and belongs on the team.', PRT.am]}
+        style={{ marginBottom: 12 }}
+      />
+      <PrBody size={8.3} color={PRT.faint}>
+        {presentingWell > 0 ? `${presentingWell} of ${n} answered with an eye on how they would come across, which is entirely normal. ` : ''}Read every score in this report alongside a conversation. Section 8 sets out exactly how much weight the figures carry.
+      </PrBody>
+    </>
+  ));
+
+  // SECTION 2a: persona + mix
+  add('s2', (
+    <>
+      <PrSectionHead num={2} title="Who This Group Is" sub="The persona, the mix of profiles inside it, and the detailed score picture behind both." />
+      <PrKey rows={[
+        ['Persona', 'One name for the group as a whole, drawn from geology. It describes how the group behaves together, not how good it is.'],
+        ['Profile', 'One of thirteen CORE profiles, given a gemstone name for each individual. None is better than another; they are different ways of being useful.'],
+        ...(smallCohort ? [['Small-sample caution', `With ${n} people, one person is ${Math.round(100 / n)} per cent of the mix. Read the shape, not the percentages.`]] : []),
+      ]} />
+      <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>THE TEAM PERSONA</PrLabel>
+      <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 30, fontWeight: 700, color: PRT.c, marginBottom: 6 }}>{persona.name}</div>
+      <PrBody size={9.5} style={{ marginBottom: 10 }}>{personaTagline} {persona.desc}</PrBody>
+      <PrNote title="WHY WE CALL THEM THIS" color={PRT.gold} style={{ marginBottom: 16 }}>{geoWhy}</PrNote>
+      <PrHead size={13} style={{ marginBottom: 8 }}>The mix of profiles</PrHead>
+      <div style={{ display: 'flex', gap: 22, alignItems: 'center', border: `1px solid ${PRT.line}`, background: PRT.panel, padding: '16px 18px', marginBottom: 12 }}>
+        <PrDonut
+          segments={topProfiles.map(([nm], i) => ({ value: archCounts[nm], color: PR_COLORS[i % PR_COLORS.length] }))}
+          size={158} hole={100}
+          centerTop={<div style={{ fontFamily: "'Playfair Display',serif", fontSize: 30, fontWeight: 700, color: PRT.ink, lineHeight: 1 }}>{n}</div>}
+          centerBottom={<div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 6.5, letterSpacing: '0.18em', color: PRT.faint, marginTop: 3 }}>TEAM MEMBERS</div>}
+        />
+        <div style={{ flex: 1 }}>
+          <PrBody size={9} style={{ marginBottom: 8 }}>{topProfiles.length} of the thirteen CORE profiles appear in this group.</PrBody>
+          {topProfiles.map(([nm, count], i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ width: 14, height: 4, background: PR_COLORS[i % PR_COLORS.length], display: 'inline-block', flexShrink: 0 }} />
+              <PrBody size={8.8} color={PRT.ink} style={{ fontWeight: 600, flex: 1 }}>{nm}</PrBody>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.8, fontWeight: 700, color: PRT.sub }}>{count} ({Math.round((count / n) * 100)}%)</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <PrNote title="WHAT THE MIX TELLS YOU" color={PRT.c}>{mixLine}</PrNote>
+    </>
+  ));
+
+  // SECTION 2b: profile table chunks
+  const profRows = topProfiles.map(([nm, count]) => {
+    const gem = GEMSTONES[nm] || GEMSTONES['Emerging Professional'];
+    const growth = ARCHETYPE_GROWTH[nm] || ARCHETYPE_GROWTH['Emerging Professional'];
+    return [
+      <span><span style={{ fontWeight: 800, color: PRT.c }}>{gem.gem}</span><br /><span style={{ fontWeight: 700, color: PRT.ink }}>{gem.title}</span><br /><span style={{ fontSize: 7.8, color: PRT.faint }}>{nm} · {count} {count === 1 ? 'person' : 'people'}</span></span>,
+      growth.individual,
+      growth.team,
+    ];
+  });
+  prChunk(profRows, 5, 5).forEach((rows, ci, arr) => {
+    add('s2', (
+      <>
+        <PrSectionHead num={2} title={`The profiles in this group${arr.length > 1 ? ` (${ci + 1} of ${arr.length})` : ''}`} sub="The gemstone is the individual's name in the CORE framework. Read the middle column when thinking about one person, the right column when thinking about how the team fits together." />
+        <PrTable cols={['Profile', 'As an individual', 'In a team']} widths={[150, undefined, undefined]} rows={rows} />
+      </>
+    ));
   });
 
-  const dimGaps = dimKeys.map(k => ({k, l:dimLabels[k], v:teamAvg[k], gap:Math.max(0, 65-teamAvg[k])})).filter(g => g.gap > 0).sort((a,b)=>b.gap - a.gap).slice(0, 4);
+  // SECTION 2c: reading the combination
+  add('s2', (
+    <>
+      <PrSectionHead num={2} title="Reading the combination" sub="What this particular mix of profiles means for how the group runs." />
+      <PrBody size={9.5} style={{ marginBottom: 12 }}>{mixLine}</PrBody>
+      <PrPairNotes
+        left={['PAIRINGS THAT WORK', pairsPresent.length ? pairsPresent.slice(0, 2).map(p => `${p[0]} with ${p[1]}: ${p[2]}`).join(' ') : 'No standout complementary pairings in this mix; standard mentor pairing by seniority applies.', PRT.gn]}
+        right={['WHAT TO WATCH', watchText, PRT.am]}
+        style={{ marginBottom: 14 }}
+      />
+      {pairsPresent.length > 0 && (
+        <>
+          <PrHead size={12} style={{ marginBottom: 6 }}>Suggested mentoring pairings</PrHead>
+          <PrBody size={8.5} color={PRT.faint} style={{ marginBottom: 8 }}>Key: pairings match complementary working styles already present in this cohort, so each person's natural strength supports the other's growth area. Suggestions for HR to refine with the individuals, not fixed allocations.</PrBody>
+          <PrTable cols={['Pairing', 'Why it works']} widths={[250, undefined]}
+            rows={pairsPresent.map(p => [<span style={{ fontWeight: 700, color: PRT.ink }}>{p[0]} + {p[1]}</span>, p[2]])} />
+        </>
+      )}
+    </>
+  ));
 
-  // Dynamic Hiring Insights based on the specific gap
-  const hiringInsights = {
-    O: "The team risks stagnation. Look for candidates who challenge the status quo and bring innovative frameworks.",
-    C: "The team risks dropped balls. Prioritize candidates with rigorous execution, high reliability, and strong organizational habits.",
-    E: "The team lacks vocal presence. Seek candidates who can confidently represent the team to external stakeholders and leadership.",
-    A: "The team risks internal friction. Look for highly collaborative candidates who build psychological safety and bridge divides.",
-    ES: "The team is vulnerable to stress. Prioritize candidates who demonstrate exceptional composure and steady decision-making under pressure.",
-    CQavg: "The team lacks cultural fluidity. Look for candidates who can seamlessly navigate diverse regional, linguistic, or institutional boundaries.",
-    OCBavg: "The team lacks glue. Seek candidates with a track record of supporting peers and taking on tasks outside their formal TORs.",
-    LAavg: "The team risks obsolescence. Prioritize candidates who demonstrate rapid self-directed learning and adaptability to new systems.",
-    EOavg: "The team has a collective compliance vulnerability. Strict adherence to transparency and rule compliance is non-negotiable for the next hire."
+  // SECTION 2d: seven areas radar
+  add('s2', (
+    <>
+      <PrSectionHead num={2} title="The detailed picture: seven overall areas" sub={`These seven areas summarise the twenty-one qualities on the next page. The dashed ring marks the 75 strength line.`} />
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+        <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={300} data={CI_ORDER.map(k => ({ label: CI_LABELS[k], value: ciAvg[k] }))} />
+      </div>
+      <div style={{ display: 'flex', gap: 14 }}>
+        <div style={{ flex: 1 }}>
+          <PrLabel c={PRT.faint} style={{ marginBottom: 6 }}>RANKED, STRONGEST FIRST</PrLabel>
+          {ciSorted.map((d, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: `1px solid ${PRT.lineSoft}`, padding: '3px 0' }}>
+              <PrBody size={8.8} color={PRT.ink} style={{ fontWeight: 600 }}>{d.l}</PrBody>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.8, fontWeight: 700, color: prCol(d.v) }}>{d.v} · {prBandName(d.v)}</span>
+            </div>
+          ))}
+          <PrLegend style={{ marginTop: 8 }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrNote title="THE SHAPE, IN ONE LINE" color={PRT.c} style={{ marginBottom: 8 }}>
+            The profile spans {spread7} points at this summary level, from {ciSorted[0].l.toLowerCase()} ({ciSorted[0].v}) to {ciSorted[ciSorted.length - 1].l.toLowerCase()} ({ciSorted[ciSorted.length - 1].v}). The variation that matters most is one level down, where the twenty-one qualities spread {spread21} points.
+          </PrNote>
+          <PrBody size={8.3} color={PRT.faint}>Everything on this page is a group average. Individual results sit behind it and are not shown, by design. Sections 4 and 7 are the only places where individuals are named.</PrBody>
+        </div>
+      </div>
+    </>
+  ));
+
+  // SECTION 2e: 21 qualities
+  add('s2', (
+    <>
+      <PrSectionHead num={2} title="Twenty-one qualities, strongest first" sub="The full evidence base for the report. Sections 3 and 4 take the top five and bottom five from this list." />
+      <PrLegend style={{ marginBottom: 10 }} />
+      <div style={{ marginBottom: 12 }}>
+        {subAvgs.map((d, i) => <PrBarRow key={i} label={d.l} v={d.v} h={10} />)}
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        {[
+          [`${strongList.length} in the strength band`, strongList.length ? `${strongList.slice(0, 4).map(d => d.l).join('; ')}${strongList.length > 4 ? '; and more' : ''}.` : 'None yet, which is common early in a career stage and is what Section 5 builds toward.', PRT.gn],
+          [`${solidList.length} in the solid band`, 'Dependable, not finished. These are the qualities most responsive to ordinary line-management attention.', PRT.am],
+          [`${buildList.length} still building`, buildList.length ? `${buildList.map(d => d.l).join('; ')}. Learnable through the work itself, and addressed in Section 5.` : 'Nothing sits below 60, so Section 4 reads as sharpening rather than repair.', PRT.rd],
+        ].map(([t, b, c], i) => (
+          <div key={i} style={{ flex: 1 }}><PrNote title={t} color={c}>{b}</PrNote></div>
+        ))}
+      </div>
+      <PrHead size={12} style={{ margin: '14px 0 6px' }}>What each of the seven areas covers</PrHead>
+      <PrTable cols={['Area', 'Score', 'What sits inside it']} widths={[160, 60, undefined]} fontSize={8.4}
+        rows={ciSorted.map(d => [
+          <span style={{ fontWeight: 700, color: PRT.ink }}>{d.l}</span>,
+          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(d.v) }}>{d.v}</span>,
+          PR_CI_CONTAINS[d.k] || '',
+        ])} />
+    </>
+  ));
+
+  // SECTION 3: strengths
+  const strengthCard = (d, i) => {
+    const info = qi(d.k);
+    return (
+      <PrQualityCard key={i} tag={`STRENGTH ${i + 1}`} tagColor={PRT.gn} title={info.label} score={d.v}
+        rows={[
+          ['WHAT IT LOOKS LIKE', info.beh],
+          ['WHY IT MATTERS', info.why],
+          ['WHAT TO DO', info.todo],
+          ['OWNER', info.owner],
+        ]} />
+    );
   };
+  add('s3', (
+    <>
+      <PrSectionHead num={3} title="What This Group Does Well" sub="The five highest-scoring qualities, each with an action and an owner." />
+      <PrKey rows={[
+        ['Order', 'Every card follows the same order: what it looks like day to day, why it matters here, and what to do about it.'],
+        ['How to use it', 'These are assets to protect, not boxes to tick. Most of the actions cost nothing beyond management attention.'],
+      ]} />
+      {top5.slice(0, 3).map((d, i) => strengthCard(d, i))}
+    </>
+  ));
+  add('s3', (
+    <>
+      <PrSectionHead num={3} title="What This Group Does Well (continued)" sub="Strengths 4 and 5, and what the five have in common." />
+      {top5.slice(3, 5).map((d, i) => strengthCard(d, i + 3))}
+      <PrNote title="WHAT THE FIVE HAVE IN COMMON" color={PRT.c} style={{ margin: '6px 0 12px' }}>{inCommonLine}</PrNote>
+      <PrPairNotes
+        left={['WHAT THIS MAKES THEM GOOD FOR NOW', `Work where the difficulty is ${PR_CAT_MEANING[topCats[0][0]].replace('how they ', '')}: hand this group the assignments that live there and they will carry them.`, PRT.gn]}
+        right={['WHAT IT COSTS TO LEAVE ALONE', 'Most of these strengths are invisible while they are working and are usually noticed only once they have gone. The actions above are mostly about naming and protecting rather than building.', PRT.am]}
+      />
+    </>
+  ));
 
-  // Expanded Roles with Experience Requirements
-  const ROLE_TARGETS = [
-    {name:'Executive / C-Suite', targets:{LRS:[75,100], ES:[70,100], EOavg:[75,100], LAavg:[70,100]}, reqExp:'senior'},
-    {name:'Senior Manager / Head', targets:{LRS:[65,95], ES:[60,90], C:[65,95], EOavg:[60,90]}, reqExp:'mid'},
-    {name:'Team Lead', targets:{OCBavg:[65,100], A:[60,90], C:[60,90], E:[55,85]}, reqExp:'junior_plus', overqual:'senior'},
-    {name:'Compliance / Audit Head', targets:{CII:[75,100], EOavg:[75,100], C:[70,100]}, reqExp:'mid'},
-    {name:'Client-Facing Director', targets:{E:[70,100], CQavg:[65,100], A:[65,95], SES:[70,100]}, reqExp:'mid'},
-    {name:'Change / Innovation Lead', targets:{ADS:[70,100], O:[70,100], LAavg:[70,100]}, reqExp:'mid'}
-  ];
-  
-  const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>{children}</div>
+  // SECTION 4: growth areas
+  const growthCard = (d, i) => {
+    const info = qi(d.k);
+    const label = i === 0 ? 'TOP PRIORITY' : i <= 2 ? 'IMPORTANT' : 'WORTH BUILDING';
+    return (
+      <PrQualityCard key={i} tag={`DEVELOPMENT AREA ${i + 1} · ${label}`} tagColor={i === 0 ? PRT.rd : PRT.am} title={info.label} score={d.v}
+        rows={[
+          ['WHAT IT LOOKS LIKE', info.beh],
+          ['WHY IT MATTERS', info.why],
+          ['WHAT TO DO', info.todo],
+          ['OWNER', info.owner],
+        ]} />
+    );
+  };
+  add('s4', (
+    <>
+      <PrSectionHead num={4} title="Where This Group Needs Support" sub="The five lowest-scoring qualities. These are development areas, not concerns." />
+      <PrKey rows={[
+        ['Order', 'Same order as Section 3, so the two sections can be read side by side.'],
+        ['Priority label', 'Top priority, important, or worth building. It reflects both the score and the cost of leaving it alone, not the score alone.'],
+        ['Band', `${bot5.filter(d => d.v >= 60).length} of the five sit in the solid band; ${bot5.filter(d => d.v < 60).length} ${bot5.filter(d => d.v < 60).length === 1 ? 'is' : 'are'} genuinely still building.`],
+      ]} />
+      {bot5.slice(0, 3).map((d, i) => growthCard(d, i))}
+    </>
+  ));
+  add('s4', (
+    <>
+      <PrSectionHead num={4} title="Where This Group Needs Support (continued)" sub="Development areas 4 and 5." />
+      {bot5.slice(3, 5).map((d, i) => growthCard(d, i + 3))}
+      {showSustain && (
+        <PrNote title="SUSTAINABILITY CHECK" color={PRT.am} style={{ marginTop: 6 }}>
+          Steadiness under pressure ({teamAvg.ES}) and learning agility ({teamAvg.LAavg}) are both still building across this group. Taken together, that pattern is worth planning around rather than waiting on: long high-pressure stretches will cost this team more energy than most, and unfamiliar work will take more support to land well. What helps is pacing, planned recovery after busy periods, early notice of change, and well-supported stretch assignments. Worth revisiting at the next assessment cycle.
+        </PrNote>
+      )}
+    </>
+  ));
+
+  // SECTION 4 support table
+  const supportIntro = (
+    <>
+      <PrSectionHead num={4} title="Team members who will benefit from extra support" sub="Everyone here passed selection and belongs on the team. This is about giving each person the right start, not about ranking them." />
+      <PrKey title="HOW TO USE THIS TABLE" rows={[
+        ['Do', 'Hold a friendly check-in inside the first two months, matched to what each person needs.'],
+        ['Do not', 'Share this table with managers as a list of concerns. Share the suggested support in the third column instead.'],
+        ['Sensitive page', 'This page names individuals. Treat it, with Section 7, as the most sensitive part of the report.'],
+        ...(showPatterns ? [['Patterns first', 'Most entries share a small number of cohort-level patterns, summarised below, rather than being separate individual issues.']] : []),
+      ]} />
+    </>
   );
+  if (supportRaw.length === 0) {
+    add('s4', (
+      <>
+        {supportIntro}
+        <PrBody size={9.5}>No one in this cohort meets the threshold for early extra support. A standard onboarding rhythm applies, with the development areas in this section handled at group level through Section 5.</PrBody>
+      </>
+    ));
+  } else {
+    const supRow = c => [
+      <span><span style={{ fontWeight: 700, color: PRT.ink }}>{c.name}</span><br /><span style={{ fontSize: 7.6, color: PRT.faint }}>{c.profile}</span></span>,
+      prCap(c.noticed) + '.',
+      prCap(c.helps) + '.',
+      <span style={{ fontWeight: 700, color: c.tier.startsWith('Priority') ? PRT.c : c.tier.startsWith('Would') ? PRT.am : PRT.faint }}>{c.tier}</span>,
+    ];
+    const supChunks = prChunk(shownIndividuals, 6, 10);
+    supChunks.forEach((chunkRows, ci) => {
+      add('s4', (
+        <>
+          {ci === 0 ? supportIntro : <PrSectionHead num={4} title={`Team members who will benefit from extra support (continued)`} sub={`Individual support notes, part ${ci + 1} of ${supChunks.length}.`} />}
+          {ci === 0 && showPatterns && (
+            <>
+              <PrHead size={12} style={{ marginBottom: 6 }}>The cohort-level patterns</PrHead>
+              <PrTable cols={['Pattern', 'How many', 'What would help']} widths={[undefined, 70, undefined]} fontSize={8.4} style={{ marginBottom: 12 }}
+                rows={patterns.filter(p => p.members.length >= 2).map(p => [
+                  prCap(p.noticed) + '.',
+                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700 }}>{p.members.length} of {n}</span>,
+                  prCap(p.helps) + '.',
+                ])} />
+            </>
+          )}
+          <PrTable cols={['Name', 'What we noticed', 'What would help', 'Approach']} widths={[110, undefined, undefined, 95]} fontSize={8.3}
+            rows={chunkRows.map(supRow)} />
+          {ci === supChunks.length - 1 && hiddenSupport > 0 && (
+            <PrBody size={8.3} color={PRT.faint} style={{ marginTop: 8 }}>Showing the {shownIndividuals.length} team members with the clearest need. The remaining {hiddenSupport} share the cohort patterns above; the full list is available from Carnelian on request.</PrBody>
+          )}
+          {ci === supChunks.length - 1 && soloNotes.length === 1 && (
+            <PrNote title="THE ONE GENUINELY INDIVIDUAL NOTE" color={PRT.c} style={{ marginTop: 10 }}>
+              {soloNotes[0].members[0].name} is the only person whose support need differs from the group pattern: they {soloNotes[0].noticed}. {prCap(soloNotes[0].helps)} is a line-manager task, not a development programme, and it is worth acting on early.
+            </PrNote>
+          )}
+        </>
+      ));
+    });
+  }
+
+  // SECTION 5: roadmap
+  add('s5', (
+    <>
+      <PrSectionHead num={5} title="Development Roadmap" sub="Grouped by how quickly each can be done. Every action names an owner." />
+      <PrKey rows={[
+        ['Quick wins', 'Startable inside three months with existing people and no budget line.'],
+        ['Bigger pieces', 'Three to twelve months. These need a programme owner and usually a budget.'],
+        ['Owner', 'HR / L&D means programme design and policy. Line manager means placement, expectations and daily practice.'],
+        ['Sequence', 'The quick wins are ordered deliberately: the first actions create the conditions that make the later ones work.'],
+      ]} />
+      <PrHead size={12} style={{ marginBottom: 6 }}>5.1 Quick wins, the next three months</PrHead>
+      <PrTable cols={['What to do', 'How it helps', 'Who owns it']} widths={[150, undefined, 105]} style={{ marginBottom: 14 }}
+        rows={[
+          ...bot5.slice(0, 3).map(d => {
+            const info = qi(d.k);
+            return [<span style={{ fontWeight: 700, color: PRT.ink }}>Build {info.label.toLowerCase()}</span>, info.todo, info.owner];
+          }),
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Talk it through before deciding</span>, 'A short structured conversation with each person alongside their results, before any placement decision rests on a score.', 'HR / L&D'],
+        ]} />
+      <PrHead size={12} style={{ marginBottom: 6 }}>5.2 Bigger pieces, three to twelve months</PrHead>
+      <PrTable cols={['Programme', 'Why, and how to shape it', 'Who owns it']} widths={[150, undefined, 105]} style={{ marginBottom: 14 }}
+        rows={[
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Leadership Development</span>, `Shape the programme around this group's actual growth areas, ${bot5[0].l.toLowerCase()} and ${bot5[1].l.toLowerCase()}, and use the existing strength in ${top5[0].l.toLowerCase()} as the foundation to build from.`, 'HR / L&D'],
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Deeper work on {bot5[3].l.toLowerCase()} and {bot5[4].l.toLowerCase()}</span>, `Fold these into existing programmes over the next two quarters rather than standalone training. ${qi(bot5[3].k).todo}`, 'HR / L&D'],
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Non-standard exposure rotation</span>, 'Deliberately give unfamiliar work: exceptions, edge cases, system changes. This is where judgement is actually built.', 'Line manager'],
+        ]} />
+      <PrNote title="HOW TO TELL WHETHER ANY OF THIS WORKED" color={PRT.c}>
+        Re-run the assessment for this cohort in six to nine months and look at two figures only: {bot5[0].l.toLowerCase()}, currently {bot5[0].v}, and {bot5[1].l.toLowerCase()}, currently {bot5[1].v}. Programme attendance is not evidence of movement. If those two numbers have not moved, the delivery needs changing rather than the programme.
+      </PrNote>
+    </>
+  ));
+  add('s5', (
+    <>
+      <PrSectionHead num={5} title="Development Roadmap (continued)" sub="Suggested tools, and how to hire toward the gap." />
+      <PrHead size={12} style={{ marginBottom: 6 }}>5.3 Suggested reading and tools</PrHead>
+      <PrBody size={8.5} color={PRT.faint} style={{ marginBottom: 6 }}>One set of resources per development area. The habit matters more than the book.</PrBody>
+      <PrTable cols={['Area', 'Suggested reading and tools']} widths={[180, undefined]} style={{ marginBottom: 14 }}
+        rows={bot5.map(d => { const info = qi(d.k); return [<span style={{ fontWeight: 700, color: PRT.ink }}>{info.label}</span>, info.resources]; })} />
+      <PrHead size={12} style={{ marginBottom: 6 }}>5.4 Hiring to fill the gap</PrHead>
+      <PrBody size={8.5} color={PRT.faint} style={{ marginBottom: 6 }}>When adding to this team, probe specifically for its lowest baseline qualities to balance the culture.</PrBody>
+      <PrTable cols={['Target quality', 'Behavioural interview question']} widths={[180, undefined]}
+        rows={bot5.slice(0, 3).map(d => { const info = qi(d.k); return [<span style={{ fontWeight: 700, color: PRT.ink }}>{info.label}</span>, <span style={{ fontStyle: 'italic' }}>"{info.probe}"</span>]; })} />
+    </>
+  ));
+
+  // SECTION 6
+  add('s6', (
+    <>
+      <PrSectionHead num={6} title="What This Group Brings to the Wider Org" sub={`Answers one question: when should someone at ${orgKnown ? orgName : 'the organisation'} ask for this group by name?`} />
+      <PrKey rows={[
+        ['What these six are', 'Capability clusters, built by combining the two related qualities behind each. For example, Pressure Tolerance combines steadiness under pressure with reliability. They describe what the group can be handed, rather than what it scores on.'],
+        ['How to use it', 'Read 6.2 as work to route toward this group, and 6.3 as work to route toward them only with support in place.'],
+      ]} />
+      <PrHead size={12} style={{ marginBottom: 8 }}>6.1 What this group is strongest at</PrHead>
+      <div style={{ border: `1px solid ${PRT.line}`, background: PRT.panel, padding: '14px 14px 9px', marginBottom: 14 }}>
+        {capital.map((d, i) => <PrBarRow key={i} label={d.l} v={d.v} h={13} labelW={185} />)}
+        <PrLegend style={{ marginTop: 6 }} />
+      </div>
+      <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <PrLabel c={PRT.gn} style={{ marginBottom: 6 }}>6.2 WHEN TO ASK FOR THIS GROUP</PrLabel>
+          {top5.slice(0, 3).map((d, i) => {
+            const info = qi(d.k);
+            return <PrBody key={i} size={8.8} style={{ marginBottom: 7 }}><span style={{ fontWeight: 700, color: PRT.ink }}>{info.label} ({d.v}):</span> {info.beh}</PrBody>;
+          })}
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrLabel c={PRT.am} style={{ marginBottom: 6 }}>6.3 WHERE TO BUILD BEFORE STRETCHING FURTHER</PrLabel>
+          {bot5.slice(0, 2).map((d, i) => {
+            const info = qi(d.k);
+            return <PrBody key={i} size={8.8} style={{ marginBottom: 7 }}><span style={{ fontWeight: 700, color: PRT.ink }}>{info.label} ({d.v}):</span> {info.todo}</PrBody>;
+          })}
+        </div>
+      </div>
+    </>
+  ));
+  add('s6', (
+    <>
+      <PrSectionHead num={6} title="6.4 How the group fits each role family" sub="Only families with someone placed into them are shown. Group average is the mean fit of the people whose best match is that family." />
+      <PrTable cols={['Role family', 'Group avg', 'Placed', 'Comfortable fit', 'Structured start', 'What this means']} widths={[190, 60, 50, 70, 70, undefined]} fontSize={8.4}
+        rows={roleFamilies.map(r => [
+          <span><span style={{ fontWeight: 700, color: PRT.ink }}>{r.name}</span><br /><span style={{ fontSize: 7.4, color: PRT.faint }}>Built from: {r.built}</span></span>,
+          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: prCol(r.avg) }}>{r.avg}%</span>,
+          r.placed, r.comfy, r.struct,
+          <span style={{ fontWeight: 700, color: prCol(r.avg) }}>{r.avg >= 75 ? 'Place with confidence' : r.avg >= 60 ? 'Place with a structured start' : 'Read Section 8 first'}</span>,
+        ])} />
+      <PrBody size={8.3} color={PRT.faint} style={{ marginTop: 8 }}>Fit percentages come from the graded matching described in Section 7. A family that does not appear had no one whose best match was that family; it says nothing about capability there.</PrBody>
+    </>
+  ));
+
+  // SECTION 7: best-fit roles
+  const bfIntro = (
+    <>
+      <PrSectionHead num={7} title="Best-Fit Roles" sub="The role that suits each person best, how well they fit it, and the primary area for their continued growth. A starting point for a conversation, not an allocation." />
+      <PrKey title="BEFORE USING THIS TABLE" rows={[
+        ['Match bands', '75 per cent and above is a comfortable fit. 60 to 74 works with a structured start. Below 60 needs a conversation before placement.'],
+        ['What match is not', 'A fit estimate against the qualities the role depends on. Not a prediction of performance, and not a ranking of people.'],
+        ['Required', 'Read Section 8, and talk to the person, before any placement decision rests on a number on this page.'],
+      ]} />
+    </>
+  );
+  const bfRow = c => [
+    <span><span style={{ fontWeight: 700, color: PRT.ink }}>{c.name}</span><br /><span style={{ fontSize: 7.6, color: PRT.faint }}>{c.profile}</span></span>,
+    c.role,
+    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: c.pct >= 75 ? PRT.gn : c.pct >= 60 ? PRT.am : PRT.rd }}>{c.pct}%</span>,
+    <span style={{ fontWeight: 700, color: c.pct >= 75 ? PRT.gn : c.pct >= 60 ? PRT.am : PRT.rd }}>{c.band}</span>,
+    c.focus,
+  ];
+  const bfChunks = prChunk(scoredCandidates, 10, 14);
+  bfChunks.forEach((chunkRows, ci) => {
+    add('s7', (
+      <>
+        {ci === 0 ? bfIntro : <PrSectionHead num={7} title={`Best-Fit Roles (continued, ${ci + 1} of ${bfChunks.length})`} sub="Match bands: 75+ comfortable fit, 60 to 74 structured start, below 60 conversation first." />}
+        <PrTable cols={['Person', 'Best-fit role', 'Match', 'Band', 'Development focus']} widths={[115, 145, 48, 92, undefined]} fontSize={8.3}
+          rows={chunkRows.map(bfRow)} />
+        {ci === bfChunks.length - 1 && (
+          <PrBody size={8.5} color={PRT.sub} style={{ marginTop: 8 }}>
+            {bandCounts.comfy} of the {n} are a comfortable fit for their suggested role, {bandCounts.struct} would do well with a structured start{bandCounts.conv > 0 ? `, and ${bandCounts.conv} would benefit from a conversation before placement` : ''}. {bandCounts.struct + bandCounts.conv > 0 ? 'That is a normal distribution for a cohort at this stage, and it is why Section 5.1 leads with mentor pairings.' : 'An unusually role-ready cohort; the development work in Section 5 is about range rather than readiness.'}
+          </PrBody>
+        )}
+      </>
+    ));
+  });
+
+  // SECTION 8
+  add('s8', (
+    <>
+      <PrSectionHead num={8} title="How to Read These Results" sub="Every score in this report comes from each person's own answers. These checks show how much to lean on them." />
+      <PrKey rows={[
+        ['Why this section exists', 'So that no one uses a number from this report without knowing how much weight it carries.'],
+        ['The short version', 'Directional confidence at group level is reasonable. Individual figures should not carry a decision on their own.'],
+      ]} />
+      <PrTable cols={['What we checked', 'Result', 'What it means']} widths={[130, 150, undefined]} style={{ marginBottom: 14 }}
+        rows={[
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Overall</span>,
+            <span style={{ fontWeight: 700, color: validAmber === 0 ? PRT.gn : PRT.am }}>{validGreen} clear, {validAmber} to read with care</span>,
+            'Interpret amber results alongside a conversation rather than the number alone.'],
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Presenting well</span>,
+            <span style={{ fontWeight: 700, color: presentingWell > n / 2 ? PRT.am : PRT.gn }}>{presentingWell} of {n}</span>,
+            'Very common when people feel assessed. Not a sign of dishonesty, just a reason to read scores as a little generous rather than exact.'],
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Balanced answering</span>,
+            <span style={{ fontWeight: 700, color: PRT.gn }}>{balancedCount} of {n}</span>,
+            'Answers spread naturally rather than agreeing with everything.'],
+          [<span style={{ fontWeight: 700, color: PRT.ink }}>Measured answering</span>,
+            <span style={{ fontWeight: 700, color: PRT.gn }}>{measuredCount} of {n}</span>,
+            'Most people used the middle of the scale as well as the ends, which is what we want to see.'],
+        ]} />
+      <PrPairNotes
+        left={['METHOD, IN FIVE LINES', `CORE assessment: 63 questions, 21 qualities, five areas. Group figures are straightforward averages of ${n} people. The seven areas in Section 2 are means of their component qualities. "Still building" counts people below the level at which a quality can be relied on. Sections 4, 6 and 7 are interpreted by Carnelian from the underlying results.`, PRT.c]}
+        right={['WHAT THIS REPORT IS NOT', 'Not a performance appraisal, and not a record of past delivery. Not a hiring or exit decision on its own. Not a ranking: the order in Section 7 reflects fit to different roles, not quality of person. Not a fixed picture: every quality here is developable, which is the point of Section 5.', PRT.am]}
+        style={{ marginBottom: 14 }}
+      />
+      <PrNote title="READ ALONGSIDE" color={PRT.gold}>
+        Individual Technical Reports and Action Plans for this batch sit behind these group figures in the CORE dashboard. Re-running the assessment in six to nine months, and watching the two figures named in Section 5, is the cleanest measure of whether the development investment landed.
+      </PrNote>
+    </>
+  ));
+
+  // fixed front pages + numbering
+  const secStart = {};
+  rest.forEach((p, i) => { if (!(p.sec in secStart)) secStart[p.sec] = i + 3; });
+  const contents = [
+    ['1', 'The Story in One Page', 'The whole cohort in a single view.', secStart.s1],
+    ['2', 'Who This Group Is', 'Persona, profile mix, and the detailed score picture.', secStart.s2],
+    ['3', 'What This Group Does Well', 'Five strengths, each with an action and an owner.', secStart.s3],
+    ['4', 'Where This Group Needs Support', 'Five development areas, plus individual support notes.', secStart.s4],
+    ['5', 'Development Roadmap', 'Quick wins, bigger programmes, and suggested tools.', secStart.s5],
+    ['6', 'What This Group Brings to the Wider Org', 'When to ask for this group by name.', secStart.s6],
+    ['7', 'Best-Fit Roles', 'One suggested role per person, with the growth focus.', secStart.s7],
+    ['8', 'How to Read These Results', 'Response confidence and method.', secStart.s8],
+  ];
+
+  const coverBody = (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <CoreLogo h={40} />
+        <PrLabel c={PRT.faint}>CORE BY CARNELIAN · RESTRICTED</PrLabel>
+      </div>
+      <div style={{ marginTop: 56 }}>
+        <PrLabel style={{ marginBottom: 6 }}>TEAM INSIGHT REPORT</PrLabel>
+        <PrHead size={22}>{cohortTitle}{orgKnown ? ` · ${orgName}` : ''}</PrHead>
+      </div>
+      <div style={{ textAlign: 'center', margin: '54px 0' }}>
+        <PrLabel c={PRT.gold} style={{ marginBottom: 8 }}>THE TEAM PERSONA</PrLabel>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 46, fontWeight: 700, color: PRT.c, lineHeight: 1.1, marginBottom: 10 }}>{persona.name}</div>
+        <PrBody size={10.5} style={{ maxWidth: 540, margin: '0 auto' }}>{personaTagline}</PrBody>
+      </div>
+      <PrMeta rows={[
+        ['Batch', batch],
+        ...(orgKnown ? [['Organisation', orgName]] : []),
+        ['Cohort', `${n} team members${deptList.length ? ` · ${deptList.join(', ')}` : ''}`],
+        ['Sector', industry || 'Unspecified'],
+        ['Career level', candidate.experience || 'Unspecified'],
+        ['Team composite', `${teamAvg.overall} / 100 group average`],
+        ['Response confidence', `${validGreen} clear read${validGreen === 1 ? '' : 's'}, ${validAmber} to read with care`],
+        ['Assessment', 'CORE · 63 questions · 21 qualities across five areas'],
+        ['Assessment date', today],
+        ['Report prepared by', 'Carnelian Co.'],
+        ['Classification', 'Restricted. HR leadership only'],
+      ]} />
+      <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, padding: '10px 14px', marginTop: 14, textAlign: 'center' }}>
+        <PrBody size={7.8} color={PRT.faint}>
+          <span style={{ fontWeight: 800, color: PRT.sub }}>CONFIDENTIAL.</span> This report aggregates individual results for team-level decision-making. Restricted to HR leadership; not for circulation to assessed individuals or line management without prior consultation with Carnelian Co. The support notes in Section 4 and the role table in Section 7 name individuals and are the most sensitive pages in the document.
+        </PrBody>
+      </div>
+    </>
+  );
+
+  const howToBody = (
+    <>
+      <PrSectionHead title="How to Read This Report" sub="Everything a project custodian needs in order to use this document unaided." />
+      <PrKey title="KEY FOR PROJECT CUSTODIANS" rows={[
+        ['Scores', 'Everything is out of 100 and is a group average unless a person is named.'],
+        ['Bands', '75 and above is a strength. 60 to 74 is solid. Below 60 means the quality is still building.'],
+        ['Colour', 'Green is strong, amber is solid, red is still building. Used the same way for group averages and for individual scores.'],
+        ['Two kinds of name', 'The group as a whole gets a name from geology. Each individual gets a gemstone. Keeping them separate makes it easy to tell whether we mean the group or a person.'],
+        ['A caution', 'People naturally present themselves well in assessments. Read every score alongside a conversation rather than on its own. Section 8 explains this.'],
+        ['Every action has an owner', 'HR and L&D handle programmes and policy. Line managers handle placement, expectations and day-to-day practice. Every recommendation names one of the two.'],
+        ['Sensitive pages', 'The support notes in Section 4 and the role table in Section 7 name individuals. Share the suggested support from those pages with managers, not the pages themselves.'],
+      ]} />
+      <PrHead size={12} style={{ margin: '2px 0 6px' }}>Contents</PrHead>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 14 }}>
+        <tbody>
+          {contents.map(([num, title, sub, pg], i) => (
+            <tr key={i} style={{ borderBottom: i < contents.length - 1 ? `1px solid ${PRT.lineSoft}` : 'none' }}>
+              <td style={{ width: 26, padding: '5px 0', fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, fontWeight: 700, color: PRT.c }}>{num}</td>
+              <td style={{ padding: '5px 0' }}>
+                <span style={{ fontFamily: "'Public Sans',sans-serif", fontSize: 9.5, fontWeight: 700, color: PRT.ink }}>{title}</span>
+                <span style={{ fontFamily: "'Public Sans',sans-serif", fontSize: 8.3, color: PRT.faint }}>  ·  {sub}</span>
+              </td>
+              <td style={{ width: 30, padding: '5px 0', textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, fontWeight: 700, color: PRT.sub }}>{pg}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <PrLabel c={PRT.faint} style={{ marginBottom: 6 }}>THIS REPORT IN FOUR NUMBERS</PrLabel>
+      <PrStats items={[
+        [n, 'Team members assessed'],
+        [subAvgs.length, 'Qualities scored'],
+        [subAvgs[0].v, 'Highest group average'],
+        [subAvgs[subAvgs.length - 1].v, 'Lowest group average'],
+      ]} />
+      <div style={{ marginTop: 14 }}>
+        <PrPairNotes
+          left={['WHERE TO START', 'If you have five minutes, read Section 1. If you are making a placement decision, read Sections 7 and 8 together. If you are commissioning development, read Section 5.', PRT.c]}
+          right={smallCohort
+            ? ['SMALL-COHORT CAUTION', `This report describes a cohort of ${n}. Group averages are straightforward means, so a single person can move any figure by up to ${Math.round(100 / n)} points. Read every number as a direction rather than a measurement.`, PRT.am]
+            : ['A NOTE ON SCALE', `Group averages over ${n} people are statistically steady. Individual variation is summarised in Sections 4 and 7 rather than hiding inside the averages.`, PRT.gn]}
+        />
+      </div>
+    </>
+  );
+
+  const bodies = [coverBody, howToBody, ...rest.map(p => p.body)];
+  const total = bodies.length;
+  const pid = i => `ti-pg-${candidate.doc_id}-${i}`;
+  const ids = bodies.map((_, i) => pid(i));
+  const footerLeft = `Team Insight Report${orgKnown ? ` · ${orgName}` : ''} · ${batch}`;
 
   return (
     <div>
-      <div id={`comp-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
-      <div style={{ background:T.bg0, borderRadius:'10px', padding:'20px', marginBottom:'14px', border:`1px solid ${T.b2}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.gold, textTransform:'uppercase', letterSpacing:'0.14em', fontWeight:'700', marginBottom:'6px' }}>Team Composition Report · Batch: {batch}</div>
-        <div style={{ fontSize:'12px', color:T.t2 }}>{n} valid responses analyzed for HR Strategy.</div>
+      <PrStyles />
+      <PrPreviewNote T={T} pages={total} />
+      <PrDownloadBtn ids={ids} filename={`${batch}_Team_Insight.pdf`} />
+      {bodies.map((b, i) => (
+        <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Restricted: HR Leadership Only">{b}</PrPage>
+      ))}
+      <PrDownloadBtn ids={ids} filename={`${batch}_Team_Insight.pdf`} />
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ORGANIZATIONAL CULTURE PULSE REPORT (print-authored)
+// ═══════════════════════════════════════════════════════════════════════════
+const CulturePulseReport = ({ candidate, allData, T }) => {
+  const batch = candidate.batch;
+  const normBatch = String(batch || '').trim().toLowerCase();
+  const allBatchRows = (allData || []).filter(r => String(r.batch || '').trim().toLowerCase() === normBatch);
+  const batchData = allBatchRows.filter(r => r.report_data?.validity?.overall !== 'red' && r.report_data?.scores);
+  if (!batch) return <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>No batch assigned.</div>;
+  if (batchData.length < 2) return <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>Only {batchData.length} valid response(s). Requires at least 2.</div>;
+
+  // ── data prep ──
+  const n = batchData.length;
+  const fmt = v => n < 12 ? Math.round(v * 10) / 10 : Math.round(v);
+  const redExcluded = allBatchRows.length - n;
+  const orgName = candidate.org || batchData[0]?.org || 'the organisation';
+  const orgKnown = orgName !== 'the organisation';
+  const deptList = [...new Set(batchData.map(b => b.department).filter(Boolean))];
+  const deptLine = deptList.length > 6 ? `${deptList.slice(0, 6).join(', ')} and ${deptList.length - 6} more` : deptList.join(', ');
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const dimKeys = ['O', 'C', 'E', 'A', 'ES', 'CQavg', 'OCBavg', 'LAavg', 'EOavg'];
+  const dimLabels = { O: 'Openness', C: 'Conscientiousness', E: 'Extraversion', A: 'Agreeableness', ES: 'Emotional Stability', CQavg: 'Cultural Intelligence', OCBavg: 'Team Citizenship', LAavg: 'Learning Agility', EOavg: 'Ethical Orientation' };
+
+  const avgKey = (rows, k) => {
+    const vals = rows.map(b => b.report_data?.scores?.[k]).filter(v => v != null).map(Number);
+    return vals.length ? fmt(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  };
+  const orgAvg = {};
+  dimKeys.forEach(k => { orgAvg[k] = avgKey(batchData, k); });
+  const compAvg = fmt(batchData.reduce((a, b) => a + Number(b.overall_score || 0), 0) / n);
+
+  const sortedDims = dimKeys.map(k => ({ k, l: dimLabels[k], v: orgAvg[k] })).sort((a, b) => b.v - a.v);
+  const top3 = sortedDims.slice(0, 3), bot3 = sortedDims.slice(-3).reverse();
+  const top2 = sortedDims.slice(0, 2), bot2 = sortedDims.slice(-2).reverse();
+  const topD = sortedDims[0], lowD = sortedDims[sortedDims.length - 1];
+  const spread9 = fmt(topD.v - lowD.v);
+
+  const persona = CULTURE_PERSONAS.find(p => p.cond(orgAvg)) || CULTURE_PERSONAS[CULTURE_PERSONAS.length - 1];
+  const learningPref = getLearningPrefSoft(orgAvg);
+  const leadershipFit = getLeadershipFitSoft(orgAvg);
+  const situations = PR_SITUATIONS[learningPref.mode] || PR_SITUATIONS['Pragmatic & On-the-Job'];
+
+  const archCounts = {};
+  batchData.forEach(b => { archCounts[b.profile_name] = (archCounts[b.profile_name] || 0) + 1; });
+  const archSorted = Object.entries(archCounts).sort((a, b) => b[1] - a[1]);
+  const dominant = archSorted[0];
+  const dominantPct = Math.round((dominant[1] / n) * 100);
+  const missing = Object.keys(ORG_ARCHETYPE_TAG).filter(a => !archCounts[a]);
+
+  const validGreen = batchData.filter(b => b.report_data?.validity?.overall === 'green').length;
+  const validAmber = n - validGreen;
+
+  const deptStats = deptList.map(dep => {
+    const rows = batchData.filter(b => b.department === dep);
+    const avg = fmt(rows.reduce((a, b) => a + Number(b.overall_score || 0), 0) / rows.length);
+    const dims = dimKeys.map(k => ({ k, l: dimLabels[k], v: avgKey(rows, k) })).filter(d => d.v > 0).sort((a, b) => b.v - a.v);
+    return { dep, count: rows.length, avg, dims };
+  }).sort((a, b) => b.avg - a.avg);
+
+  const whereFirst = k => {
+    const eligible = deptStats.filter(d => d.count >= 2).map(d => ({ dep: d.dep, v: (d.dims.find(x => x.k === k) || {}).v })).filter(d => d.v != null);
+    if (eligible.length >= 2) {
+      const lowest = eligible.sort((a, b) => a.v - b.v)[0];
+      return `${lowest.dep} (lowest departmental average on this area, at ${lowest.v})`;
+    }
+    return PR_WHERE_FIRST[k] || 'Wherever the pressure of growth lands first';
+  };
+
+  const PR_DIM_CAT = { A: 'relational', E: 'relational', OCBavg: 'relational', CQavg: 'relational', C: 'procedural', EOavg: 'procedural', O: 'adaptive', LAavg: 'adaptive', ES: 'steadiness' };
+  const topCatCounts = {};
+  top3.forEach(d => { const c = PR_DIM_CAT[d.k]; topCatCounts[c] = (topCatCounts[c] || 0) + 1; });
+  const topCatDominant = Object.entries(topCatCounts).sort((a, b) => b[1] - a[1])[0];
+  const strengthsInBand = top3.filter(d => d.v >= 75);
+  const inCommonCulture = `${topCatDominant[1] === 3 ? 'All three' : topCatDominant[1] === 2 ? 'Two of the three' : 'The leading strength'} of the top strengths are ${topCatDominant[0]}. ${topCatDominant[0] === 'relational' ? 'This organisation is built on goodwill and initiative between people, which is why it copes well with ambiguity and why Section 2 concentrates on structure.' : topCatDominant[0] === 'procedural' ? 'This organisation runs on consistency and standards, which is why Section 2 concentrates on energy for people and change.' : topCatDominant[0] === 'adaptive' ? 'This organisation runs on curiosity and speed, which is why Section 2 concentrates on consistency and follow-through.' : 'This organisation is anchored by steadiness, which is why Section 2 concentrates on pace and openness.'} The strengths and the watch areas are two sides of the same culture.`;
+
+  // ── page assembly ──
+  const rest = [];
+  const add = (sec, body) => rest.push({ sec, body });
+
+  // Culture profile page
+  add('prof', (
+    <>
+      <PrSectionHead title="The culture profile: nine dimensions" sub="The shape shows where this organisation is even and where it is uneven. The dashed ring marks the 75 strength line." />
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+        <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={290} data={sortedDims.map(d => ({ label: d.l, value: d.v }))} />
       </div>
-
-      {card(
-        <>
-          <SectionHead label="1. Composition Diagnostic" T={T} />
-          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-            {findings.map((f, i) => {
-              const col = f.sev==='critical'?T.rd:f.sev==='watch'?T.am:T.gn;
-              const bg = f.sev==='critical'?T.rdP:f.sev==='watch'?T.amP:T.gnP;
-              return (
-                <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${col}`, borderRadius:'8px', padding:'14px' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-                    <span style={{ background:bg, color:col, padding:'2px 8px', borderRadius:'4px', fontSize:'9px', fontWeight:'800', textTransform:'uppercase' }}>{f.sev}</span>
-                    <span style={{ fontSize:'13px', fontWeight:'700', color:T.t0 }}>{f.t}</span>
-                  </div>
-                  <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5' }}>{f.d}</div>
-                </div>
-              );
-            })}
+      <div style={{ display: 'flex', gap: 14 }}>
+        <div style={{ flex: 1 }}>
+          <PrLabel c={PRT.faint} style={{ marginBottom: 6 }}>RANKED, STRONGEST FIRST</PrLabel>
+          {sortedDims.map((d, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: `1px solid ${PRT.lineSoft}`, padding: '2.5px 0' }}>
+              <PrBody size={8.7} color={PRT.ink} style={{ fontWeight: 600 }}>{String(i + 1).padStart(2, '0')}  {d.l}</PrBody>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.7, fontWeight: 700, color: prCol(d.v) }}>{d.v} · {prBandName(d.v)}</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 5 }}>
+            <PrBody size={8.7} color={PRT.ink} style={{ fontWeight: 800 }}>Composite</PrBody>
+            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.7, fontWeight: 800, color: PRT.c }}>{compAvg}</span>
           </div>
-        </>
-      )}
-
-      {card(
-        <>
-          <SectionHead label="2. Hiring Profile Specification" T={T} />
-          <p style={{ fontSize:'12px', color:T.t2, marginBottom:'16px' }}>Target these dimension ranges for your next hire to balance the team's current blind spots.</p>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', marginBottom:'24px' }}>
-            {dimGaps.map((g, i) => (
-              <div key={i} style={{ flex:'1 1 240px', background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px' }}>
-                  <div style={{ fontSize:'12px', fontWeight:'800', color:T.t0, textTransform:'uppercase', letterSpacing:'0.05em' }}>{g.l}</div>
-                  <div className="mono" style={{ fontSize:'14px', fontWeight:'800', color:T.gold }}>≥ {g.v < 50 ? 80 : 75}</div>
-                </div>
-                <div style={{ fontSize:'11.5px', color:T.t1, lineHeight:'1.5', marginBottom:'10px' }}>{hiringInsights[g.k]}</div>
-                <div style={{ fontSize:'10px', color:T.t3, background:T.bg2, padding:'4px 8px', borderRadius:'4px', display:'inline-block' }}>
-                  Current team avg: <span style={{ color:T.rd, fontWeight:'700' }}>{g.v}/100</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <SectionHead label="Targeted Interview Probes" T={T} />
-          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-            {dimGaps.slice(0,3).map((g, i) => {
-              const probes = {
-                'Conscientiousness': {q:'Describe a project with multiple stakeholders and a hard deadline where something went wrong. What specifically did you do to keep it on track?', l:'Concrete structural actions, not generic "I worked harder."'},
-                'Emotional Stability': {q:'Describe a professional setback that genuinely shook you. What happened, and what did you do in the 30 days after?', l:'Honest acknowledgment of the difficulty paired with concrete recovery actions.'},
-                'Learning Agility': {q:'Walk me through the most recent significant change in your professional knowledge or skills. What triggered it, and how did you sustain it?', l:'Self-directed learning, not mandatory training.'},
-                'Ethical Orientation': {q:'Describe a situation where the easy path and the right path were different, and you chose the right path. What did it cost you?', l:'Real cost, specifically named. Candidates who claim there was no cost are sanitising the story.'},
-                'Openness': {q:'Tell me about a time you had to adopt an approach you initially disagreed with. What changed your mind?', l:'Evidence of genuine re-evaluation, not just compliance.'},
-                'Extraversion': {q:'Tell me about a time you had to influence a room full of people who were skeptical of your position. What did you do?', l:'Specific techniques used, reading the room, and willingness to engage conflict.'},
-                'Agreeableness': {q:'Describe a situation where a peer strongly disagreed with a decision you had authority over. How did the disagreement unfold and resolve?', l:'Willingness to hear substance of the disagreement rather than deflecting it.'},
-                'Cultural Intelligence': {q:'Tell me about a time your assumptions about how a colleague would behave turned out to be wrong.', l:'Genuine recognition of the error, not performed humility.'},
-                'Team Citizenship': {q:'Tell me about something you did for your team or organisation in the last year that was not part of your formal role.', l:'Discretionary effort with specific examples.'}
-              };
-              const p = probes[g.l] || probes['Ethical Orientation'];
-              return (
-                <div key={i} style={{ background:T.bg3, border:`1px solid ${T.b1}`, borderLeft:`4px solid ${T.gold}`, borderRadius:'8px', padding:'14px' }}>
-                  <div style={{ fontSize:'10px', fontWeight:'800', color:T.gold, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'6px' }}>Targets: {g.l}</div>
-                  <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>"{p.q}"</div>
-                  <div style={{ fontSize:'12px', color:T.t1 }}><strong>Listen for:</strong> {p.l}</div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {card(
-        <>
-          <SectionHead label="3. Promotion Fit & Talent Grid" T={T} />
-          <p style={{ fontSize:'12px', color:T.t2, marginBottom:'20px' }}>Candidate fit mapped against target dimension ranges and experience requirements for key organisational roles.</p>
-          
-          <div style={{ display:'flex', flexWrap:'wrap', gap:'20px' }}>
-            {ROLE_TARGETS.map((role, idx) => {
-              const scored = batchData.map(b => {
-                let match = 0, count = 0;
-                let highestKey = null, lowestKey = null;
-                let highestVal = -1, lowestVal = 101;
-
-                Object.entries(role.targets).forEach(([k, [min, max]]) => {
-                  const v = b.report_data?.scores?.[k] || b.report_data?.CI?.[k];
-                  if(v != null) { 
-                    count++; 
-                    if(v >= min && v <= max) match++; 
-                    else if(v >= min-10) match+=0.5; 
-                    
-                    if (v > highestVal) { highestVal = v; highestKey = k; }
-                    if (v < lowestVal) { lowestVal = v; lowestKey = k; }
-                  }
-                });
-                
-                let fitPct = count>0 ? Math.round((match/count)*100) : 0;
-                
-                // Fixed Experience Logic (Exact String Matching)
-                const expStr = String(b.report_data?.respondent?.exp || b.experience || '').toLowerCase().trim();
-                const isAbsBeginner = expStr === '0–2 years' || expStr.includes('entry');
-                const isJunior = isAbsBeginner || expStr === '3–5 years' || expStr.includes('junior');
-                const isMid = expStr === '6–10 years' || expStr === '11–15 years' || expStr.includes('mid');
-                const isSenior = expStr === '16+ years' || expStr.includes('senior') || expStr.includes('executive') || expStr.includes('director');
-
-                let expWarning = null;
-                if (role.reqExp === 'senior' && !isSenior) expWarning = isMid ? 'Lacks Exec Exp' : 'Too Junior';
-                if (role.reqExp === 'mid' && (isAbsBeginner || isJunior)) expWarning = isAbsBeginner ? 'Too Junior' : 'Lacks Exp';
-                if (role.reqExp === 'junior_plus' && isAbsBeginner) expWarning = 'Too Junior';
-                if (role.overqual === 'senior' && isSenior) expWarning = 'Overqualified';
-
-                let fitLabel = '';
-                let fitCol = T.t0;
-                if (expWarning) { fitLabel = expWarning; fitCol = T.rd; }
-                else if (fitPct >= 75) { fitLabel = 'Strong Fit'; fitCol = T.gn; }
-                else if (fitPct >= 50) { fitLabel = 'Potential Fit'; fitCol = T.am; }
-                else { fitLabel = 'Not a Fit'; fitCol = T.rd; }
-
-                // Generate dynamic breakdown
-                const keyNames = { LRS:'Leadership', ES:'Resilience', C:'Delivery', EOavg:'Integrity', OCBavg:'Citizenship', A:'Collaboration', E:'Presence', CII:'Compliance', CQavg:'Cultural IQ', SES:'Stakeholder', ADS:'Adaptability', O:'Innovation', LAavg:'Learning' };
-                let breakdown = '';
-                if (expWarning) breakdown = `Experience mismatch (${b.report_data?.respondent?.exp || 'Unknown'})`;
-                else if (fitPct >= 75) breakdown = `Excellent match across required dimensions.`;
-                else if (fitPct >= 50) breakdown = `Strong on ${keyNames[highestKey]}, needs development in ${keyNames[lowestKey]}.`;
-                else breakdown = `Critical gap in ${keyNames[lowestKey]} (${lowestVal}/100).`;
-
-                return { ...b, fitPct, fitLabel, fitCol, breakdown };
-              }).sort((a,b) => {
-                // Sort by Fit Percentage, but push warnings to the bottom
-                if (a.fitLabel === 'Overqualified' || a.fitLabel.includes('Junior') || a.fitLabel.includes('Lacks')) return 1;
-                if (b.fitLabel === 'Overqualified' || b.fitLabel.includes('Junior') || b.fitLabel.includes('Lacks')) return -1;
-                return b.fitPct - a.fitPct;
-              });
-
-              return (
-                <div key={idx} style={{ flex:'1 1 300px', background:T.bg3, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'16px' }}>
-                  <div style={{ fontSize:'14px', fontWeight:'800', color:T.gold, marginBottom:'12px', borderBottom:`1px solid ${T.b2}`, paddingBottom:'8px' }}>
-                    {role.name}
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-                    {scored.map((c, i) => (
-                      <div key={i} style={{ padding:'12px', background:T.bg2, border:`1px solid ${c.fitCol}40`, borderLeft:`4px solid ${c.fitCol}`, borderRadius:'6px' }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'4px' }}>
-                          <div>
-                            <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0 }}>{c.name}</div>
-                            <div style={{ fontSize:'10px', color:T.t2 }}>{c.profile_name}</div>
-                          </div>
-                          <div style={{ textAlign:'right' }}>
-                            <div className="mono" style={{ fontSize:'13px', fontWeight:'800', color:c.fitCol }}>
-                              {c.fitLabel}
-                            </div>
-                            {!c.expWarning && <div style={{ fontSize:'10px', color:c.fitCol, fontWeight:'700' }}>{c.fitPct}% MATCH</div>}
-                          </div>
-                        </div>
-                        <div style={{ fontSize:'11px', color:T.t3, lineHeight:'1.4', marginTop:'6px', paddingTop:'6px', borderTop:`1px solid ${T.b1}` }}>
-                          {c.breakdown}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrNote title="THE SPREAD, AND WHY IT MATTERS" color={PRT.c} style={{ marginBottom: 8 }}>
+            Spread across the nine dimensions is {spread9} points ({topD.v} to {lowD.v}). {spread9 >= 12 ? 'A spread this size means the culture has a clear signature rather than being uniformly average, which is what makes Sections 1 and 2 actionable.' : 'A tight spread means the culture is even rather than sharply differentiated; read Sections 1 and 2 as relative emphasis rather than strong contrast.'}
+          </PrNote>
+          <PrLegend style={{ marginBottom: 8 }} />
+          <PrBody size={8.3} color={PRT.faint}>Every figure on this page describes the organisation as a whole. Nothing here attributes a score to a named person.</PrBody>
+        </div>
       </div>
-      <DownloadBtn elementId={`comp-report-${candidate.doc_id}`} filename={`${batch}_Team_Composition.pdf`} T={T} />
+    </>
+  ));
+
+  // SECTION 1: strengths
+  add('c1', (
+    <>
+      <PrSectionHead num={1} title="Cultural Strengths" sub="What kind of people this organisation naturally attracts, retains, and brings out the best in." />
+      <PrKey rows={[
+        ['What this is', 'The three highest-scoring dimensions of nine, ranked against each other.'],
+        ['How to use it', 'Treat these as assets to protect. They are what recruitment and onboarding should keep selecting for, not what needs fixing.'],
+        ['Band note', strengthsInBand.length === 3 ? 'All three sit in the strength band (75+).' : strengthsInBand.length > 0 ? `${strengthsInBand.map(d => d.l).join(' and ')} ${strengthsInBand.length === 1 ? 'is' : 'are'} in the strength band (75+); the other${3 - strengthsInBand.length === 1 ? ' is' : 's are'} top-ranked but sit in the solid band.` : 'None of the three reaches the strength band yet; they are top-ranked relative to the rest of the profile.'],
+      ]} />
+      {top3.map((d, i) => {
+        const c = CULTURE_DIM_CONTENT[d.k] || {};
+        return (
+          <PrQualityCard key={i} tag={`STRENGTH ${i + 1}`} tagColor={PRT.gn} title={d.l} score={d.v}
+            rows={[
+              ['HIRING PATTERN', c.hiring || ''],
+              ['DAY TO DAY', c.culture || ''],
+              ['PAYOFF', c.payoff || ''],
+            ]} />
+        );
+      })}
+      <PrNote title="WHAT THESE THREE HAVE IN COMMON" color={PRT.c}>{inCommonCulture}</PrNote>
+    </>
+  ));
+
+  // SECTION 2: watch areas
+  add('c2', (
+    <>
+      <PrSectionHead num={2} title="Cultural Watch Areas" sub="Organisation-wide patterns worth deliberate attention. These are not individual shortfalls." />
+      <PrKey rows={[
+        ['What this is', 'The three lowest-scoring dimensions of nine, ranked against each other.'],
+        ['How to read it', `${bot3.filter(d => d.v >= 60).length} of the three sit in the solid band. ${bot3.every(d => d.v >= 60) ? 'This is a culture with no failing dimension, so read these as build priorities rather than problems.' : 'Read these as build priorities with a clear starting order.'}`],
+        ['Where it goes next', 'Each of the three has a matching structural move in Section 6, with an owner and a timeframe.'],
+      ]} />
+      {bot3.map((d, i) => {
+        const c = CULTURE_DIM_CONTENT[d.k] || {};
+        return (
+          <PrQualityCard key={i} tag={`WATCH AREA ${i + 1}`} tagColor={PRT.am} title={d.l} score={d.v}
+            rows={[
+              ['WHAT WE NOTICE, ORG-WIDE', c.structural || ''],
+              ['WHY IT IS WORTH BUILDING', c.buildReason || ''],
+              ['WHERE IT SHOWS FIRST', whereFirst(d.k)],
+            ]} />
+        );
+      })}
+      <PrNote title="THE SINGLE MOST USEFUL READ" color={PRT.c}>
+        {lowD.l} at {lowD.v} is the lowest dimension and the one most exposed by growth. A culture that runs on its current strengths absorbs this gap well at {n} people and much less well at several times that. {(CULTURE_DIM_CONTENT[lowD.k] || {}).buildReason || 'Building it now is cheaper than repairing it later.'}
+      </PrNote>
+    </>
+  ));
+
+  // SECTION 3: archetypes
+  add('c3', (
+    <>
+      <PrSectionHead num={3} title="Archetype Distribution" sub="Which profiles are over- or under-represented across the organisation. A useful signal for future hiring." />
+      <PrKey rows={[
+        ['What an archetype is', 'A CORE profile describing how a person tends to contribute. Thirteen exist in the framework. None is better than another.'],
+        ['How to use it', 'Read the mix, not the individual counts. An over-represented profile tells you what the organisation is good at hiring for; an absent one tells you what it currently has to build or buy.'],
+        ...(n <= 12 ? [['Small-sample caution', `With ${n} respondents, one person equals ${Math.round(100 / n)} percentage points. Treat this as a direction of travel, not a distribution.`]] : []),
+      ]} />
+      <div style={{ display: 'flex', gap: 22, alignItems: 'center', border: `1px solid ${PRT.line}`, background: PRT.panel, padding: '16px 18px', marginBottom: 12 }}>
+        <PrDonut
+          segments={archSorted.map(([nm], i) => ({ value: archCounts[nm], color: PR_COLORS[i % PR_COLORS.length] }))}
+          size={150} hole={94}
+          centerTop={<div style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 700, color: PRT.ink, lineHeight: 1 }}>{n}</div>}
+          centerBottom={<div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 6.3, letterSpacing: '0.16em', color: PRT.faint, marginTop: 3 }}>PEOPLE</div>}
+        />
+        <div style={{ flex: 1 }}>
+          <PrBody size={9} style={{ marginBottom: 8 }}>{archSorted.length} of the thirteen CORE profiles appear across this organisation.</PrBody>
+          {archSorted.slice(0, 9).map(([nm, count], i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ width: 14, height: 4, background: PR_COLORS[i % PR_COLORS.length], display: 'inline-block', flexShrink: 0 }} />
+              <PrBody size={8.7} color={PRT.ink} style={{ fontWeight: 600, flex: 1 }}>{nm}</PrBody>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.7, fontWeight: 700, color: PRT.sub }}>{count} ({Math.round((count / n) * 100)}%)</span>
+            </div>
+          ))}
+          {archSorted.length > 9 && <PrBody size={8} color={PRT.faint}>and {archSorted.length - 9} more profile{archSorted.length - 9 === 1 ? '' : 's'} with smaller counts.</PrBody>}
+        </div>
+      </div>
+      <PrNote title="WHAT THIS MIX MEANS" color={PRT.c} style={{ marginBottom: 10 }}>
+        The dominant profile is {dominant[0]} at {dominantPct} per cent, which leans toward {ORG_ARCHETYPE_TAG[dominant[0]] || 'a distinct working style'}. That builds naturally toward {topD.l.toLowerCase()}, while {lowD.l.toLowerCase()} is the dimension that needs deliberate attention as the organisation grows.
+      </PrNote>
+      {missing.length > 0 ? (
+        <PrNote title="NOT CURRENTLY REPRESENTED" color={PRT.am}>
+          {missing.slice(0, 3).map(m => `${m}, which leans toward ${ORG_ARCHETYPE_TAG[m]}`).join('. ')}. {missing.length > 3 ? `${missing.length - 3} further profile${missing.length - 3 === 1 ? ' is' : 's are'} also absent. ` : ''}Worth weighting toward in the next few hires if the organisation is scaling, and worth checking against Section 6 before treating it as a gap.
+        </PrNote>
+      ) : (
+        <PrNote title="COVERAGE" color={PRT.gn}>All thirteen CORE profiles are represented, which is an unusually complete spread of working styles.</PrNote>
+      )}
+    </>
+  ));
+
+  // SECTION 4: departments
+  const deptRow = d => [
+    <span style={{ fontWeight: 700, color: PRT.ink }}>{d.dep}{d.count < 3 ? ' *' : ''}</span>,
+    d.count,
+    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: prCol(d.avg) }}>{d.avg}</span>,
+    d.count < 2 || !d.dims.length ? <span style={{ fontStyle: 'italic', color: PRT.faint }}>Too few respondents for a reliable read</span> : `${d.dims[0].l} (${d.dims[0].v})`,
+    d.count < 2 || !d.dims.length ? <span style={{ fontStyle: 'italic', color: PRT.faint }}>Too few respondents for a reliable read</span> : `${d.dims[d.dims.length - 1].l} (${d.dims[d.dims.length - 1].v})`,
+  ];
+  const deptChunks = prChunk(deptStats, 11, 15);
+  deptChunks.forEach((chunkRows, ci) => {
+    add('c4', (
+      <>
+        <PrSectionHead num={4} title={`How Departments Compare${deptChunks.length > 1 ? ` (${ci + 1} of ${deptChunks.length})` : ''}`} sub="A starting point for department-level conversations, not a ranking." />
+        {ci === 0 && (
+          <PrKey rows={[
+            ['Composite', 'That department\'s average overall score out of 100.'],
+            ['Standout and growth', 'The highest and lowest of the nine measured areas for that department.'],
+            ['Small departments', 'Departments marked * have fewer than 3 respondents; treat their figures as directional, and their standout/growth reads are withheld below 2 respondents.'],
+          ]} />
+        )}
+        <PrTable cols={['Department', 'People', 'Composite', 'Standout strength', 'Growth area']} widths={[160, 55, 70, undefined, undefined]} fontSize={8.4}
+          rows={chunkRows.map(deptRow)} />
+        {ci === deptChunks.length - 1 && (
+          <PrBody size={8.3} color={PRT.faint} style={{ marginTop: 8 }}>Differences between departments are usually about role demands and local leadership rather than talent quality. The most useful follow-up is a short conversation with the department at each end of the composite range.</PrBody>
+        )}
+      </>
+    ));
+  });
+
+  // SECTION 5: learning and leadership
+  add('c5', (
+    <>
+      <PrSectionHead num={5} title="Learning and Leadership Fit" sub="How this culture prefers to learn, and the leadership style that lands with it." />
+      <PrKey rows={[
+        ['What this is', 'A read on delivery style, not on content. It tells you how to introduce a programme or a change here, not what it should contain.'],
+        ['Why it matters', 'The same intervention succeeds or fails on delivery. Match the delivery to the culture and Section 6 gets much easier.'],
+      ]} />
+      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <div style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${PRT.c}`, padding: '11px 13px' }}>
+          <PrLabel style={{ marginBottom: 4 }}>LEARNING AND GROWTH PREFERENCES</PrLabel>
+          <PrHead size={13} style={{ marginBottom: 5 }}>{learningPref.mode}</PrHead>
+          <PrBody size={8.8} style={{ marginBottom: 7 }}>{learningPref.desc}</PrBody>
+          <PrBody size={8.8} style={{ marginBottom: 5 }}><span style={{ fontWeight: 700, color: PRT.ink }}>How to build on it:</span> {learningPref.incentive}</PrBody>
+          <PrBody size={8.8}><span style={{ fontWeight: 700, color: PRT.ink }}>Worth knowing:</span> {learningPref.resist}</PrBody>
+        </div>
+        <div style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${PRT.gold}`, padding: '11px 13px' }}>
+          <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>LEADERSHIP STYLE FIT</PrLabel>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
+            <div>
+              <PrLabel c={PRT.gn} style={{ letterSpacing: '0.08em' }}>WORKS WELL HERE</PrLabel>
+              <PrBody size={10} color={PRT.ink} style={{ fontWeight: 800 }}>{leadershipFit.succeeds}</PrBody>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <PrLabel c={PRT.am} style={{ letterSpacing: '0.08em' }}>LANDS LESS NATURALLY</PrLabel>
+              <PrBody size={10} color={PRT.ink} style={{ fontWeight: 800 }}>{leadershipFit.lessWell}</PrBody>
+            </div>
+          </div>
+          <PrBody size={8.8}>{leadershipFit.desc}</PrBody>
+        </div>
+      </div>
+      <PrHead size={12} style={{ marginBottom: 6 }}>How this plays out in three common situations</PrHead>
+      <PrTable cols={['Situation', 'What works here', 'What tends to backfire']} fontSize={8.4} style={{ marginBottom: 14 }}
+        rows={situations.map(s => [<span style={{ fontWeight: 700, color: PRT.ink }}>{s[0]}</span>, s[1], s[2]])} />
+      <PrHead size={12} style={{ marginBottom: 6 }}>Introducing a change here: a three-step sequence</PrHead>
+      {[
+        ['1 · Give the reason first', 'State the problem the change solves before naming the process. This culture accepts a reasoned constraint far more readily than an unexplained one.'],
+        ['2 · Let the team shape the how', orgAvg.O >= 60 ? `Set the outcome and the deadline, not the method. With openness at ${orgAvg.O}, the group will build a better process than one handed to them.` : `Set the outcome and provide a clear starting method to adapt. With openness at ${orgAvg.O}, a blank page invites hesitation more than invention.`],
+        ['3 · Add one visible checkpoint', `A single named review point converts autonomy into accountability without becoming oversight. This is the specific bridge between this section and the ${lowD.l.toLowerCase()} figure in Section 2.`],
+      ].map(([t, b], i) => (
+        <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 6, alignItems: 'flex-start' }}>
+          <div style={{ minWidth: 130, fontFamily: "'IBM Plex Mono',monospace", fontSize: 8, fontWeight: 700, color: PRT.c, letterSpacing: '0.06em', paddingTop: 1 }}>{t}</div>
+          <PrBody size={8.8}>{b}</PrBody>
+        </div>
+      ))}
+    </>
+  ));
+
+  // SECTION 6: interventions
+  const TIMEFRAMES = ['Start now', 'Next quarter', '6 to 12 months'];
+  add('c6', (
+    <>
+      <PrSectionHead num={6} title="Culture-Level Interventions" sub="Structural, org-wide moves that answer Section 2. These are policy-level, not individual coaching." />
+      <PrKey rows={[
+        ['What these are', 'Changes to policy, process or calendar. None of them requires a training budget or an individual development plan.'],
+        ['Owner', 'The function accountable for the move happening, named on every card.'],
+        ['Timeframe', 'Suggested start, not duration. The three are sequenced deliberately: structure first, recovery second, exposure third.'],
+      ]} />
+      {bot3.map((d, i) => (
+        <div key={i} style={{ border: `1px solid ${PRT.line}`, borderLeft: `4px solid ${i === 0 ? PRT.c : PRT.am}`, padding: '10px 13px', marginBottom: 9 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
+            <PrLabel c={i === 0 ? PRT.c : PRT.am}>BUILDING: {d.l.toUpperCase()} · {d.v}</PrLabel>
+            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em', color: PRT.faint, textTransform: 'uppercase' }}>{TIMEFRAMES[i]}</span>
+          </div>
+          <PrHead size={12.5} style={{ marginBottom: 4 }}>{PR_INT_TITLE[d.k] || `Build ${d.l.toLowerCase()} deliberately`}</PrHead>
+          <PrBody size={8.9} style={{ marginBottom: 5 }}>{(CULTURE_DIM_CONTENT[d.k] || {}).intervention || ''}</PrBody>
+          <PrBody size={8} color={PRT.faint} style={{ fontFamily: "'IBM Plex Mono',monospace", letterSpacing: '0.08em', textTransform: 'uppercase' }}>Owner: {PR_INT_OWNER[d.k] || 'HR / L&D'}</PrBody>
+        </div>
+      ))}
+      <PrHead size={12} style={{ margin: '8px 0 6px' }}>Sequencing, and how progress is measured</PrHead>
+      <PrTable cols={['Window', 'What is in flight', 'What tells you it is working']} widths={[95, undefined, undefined]} fontSize={8.4} style={{ marginBottom: 10 }}
+        rows={bot3.map((d, i) => [
+          <span style={{ fontWeight: 700, color: PRT.ink }}>{['0 to 3 months', '3 to 6 months', '6 to 12 months'][i]}</span>,
+          PR_INT_TITLE[d.k] || `Build ${d.l.toLowerCase()}`,
+          PR_WORKING_SIGNAL[d.k] || 'The figure moves at the next re-pulse.',
+        ])} />
+      <PrNote title="A CAUTION ON MEASUREMENT" color={PRT.am}>
+        Programme completion is not evidence of cultural movement. The only reliable measure is a re-pulse of the same nine dimensions, and six months is usually the shortest interval that shows real change. {lowD.l} at {lowD.v} is the figure to watch first.
+      </PrNote>
+    </>
+  ));
+
+  // EXEC SUMMARY
+  add('exec', (
+    <>
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
+        <PrLabel style={{ marginBottom: 8 }}>EXECUTIVE CULTURE SUMMARY</PrLabel>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 30, fontWeight: 700, color: PRT.ink, lineHeight: 1.15, marginBottom: 8 }}>"{persona.name}"</div>
+        <PrBody size={8.8} color={PRT.faint}>{orgKnown ? `${orgName} · ` : ''}{batch} · composite {compAvg} of 100 · {n} respondents</PrBody>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+        <div style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${PRT.gn}`, background: PRT.gnSoft, padding: '10px 12px' }}>
+          <PrLabel c={PRT.gn} style={{ marginBottom: 7 }}>TOP TWO CULTURAL STRENGTHS</PrLabel>
+          {top2.map((d, i) => <PrBody key={i} size={10} color={PRT.ink} style={{ fontWeight: 700, marginBottom: 4 }}>{i + 1}. {d.l} ({d.v})</PrBody>)}
+        </div>
+        <div style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${PRT.am}`, background: PRT.amSoft, padding: '10px 12px' }}>
+          <PrLabel c={PRT.am} style={{ marginBottom: 7 }}>TOP TWO GROWTH AREAS</PrLabel>
+          {bot2.map((d, i) => <PrBody key={i} size={10} color={PRT.ink} style={{ fontWeight: 700, marginBottom: 4 }}>{i + 1}. {d.l} ({d.v})</PrBody>)}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+        <div style={{ flex: 1 }}>
+          <PrNote title="HIRING PATTERN INSIGHT" color={PRT.gold}>
+            The dominant archetype is {dominant[0]} at {dominantPct} per cent. That builds naturally toward {top2[0].l.toLowerCase()}, while {bot2[0].l.toLowerCase()} needs deliberate attention as the organisation grows.{missing.length ? ` The absent profiles (${missing.slice(0, 2).join(', ')}) sit on the ${PR_DIM_CAT[lowD.k] === 'procedural' ? 'process and governance' : 'complementary'} side of the framework.` : ''}
+          </PrNote>
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrNote title="LEADERSHIP RECOMMENDATION" color={PRT.c}>
+            Lead here by being {leadershipFit.succeeds.toLowerCase()}. A {leadershipFit.lessWell.toLowerCase()} approach tends to land less naturally, which matters because the moves in Section 6 are structural and will need to be introduced without feeling imposed.
+          </PrNote>
+        </div>
+      </div>
+      <PrHead size={12} style={{ marginBottom: 6 }}>Three moves for the next 90 days</PrHead>
+      <PrTable cols={['#', 'Move', 'Owner']} widths={[26, undefined, 130]} fontSize={8.6} style={{ marginBottom: 12 }}
+        rows={bot3.map((d, i) => [
+          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: PRT.c }}>{i + 1}</span>,
+          <span><span style={{ fontWeight: 700, color: PRT.ink }}>{PR_INT_TITLE[d.k] || `Build ${d.l.toLowerCase()}`}.</span> {(CULTURE_DIM_CONTENT[d.k] || {}).intervention || ''}</span>,
+          PR_INT_OWNER[d.k] || 'HR / L&D',
+        ])} />
+      <PrPairNotes
+        left={['HOW CONFIDENT TO BE', `${n} respondents; ${validAmber} of them worth reading alongside a conversation. Directional confidence is reasonable at the dimension level. Do not use these figures for individual decisions of any kind.`, PRT.am]}
+        right={['WHAT WE WOULD LOOK AT NEXT', `Re-pulse the same nine dimensions in six months, and read this document alongside the Team Insight reporting for ${batch}, which covers the same people at team level using the same score bands.`, PRT.gn]}
+      />
+    </>
+  ));
+
+  // fixed front pages + numbering
+  const secStart = {};
+  rest.forEach((p, i) => { if (!(p.sec in secStart)) secStart[p.sec] = i + 3; });
+  const contents = [
+    ['·', 'The Culture Profile', 'Nine dimensions, ranked, with the spread.', secStart.prof],
+    ['1', 'Cultural Strengths', 'What this organisation attracts and retains.', secStart.c1],
+    ['2', 'Cultural Watch Areas', 'Org-wide patterns worth deliberate attention.', secStart.c2],
+    ['3', 'Archetype Distribution', 'Who is in the room, and who is missing.', secStart.c3],
+    ['4', 'How Departments Compare', 'Composite, standout and growth per department.', secStart.c4],
+    ['5', 'Learning and Leadership Fit', 'How to deliver change so it lands.', secStart.c5],
+    ['6', 'Culture-Level Interventions', 'Structural moves, owners and timeframes.', secStart.c6],
+    ['·', 'Executive Culture Summary', 'Boardroom-ready, one page.', secStart.exec],
+  ];
+
+  const coverBody = (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <CoreLogo h={40} />
+        <PrLabel c={PRT.faint}>CORE BY CARNELIAN · RESTRICTED</PrLabel>
+      </div>
+      <div style={{ marginTop: 52 }}>
+        <PrLabel style={{ marginBottom: 6 }}>ORGANIZATIONAL CULTURE PULSE REPORT</PrLabel>
+        <PrHead size={22}>{orgKnown ? orgName : `Batch ${batch}`}</PrHead>
+      </div>
+      <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', margin: '46px 0' }}>
+        <div style={{ flex: 1 }}>
+          <PrLabel c={PRT.gold} style={{ marginBottom: 8 }}>THE CULTURE, IN ONE LINE</PrLabel>
+          <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 34, fontWeight: 700, color: PRT.c, lineHeight: 1.15, marginBottom: 10 }}>"{persona.name}"</div>
+          <PrBody size={10}>{persona.desc} Its strongest asset is {topD.l.toLowerCase()} ({topD.v}); its clearest build is {lowD.l.toLowerCase()} ({lowD.v}).</PrBody>
+        </div>
+        <div style={{ width: 170, textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 54, fontWeight: 700, color: PRT.c, lineHeight: 1 }}>{compAvg}</div>
+          <PrLabel c={PRT.faint} style={{ marginTop: 6, letterSpacing: '0.1em' }}>ORG COMPOSITE</PrLabel>
+          <PrBody size={7.8} color={PRT.faint} style={{ marginTop: 4 }}>Average overall performance baseline across all participants.</PrBody>
+        </div>
+      </div>
+      <PrMeta rows={[
+        ['Batch / organisation', `${batch}${orgKnown ? ` · ${orgName}` : ''}`],
+        ['Total participants', `${n} assessed team members`],
+        ['Departments', `${deptList.length} represented: ${deptLine}`],
+        ['Response confidence', `${validGreen} of ${n} high confidence, ${validAmber} to read alongside a conversation${redExcluded > 0 ? ` (${redExcluded} excluded, low reliability)` : ''}`],
+        ['Assessment date', today],
+        ['Report prepared by', 'Carnelian Co.'],
+        ['Classification', 'Restricted. HR leadership only'],
+      ]} />
+      <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, padding: '10px 14px', marginTop: 14, textAlign: 'center' }}>
+        <PrBody size={7.8} color={PRT.faint}>
+          <span style={{ fontWeight: 800, color: PRT.sub }}>CONFIDENTIAL.</span> This report describes organisation-wide patterns only. It contains no individual results and is not a performance record. Restricted to HR leadership; not for onward circulation without prior consultation with Carnelian Co.
+        </PrBody>
+      </div>
+    </>
+  );
+
+  const howToBody = (
+    <>
+      <PrSectionHead title="How to Read This Report" sub="Everything a project custodian needs in order to use this document unaided." />
+      <PrKey title="KEY FOR PROJECT CUSTODIANS" rows={[
+        ['Scores', 'Everything is out of 100 and describes the organisation, not any individual.'],
+        ['Bands', '75 and above is a strength. 60 to 74 is solid. Below 60 is still building. The same bands are used in the Team Insight reporting for this batch, so the documents can be read side by side.'],
+        ['Strong and weak', 'Sections 1 and 2 rank the nine dimensions against each other. A dimension can be a relative watch area and still sit in the solid band.'],
+        ['Patterns, not people', 'Every finding here is organisation-wide. Nothing in this report attributes a score to a named person.'],
+        ['A caution', `These are self-reported results. ${validAmber} of ${n} responses in this batch are worth reading alongside a conversation rather than on their own. That is normal in assessment, not a red flag.`],
+        ['Who acts', 'Section 6 names an owner and a timeframe for every recommended move.'],
+      ]} />
+      <PrHead size={12} style={{ margin: '2px 0 6px' }}>Contents</PrHead>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 14 }}>
+        <tbody>
+          {contents.map(([num, title, sub, pg], i) => (
+            <tr key={i} style={{ borderBottom: i < contents.length - 1 ? `1px solid ${PRT.lineSoft}` : 'none' }}>
+              <td style={{ width: 26, padding: '5px 0', fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, fontWeight: 700, color: PRT.c }}>{num}</td>
+              <td style={{ padding: '5px 0' }}>
+                <span style={{ fontFamily: "'Public Sans',sans-serif", fontSize: 9.5, fontWeight: 700, color: PRT.ink }}>{title}</span>
+                <span style={{ fontFamily: "'Public Sans',sans-serif", fontSize: 8.3, color: PRT.faint }}>  ·  {sub}</span>
+              </td>
+              <td style={{ width: 30, padding: '5px 0', textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, fontWeight: 700, color: PRT.sub }}>{pg}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <PrLabel c={PRT.faint} style={{ marginBottom: 6 }}>THIS REPORT IN FOUR NUMBERS</PrLabel>
+      <PrStats items={[
+        [n, 'Participants assessed'],
+        [deptList.length, 'Departments represented'],
+        [topD.v, `Highest dimension: ${topD.l}`],
+        [lowD.v, `Lowest dimension: ${lowD.l}`],
+      ]} />
+      <div style={{ marginTop: 14 }}>
+        <PrPairNotes
+          left={['WHERE TO START', 'If you have five minutes, read the Executive Culture Summary at the back. If you are planning hiring, read Sections 3 and 4. If you are planning change, read Sections 5 and 6 together.', PRT.c]}
+          right={n <= 12
+            ? ['SMALL-SAMPLE CAUTION', `With ${n} respondents, one person can move any organisation-wide figure by up to ${Math.round(100 / n)} points. Read every number as a direction of travel rather than a measurement.`, PRT.am]
+            : ['A NOTE ON SCALE', `Figures over ${n} respondents are statistically steady at the organisation level. Department-level figures in Section 4 carry their own sample-size notes.`, PRT.gn]}
+        />
+      </div>
+    </>
+  );
+
+  const bodies = [coverBody, howToBody, ...rest.map(p => p.body)];
+  const total = bodies.length;
+  const pid = i => `cp-pg-${candidate.doc_id}-${i}`;
+  const ids = bodies.map((_, i) => pid(i));
+  const footerLeft = `Organizational Culture Pulse Report${orgKnown ? ` · ${orgName}` : ''} · ${batch}`;
+
+  return (
+    <div>
+      <PrStyles />
+      <PrPreviewNote T={T} pages={total} />
+      <PrDownloadBtn ids={ids} filename={`${batch}_Culture_Pulse.pdf`} />
+      {bodies.map((b, i) => (
+        <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Restricted: HR Leadership Only">{b}</PrPage>
+      ))}
+      <PrDownloadBtn ids={ids} filename={`${batch}_Culture_Pulse.pdf`} />
     </div>
   );
 };
@@ -2177,15 +3861,6 @@ const TeamCompositionReport = ({ candidate, allData, T }) => {
 // ═══════════════════════════════════════════════════════════════
 // CANDIDATE DETAIL MODAL — all 5 reports
 // ═══════════════════════════════════════════════════════════════
-const REPORT_TABS = [
-  { id:'tech',    label:'📊 Technical Report',      sub:'HR & Leadership' },
-  { id:'action',  label:'🧭 Action Plan',            sub:'Individual' },
-  { id:'player',  label:'🎮 Player Report',          sub:'Gamified' },
-  { id:'team',    label:'👥 Team Aggregate',         sub:'Batch-Level' },
-  { id:'comp',    label:'🧩 Team Composition',       sub:'HR Strategy' },
-  { id:'persona', label:'📸 Persona Card',           sub:'Shareable' },
-  { id:'evidence',label:'📎 Evidence & Uploads',     sub:'Verification' },
-];
 
 const EvidenceReport = ({ candidate, T }) => {
   const [evState, setEvState] = useState({});
@@ -2457,9 +4132,40 @@ const PersonaCard = ({ candidate, T }) => {
   );
 };
 
+// ═══════════════════════════════════════════════════════════════
+// CANDIDATE DETAIL MODAL — all reports
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// CANDIDATE DETAIL MODAL — all reports
+// ═══════════════════════════════════════════════════════════════
+const REPORT_TABS = [
+  { id:'tech',    label:'📊 Technical Report',      sub:'HR & Leadership' },
+  { id:'action',  label:'🧭 Action Plan',            sub:'Individual' },
+  { id:'player',  label:'🎮 Player Report',          sub:'Gamified' },
+  { id:'insight', label:'👥 Team Insight',           sub:'Single Dept' },
+  { id:'culture', label:'🌍 Culture Pulse',          sub:'Multi-Dept' },
+  { id:'persona', label:'📸 Persona Card',           sub:'Shareable' },
+  { id:'evidence',label:'📎 Evidence & Uploads',     sub:'Verification' },
+];
+
 const CandidateModal = ({ candidate, onClose, T, allData }) => {
   const [reportTab, setReportTab] = useState('tech');
+  
   if (!candidate) return null;
+
+  // Determine if this is a single-dept team or multi-dept org
+  const normBatch = String(candidate.batch || '').trim().toLowerCase();
+  const batchData = allData.filter(r => String(r.batch || '').trim().toLowerCase() === normBatch && r.report_data?.validity?.overall !== 'red');
+  const uniqueDepts = [...new Set(batchData.map(b => b.department).filter(Boolean))];
+  
+  const showInsight = candidate.batch && uniqueDepts.length <= 1;
+  const showCulture = candidate.batch && uniqueDepts.length > 1;
+
+  const activeTabs = REPORT_TABS.filter(t => {
+    if (t.id === 'insight') return showInsight;
+    if (t.id === 'culture') return showCulture;
+    return true;
+  });
 
   return (
     <div style={{
@@ -2503,7 +4209,7 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
 
           {/* REPORT TAB BAR */}
           <div style={{ display:'flex', gap:'4px', flexWrap:'wrap' }}>
-            {REPORT_TABS.map(tab => (
+            {activeTabs.map(tab => (
               <button key={tab.id} onClick={()=>setReportTab(tab.id)} className="report-tab-btn"
                 style={{
                   padding:'10px 18px', borderRadius:'8px 8px 0 0',
@@ -2527,8 +4233,8 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
           {reportTab === 'tech'   && <TechnicalReport  candidate={candidate} T={T} />}
           {reportTab === 'action' && <ActionPlanReport candidate={candidate} T={T} />}
           {reportTab === 'player' && <PlayerReport     candidate={candidate} T={T} />}
-          {reportTab === 'team'   && <TeamReport       candidate={candidate} allData={allData} T={T} />}
-{reportTab === 'comp'   && <TeamCompositionReport candidate={candidate} allData={allData} T={T} />}
+          {reportTab === 'insight'&& <TeamInsightReport candidate={candidate} allData={allData} T={T} />}
+          {reportTab === 'culture'&& <CulturePulseReport candidate={candidate} allData={allData} T={T} />}
           {reportTab === 'persona' && <PersonaCard candidate={candidate} T={T} />}
           {reportTab === 'evidence' && <EvidenceReport candidate={candidate} T={T} />}
         </div>
@@ -2536,7 +4242,6 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
     </div>
   );
 };
-
 // ═══════════════════════════════════════════════════════════════
 // MAIN DASHBOARD TABS (unchanged logic, updated modal call)
 // ═══════════════════════════════════════════════════════════════

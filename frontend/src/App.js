@@ -3459,17 +3459,7 @@ const getResources = () => {
             📊 Technical Report
           </button>
         )}
-        {(!R.batch || !ent || (!ent.player && !ent.tech)) && (
-          <>
-            <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-              🔒 Technical Report
-            </button>
-            <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
-              🔒 Player Report
-            </button>
-          </>
-        )}
-      </div>
+        </div>
 
       {/* ─── TAB 1: ACTION PLAN ─── */}
       {resTab === 'action' && (

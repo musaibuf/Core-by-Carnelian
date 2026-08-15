@@ -445,6 +445,7 @@ const TABS = [
   { id:'scores',    icon:'◉', label:'Score Analytics' },
   { id:'validity',  icon:'◎', label:'Validity Monitor' },
   { id:'industry',  icon:'◑', label:'Industry Breakdown' },
+  { id:'access',    icon:'⛨', label:'Access Panel' },
 ];
 
 const Sidebar = ({ activeTab, setActiveTab, T, total }) => (
@@ -4148,10 +4149,21 @@ const REPORT_TABS = [
   { id:'evidence',label:'📎 Evidence & Uploads',     sub:'Verification' },
 ];
 
-const CandidateModal = ({ candidate, onClose, T, allData }) => {
+const CandidateModal = ({ candidate, onClose, T, allData, batches }) => {
   const [reportTab, setReportTab] = useState('tech');
   
   if (!candidate) return null;
+
+  // Admin-side entitlements: which reports were commissioned for this batch
+  const batchRec = (batches || []).find(b => String(b.code).toUpperCase() === String(candidate.batch || '').toUpperCase());
+  const adminEnt = batchRec ? batchRec.entitlements || {} : null;
+  const TAB_ENT_MAP = { tech:'tech', action:'action', player:'player', insight:'team', culture:'culture', persona:'persona' };
+  const adminAllows = (tabId) => {
+    if (!adminEnt) return true; // individuals and legacy batches: show everything
+    if (tabId === 'evidence') return !adminEnt.player || adminEnt.player.admin !== false;
+    const key = TAB_ENT_MAP[tabId];
+    return !adminEnt[key] || adminEnt[key].admin !== false;
+  };
 
   // Determine if this is a single-dept team or multi-dept org
   const normBatch = String(candidate.batch || '').trim().toLowerCase();
@@ -4162,10 +4174,11 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
   const showCulture = candidate.batch && uniqueDepts.length > 1;
 
   const activeTabs = REPORT_TABS.filter(t => {
-    if (t.id === 'insight') return showInsight;
-    if (t.id === 'culture') return showCulture;
-    return true;
+    if (t.id === 'insight') return showInsight && adminAllows('insight');
+    if (t.id === 'culture') return showCulture && adminAllows('culture');
+    return adminAllows(t.id);
   });
+  const safeTab = activeTabs.some(t => t.id === reportTab) ? reportTab : (activeTabs[0]?.id || 'tech');
 
   return (
     <div style={{
@@ -4213,10 +4226,10 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
               <button key={tab.id} onClick={()=>setReportTab(tab.id)} className="report-tab-btn"
                 style={{
                   padding:'10px 18px', borderRadius:'8px 8px 0 0',
-                  border:`1px solid ${reportTab===tab.id ? T.b2 : 'transparent'}`,
-                  borderBottom: reportTab===tab.id ? `1px solid ${T.bg1}` : `1px solid ${T.b2}`,
-                  background: reportTab===tab.id ? T.bg1 : 'transparent',
-                  color: reportTab===tab.id ? T.t0 : T.t3,
+                  border:`1px solid ${safeTab===tab.id ? T.b2 : 'transparent'}`,
+                  borderBottom: safeTab===tab.id ? `1px solid ${T.bg1}` : `1px solid ${T.b2}`,
+                  background: safeTab===tab.id ? T.bg1 : 'transparent',
+                  color: safeTab===tab.id ? T.t0 : T.t3,
                   fontFamily:"'Plus Jakarta Sans',sans-serif",
                   fontSize:'12px', fontWeight:'700', marginBottom:'-1px',
                   position:'relative',
@@ -4230,12 +4243,12 @@ const CandidateModal = ({ candidate, onClose, T, allData }) => {
 
         {/* REPORT CONTENT */}
         <div style={{ padding:'24px 28px' }}>
-          {reportTab === 'tech'   && <TechnicalReport  candidate={candidate} T={T} />}
-          {reportTab === 'action' && <ActionPlanReport candidate={candidate} T={T} />}
-          {reportTab === 'player' && <PlayerReport     candidate={candidate} T={T} />}
-          {reportTab === 'insight'&& <TeamInsightReport candidate={candidate} allData={allData} T={T} />}
-          {reportTab === 'culture'&& <CulturePulseReport candidate={candidate} allData={allData} T={T} />}
-          {reportTab === 'persona' && <PersonaCard candidate={candidate} T={T} />}
+          {safeTab === 'tech'   && <TechnicalReport  candidate={candidate} T={T} />}
+          {safeTab === 'action' && <ActionPlanReport candidate={candidate} T={T} />}
+          {safeTab === 'player' && <PlayerReport     candidate={candidate} T={T} />}
+          {safeTab === 'insight'&& <TeamInsightReport candidate={candidate} allData={allData} T={T} />}
+          {safeTab === 'culture'&& <CulturePulseReport candidate={candidate} allData={allData} T={T} />}
+          {safeTab === 'persona' && <PersonaCard candidate={candidate} T={T} />}
           {reportTab === 'evidence' && <EvidenceReport candidate={candidate} T={T} />}
         </div>
       </div>
@@ -4772,24 +4785,283 @@ const IndustryTab = ({ data, T, onSelect }) => {
 // ═══════════════════════════════════════════════════════════════
 // ROOT DASHBOARD
 // ═══════════════════════════════════════════════════════════════
+// ═══ ADMIN AUTH + ACCESS PANEL + NOTIFICATIONS ═══════════════════════════════
+const API_BASE = 'https://core-by-carnelian-backend.onrender.com';
+const getAdminToken = () => { try { return localStorage.getItem('core_admin_token') || ''; } catch(e) { return ''; } };
+const setAdminToken = (t) => { try { t ? localStorage.setItem('core_admin_token', t) : localStorage.removeItem('core_admin_token'); } catch(e) {} };
+const authHeaders = () => ({ 'Authorization': 'Bearer ' + getAdminToken() });
+
+const REPORT_DEFS = [
+  { k:'action',  l:'Candidate Action Plan', lockP:true,  lockNote:'Always included' },
+  { k:'persona', l:'Persona Report',        lockP:true,  lockNote:'Always included' },
+  { k:'player',  l:'Player Report (Gamified)' },
+  { k:'tech',    l:'Technical Report' },
+  { k:'team',    l:'Team Insight Report',   noP:true,    lockNote:'Admin only, forwarded to HR by you' },
+  { k:'culture', l:'Culture Pulse Report',  noP:true,    lockNote:'Admin only, forwarded to HR by you' },
+];
+const DEFAULT_ENT = () => ({ action:{admin:true,participant:true}, persona:{admin:true,participant:true}, player:{admin:true,participant:false}, tech:{admin:true,participant:false}, team:{admin:true,participant:false}, culture:{admin:true,participant:false} });
+
+const AdminLogin = ({ T, onSuccess }) => {
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const doLogin = async () => {
+    if (!pw) return;
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch(`${API_BASE}/api/admin/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pw }) });
+      const j = await r.json();
+      if (j.success && j.token) { setAdminToken(j.token); onSuccess(); }
+      else setErr(j.message || 'Login failed.');
+    } catch(e) { setErr('Could not reach the server.'); }
+    setBusy(false);
+  };
+  return (
+    <div style={{ minHeight:'100vh', background:T.bg0, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px' }}>
+      <div style={{ width:'100%', maxWidth:'380px', background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'14px', padding:'36px 32px', textAlign:'center' }}>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>CORE Command</div>
+        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, letterSpacing:'0.16em', textTransform:'uppercase', fontWeight:'700', marginBottom:'26px' }}>Admin access only</div>
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==='Enter'&&doLogin()} placeholder="Admin password"
+          style={{ width:'100%', padding:'12px 14px', borderRadius:'8px', border:`1px solid ${T.b2}`, background:T.bg2, color:T.t0, fontSize:'14px', fontFamily:"'Plus Jakarta Sans',sans-serif", outline:'none', marginBottom:'12px', boxSizing:'border-box' }} />
+        {err && <div style={{ fontSize:'11px', color:T.rd, fontWeight:'700', marginBottom:'10px' }}>{err}</div>}
+        <button onClick={doLogin} disabled={busy} style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'none', cursor:'pointer', background:T.c, color:'#fff', fontSize:'13px', fontWeight:'800', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+          {busy ? 'Checking…' : 'Unlock Dashboard'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const NotificationBell = ({ T }) => {
+  const [items, setItems] = useState([]);
+  const [open, setOpen] = useState(false);
+  const load = () => {
+    fetch(`${API_BASE}/api/notifications`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => Array.isArray(d) && setItems(d))
+      .catch(() => {});
+  };
+  useEffect(() => { load(); const t = setInterval(load, 60000); return () => clearInterval(t); }, []);
+  const unread = items.filter(i => !i.is_read).length;
+  const markAll = () => {
+    fetch(`${API_BASE}/api/notifications/read`, { method:'PATCH', headers:{ 'Content-Type':'application/json', ...authHeaders() }, body:'{}' })
+      .then(() => setItems(items.map(i => ({ ...i, is_read: true }))))
+      .catch(() => {});
+  };
+  return (
+    <div style={{ position:'relative' }}>
+      <button onClick={()=>setOpen(o=>!o)} title="Notifications" style={{ position:'relative', padding:'6px 12px', borderRadius:'5px', border:`1px solid ${T.b2}`, background:T.bg2, color:T.t1, cursor:'pointer', fontSize:'14px' }}>
+        🔔
+        {unread > 0 && <span style={{ position:'absolute', top:'-6px', right:'-6px', minWidth:'17px', height:'17px', padding:'0 4px', borderRadius:'9px', background:T.rd, color:'#fff', fontSize:'9.5px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'JetBrains Mono',monospace" }}>{unread > 99 ? '99+' : unread}</span>}
+      </button>
+      {open && (
+        <div style={{ position:'absolute', right:0, top:'42px', width:'360px', maxHeight:'440px', overflowY:'auto', background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'10px', boxShadow:'0 20px 50px rgba(0,0,0,0.45)', zIndex:200 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 14px', borderBottom:`1px solid ${T.b2}`, position:'sticky', top:0, background:T.bg1 }}>
+            <span style={{ fontSize:'11px', fontWeight:'800', color:T.t0, textTransform:'uppercase', letterSpacing:'0.1em', fontFamily:"'JetBrains Mono',monospace" }}>Notifications</span>
+            {unread > 0 && <button onClick={markAll} style={{ fontSize:'10px', fontWeight:'700', color:T.gold, background:'transparent', border:'none', cursor:'pointer' }}>Mark all read</button>}
+          </div>
+          {items.length === 0 && <div style={{ padding:'24px', fontSize:'12px', color:T.t3, textAlign:'center' }}>Nothing yet.</div>}
+          {items.map(nf => (
+            <div key={nf.id} style={{ padding:'11px 14px', borderBottom:`1px solid ${T.b1}`, background: nf.is_read ? 'transparent' : `${T.gold}12` }}>
+              <div style={{ display:'flex', gap:'8px', alignItems:'baseline' }}>
+                <span style={{ fontSize:'12px' }}>{nf.type === 'evidence' ? '📎' : '📥'}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0 }}>{nf.title}</div>
+                  <div style={{ fontSize:'11px', color:T.t2, marginTop:'2px' }}>{nf.body}</div>
+                  <div style={{ fontSize:'9px', color:T.t3, marginTop:'3px', fontFamily:"'JetBrains Mono',monospace" }}>{new Date(nf.created_at).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AccessPanelTab = ({ T }) => {
+  const [batches, setBatches] = useState([]);
+  const [org, setOrg] = useState('');
+  const [ent, setEnt] = useState(DEFAULT_ENT());
+  const [creating, setCreating] = useState(false);
+  const [createdCode, setCreatedCode] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [msg, setMsg] = useState('');
+
+  const load = () => {
+    fetch(`${API_BASE}/api/batches`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => Array.isArray(d) && setBatches(d))
+      .catch(() => {});
+  };
+  useEffect(load, []);
+
+  const toggle = (state, setState, k, col) => {
+    const def = REPORT_DEFS.find(r => r.k === k);
+    if (col === 'participant' && (def.lockP || def.noP)) return;
+    setState(prev => ({ ...prev, [k]: { ...prev[k], [col]: !prev[k][col] } }));
+  };
+
+  const create = async () => {
+    if (!org.trim()) { setMsg('Enter an organisation name first.'); return; }
+    setCreating(true); setMsg(''); setCreatedCode(null);
+    try {
+      const r = await fetch(`${API_BASE}/api/batches`, { method:'POST', headers:{ 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify({ org: org.trim(), entitlements: ent }) });
+      const j = await r.json();
+      if (j.success) { setCreatedCode(j.data.code); setOrg(''); setEnt(DEFAULT_ENT()); load(); }
+      else setMsg(j.message || 'Failed to create batch.');
+    } catch(e) { setMsg('Could not reach the server.'); }
+    setCreating(false);
+  };
+
+  const saveEdit = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/api/batches/${encodeURIComponent(editing.code)}`, { method:'PATCH', headers:{ 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify({ entitlements: editing.entitlements }) });
+      const j = await r.json();
+      if (j.success) { setEditing(null); load(); }
+    } catch(e) {}
+  };
+
+  const setStatus = async (code, status) => {
+    try {
+      await fetch(`${API_BASE}/api/batches/${encodeURIComponent(code)}`, { method:'PATCH', headers:{ 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify({ status }) });
+      load();
+    } catch(e) {}
+  };
+
+  const EntGrid = ({ value, onToggle }) => (
+    <table style={{ width:'100%', borderCollapse:'collapse', marginBottom:'16px' }}>
+      <thead>
+        <tr>
+          {['Report', 'Generated for admin', 'Visible to participant'].map(h => (
+            <th key={h} style={{ textAlign:'left', padding:'8px 10px', fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontFamily:"'JetBrains Mono',monospace", borderBottom:`1px solid ${T.b2}` }}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {REPORT_DEFS.map(rd => (
+          <tr key={rd.k} style={{ borderBottom:`1px solid ${T.b1}` }}>
+            <td style={{ padding:'9px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{rd.l}</td>
+            <td style={{ padding:'9px 10px' }}>
+              <input type="checkbox" checked={!!value[rd.k]?.admin} onChange={()=>onToggle(rd.k, 'admin')} style={{ cursor:'pointer', width:'15px', height:'15px', accentColor:T.gold }} />
+            </td>
+            <td style={{ padding:'9px 10px' }}>
+              {(rd.lockP || rd.noP)
+                ? <span style={{ fontSize:'10px', color:T.t3, fontWeight:'700' }}>{rd.lockP ? '✓ ' : '🔒 '}{rd.lockNote}</span>
+                : <input type="checkbox" checked={!!value[rd.k]?.participant} onChange={()=>onToggle(rd.k, 'participant')} style={{ cursor:'pointer', width:'15px', height:'15px', accentColor:T.gold }} />}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  return (
+    <div>
+      <div style={{ background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'28px', marginBottom:'24px' }}>
+        <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.25rem', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>Register a new organisation batch</h3>
+        <p style={{ fontSize:'12px', color:T.t2, marginBottom:'18px', lineHeight:'1.6' }}>The batch code is generated automatically (fiscal quarter, resets each quarter) and is guaranteed not to clash with any existing batch. Participants must enter this exact code to take the assessment.</p>
+        <label style={{ display:'block', fontSize:'10px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontWeight:'700', marginBottom:'6px', fontFamily:"'JetBrains Mono',monospace" }}>Organisation Name</label>
+        <input value={org} onChange={e=>setOrg(e.target.value)} placeholder="e.g. Habib Bank Limited"
+          style={{ width:'100%', maxWidth:'420px', padding:'11px 13px', borderRadius:'8px', border:`1px solid ${T.b2}`, background:T.bg2, color:T.t0, fontSize:'13px', outline:'none', marginBottom:'18px', boxSizing:'border-box', fontFamily:"'Plus Jakarta Sans',sans-serif" }} />
+        <EntGrid value={ent} onToggle={(k,col)=>toggle(ent, setEnt, k, col)} />
+        {msg && <div style={{ fontSize:'11px', color:T.rd, fontWeight:'700', marginBottom:'10px' }}>{msg}</div>}
+        <button onClick={create} disabled={creating} style={{ padding:'12px 26px', borderRadius:'8px', border:'none', cursor:'pointer', background:T.c, color:'#fff', fontSize:'13px', fontWeight:'800', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+          {creating ? 'Generating code…' : '+ Create Batch'}
+        </button>
+        {createdCode && (
+          <div style={{ marginTop:'16px', padding:'16px 20px', background:`${T.gn}18`, border:`1px solid ${T.gn}`, borderRadius:'10px', display:'flex', alignItems:'center', gap:'14px', flexWrap:'wrap' }}>
+            <span style={{ fontSize:'12px', color:T.t1, fontWeight:'700' }}>Batch created. Share this code with the organisation:</span>
+            <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'18px', fontWeight:'800', color:T.gn, letterSpacing:'0.08em' }}>{createdCode}</span>
+            <button onClick={()=>navigator.clipboard && navigator.clipboard.writeText(createdCode)} style={{ padding:'6px 12px', borderRadius:'6px', border:`1px solid ${T.b2}`, background:T.bg2, color:T.t1, cursor:'pointer', fontSize:'10px', fontWeight:'700' }}>Copy</button>
+          </div>
+        )}
+      </div>
+
+      <div style={{ background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'28px' }}>
+        <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.25rem', fontWeight:'700', color:T.t0, marginBottom:'16px' }}>Registered batches</h3>
+        {batches.length === 0 && <div style={{ fontSize:'12px', color:T.t3 }}>No batches registered yet. Legacy batches that only exist inside assessment records will keep working for report generation, but new submissions require a registered code.</div>}
+        {batches.length > 0 && (
+          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <thead>
+              <tr>
+                {['Code', 'Organisation', 'Responses', 'Status', 'Created', 'Actions'].map(h => (
+                  <th key={h} style={{ textAlign:'left', padding:'9px 10px', fontSize:'9px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.12em', fontFamily:"'JetBrains Mono',monospace", borderBottom:`1px solid ${T.b2}` }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {batches.map(b => (
+                <tr key={b.code} style={{ borderBottom:`1px solid ${T.b1}` }}>
+                  <td style={{ padding:'10px', fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:'800', color:T.gold }}>{b.code}</td>
+                  <td style={{ padding:'10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{b.org}</td>
+                  <td style={{ padding:'10px', fontSize:'12px', color:T.t1, fontFamily:"'JetBrains Mono',monospace" }}>{b.responses}</td>
+                  <td style={{ padding:'10px' }}>
+                    <span style={{ fontSize:'10px', fontWeight:'800', color: b.status === 'active' ? T.gn : T.rd, textTransform:'uppercase', letterSpacing:'0.08em' }}>{b.status}</span>
+                  </td>
+                  <td style={{ padding:'10px', fontSize:'11px', color:T.t3 }}>{new Date(b.created_at).toLocaleDateString()}</td>
+                  <td style={{ padding:'10px', display:'flex', gap:'6px', flexWrap:'wrap' }}>
+                    <button onClick={()=>setEditing({ code: b.code, entitlements: { ...DEFAULT_ENT(), ...(b.entitlements || {}) } })} style={{ padding:'5px 10px', borderRadius:'5px', border:`1px solid ${T.b2}`, background:T.bg2, color:T.t1, cursor:'pointer', fontSize:'10px', fontWeight:'700' }}>Edit access</button>
+                    <button onClick={()=>setStatus(b.code, b.status === 'active' ? 'closed' : 'active')} style={{ padding:'5px 10px', borderRadius:'5px', border:`1px solid ${b.status==='active' ? T.rd : T.gn}`, background:'transparent', color: b.status === 'active' ? T.rd : T.gn, cursor:'pointer', fontSize:'10px', fontWeight:'700' }}>
+                      {b.status === 'active' ? 'Close' : 'Reopen'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {editing && (
+        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }} onClick={()=>setEditing(null)}>
+          <div style={{ width:'100%', maxWidth:'560px', background:T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'28px' }} onClick={e=>e.stopPropagation()}>
+            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.15rem', fontWeight:'700', color:T.t0, marginBottom:'16px' }}>Edit access · <span style={{ fontFamily:"'JetBrains Mono',monospace", color:T.gold }}>{editing.code}</span></h3>
+            <EntGrid value={editing.entitlements} onToggle={(k,col)=>{
+              const def = REPORT_DEFS.find(r => r.k === k);
+              if (col === 'participant' && (def.lockP || def.noP)) return;
+              setEditing(prev => ({ ...prev, entitlements: { ...prev.entitlements, [k]: { ...prev.entitlements[k], [col]: !prev.entitlements[k][col] } } }));
+            }} />
+            <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end' }}>
+              <button onClick={()=>setEditing(null)} style={{ padding:'10px 18px', borderRadius:'7px', border:`1px solid ${T.b2}`, background:'transparent', color:T.t1, cursor:'pointer', fontSize:'12px', fontWeight:'700' }}>Cancel</button>
+              <button onClick={saveEdit} style={{ padding:'10px 18px', borderRadius:'7px', border:'none', background:T.c, color:'#fff', cursor:'pointer', fontSize:'12px', fontWeight:'800' }}>Save changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [assessments, setAssessments]    = useState([]);
   const [loading, setLoading]            = useState(true);
   const [error, setError]                = useState(null);
   const [activeTab, setActiveTab]        = useState('overview');
   const [selectedCandidate, setSelected] = useState(null);
-  const [mode, setMode] = useState(() => {
+ const [mode, setMode] = useState(() => {
     try { return localStorage.getItem('themeMode')||'dark'; } catch(e) { return 'dark'; }
   });
+  const [authed, setAuthed] = useState(() => !!getAdminToken());
+  const [batches, setBatches] = useState([]);
 
   const T = mode === 'dark' ? darkTheme : lightTheme;
 
   useEffect(() => {
-    fetch('https://core-by-carnelian-backend.onrender.com/api/assessments')
-      .then(res=>{ if(!res.ok) throw new Error('API error'); return res.json(); })
+    if (!authed) return;
+    setLoading(true);
+    fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', { headers: authHeaders() })
+      .then(res=>{
+        if(res.status === 401) { setAdminToken(''); setAuthed(false); throw new Error('Session expired'); }
+        if(!res.ok) throw new Error('API error'); return res.json();
+      })
       .then(data=>{ setAssessments(data); setLoading(false); })
-      .catch(err=>{ console.error(err); setError('Failed to connect to the database.'); setLoading(false); });
-  }, []);
+      .catch(err=>{ console.error(err); setError(err.message === 'Session expired' ? null : 'Failed to connect to the database.'); setLoading(false); });
+    fetch(`${API_BASE}/api/batches`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => Array.isArray(d) && setBatches(d))
+      .catch(() => {});
+  }, [authed]);
 
   const TAB_COMPONENTS = {
     overview: <OverviewTab data={assessments} T={T} onSelect={setSelected} />,
@@ -4797,7 +5069,15 @@ export default function Dashboard() {
     scores:   <ScoresTab   data={assessments} T={T} onSelect={setSelected} />,
     validity: <ValidityTab data={assessments} T={T} onSelect={setSelected} />,
     industry: <IndustryTab data={assessments} T={T} onSelect={setSelected} />,
+    access:   <AccessPanelTab T={T} />,
   };
+
+ if (!authed) return (
+    <>
+      <DashStyles T={T} />
+      <AdminLogin T={T} onSuccess={()=>setAuthed(true)} />
+    </>
+  );
 
   return (
     <>
@@ -4831,7 +5111,13 @@ export default function Dashboard() {
               {error && <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.am, fontWeight:'700' }}>{error}</div>}
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+              <NotificationBell T={T} />
               <Pill label={`${assessments.length} records`} color={T.gold} />
+              <button onClick={()=>{ setAdminToken(''); setAuthed(false); }} title="Log out" style={{
+                padding:'6px 12px', borderRadius:'5px', border:`1px solid ${T.b2}`,
+                background:'transparent', color:T.t3, cursor:'pointer',
+                fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'11px', fontWeight:'700',
+              }}>Log out</button>
               <button onClick={()=>setMode(m=>m==='dark'?'light':'dark')} style={{
                 padding:'6px 14px', borderRadius:'5px', border:`1px solid ${T.b2}`,
                 background:T.bg2, color:T.t1, cursor:'pointer',
@@ -4860,6 +5146,7 @@ export default function Dashboard() {
           onClose={()=>setSelected(null)}
           T={T}
           allData={assessments}
+          batches={batches}
         />
       )}
     </>

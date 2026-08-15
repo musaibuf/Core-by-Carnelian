@@ -1547,6 +1547,23 @@ const AssessmentPage = ({setTab, setReportData, setHistoryFlag}) => {
   const [assessmentType, setAssessmentType] = useState(null);
   const [intakeStage, setIntakeStage] = useState(1);
 const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptOther:'',role:'',exp:'',gender:'',org:'',industry:'', batch:'', purpose:'', level:'', conf:'Restricted — HR Leadership Only'});  const [answers, setAnswers] = useState(Array(QS.length).fill(null));
+  const [batchInfo, setBatchInfo] = useState(null);
+  const [batchChecking, setBatchChecking] = useState(false);
+  const validateBatch = async (code) => {
+    if (!code || !/^Q[1-4]-\d{3}-\d{4}$/.test(code)) { setBatchInfo(null); return null; }
+    setBatchChecking(true);
+    try {
+      const r = await fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(code)}`);
+      const j = await r.json();
+      setBatchInfo(j);
+      if (j.valid) setResp(prev => ({ ...prev, org: j.org }));
+      return j;
+    } catch (e) {
+      const j = { valid: false, reason: 'network' };
+      setBatchInfo(j);
+      return j;
+    } finally { setBatchChecking(false); }
+  };
   const [cur, setCur] = useState(0);
   const [breaker, setBreaker] = useState(null);
   const [gameStage, setGameStage] = useState(null);
@@ -1884,13 +1901,18 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               <>
                 <div style={{marginBottom:'20px'}}>
                   <label style={lbl}>Organisation Name</label>
-                  <input value={resp.org} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="e.g. Allied Bank Limited" style={inp(focused.org)} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} />
+                  <input value={resp.org} readOnly={!!(batchInfo && batchInfo.valid)} onChange={e=>setResp(r=>({...r,org:e.target.value}))} placeholder="Auto-fills from your batch code" style={{...inp(focused.org), opacity: (batchInfo && batchInfo.valid) ? 0.75 : 1, cursor: (batchInfo && batchInfo.valid) ? 'not-allowed' : 'text'}} onFocus={()=>setFocused(f=>({...f,org:true}))} onBlur={()=>setFocused(f=>({...f,org:false}))} />
+                  {batchInfo && batchInfo.valid && <div style={{fontSize:'10.5px', color:T.t3, marginTop:'4px', fontWeight:'600'}}>Locked from batch registration. If this is not your organisation, check your batch code.</div>}
                 </div>
 
                 <div className="grid-2-col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'20px'}}>
                   <div>
                     <label style={lbl}>Assessment Batch Name</label>
-                    <input value={resp.batch} onChange={e=>setResp(r=>({...r,batch:e.target.value.toUpperCase()}))} placeholder="e.g. Q1-001-2026" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>setFocused(f=>({...f,batch:false}))} />
+                    <input value={resp.batch} onChange={e=>{const v=e.target.value.toUpperCase(); setResp(r=>({...r,batch:v})); setBatchInfo(null);}} placeholder="e.g. Q1-001-2026" style={inp(focused.batch)} onFocus={()=>setFocused(f=>({...f,batch:true}))} onBlur={()=>{setFocused(f=>({...f,batch:false})); validateBatch(resp.batch);}} />
+                    {batchChecking && <div style={{fontSize:'10.5px', color:T.t3, marginTop:'4px', fontWeight:'600'}}>Checking batch code…</div>}
+                    {!batchChecking && batchInfo && batchInfo.valid && <div style={{fontSize:'10.5px', color:'#16A34A', marginTop:'4px', fontWeight:'700'}}>✓ Valid batch · {batchInfo.org}</div>}
+                    {!batchChecking && batchInfo && !batchInfo.valid && batchInfo.reason === 'closed' && <div style={{fontSize:'10.5px', color:'#DC2626', marginTop:'4px', fontWeight:'700'}}>This batch is closed and no longer accepting responses.</div>}
+                    {!batchChecking && batchInfo && !batchInfo.valid && batchInfo.reason !== 'closed' && <div style={{fontSize:'10.5px', color:'#DC2626', marginTop:'4px', fontWeight:'700'}}>Batch code not recognised. Please check with your organisation.</div>}
                   </div>
                   <div>
                     <label style={lbl}>Primary Assessment Purpose</label>
@@ -1950,13 +1972,20 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
               </select>
             </div>
 
-            <button onClick={()=>{
+            <button onClick={async ()=>{
               if(assessmentType === 'ind' && !resp.name){alert('Please enter your Full Name.');return;}
               if(assessmentType === 'org') {
                 if(!resp.batch) { alert('Please enter an Assessment Batch Name.'); return; }
                 if(!/^Q[1-4]-\d{3}-\d{4}$/.test(resp.batch)) { 
                   alert('Batch Name must be in the exact format QX-XXX-XXXX (e.g., Q1-005-2026).'); 
                   return; 
+                }
+                const info = (batchInfo && batchInfo.code === resp.batch) ? batchInfo : await validateBatch(resp.batch);
+                if(!info || !info.valid) {
+                  alert(info && info.reason === 'closed'
+                    ? 'This batch is closed and no longer accepting responses. Please contact your organisation.'
+                    : 'This batch code is not registered. Please check the code with your organisation.');
+                  return;
                 }
               }
               if(!resp.industry){alert('Please select an industry sector.');return;} 
@@ -2523,15 +2552,22 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 // ─── RESULTS PAGE (TABS: Action Plan, Technical, Player) ──────────────────────
 const ResultsPage = ({reportData}) => {
   const [resTab, setResTab] = useState('action');
+  const [ent, setEnt] = useState(null);
   const [batchData, setBatchData] = useState([]);
   const [promoRole, setPromoRole] = useState(0);
   const [evState, setEvState] = useState({});
   const [expandedSteps, setExpandedSteps] = useState({});
   const [personaSlide, setPersonaSlide] = useState(0);
 
-  useEffect(() => {
+ useEffect(() => {
     if (reportData?.docId) {
       try { setEvState(JSON.parse(localStorage.getItem(`core_ev_${reportData.docId}`) || '{}')); } catch(e) {}
+    }
+    if (reportData?.respondent?.batch) {
+      fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(reportData.respondent.batch)}`)
+        .then(r => r.json())
+        .then(j => { if (j && j.participant) setEnt(j.participant); })
+        .catch(() => {});
     }
     if (reportData?.respondent?.batch) {
       try {
@@ -2562,11 +2598,22 @@ const ResultsPage = ({reportData}) => {
     }
   };
 
+  const syncEvidence = (newState, action, changedKey) => {
+    fetch('https://core-by-carnelian-backend.onrender.com/api/evidence', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        doc_id: reportData.docId, evidence: newState, action, changed_key: changedKey,
+        name: reportData?.respondent?.name || '', batch: reportData?.respondent?.batch || '',
+      }),
+    }).catch(() => {});
+  };
+
   const submitEvidence = () => {
     const newState = {...evState};
     newState[evModal.key] = { ts: Date.now(), xp: evModal.xp, type: evModal.type, data: evInput };
     setEvState(newState);
     localStorage.setItem(`core_ev_${reportData.docId}`, JSON.stringify(newState));
+    syncEvidence(newState, 'submit', evModal.key);
     setEvModal(null);
   };
 
@@ -2576,6 +2623,7 @@ const ResultsPage = ({reportData}) => {
     delete newState[evModal.key];
     setEvState(newState);
     localStorage.setItem(`core_ev_${reportData.docId}`, JSON.stringify(newState));
+    syncEvidence(newState, 'revoke', evModal.key);
     setEvModal(null);
   };
 
@@ -3400,8 +3448,18 @@ const getResources = () => {
           📸 My Persona
         </button>
 
-        {/* For Individuals (!R.batch), show the locked tabs. For Orgs, show nothing else. */}
-        {!R.batch && (
+       {/* Extra tabs unlock only when the batch's registered entitlements allow them */}
+        {R.batch && ent && ent.player && (
+          <button onClick={()=>setResTab('player')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='player'?T.gold:T.b2}`, background:resTab==='player'?T.gold:'transparent', color:resTab==='player'?'#fff':T.t1, transition:'all 0.2s'}}>
+            🎮 Player Report
+          </button>
+        )}
+        {R.batch && ent && ent.tech && (
+          <button onClick={()=>setResTab('tech')} style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", border:`2px solid ${resTab==='tech'?T.gold:T.b2}`, background:resTab==='tech'?T.gold:'transparent', color:resTab==='tech'?'#fff':T.t1, transition:'all 0.2s'}}>
+            📊 Technical Report
+          </button>
+        )}
+        {(!R.batch || !ent || (!ent.player && !ent.tech)) && (
           <>
             <button disabled title="Restricted to HR / Admin" style={{padding:'10px 22px', borderRadius:'8px', fontSize:'13px', fontWeight:'700', cursor:'not-allowed', fontFamily:"'Public Sans',sans-serif", border:`1px solid ${T.b2}`, background:T.b0, color:T.t3, opacity:0.6}}>
               🔒 Technical Report

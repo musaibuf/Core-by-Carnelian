@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 
+const crypto = require('crypto');
+
 const app = express();
 
 // Middleware
@@ -10,11 +12,49 @@ app.use(cors({
     origin: ['https://core-by-carnelian.onrender.com', 'http://localhost:3000'],
     credentials: true
 }));
-app.use(express.json()); // Parses incoming JSON requests
+app.use(express.json({ limit: '25mb' })); // Parses incoming JSON requests (evidence uploads carry base64 files)
+
+// ── Admin auth (token = expiry + HMAC signed with ADMIN_PASSWORD) ──
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const signExp = exp => crypto.createHmac('sha256', ADMIN_PASSWORD).update(String(exp)).digest('hex');
+const makeToken = () => { const exp = Date.now() + 12 * 60 * 60 * 1000; return `${exp}.${signExp(exp)}`; };
+const isAdmin = (req) => {
+  if (!ADMIN_PASSWORD) return false;
+  const h = req.headers.authorization || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : '';
+  const [exp, sig] = token.split('.');
+  if (!exp || !sig || Number(exp) < Date.now()) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signExp(exp)), Buffer.from(sig));
+  } catch (e) { return false; }
+};
+const requireAdmin = (req, res, next) => {
+  if (!isAdmin(req)) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  next();
+};
+
+// ── Batch code generation: fiscal quarter (Jul–Sep Q1, Oct–Dec Q2, Jan–Mar Q3, Apr–Jun Q4), calendar year label, counter resets per quarter ──
+const fiscalQuarter = (d) => { const m = d.getMonth(); return (m >= 6 && m <= 8) ? 1 : (m >= 9) ? 2 : (m <= 2) ? 3 : 4; };
+const generateBatchCode = async () => {
+  const now = new Date();
+  const q = fiscalQuarter(now), y = now.getFullYear();
+  const like = `Q${q}-%-${y}`;
+  const r = await pool.query(
+    `SELECT code FROM batches WHERE code LIKE $1
+     UNION
+     SELECT DISTINCT batch AS code FROM assessments WHERE batch LIKE $1`, [like]);
+  let max = 0;
+  r.rows.forEach(row => {
+    const m = /^Q[1-4]-(\d{3})-\d{4}$/.exec(row.code || '');
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return `Q${q}-${String(max + 1).padStart(3, '0')}-${y}`;
+};
 
 // Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 // Test DB Connection and Create Table if it doesn't exist
@@ -57,6 +97,31 @@ pool.connect()
     }
 
     console.log('✅ Assessments table is ready');
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS batches (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        org VARCHAR(255) NOT NULL,
+        entitlements JSONB NOT NULL DEFAULT '{}',
+        status VARCHAR(20) NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        type VARCHAR(30) NOT NULL,
+        title VARCHAR(255),
+        body TEXT,
+        batch VARCHAR(50),
+        doc_id VARCHAR(255),
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Batches and notifications tables are ready');
   })
   .catch(err => console.error('❌ Database connection/setup error', err.stack));
 
@@ -68,6 +133,18 @@ pool.connect()
 app.post('/api/assessments', async (req, res) => {
   try {
     const payload = req.body; // This is the dbPayload sent from the frontend
+
+    // Organisational submissions must reference a registered, active batch
+    if (payload.batch && String(payload.batch).trim() !== '') {
+      const b = await pool.query('SELECT code, org, status FROM batches WHERE UPPER(code) = UPPER($1)', [String(payload.batch).trim()]);
+      if (!b.rows.length) {
+        return res.status(400).json({ success: false, message: 'Invalid batch code. Please check with your organisation.' });
+      }
+      if (b.rows[0].status !== 'active') {
+        return res.status(400).json({ success: false, message: 'This batch is closed and no longer accepting responses.' });
+      }
+      payload.batch = b.rows[0].code; // normalise casing
+    }
 
     const query = `
       INSERT INTO assessments 
@@ -94,6 +171,16 @@ app.post('/api/assessments', async (req, res) => {
     ];
 
     const result = await pool.query(query, values);
+
+    try {
+      await pool.query(
+        `INSERT INTO notifications (type, title, body, batch, doc_id) VALUES ($1, $2, $3, $4, $5)`,
+        ['response', `New response: ${payload.name || 'Unnamed'}`,
+         `${payload.batch || 'Individual'} · ${payload.profile_name || ''} · score ${payload.overall_score ?? ''}`,
+         payload.batch || null, payload.doc_id || null]
+      );
+    } catch (nErr) { console.error('Notification insert failed', nErr.message); }
+
     res.status(201).json({ success: true, message: 'Assessment saved', data: result.rows[0] });
 
   } catch (err) {
@@ -106,6 +193,9 @@ app.post('/api/assessments', async (req, res) => {
 app.get('/api/assessments', async (req, res) => {
   try {
     const { email } = req.query;
+    if (!email && !isAdmin(req)) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
     let result;
     if (email) {
       result = await pool.query(
@@ -119,6 +209,168 @@ app.get('/api/assessments', async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN AUTH
+// ----------------------------------------------------
+app.post('/api/admin/login', (req, res) => {
+  if (!ADMIN_PASSWORD) return res.status(500).json({ success: false, message: 'ADMIN_PASSWORD not configured on server.' });
+  if ((req.body.password || '') !== ADMIN_PASSWORD) return res.status(401).json({ success: false, message: 'Incorrect password.' });
+  res.json({ success: true, token: makeToken() });
+});
+
+// ----------------------------------------------------
+// BATCHES (Access Panel)
+// ----------------------------------------------------
+const sanitizeEntitlements = (e) => {
+  const out = {};
+  ['action', 'persona', 'player', 'tech', 'team', 'culture'].forEach(k => {
+    const v = (e && e[k]) || {};
+    out[k] = { admin: !!v.admin, participant: !!v.participant };
+  });
+  // Action Plan and Persona are always participant-visible; group reports never are
+  out.action.participant = true;
+  out.persona.participant = true;
+  out.team.participant = false;
+  out.culture.participant = false;
+  return out;
+};
+
+// Create a batch: server generates the next non-clashing code
+app.post('/api/batches', requireAdmin, async (req, res) => {
+  try {
+    const { org, entitlements } = req.body;
+    if (!org || !String(org).trim()) return res.status(400).json({ success: false, message: 'Organisation name is required.' });
+    const ent = sanitizeEntitlements(entitlements);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = await generateBatchCode();
+      try {
+        const r = await pool.query(
+          `INSERT INTO batches (code, org, entitlements) VALUES ($1, $2, $3) RETURNING *`,
+          [code, String(org).trim(), JSON.stringify(ent)]
+        );
+        return res.status(201).json({ success: true, data: r.rows[0] });
+      } catch (insErr) {
+        if (insErr.code !== '23505') throw insErr; // 23505 = unique clash, regenerate and retry
+      }
+    }
+    res.status(500).json({ success: false, message: 'Could not generate a unique batch code. Try again.' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+// List batches with response counts
+app.get('/api/batches', requireAdmin, async (req, res) => {
+  try {
+    const r = await pool.query(`
+      SELECT b.*, (SELECT COUNT(*) FROM assessments a WHERE UPPER(a.batch) = UPPER(b.code)) AS responses
+      FROM batches b ORDER BY b.created_at DESC
+    `);
+    res.json(r.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+// Edit entitlements or open/close a batch
+app.patch('/api/batches/:code', requireAdmin, async (req, res) => {
+  try {
+    const { entitlements, status } = req.body;
+    const sets = [], vals = [];
+    if (entitlements) { vals.push(JSON.stringify(sanitizeEntitlements(entitlements))); sets.push(`entitlements = $${vals.length}`); }
+    if (status === 'active' || status === 'closed') { vals.push(status); sets.push(`status = $${vals.length}`); }
+    if (!sets.length) return res.status(400).json({ success: false, message: 'Nothing to update.' });
+    vals.push(req.params.code);
+    const r = await pool.query(
+      `UPDATE batches SET ${sets.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE UPPER(code) = UPPER($${vals.length}) RETURNING *`, vals);
+    if (!r.rows.length) return res.status(404).json({ success: false, message: 'Batch not found.' });
+    res.json({ success: true, data: r.rows[0] });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+// PUBLIC: validate a batch code for the assessment form. Returns org + participant entitlements only.
+app.get('/api/batches/validate/:code', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT code, org, status, entitlements FROM batches WHERE UPPER(code) = UPPER($1)', [req.params.code]);
+    if (!r.rows.length) return res.json({ valid: false, reason: 'not_found' });
+    const b = r.rows[0];
+    if (b.status !== 'active') return res.json({ valid: false, reason: 'closed', org: b.org });
+    const e = b.entitlements || {};
+    res.json({
+      valid: true, code: b.code, org: b.org,
+      participant: {
+        action: true, persona: true,
+        player: !!(e.player && e.player.participant),
+        tech: !!(e.tech && e.tech.participant),
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ valid: false, reason: 'server_error' });
+  }
+});
+
+// ----------------------------------------------------
+// EVIDENCE SYNC (gamified report) + notification
+// ----------------------------------------------------
+app.post('/api/evidence', async (req, res) => {
+  try {
+    const { doc_id, evidence, action, changed_key, name, batch } = req.body;
+    if (!doc_id) return res.status(400).json({ success: false, message: 'doc_id required' });
+    const r = await pool.query(
+      `UPDATE assessments SET report_data = jsonb_set(COALESCE(report_data, '{}'::jsonb), '{evidence}', $2::jsonb, true)
+       WHERE doc_id = $1 RETURNING doc_id`,
+      [doc_id, JSON.stringify(evidence || {})]
+    );
+    if (!r.rows.length) return res.status(404).json({ success: false, message: 'Assessment not found.' });
+    if (action === 'submit') {
+      try {
+        await pool.query(
+          `INSERT INTO notifications (type, title, body, batch, doc_id) VALUES ($1, $2, $3, $4, $5)`,
+          ['evidence', `Evidence uploaded: ${name || doc_id}`, `Item: ${changed_key || 'unknown'} · ${batch || 'Individual'}`, batch || null, doc_id]
+        );
+      } catch (nErr) { console.error('Notification insert failed', nErr.message); }
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+// ----------------------------------------------------
+// NOTIFICATIONS
+// ----------------------------------------------------
+app.get('/api/notifications', requireAdmin, async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100');
+    res.json(r.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+app.patch('/api/notifications/read', requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (Array.isArray(ids) && ids.length) {
+      await pool.query('UPDATE notifications SET is_read = TRUE WHERE id = ANY($1::int[])', [ids]);
+    } else {
+      await pool.query('UPDATE notifications SET is_read = TRUE WHERE is_read = FALSE');
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
 

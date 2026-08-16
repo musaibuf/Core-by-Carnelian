@@ -2218,10 +2218,30 @@ const ARCHETYPE_GROWTH = {
 // Minimal, dependency-free radar chart.
 const RadarChart = ({ data, T, size = 380, color = '#B01C24' }) => {
   const N = data.length;
-  const pad = 150;
-  const w = size + pad * 2, h = size + pad * 2;
-  const cx = w / 2, cy = h / 2, R = size * 0.34;
+  const R = size * 0.34;
+  const labelR = R * 1.32;
   const angleFor = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
+  const CHAR_W = 7.3, MARGIN = 14; // rough width of a bold 12px character, plus a safety margin
+
+  // Estimate how far each label's actual text reaches left/right and top/bottom of the plot center,
+  // so the box (and therefore its true visual centroid) is sized to match, not just the point circle.
+  let leftExtent = R, rightExtent = R, topExtent = R, bottomExtent = R;
+  data.forEach((d, i) => {
+    const a = angleFor(i);
+    const dx = Math.cos(a) * labelR, dy = Math.sin(a) * labelR;
+    const textW = (d.label ? d.label.length : 0) * CHAR_W;
+    const anchor = dx < -12 ? 'end' : dx > 12 ? 'start' : 'middle';
+    const right = anchor === 'start' ? dx + textW : anchor === 'middle' ? dx + textW / 2 : dx;
+    const left = anchor === 'end' ? dx - textW : anchor === 'middle' ? dx - textW / 2 : dx;
+    rightExtent = Math.max(rightExtent, right);
+    leftExtent = Math.max(leftExtent, -left);
+    topExtent = Math.max(topExtent, -dy + 8);
+    bottomExtent = Math.max(bottomExtent, dy + 8);
+  });
+  const padL = leftExtent + MARGIN, padR = rightExtent + MARGIN;
+  const padT = topExtent + MARGIN, padB = bottomExtent + MARGIN;
+  const w = padL + padR, h = padT + padB;
+  const cx = padL, cy = padT;
   const pt = (i, frac) => {
     const a = angleFor(i);
     return [cx + Math.cos(a) * R * frac, cy + Math.sin(a) * R * frac];

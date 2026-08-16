@@ -874,8 +874,217 @@ const TechnicalReport = ({ candidate, T }) => {
 };
 
 // ─── ACTION PLAN REPORT (candidate development roadmap) ───────
+// Shared authored-page PDF exporter for the Action Plan, identical output to the participant-side download.
+const ActionPlanDownloadBtn = ({ R, S, CI, profile, allDims, top2, bot2, devAreas, resources, relapse, programs, pdfBusy, setPdfBusy }) => {
+  const download = async () => {
+    setPdfBusy('Loading export engine…');
+    try {
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src; s.onload = resolve; s.onerror = reject;
+        document.body.appendChild(s);
+      });
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
+
+      const { jsPDF } = window.jspdf;
+      const A4_W = 210, A4_H = 297;
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+      const date = new Date(R.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+      const docId = R.doc_id;
+
+      const C = '#B01C24', GOLD = '#A07830', INK = '#1A1414', SUB = '#4A3F3F', FAINT = '#8C7F7F',
+            LINE = '#E5DEDE', PANEL = '#FAF7F5', BG = '#FFFFFF', GN = '#15803D', AM = '#B45309', RD = '#B91C1C',
+            GNs = '#E9F4EC', AMs = '#FBF1E4', RDs = '#FBEAEA';
+      const band = v => v >= 75 ? ['Strong', GN, GNs] : v >= 50 ? ['Developing', AM, AMs] : ['Priority', RD, RDs];
+      const esc = s => (s || '').toString();
+      const tableBlock = (headers, widths, rows, cellFont) => {
+        const fs = cellFont || '9.3px';
+        const headerRow = `<div style="display:flex;background:${PANEL};border-bottom:2px solid ${LINE};">${headers.map((h,i)=>`<div style="width:${widths[i]};box-sizing:border-box;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:7.2px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${SUB};">${esc(h)}</div>`).join('')}</div>`;
+        const bodyRows = rows.map((r, ri) => `<div style="display:flex;${ri<rows.length-1?`border-bottom:1px solid ${LINE};`:''}">${r.map((c,ci)=>`<div style="width:${widths[ci]};box-sizing:border-box;padding:7px 10px;font-size:${fs};color:${INK};line-height:1.5;">${c}</div>`).join('')}</div>`).join('');
+        return `<div style="border:1px solid ${LINE};">${headerRow}${bodyRows}</div>`;
+      };
+
+      let LOGO_SVG = `<div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:${C};">CORE <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:${FAINT};letter-spacing:0.14em;">BY CARNELIAN</span></div>`;
+      try {
+        const logoResp = await fetch(`${window.location.origin}/core-logo-for-light-mode.svg`);
+        if (logoResp.ok) {
+          let raw = await logoResp.text();
+          raw = raw.replace(/<svg([^>]*)>/i, (m, attrs) => `<svg${attrs.replace(/\s(width|height)="[^"]*"/gi, '')} height="28" style="display:block;height:28px;width:auto;">`);
+          LOGO_SVG = `<div style="display:flex;align-items:center;justify-content:flex-start;height:28px;">${raw}</div>`;
+        }
+      } catch (e) { /* falls back to the wordmark above */ }
+
+      const pageShell = (bodyHtml, pageLabel) => `
+        <div style="width:794px;min-height:1122px;background:${BG};font-family:'Public Sans',sans-serif;padding:50px 54px 60px;box-sizing:border-box;position:relative;">
+          <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,${C},${GOLD},transparent 70%);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;">
+            ${LOGO_SVG}
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${FAINT};letter-spacing:0.12em;">PERSONAL & CONFIDENTIAL · ${esc(pageLabel)}</div>
+          </div>
+          ${bodyHtml}
+          <div style="position:absolute;left:54px;right:54px;bottom:22px;border-top:1px solid ${LINE};padding-top:8px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:7px;color:${FAINT};">
+            <span>${esc(R.name)} · CORE Personal Development Report</span>
+            <span>${esc(docId)} · ${esc(date)}</span>
+          </div>
+        </div>`;
+
+      const sectionHead = (label, title, sub) => `
+        <div style="margin-bottom:16px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.16em;color:${C};text-transform:uppercase;margin-bottom:4px;">${esc(label)}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:${INK};">${esc(title)}</div>
+          ${sub ? `<div style="font-family:'Public Sans',sans-serif;font-size:9.5px;color:${FAINT};margin-top:5px;">${esc(sub)}</div>` : ''}
+          <div style="height:2px;background:linear-gradient(90deg,${C},${GOLD},transparent);margin-top:9px;"></div>
+        </div>`;
+
+      const keyBlock = (rows) => `
+        <div style="background:${PANEL};border:1px solid ${LINE};border-left:3px solid ${GOLD};padding:11px 14px;margin-bottom:16px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.14em;color:${GOLD};text-transform:uppercase;margin-bottom:7px;">Key for this page</div>
+          ${rows.map(([k,v]) => `<div style="display:flex;gap:10px;margin-bottom:4px;font-size:8.7px;line-height:1.5;"><div style="width:130px;flex-shrink:0;font-weight:700;color:${INK};">${esc(k)}</div><div style="color:${SUB};">${esc(v)}</div></div>`).join('')}
+        </div>`;
+
+      const p1 = pageShell(`
+        <div style="margin-top:30px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.16em;color:${GOLD};text-transform:uppercase;margin-bottom:8px;">Personal CORE Development Report</div>
+          <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:${INK};margin-bottom:18px;">${esc(R.name)}</div>
+          <div style="font-family:'Public Sans',sans-serif;font-size:11px;color:${SUB};line-height:1.7;max-width:560px;">This report is written directly to you, not to your manager or HR. It translates your assessment results into specific, actionable guidance: what your scores mean, where your genuine strengths are, what to develop, and exactly how.</div>
+        </div>
+        <div style="margin:34px 0;padding:22px 24px;background:${PANEL};border:1px solid ${LINE};border-left:4px solid ${C};">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.14em;color:${GOLD};text-transform:uppercase;margin-bottom:7px;">Professional Profile</div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:${INK};margin-bottom:9px;">${esc(profile?.name || 'Professional Profile')}</div>
+          <div style="font-family:'Public Sans',sans-serif;font-size:11px;color:${SUB};line-height:1.65;">${esc(profile?.desc || '')}</div>
+          ${profile?.devNote ? `<div style="margin-top:12px;padding:11px 13px;background:${BG};border-left:3px solid ${GOLD};font-size:10px;color:${SUB};line-height:1.6;">${esc(profile.devNote)}</div>` : ''}
+        </div>
+        ${tableBlock(['Field','Value'], ['180px','flex:1'], [
+          ['Date', esc(date)], ['Experience', esc(R.experience || 'Unspecified')], ['Purpose', esc(R.purpose || 'Unspecified')],
+          ['Industry', esc(R.industry || 'Unspecified')], ['Report ID', esc(docId)],
+        ].map(([k,v]) => [`<span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.1em;color:${FAINT};text-transform:uppercase;">${k}</span>`, `<span style="font-size:10px;color:${INK};font-weight:600;">${v}</span>`]))}
+        <div style="margin-top:20px;padding:12px 16px;background:${PANEL};border:1px solid ${LINE};font-size:8.3px;color:${FAINT};line-height:1.6;">
+          <strong style="color:${SUB};">CONFIDENTIAL.</strong> Prepared for personal use by Carnelian Co. Not a performance appraisal. Questions: hello@carnelianco.com
+        </div>
+      `, 'Cover');
+
+      const dimRows = allDims.map(d => { const [bl,bc] = band(d.v); return [`<span style="font-weight:600;">${esc(d.l)}</span>`, `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${d.v}/100</span>`, `<span style="font-weight:700;color:${bc};">${bl}</span>`]; });
+      const idxRows = [['CII','Compliance & Integrity',CI.CII],['LRS','Leadership Readiness',CI.LRS],['TVS','Team Value',CI.TVS],['ADS','Adaptability',CI.ADS],['SES','Stakeholder Engagement',CI.SES],['OPS','Operations',CI.OPS],['PMS','People Management',CI.PMS]]
+        .map(([k,l,v]) => { const [bl,bc] = band(v); return [`<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${C};">${k}</span>`, `<span style="font-weight:600;">${esc(l)}</span>`, `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${v}</span>`]; });
+      const p2 = pageShell(`
+        ${sectionHead('Section 1', 'Score Profile at a Glance', 'Nine behavioural dimensions, ranked, plus the seven composite indices built from them.')}
+        ${keyBlock([['Bands', '75+ is a genuine strength. 50 to 74 is developing. Below 50 is the priority — the plan below is built around it.'], ['Indices', 'Composite indices combine several dimensions to show how they interact, weighted for their role relevance.']])}
+        ${tableBlock(['Dimension','Score','Band'], ['55%','20%','25%'], dimRows)}
+        <div style="margin-bottom:20px;"></div>
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Seven Composite Indices</div>
+        ${tableBlock(['Code','Index','Score'], ['15%','60%','25%'], idxRows)}
+      `, 'Score Profile');
+
+      const strengthCard = (d) => `<div style="border:1px solid ${LINE};border-left:4px solid ${GN};background:${GNs};padding:14px 16px;margin-bottom:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.12em;color:${GN};text-transform:uppercase;margin-bottom:5px;">Core Strength</div><div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:${INK};margin-bottom:6px;">${esc(d.l)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${GN};font-weight:700;">${d.v}/100</span></div><div style="font-size:9.3px;color:${SUB};line-height:1.55;">${esc(d.str)}</div></div>`;
+      const growthCard = (d) => `<div style="border:1px solid ${LINE};border-left:4px solid ${RD};background:${RDs};padding:14px 16px;margin-bottom:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.12em;color:${RD};text-transform:uppercase;margin-bottom:5px;">Priority Development Area</div><div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:${INK};margin-bottom:6px;">${esc(d.l)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${RD};font-weight:700;">${d.v}/100</span></div><div style="font-size:9.3px;color:${SUB};line-height:1.55;">${esc(d.gap || 'A core driver of professional effectiveness and the highest-leverage development opportunity right now.')}</div></div>`;
+      const p3 = pageShell(`
+        ${sectionHead('Section 2', 'What They Are Good At, And Where To Grow', 'The two clearest strengths, and the two areas this development plan targets.')}
+        ${keyBlock([['How these were picked', 'Nine dimensions ranked highest to lowest. The top two are the anchor strengths. The bottom two are the priority development areas, the focus of Section 3.']])}
+        ${top2.map(strengthCard).join('')}
+        ${bot2.map(growthCard).join('')}
+      `, 'Strengths & Growth');
+
+      const roadmapPages = devAreas.map((d, i) => {
+        const stepRows = (d.habits || []).filter(h => h && (h.h || h.t)).map((h, j) => {
+          const phase = j < 2 ? ['Days 1–30', RD, RDs] : j < 5 ? ['Days 30–90', AM, AMs] : ['Days 90–180', GN, GNs];
+          return [
+            `<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${phase[1]};">${j+1}</span>`,
+            `<span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${phase[1]};background:${phase[2]};padding:2px 6px;border-radius:3px;">${phase[0]}</span>`,
+            `<strong>${esc(h.h)}</strong> ${esc(h.t)}`,
+          ];
+        });
+        return pageShell(`
+          ${sectionHead(`Section 3.${i+1}`, d.dim, `Group average ${d.v}/100. A ten-step, week-by-week plan for this dimension.`)}
+          <div style="background:${PANEL};border:1px solid ${LINE};border-left:4px solid ${GOLD};padding:12px 14px;margin-bottom:14px;font-size:9.3px;color:${SUB};line-height:1.6;">${esc(d.why)}</div>
+          ${tableBlock(['#','Window','Action'], ['6%','18%','76%'], stepRows, '9px')}
+        `, `Roadmap · ${d.dim}`);
+      });
+
+      const TYPE_COLOR = { book: ['#1D4ED8', '#DBEAFE', 'BOOK'], ted: ['#B91C1C', '#FBEAEA', 'TED TALK'], youtube: ['#0F766E', '#E6F5F2', 'YOUTUBE'], article: ['#B45309', '#FBF1E4', 'ARTICLE'], course: ['#6D28D9', '#EEE9FB', 'COURSE'] };
+      const resRows = resources.slice(0, 8).map(r => {
+        const [tc, tbg, tlbl] = TYPE_COLOR[r.type] || [SUB, PANEL, (r.type || 'RESOURCE').toUpperCase()];
+        return `<div style="border:1px solid ${LINE};border-left:4px solid ${tc};padding:10px 12px;margin-bottom:8px;background:${BG};"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:9.8px;font-weight:800;color:${INK};">${esc(r.title)}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${tc};background:${tbg};padding:3px 7px;border-radius:3px;white-space:nowrap;">${tlbl}</span></div><div style="font-size:8.5px;color:${FAINT};font-weight:600;margin-bottom:4px;">${esc(r.author)}</div><div style="font-size:8.7px;color:${SUB};line-height:1.5;">${esc(r.why)}</div></div>`;
+      }).join('');
+      const protoRows = relapse.map(p => `<div style="border:1px solid ${LINE};padding:10px 12px;margin-bottom:8px;"><div style="font-size:9px;color:${INK};font-weight:700;margin-bottom:5px;"><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:${RD};background:${RDs};padding:2px 6px;border-radius:3px;margin-right:6px;">IF</span>${esc(p.trigger)}</div><div style="font-size:8.8px;color:${SUB};line-height:1.5;"><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:${GN};background:${GNs};padding:2px 6px;border-radius:3px;margin-right:6px;">THEN</span>${esc(p.response)}</div></div>`).join('');
+      const p_resources = pageShell(`
+        ${sectionHead('Section 4', 'Development Toolkit', 'Resources matched to the priority dimensions, and if-then protocols for when a habit breaks.')}
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Profile-Matched Resources</div>
+        ${resRows}
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin:14px 0 8px;">If-Then Protocols</div>
+        ${protoRows}
+      `, 'Toolkit & Protocols');
+
+      const FORMAT_COLOR = { Training: [GOLD, '#F6EFE2'], Coaching: ['#1D4ED8', '#DBEAFE'], Mentorship: [GN, GNs], Consulting: [C, RDs] };
+      const progRows = programs.slice(0, 4).map(p => {
+        const [fc, fbg] = FORMAT_COLOR[p.format] || [GOLD, '#F6EFE2'];
+        return `<div style="border:1px solid ${LINE};border-left:4px solid ${fc};padding:11px 13px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:10.3px;font-weight:800;color:${INK};">${esc(p.name)}</span>${p.format ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${fc};background:${fbg};padding:3px 7px;border-radius:3px;white-space:nowrap;">${esc(p.format).toUpperCase()}</span>` : ''}</div><div style="font-size:8.8px;color:${SUB};line-height:1.5;margin-bottom:4px;">${esc(p.desc)}</div><div style="font-size:8.3px;color:${GN};font-style:italic;">${esc(p.match || 'Recommended based on this profile.')}</div></div>`;
+      }).join('');
+      const matrixQuad = (title, items, col, bg) => `<div style="border:1px solid ${LINE};background:${bg};padding:12px 14px;"><div style="font-size:9.5px;font-weight:700;color:${col};margin-bottom:8px;">${esc(title)}</div>${items.map(d => `<div style="font-size:8.7px;color:${INK};font-weight:600;margin-bottom:3px;">${esc(d.l)} (${d.v}/100)</div>`).join('')}</div>`;
+      const p_close = pageShell(`
+        ${sectionHead('Section 5', 'Recommended Programmes & Priority Matrix')}
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Recommended Programmes · Carnelian</div>
+        ${progRows}
+        <div style="background:${C};border-radius:6px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="color:#fff;font-size:9.5px;font-weight:700;">Get in touch: hello@carnelianco.com</div>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Priority Action Matrix</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+          ${matrixQuad('Act Now', allDims.slice(7,9), RD, RDs)}
+          ${matrixQuad('Build Soon', allDims.slice(5,7), AM, AMs)}
+          ${matrixQuad('Sustain & Expand', allDims.slice(0,2), GN, GNs)}
+          ${matrixQuad('Monitor Progress', allDims.slice(2,5), SUB, PANEL)}
+        </div>
+        <div style="background:${PANEL};border:1px solid ${LINE};padding:14px 16px;">
+          <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">A Note to Close</div>
+          <div style="font-size:9px;color:${SUB};line-height:1.65;">This report is a starting point, not a verdict. Every dimension measured here is developable with deliberate effort and the right support. Take one action from this report today. Growth begins with honest self-knowledge.</div>
+        </div>
+      `, 'Programmes & Close');
+
+      const allPages = [p1, p2, p3, ...roadmapPages, p_resources, p_close];
+
+      for (let i = 0; i < allPages.length; i++) {
+        setPdfBusy(`Rendering page ${i + 1} of ${allPages.length}…`);
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+        container.innerHTML = allPages[i];
+        document.body.appendChild(container);
+        await new Promise(r => setTimeout(r, 120));
+        const canvas = await window.html2canvas(container.children[0], { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' });
+        document.body.removeChild(container);
+        const imgData = canvas.toDataURL('image/jpeg', 0.94);
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, A4_W, A4_H);
+      }
+
+      setPdfBusy('Saving…');
+      pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
+    } catch (e) {
+      console.error('Action Plan PDF export failed', e);
+      alert('Failed to generate the PDF. Please try again.');
+    } finally {
+      setPdfBusy(null);
+    }
+  };
+
+  return (
+    <button onClick={download} disabled={!!pdfBusy} style={{
+      margin: '18px auto', padding: '13px 26px', borderRadius: 8, background: pdfBusy ? '#8C7F7F' : '#A07830',
+      color: '#fff', border: 'none', cursor: pdfBusy ? 'wait' : 'pointer',
+      fontFamily: "'Public Sans',sans-serif", fontSize: 13, fontWeight: 800, display: 'flex',
+      justifyContent: 'center', alignItems: 'center', gap: 8, width: '100%', maxWidth: 794,
+    }}>
+      {pdfBusy || '⬇ Download Action Plan (PDF)'}
+    </button>
+  );
+};
+
 const ActionPlanReport = ({ candidate, T }) => {
   const [expandedSteps, setExpandedSteps] = useState({});
+  const [pdfBusy, setPdfBusy] = useState(null);
   const rd      = candidate.report_data || {};
   const S       = rd.scores   || {};
   const CI      = rd.CI       || {};
@@ -1081,26 +1290,38 @@ const ActionPlanReport = ({ candidate, T }) => {
     const progs = [];
     const gapKeys = bot2.map(d => d.k);
     const profileText = profile?.name || candidate?.profile_name || 'professional';
+    const industryText = R.industry || 'your sector';
+    const expLevel = R.experience || '';
+    const roleLevel = R.level || '';
+    const isEarlyCareer = ['0–2 years','3–5 years'].includes(expLevel) || roleLevel.includes('Entry') || roleLevel.includes('Junior');
+    const isMidCareer = expLevel === '6–10 years' || roleLevel.includes('Mid-Level');
+    const isSenior = ['11–15 years','16+ years'].includes(expLevel) || roleLevel.includes('Senior') || roleLevel.includes('Executive') || roleLevel.includes('Director');
 
-    if(gapKeys.includes('E') || gapKeys.includes('A') || gapKeys.includes('OCBavg')) 
-      progs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging.", match:`Directly targets the interpersonal gaps in your ${profileText} profile.`});
-    
-    if(gapKeys.includes('EOavg') || (gs?.seesaw?.val>60)) 
-      progs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency.", match:`Recommended based on your Ethical Orientation scores and Values Seesaw responses.`});
-    
-    if(gapKeys.includes('LAavg') || gapKeys.includes('O')) 
-      progs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits that accelerate professional development.", match:`Directly targets your priority development area in adaptive learning.`});
-    
-    if(gapKeys.includes('CQavg')) 
-      progs.push({name:'Intercultural Communication & Collaboration', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional contexts.", match:`Recommended to help you navigate diverse stakeholders in ${R.industry || 'your sector'}.`});
-    
-    if(gapKeys.includes('ES')) 
-      progs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools.", match:`Directly targets your priority development area in Emotional Resilience.`});
-    
-    if(progs.length===0) 
-      progs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile.", match:`Recommended to help you leverage your balanced strengths as a ${profileText}.`});
+    if(gapKeys.includes('E') || gapKeys.includes('A') || gapKeys.includes('OCBavg'))
+      progs.push({format:'Training', name:'Communication & Influence Workshop', desc:"A two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging.", match:`Directly targets the interpersonal gaps in your ${profileText} profile.`});
+    if(gapKeys.includes('EOavg') || (gs?.seesaw?.val>60))
+      progs.push({format:'Training', name:'Professional Ethics & Values Programme', desc:"A facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency.", match:`Recommended based on your Ethical Orientation scores and Values Seesaw responses.`});
+    if(gapKeys.includes('LAavg') || gapKeys.includes('O'))
+      progs.push({format:'Training', name:'Learning Agility & Growth Mindset Workshop', desc:"A programme building the specific habits that accelerate professional development.", match:`Directly targets your priority development area in adaptive learning.`});
+    if(gapKeys.includes('CQavg'))
+      progs.push({format:'Training', name:'Intercultural Communication & Collaboration', desc:"A cross-cultural effectiveness programme for multi-institutional contexts.", match:`Recommended to help you navigate diverse stakeholders in ${industryText}.`});
+    if(gapKeys.includes('ES'))
+      progs.push({format:'Training', name:'Resilience & Emotional Intelligence Programme', desc:"A one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools.", match:`Directly targets your priority development area in Emotional Resilience.`});
 
-    return progs.slice(0, 3);
+    if(isMidCareer || isSenior || gapKeys.includes('ES') || gapKeys.includes('C'))
+      progs.push({format:'Coaching', name:'1:1 CORE Executive Coaching', desc:"A structured six-session coaching engagement with a Carnelian consultant, built directly around this profile and its two priority areas.", match: isSenior ? `Matched to seniority (${roleLevel || expLevel}) — coaching outperforms group training at this level.` : `Recommended to work through ${bot2[0]?.l?.toLowerCase() || 'the priority area'} with individual accountability.`});
+
+    if(isEarlyCareer || profileText.toLowerCase().includes('emerging'))
+      progs.push({format:'Mentorship', name:'Carnelian Mentor Pairing Programme', desc:"A structured six-month pairing with a senior practitioner in the field, with fortnightly check-ins and a written development focus.", match:`Matched to career stage (${expLevel || 'early career'}) — mentorship compounds fastest in the first few years.`});
+
+    if(isSenior || gapKeys.includes('EOavg') || gapKeys.includes('C'))
+      progs.push({format:'Consulting', name:'Team & Culture Advisory Engagement', desc:"Carnelian works with the function or team directly on the systemic version of this gap, from process design to culture diagnostics.", match: isSenior ? `At ${roleLevel || 'this level'}, the highest-leverage move is usually structural, not personal.` : `Worth raising with the manager if this gap in ${bot2[0]?.l?.toLowerCase() || 'this area'} shows up across the team, not just individually.`});
+
+    if(progs.length===0)
+      progs.push({format:'Coaching', name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief the full CORE profile.", match:`Recommended to help leverage balanced strengths as a ${profileText}.`});
+
+    const seen = new Set();
+    return progs.filter(p => (seen.has(p.name) ? false : (seen.add(p.name), true))).slice(0, 4);
   };
 
   const getRelapse = () => {
@@ -1347,17 +1568,23 @@ const ActionPlanReport = ({ candidate, T }) => {
         {/* PROGRAMS */}
         {card(
           <>
-            <SectionHead label="Recommended Training — Carnelian Programmes" T={T} />
+            <SectionHead label="Recommended Programmes — Carnelian" T={T} />
             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {programs.map((p, i) => (
+              {programs.map((p, i) => {
+                const fmtCol = p.format==='Coaching'?'#3B82F6':p.format==='Mentorship'?T.gn:p.format==='Consulting'?T.c:T.gold;
+                return (
                 <div key={i} style={{ background:`linear-gradient(135deg, ${T.bg2} 0%, ${T.bg3} 100%)`, border:`1px solid ${T.b1}`, borderRadius:'8px', padding:'16px', display:'flex', gap:'12px', alignItems:'flex-start' }}>
                   <div style={{ width:'28px', height:'28px', borderRadius:'50%', background:T.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'800', flexShrink:0 }}>C</div>
-                  <div>
-                    <div style={{ fontSize:'13px', fontWeight:'700', color:T.gold, marginBottom:'4px' }}>{p.name}</div>
-                    <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5' }}>{p.desc}</div>
+                  <div style={{flex:1}}>
+                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px', flexWrap:'wrap' }}>
+                      <div style={{ fontSize:'13px', fontWeight:'700', color:T.gold }}>{p.name}</div>
+                      {p.format && <span style={{fontSize:'8.5px', fontWeight:'800', color:fmtCol, background:`${fmtCol}18`, padding:'2px 7px', borderRadius:'100px', textTransform:'uppercase', letterSpacing:'0.06em'}}>{p.format}</span>}
+                    </div>
+                    <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.5', marginBottom:'6px' }}>{p.desc}</div>
+                    <div style={{ fontSize:'10.5px', color:T.gn, fontStyle:'italic', fontWeight:'600' }}>{p.match || 'Recommended based on this profile.'}</div>
                   </div>
                 </div>
-              ))}
+              );})}
             </div>
           </>
         )}
@@ -1391,7 +1618,11 @@ const ActionPlanReport = ({ candidate, T }) => {
         This report is written for {candidate.name}. It contains no HR risk language. Questions: hello@carnelianco.com
       </div>
       </div>
-      <DownloadBtn elementId={`action-report-${candidate.doc_id}`} filename={`${candidate.name}_Action_Plan.pdf`} T={T} />
+      <ActionPlanDownloadBtn
+        R={R} S={S} CI={CI} profile={profile} allDims={allDims} top2={top2} bot2={bot2}
+        devAreas={devAreas} resources={resources} relapse={relapse} programs={programs}
+        pdfBusy={pdfBusy} setPdfBusy={setPdfBusy}
+      />
     </div>
   );
 };

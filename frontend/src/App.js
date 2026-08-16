@@ -2557,6 +2557,7 @@ const ResultsPage = ({reportData}) => {
   const [promoRole, setPromoRole] = useState(0);
   const [evState, setEvState] = useState({});
   const [expandedSteps, setExpandedSteps] = useState({});
+  const [pdfBusy, setPdfBusy] = useState(null);
   const [personaSlide, setPersonaSlide] = useState(0);
 
  useEffect(() => {
@@ -2971,290 +2972,236 @@ const buildHabits = (content, dim, profile, R) => {
         ['Conscientiousness', S.C], ['Emotional Resilience', S.ES]
       ].filter(([_,v]) => v !== undefined && v !== null);
 
-      // ─── PDF DOWNLOAD (Action Plan) ───
-  const downloadPDF = async () => {
-    const loadScript = (src) => new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-      const s = document.createElement('script');
-      s.src = src; s.onload = resolve; s.onerror = reject;
-      document.body.appendChild(s);
-    });
-
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-
-    const { jsPDF } = window.jspdf;
-    const chunk = (arr, size) => { const out=[]; for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; };
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-    const A4_W = 210, A4_H = 297;
-    const firstName = R.name?.split(' ')[0] || 'Professional';
-    const logoURL = `${window.location.origin}/core-logo-for-light-mode.svg`;
-
-    const addPageFromHTML = async (htmlContent, bgColor = '#F8F7F5') => {
-      const container = document.createElement('div');
-      container.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:794px; min-height:1122px; background:${bgColor}; font-family:'Public Sans',sans-serif; -webkit-print-color-adjust:exact;`;
-      container.innerHTML = htmlContent;
-      document.body.appendChild(container);
-      await new Promise(r => setTimeout(r, 650));
-      const canvas = await window.html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: bgColor, width: 794, windowWidth: 794 });
-      document.body.removeChild(container);
-      const canvasH = canvas.height;
-      const canvasW = canvas.width;
-      const pageHeightPx = (canvasW / A4_W) * A4_H;
-      const totalPages = Math.ceil(canvasH / pageHeightPx);
-      for (let pg = 0; pg < totalPages; pg++) {
-        if (pg > 0 || pdf.internal.pages.length > 1) pdf.addPage();
-        const srcY = pg * pageHeightPx;
-        const srcH = Math.min(pageHeightPx, canvasH - srcY);
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvasW; sliceCanvas.height = pageHeightPx;
-        const ctx = sliceCanvas.getContext('2d');
-        ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvasW, pageHeightPx);
-        ctx.drawImage(canvas, 0, srcY, canvasW, srcH, 0, 0, canvasW, srcH);
-        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-        pdf.addImage(sliceData, 'JPEG', 0, 0, A4_W, A4_H);
-      }
-    };
-
-    const fontLink = `<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>`;
-   const baseStyles = `${fontLink}<style>* { margin:0; padding:0; box-sizing:border-box; } body, div, p, span, h1, h2, h3, h4, h5 { font-family:'Public Sans',sans-serif; } .serif { font-family:'Crimson Pro',serif !important; } .mono { font-family:'Courier New',monospace !important; }</style>`;
-    const wrap = (content, bg = '#F8F7F5', pad = '56px 64px') => `${baseStyles}<div style="width:794px;min-height:1122px;background:${bg};padding:${pad};box-sizing:border-box;display:flex;flex-direction:column;">${content}</div>`;
-
-    // Page 1: Cover
-    await addPageFromHTML(wrap(`
-      <div style="position:absolute;top:0;left:0;right:0;height:6px;background:#B01C24;"></div>
-      <div style="position:absolute;top:-100px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.09) 0%,transparent 72%);"></div>
-    <div style="margin-bottom:auto; position:relative; z-index:2; height:85px; width:350px; background-image:url('${logoURL}'); background-size:contain; background-repeat:no-repeat; background-position:left center;">
-      </div>
-      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 0 40px;position:relative;z-index:2;">
-        <div class="mono" style="font-size:10px;font-weight:800;color:#B01C24;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;">Personal Action Plan</div>
-        <h1 class="serif" style="font-size:58px;line-height:1.06;font-weight:700;color:#111111;margin:0 0 22px;max-width:650px;">${R.name}</h1>
-        <div style="display:inline-block;padding:10px 20px;border:1px solid #D8C9A0;border-radius:999px;background:#FFF9EC;color:#8D6B15;font-size:12px;font-weight:800;width:fit-content;">${profile?.name || 'Professional Profile'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:22px;border-top:1px solid #E6E0D4;position:relative;z-index:2;">
-        <div style="font-size:11px;color:#6B7280;font-weight:700;letter-spacing:0.06em;">CORE by Carnelian</div>
-        <div style="text-align:right;"><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:5px;">${date}</div><div class="mono" style="font-size:10px;color:#9CA3AF;font-weight:700;letter-spacing:0.08em;">${docId}</div></div>
-      </div>
-    `, '#F8F7F5', '56px 64px'), '#F8F7F5');
-
-   // Page 2: Welcome + Scores
-    const barsHTML = allDims.map((d, i) => {
-      const l = d.l;
-      const v = d.v;
-      const color = v >= 75 ? '#16A34A' : v >= 50 ? '#D97706' : '#DC2626';
-      const grad = v >= 75 ? 'linear-gradient(90deg,#16A34A,#22C55E)' : v >= 50 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#DC2626,#EF4444)';
-      return `<div style="display:flex;align-items:center;gap:14px;padding-bottom:0;margin-bottom:8px;border-bottom:none"><div style="width:170px;flex-shrink:0;font-size:12px;color:#4B5563;font-weight:700;">${l}</div><div style="flex:1;background:#F3F4F6;height:5px;border-radius:4px;overflow:hidden;"><div style="width:${Math.max(0,Math.min(100,v))}%;height:100%;background:${grad};border-radius:4px;"></div></div><div class="mono" style="width:36px;text-align:right;font-size:11px;color:${color};font-weight:800;">${v}</div></div>`;
-    }).join('');
-    await addPageFromHTML(wrap(`
-      <div style="background:#1A1A1A;border-radius:12px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(184,145,46,0.12) 0%,transparent 70%);"></div>
-        <div style="position:relative;z-index:1;">
-          <div class="mono" style="font-size:9px;color:#B8912E;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;font-weight:700;">Your Personal Blueprint</div>
-          <h2 class="serif" style="font-size:2rem;font-weight:700;color:#fff;margin-bottom:14px;">Welcome, ${firstName}.</h2>
-          <p style="color:#E5E7EB;font-size:13px;line-height:1.75;margin-bottom:12px;font-weight:500;">Thank you for trusting us with your reflections. We know that taking an assessment can feel vulnerable. Please know that this report is not a judgment, nor a final verdict on who you are. Human beings are beautifully complex, and psychometrics simply capture a snapshot of your current professional habits.</p>
-          <p style="color:#E5E7EB;font-size:13px;line-height:1.75;margin-bottom:22px;font-weight:500;">Think of this document as a mirror held up to your professional self—designed to celebrate your natural gifts and gently highlight the spaces where you have the greatest room to grow.</p>
-          <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:20px;border-left:4px solid #B01C24;">
-            <div class="mono" style="font-size:8px;text-transform:uppercase;letter-spacing:0.14em;color:#B8912E;font-weight:700;margin-bottom:7px;">Your Natural Work Style</div>
-            <div class="serif" style="font-size:1.5rem;color:#fff;font-weight:700;margin-bottom:8px;">${profile?.name || 'Professional Profile'}</div>
-            <div style="font-size:12px;color:#9CA3AF;line-height:1.6;font-weight:600;">${profile?.desc || 'A reliable and principled professional with strong compliance orientation.'}</div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 32px;">
-        <h3 class="serif" style="font-size:1.35rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Score Profile at a Glance</h3>
-        <p style="color:#4B5563; font-size:12px; line-height:1.7; margin-bottom:12px; font-weight:500;">Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;">${barsHTML}</div>
-      </div>
-    `));
-
-    // Page 4: Composite Indices (With Descriptions, Validity Removed)
-    const compHTML = [
-      ['CII','Compliance & Integrity',CI.CII, 'Primary screen for fiduciary and compliance roles.', 70, 54],
-      ['LRS','Leadership Readiness',CI.LRS, 'Predicts senior leadership performance and readiness.', 72, 55],
-      ['TVS','Team Value',CI.TVS, 'Predicts team cohesion and collaborative contribution.', 68, 51],
-      ['ADS','Adaptability',CI.ADS, 'Suitability for change, reform, and innovation roles.', 67, 50],
-      ['SES','Stakeholder Effectiveness',CI.SES, 'Effectiveness with clients, donors, and external partners.', 68, 52],
-      ['OPS','Operational Reliability',CI.OPS, 'Sustained delivery and reliability under pressure.', 67, 51],
-      ['PMS','People Management',CI.PMS, 'Interpersonal and ethical readiness for people management.', 67, 51]
-    ].map(([k,l,v,d,g,a])=>{
-      const col = v>=g?'#16A34A':v>=a?'#D97706':'#DC2626';
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #F3F4F6;"><div><div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:4px;">${l} (${k})</div><div style="font-size:11px;color:#6B7280;">${d}</div></div><div style="font-size:16px;font-weight:800;color:${col};">${v}/100</div></div>`;
-    }).join('');
-
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">Your Composite Indices</h3>
-        <p style="color:#4B5563; font-size:12px; line-height:1.6; margin-bottom:20px; font-weight:500;">These 7 indices combine scores across all five modules to reflect how your dimensions interact. Each index is weighted by meta-analytic research for its specific role family.</p>
-        ${compHTML}
-      </div>
-    `));
-
-    // Page 3: Strengths & Priorities (Combined on one page)
-    const strengthsHTML = top2.map(d => `<div style="padding:20px;border-radius:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#15803D;margin-bottom:7px;">✦ Core Strength</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#166534;">${d.l}</h4><p style="font-size:12px;color:#15803D;line-height:1.6;font-weight:500;margin-bottom:14px;">${d.str}</p><span style="padding:3px 10px;background:#DCFCE7;color:#166534;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
-    const priorityHTML = bot2.map(d => `<div style="padding:20px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;border-left:5px solid #DC2626;"><div class="mono" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#B91C1C;margin-bottom:7px;">◈ Priority Development Area</div><h4 class="serif" style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#B91C1C;">${d.l}</h4><p style="font-size:11.5px;color:#B91C1C;line-height:1.5;font-weight:600;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(185,28,28,0.15);">${d.gap || 'A core driver of professional effectiveness.'}</p><p style="font-size:11.5px;color:#B91C1C;line-height:1.5;font-weight:500;margin-bottom:14px;">Your 10-step action plan below targets this dimension specifically.</p><span style="padding:3px 10px;background:#FEE2E2;color:#B91C1C;border-radius:4px;font-size:10px;font-weight:800;">Score: ${d.v}/100 · ${bd(d.v)} Range</span></div>`).join('');
-
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">What You Are Good At · And Where To Grow</h3>
-        <p style="color:#4B5563;font-size:12.5px;line-height:1.6;margin-bottom:20px;font-weight:500;"><strong style="color:#111827;">How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style="color:#16A34A;">Top 2</strong> become your anchor strengths. The <strong style="color:#DC2626;">Bottom 2</strong> become your priority development areas.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">${strengthsHTML}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">${priorityHTML}</div>
-      </div>
-    `));
-
-   // Pages 4+: Development Roadmap
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;margin-bottom:24px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Development Roadmap ${R.industry ? `· ${R.industry}` : ''}</h3>
-        <div style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:10px; padding:20px 24px; margin-bottom:20px; border-left:4px solid #D97706;">
-          <p style="color:#374151; font-size:12.5px; line-height:1.8; font-weight:500; margin:0;">
-            The score landscape above shows your full profile — strengths, developing areas, and priorities. <strong style="color:#111827;">This action plan focuses on your lowest-scoring behaviours only.</strong> That is intentional. Research consistently shows that working on too many habits at once leads to none of them sticking. Micro-actions applied consistently to your core gaps create more measurable growth than scattered effort across everything at once.
-            <br/><br/>
-            Once you have built real habits around these two dimensions and your next CORE retake shows movement, Carnelian will work with you on the next layer. Think of this as <strong style="color:#D97706;">sequenced development</strong> — not a limitation, but a strategy. If you want to understand how your full profile maps to a broader development plan, <strong style="color:#D97706;">reach out to Carnelian at hello@carnelianco.com</strong>
-          </p>
-        </div>
-        <p style="color:#4B5563; font-size:12.5px; line-height:1.7; margin-bottom:16px; font-weight:500;">Each area below includes a 10-step plan with week-by-week instructions. Follow the steps in order — each one builds on the previous.</p>
-        ${R.industry ? `<div style="background:rgba(176,28,36,0.05); border-left:3px solid #B01C24; padding:10px 14px; border-radius:0 8px 8px 0; font-size:12px; color:#B01C24; font-weight:600; margin-bottom:24px;">Industry lens: <strong>${R.industry}</strong> — all actions are framed for this sector.</div>` : ''}
-      </div>
-    `));
-
-    const habitCard = h => `<li style="padding:8px 0;font-size:12px;color:#374151;line-height:1.55;font-weight:500;"><div style="display:flex;gap:10px;"><span style="color:#D97706;font-weight:800;flex-shrink:0;">→</span><span><strong style="color:#111827;">${h.h}</strong> ${h.t}</span></div>${h.how ? `<div style="margin:6px 0 0 20px;padding:8px 10px;background:#F9FAFB;border-left:3px solid #D97706;border-radius:4px;font-size:11px;color:#4B5563;line-height:1.6;">${h.how}</div>` : ''}</li>`;
-for (const d of devAreas) {
- try {
-  console.log('Generating roadmap pages for:', d.dim);
-  const dimCol = d.v<45?'#DC2626':d.v<60?'#D97706':'#16A34A';
-  const habitChunks = chunk(d.habits && d.habits.length ? d.habits : [{h:'Week 1', t:'Begin tracking this dimension.'}], 5);
-  for (let ci = 0; ci < habitChunks.length; ci++) {
-    const isFirst = ci === 0;
-    const header = isFirst ? `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-        <h4 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;">${d.dim}</h4>
-        <span style="padding:5px 12px;background:rgba(217,119,6,0.1);color:${dimCol};border-radius:6px;font-size:12px;font-weight:800;">${d.v}/100</span>
-      </div>
-      <div class="mono" style="font-size:9px;color:#6B7280;margin-bottom:18px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;">${d.v >= 70 ? 'HIGH' : d.v >= 50 ? 'MID' : 'LOW'} range</div>
-      <p style="font-size:12.5px;color:#4B5563;line-height:1.75;margin-bottom:24px;font-weight:500;padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid #D97706;">${d.why}</p>
-      <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin-bottom:14px;">Your 10-Step Action Plan for ${d.dim}:</h5>
-    ` : `
-      <h4 class="serif" style="font-size:1.2rem;font-weight:700;color:#111827;margin-bottom:4px;">${d.dim}</h4>
-      <div class="mono" style="font-size:9px;color:#9CA3AF;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.1em;">Action Plan (cont.)</div>
-    `;
-
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-        ${header}
-        <ul style="padding-left:0;list-style:none;margin:0;">${habitChunks[ci].map(habitCard).join('')}</ul>
-      </div>
-    `));
-  }
-
-  // Growth timeline on its own page
-  await addPageFromHTML(wrap(`
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-      <h4 class="serif" style="font-size:1.2rem;font-weight:700;color:#111827;margin-bottom:4px;">${d.dim}</h4>
-      <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#6B7280;font-weight:800;margin:16px 0 14px;">Your Growth Timeline:</h5>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:18px;background:#FEF2F2;padding:16px;border-radius:8px;border-left:4px solid #DC2626;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:0.04em;">Now<br/><span style="font-size:8px;opacity:0.8">(0–30 Days)</span></div><div style="font-size:12.5px;color:#7F1D1D;line-height:1.55;font-weight:600;">${d.now || d.acts[0]}</div></div>
-        <div style="display:flex;gap:18px;background:#FFFBEB;padding:16px;border-radius:8px;border-left:4px solid #D97706;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;letter-spacing:0.04em;">Soon<br/><span style="font-size:8px;opacity:0.8">(30–90 Days)</span></div><div style="font-size:12.5px;color:#92400E;line-height:1.55;font-weight:600;">${d.soon || d.acts[1]}</div></div>
-        <div style="display:flex;gap:18px;background:#F0FDF4;padding:16px;border-radius:8px;border-left:4px solid #16A34A;align-items:flex-start;"><div style="min-width:80px;font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:0.04em;">Future<br/><span style="font-size:8px;opacity:0.8">(90–180 Days)</span></div><div style="font-size:12.5px;color:#166534;line-height:1.55;font-weight:600;">${d.fut}</div></div>
-      </div>
-    </div>
-  `));
-  console.log('Completed roadmap pages for:', d.dim);
- } catch (e) { console.error('❌ Roadmap generation FAILED for dimension:', d.dim, e); }
-}
-
-   // Resources (Condensed to 5 per page)
-    const resCard = r => `<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#111827;">${r.title}</div><div style="font-size:10px;color:#6B7280;margin-bottom:4px;">${r.author}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${r.why}</div></div>`;
-
-    const resourceChunks = chunk(resources, 5); // Changed to 5 to save pages
-    for (let ci = 0; ci < resourceChunks.length; ci++) {
-      const heading = ci === 0 ? `<h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">Your Development Toolkit</h3>` : `<div class="mono" style="font-size:9px;color:#9CA3AF;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Development Toolkit (cont.)</div>`;
-      await addPageFromHTML(wrap(`
-        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-          ${heading}
-          ${resourceChunks[ci].map(resCard).join('')}
-        </div>
-      `));
+  // ─── PDF DOWNLOAD (Action Plan) — captures the exact on-screen cards, page by page ───
+  const loadScriptOnceAP = (src, flag) => new Promise((resolve, reject) => {
+    if (window[flag]) { resolve(); return; }
+    const existing = document.querySelector(`script[data-${flag}]`);
+    if (existing) {
+      const check = setInterval(() => { if (window[flag]) { clearInterval(check); resolve(); } }, 50);
+      return;
     }
+    const s = document.createElement('script');
+    s.src = src;
+    s.setAttribute(`data-${flag}`, '1');
+    s.onload = () => { window[flag] = true; resolve(); };
+    s.onerror = reject;
+    document.body.appendChild(s);
+  });
 
-    // Carnelian Programmes + If-Then Protocol (Combined on one page)
-    const programsHTML = programs.map(p=>`<div style="margin-bottom:12px;padding:12px;background:#F9FAFB;border-radius:8px;"><div style="font-size:12px;font-weight:800;color:#B01C24;">${p.name}</div><div style="font-size:11px;color:#374151;line-height:1.5;">${p.desc}</div></div>`).join('');
-    const relapseHTML = relapse.map(p=>`<div style="margin-bottom:12px;padding:14px;background:#F9FAFB;border-radius:8px;border-left:4px solid #B01C24;"><div style="font-size:11px;font-weight:800;color:#B01C24;margin-bottom:6px;">IF: ${p.trigger}</div><div style="font-size:11.5px;color:#374151;line-height:1.6;"><strong>THEN:</strong> ${p.response}</div></div>`).join('');
+  const downloadPDF = async () => {
+    setPdfBusy('Loading export engine…');
+    try {
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src; s.onload = resolve; s.onerror = reject;
+        document.body.appendChild(s);
+      });
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
 
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;margin-bottom:24px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">Recommended Carnelian Programmes</h3>
-        ${programsHTML}
-      </div>
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:8px;">Your If-Then Protocol</h3>
-        <p style="font-size:12px;color:#6B7280;margin-bottom:16px;line-height:1.6;">Relapse risk is highest in the first 30 days. These are decision frameworks for situations you will encounter.</p>
-        ${relapseHTML}
-      </div>
-    `));
-    
-    // Priority Action Matrix (Relative 4-Box Layout)
-    const actNowList = allDims.slice(7, 9).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
-    const buildSoonList = allDims.slice(5, 7).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
-    const sustainList = allDims.slice(0, 2).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
-    const monitorList = allDims.slice(2, 5).map(d=>`<li style="margin-bottom:4px;">${d.l} (${d.v}/100)</li>`).join('');
+      const { jsPDF } = window.jspdf;
+      const A4_W = 210, A4_H = 297;
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:12px;">Your Priority Action Matrix</h3>
-        <p style="color:#4B5563; font-size:13px; line-height:1.7; margin-bottom:12px; font-weight:500;">Dimensions sorted by urgency. Sustain means it is a genuine strength — protect it actively.</p>
-        <div style="font-size:11.5px; color:#6B7280; margin-bottom:24px; padding:10px 14px; background:#F9FAFB; border-radius:6px; line-height:1.6; font-weight:500;">
-          <strong style="color:#4B5563;">Where these come from:</strong> This matrix sorts the individual dimensions that make up your composites by urgency, so you know exactly which specific behaviour to focus on.
-        </div>
-        
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-          <div style="background:#FEF2F2; border:1px solid rgba(239,68,68,0.4); border-radius:10px; padding:20px;">
-            <div style="font-size:13px; font-weight:800; color:#DC2626; margin-bottom:12px;">🔴 Act Now (0–30 Days)</div>
-            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${actNowList}</ul>
+      // ── CORE print palette, shared visual language with Team Insight / Culture Pulse ──
+      const C = '#B01C24', GOLD = '#A07830', INK = '#1A1414', SUB = '#4A3F3F', FAINT = '#8C7F7F',
+            LINE = '#E5DEDE', PANEL = '#FAF7F5', BG = '#FFFFFF', GN = '#15803D', AM = '#B45309', RD = '#B91C1C',
+            GNs = '#E9F4EC', AMs = '#FBF1E4', RDs = '#FBEAEA';
+      const band = v => v >= 75 ? ['Strong', GN, GNs] : v >= 50 ? ['Developing', AM, AMs] : ['Priority', RD, RDs];
+      const esc = s => (s || '').toString();
+      const tableBlock = (headers, widths, rows, cellFont) => {
+        const fs = cellFont || '9.3px';
+        const headerRow = `<div style="display:flex;background:${PANEL};border-bottom:2px solid ${LINE};">${headers.map((h,i)=>`<div style="width:${widths[i]};box-sizing:border-box;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:7.2px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${SUB};">${esc(h)}</div>`).join('')}</div>`;
+        const bodyRows = rows.map((r, ri) => `<div style="display:flex;${ri<rows.length-1?`border-bottom:1px solid ${LINE};`:''}">${r.map((c,ci)=>`<div style="width:${widths[ci]};box-sizing:border-box;padding:7px 10px;font-size:${fs};color:${INK};line-height:1.5;">${c}</div>`).join('')}</div>`).join('');
+        return `<div style="border:1px solid ${LINE};">${headerRow}${bodyRows}</div>`;
+      };
+
+      let LOGO_SVG = `<div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:${C};">CORE <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:${FAINT};letter-spacing:0.14em;">BY CARNELIAN</span></div>`;
+      try {
+        const logoResp = await fetch(`${window.location.origin}/core-logo-for-light-mode.svg`);
+        if (logoResp.ok) {
+          let raw = await logoResp.text();
+          raw = raw.replace(/<svg([^>]*)>/i, (m, attrs) => `<svg${attrs.replace(/\s(width|height)="[^"]*"/gi, '')} height="28" style="display:block;height:28px;width:auto;">`);
+          LOGO_SVG = `<div style="display:flex;align-items:center;justify-content:flex-start;height:28px;">${raw}</div>`;
+        }
+      } catch (e) { /* falls back to the wordmark above */ }
+
+      const pageShell = (bodyHtml, pageLabel) => `
+        <div style="width:794px;min-height:1122px;background:${BG};font-family:'Public Sans',sans-serif;padding:50px 54px 60px;box-sizing:border-box;position:relative;">
+          <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,${C},${GOLD},transparent 70%);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;">
+            ${LOGO_SVG}
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${FAINT};letter-spacing:0.12em;">PERSONAL & CONFIDENTIAL · ${esc(pageLabel)}</div>
           </div>
-          <div style="background:#FFFBEB; border:1px solid rgba(245,158,11,0.4); border-radius:10px; padding:20px;">
-            <div style="font-size:13px; font-weight:800; color:#D97706; margin-bottom:12px;">🟡 Build Soon (30–90 Days)</div>
-            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${buildSoonList}</ul>
+          ${bodyHtml}
+          <div style="position:absolute;left:54px;right:54px;bottom:22px;border-top:1px solid ${LINE};padding-top:8px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:7px;color:${FAINT};">
+            <span>${esc(R.name)} · CORE Personal Development Report</span>
+            <span>${esc(docId)} · ${esc(date)}</span>
           </div>
-          <div style="background:#F0FDF4; border:1px solid rgba(34,197,94,0.4); border-radius:10px; padding:20px;">
-            <div style="font-size:13px; font-weight:800; color:#16A34A; margin-bottom:12px;">🟢 Sustain & Expand</div>
-            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${sustainList}</ul>
-          </div>
-          <div style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:10px; padding:20px;">
-            <div style="font-size:13px; font-weight:800; color:#6B7280; margin-bottom:12px;">🔵 Monitor Progress</div>
-            <ul style="padding-left:20px; margin:0; color:#111827; font-size:13px; line-height:1.6; font-weight:600;">${monitorList}</ul>
-          </div>
-        </div>
-      </div>
-    `));
+        </div>`;
 
-    // Close Note
-    await addPageFromHTML(wrap(`
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:32px 36px;margin-bottom:24px;">
-        <h3 class="serif" style="font-size:1.4rem;font-weight:700;color:#111827;margin-bottom:16px;">A Note to Close</h3>
-        <p style="color:#374151; font-size:13px; line-height:1.8; margin-bottom:24px; font-weight:500;">This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that."</p>
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #E5E7EB; padding-top:20px;">
-          <div class="mono" style="font-size:10px; color:#6B7280; font-weight:600;">CORE · ${docId} · Carnelian Pvt Ltd · ${date}</div>
-          <div style="font-size:12px; color:#16A34A; font-weight:700;">Questions? hello@carnelianco.com</div>
-        </div>
-      </div>
-    `));
+      const sectionHead = (label, title, sub) => `
+        <div style="margin-bottom:16px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.16em;color:${C};text-transform:uppercase;margin-bottom:4px;">${esc(label)}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:${INK};">${esc(title)}</div>
+          ${sub ? `<div style="font-family:'Public Sans',sans-serif;font-size:9.5px;color:${FAINT};margin-top:5px;">${esc(sub)}</div>` : ''}
+          <div style="height:2px;background:linear-gradient(90deg,${C},${GOLD},transparent);margin-top:9px;"></div>
+        </div>`;
 
-    // CTA
-    await addPageFromHTML(wrap(`
-      <div style="background:#1A1A1A;border-radius:12px;padding:56px 48px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div style="width:56px;height:56px;background:rgba(184,145,46,0.12);border:2px solid #B8912E;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px;font-weight:800;color:#B8912E;">→</div>
-        <h3 class="serif" style="font-size:1.8rem;font-weight:700;color:#B8912E;margin-bottom:16px;">Let's Build Your Path Together</h3>
-        <p style="color:#E5E7EB;font-size:13px;line-height:1.8;max-width:540px;margin:0 auto 32px;font-weight:500;">Reading a report is just the first step. If you found these insights helpful but want to dive deeper into what this means for your specific career trajectory, leadership style, or current workplace challenges, our consultants are here to guide you through a 1-on-1 debrief.</p>
-        <div style="padding:14px 32px;border-radius:8px;border:2px solid #B01C24;color:#fff;font-size:13px;font-weight:800;display:inline-block;">
-          <a href="mailto:hello@carnelianco.com" style="color:#fff;text-decoration:none;">Reach out at hello@carnelianco.com</a>
+      const keyBlock = (rows) => `
+        <div style="background:${PANEL};border:1px solid ${LINE};border-left:3px solid ${GOLD};padding:11px 14px;margin-bottom:16px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.14em;color:${GOLD};text-transform:uppercase;margin-bottom:7px;">Key for this page</div>
+          ${rows.map(([k,v]) => `<div style="display:flex;gap:10px;margin-bottom:4px;font-size:8.7px;line-height:1.5;"><div style="width:130px;flex-shrink:0;font-weight:700;color:${INK};">${esc(k)}</div><div style="color:${SUB};">${esc(v)}</div></div>`).join('')}
+        </div>`;
+
+      // ── Page 1: Cover ──
+      const p1 = pageShell(`
+        <div style="margin-top:30px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.16em;color:${GOLD};text-transform:uppercase;margin-bottom:8px;">Personal CORE Development Report</div>
+          <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:${INK};margin-bottom:18px;">${esc(R.name)}</div>
+          <div style="font-family:'Public Sans',sans-serif;font-size:11px;color:${SUB};line-height:1.7;max-width:560px;">This report is written directly to you, not to your manager or HR. It translates your assessment results into specific, actionable guidance: what your scores mean, where your genuine strengths are, what to develop, and exactly how.</div>
         </div>
-        <div class="mono" style="margin-top:36px;font-size:9px;color:#6B7280;font-weight:600;">${docId} · CORE by Carnelian · ${date}</div>
-      </div>
-    `));
-    
-    pdf.deletePage(1);
-    pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
+        <div style="margin:34px 0;padding:22px 24px;background:${PANEL};border:1px solid ${LINE};border-left:4px solid ${C};">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.14em;color:${GOLD};text-transform:uppercase;margin-bottom:7px;">Your Professional Profile</div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:${INK};margin-bottom:9px;">${esc(profile?.name || 'Professional Profile')}</div>
+          <div style="font-family:'Public Sans',sans-serif;font-size:11px;color:${SUB};line-height:1.65;">${esc(profile?.desc || '')}</div>
+          ${profile?.devNote ? `<div style="margin-top:12px;padding:11px 13px;background:${BG};border-left:3px solid ${GOLD};font-size:10px;color:${SUB};line-height:1.6;">${esc(profile.devNote)}</div>` : ''}
+        </div>
+        <div style="border:1px solid ${LINE};">
+          ${[['Date', date], ['Experience', R.exp || 'Unspecified'], ['Purpose', R.purpose || 'Unspecified'], ['Industry', R.industry || 'Unspecified'], ['Report ID', docId]]
+            .map(([k,v],i,arr) => `<div style="display:flex;${i<arr.length-1?`border-bottom:1px solid ${LINE};`:''}"><div style="width:180px;box-sizing:border-box;padding:9px 12px;font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.1em;color:${FAINT};text-transform:uppercase;border-right:1px solid ${LINE};">${esc(k)}</div><div style="flex:1;box-sizing:border-box;padding:9px 12px;font-size:10px;color:${INK};font-weight:600;">${esc(v)}</div></div>`).join('')}
+        </div>
+        <div style="margin-top:20px;padding:12px 16px;background:${PANEL};border:1px solid ${LINE};font-size:8.3px;color:${FAINT};line-height:1.6;">
+          <strong style="color:${SUB};">CONFIDENTIAL.</strong> Prepared for your personal use by Carnelian Co. Not a performance appraisal. Questions: hello@carnelianco.com
+        </div>
+      `, 'Cover');
+
+      // ── Page 2: Score Profile ──
+      const dimRows = allDims.map(d => {
+        const [bl,bc] = band(d.v);
+        return [
+          `<span style="font-weight:600;">${esc(d.l)}</span>`,
+          `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${d.v}/100</span>`,
+          `<span style="font-weight:700;color:${bc};">${bl}</span>`,
+        ];
+      });
+      const idxRows = [['CII','Compliance & Integrity',CI.CII],['LRS','Leadership Readiness',CI.LRS],['TVS','Team Value',CI.TVS],['ADS','Adaptability',CI.ADS],['SES','Stakeholder Engagement',CI.SES],['OPS','Operations',CI.OPS],['PMS','People Management',CI.PMS]]
+        .map(([k,l,v]) => {
+          const [bl,bc] = band(v);
+          return [
+            `<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${C};">${k}</span>`,
+            `<span style="font-weight:600;">${esc(l)}</span>`,
+            `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${v}</span>`,
+          ];
+        });
+      const p2 = pageShell(`
+        ${sectionHead('Section 1', 'Your Score Profile at a Glance', 'Nine behavioural dimensions, ranked, plus the seven composite indices built from them.')}
+        ${keyBlock([['Bands', '75+ is a genuine strength. 50 to 74 is developing. Below 50 is your priority — your plan below is built around it.'], ['Indices', 'Composite indices combine several dimensions to show how they interact, weighted for their role relevance.']])}
+        ${tableBlock(['Dimension','Score','Band'], ['55%','20%','25%'], dimRows)}
+        <div style="margin-bottom:20px;"></div>
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Seven Composite Indices</div>
+        ${tableBlock(['Code','Index','Score'], ['15%','60%','25%'], idxRows)}
+      `, 'Score Profile');
+
+      // ── Page 3: Strengths & Growth Areas ──
+      const strengthCard = (d) => `<div style="border:1px solid ${LINE};border-left:4px solid ${GN};background:${GNs};padding:14px 16px;margin-bottom:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.12em;color:${GN};text-transform:uppercase;margin-bottom:5px;">Core Strength</div><div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:${INK};margin-bottom:6px;">${esc(d.l)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${GN};font-weight:700;">${d.v}/100</span></div><div style="font-size:9.3px;color:${SUB};line-height:1.55;">${esc(d.str)}</div></div>`;
+      const growthCard = (d) => `<div style="border:1px solid ${LINE};border-left:4px solid ${RD};background:${RDs};padding:14px 16px;margin-bottom:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.12em;color:${RD};text-transform:uppercase;margin-bottom:5px;">Priority Development Area</div><div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:${INK};margin-bottom:6px;">${esc(d.l)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${RD};font-weight:700;">${d.v}/100</span></div><div style="font-size:9.3px;color:${SUB};line-height:1.55;">${esc(d.gap || 'A core driver of professional effectiveness and your highest-leverage development opportunity right now.')}</div></div>`;
+      const p3 = pageShell(`
+        ${sectionHead('Section 2', 'What You Are Good At, And Where To Grow', 'Your two clearest strengths, and the two areas your development plan targets.')}
+        ${keyBlock([['How these were picked', 'Your nine dimensions ranked highest to lowest. The top two are your anchor strengths. The bottom two are your priority development areas, the focus of Section 3.']])}
+        ${top2.map(strengthCard).join('')}
+        ${bot2.map(growthCard).join('')}
+      `, 'Strengths & Growth');
+
+      // ── Roadmap pages: one page per priority dimension ──
+      const roadmapPages = devAreas.map((d, i) => {
+        const stepRows = (d.habits || []).filter(h => h && (h.h || h.t)).map((h, j) => {
+          const phase = j < 2 ? ['Days 1–30', RD, RDs] : j < 5 ? ['Days 30–90', AM, AMs] : ['Days 90–180', GN, GNs];
+          return [
+            `<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${phase[1]};">${j+1}</span>`,
+            `<span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${phase[1]};background:${phase[2]};padding:2px 6px;border-radius:3px;">${phase[0]}</span>`,
+            `<strong>${esc(h.h)}</strong> ${esc(h.t)}`,
+          ];
+        });
+        return pageShell(`
+          ${sectionHead(`Section 3.${i+1}`, d.dim, `Group average ${d.v}/100. Your ten-step, week-by-week plan for this dimension.`)}
+          <div style="background:${PANEL};border:1px solid ${LINE};border-left:4px solid ${GOLD};padding:12px 14px;margin-bottom:14px;font-size:9.3px;color:${SUB};line-height:1.6;">${esc(d.why)}</div>
+          ${tableBlock(['#','Window','Action'], ['6%','18%','76%'], stepRows, '9px')}
+        `, `Roadmap · ${d.dim}`);
+      });
+
+      // ── Resources & Protocols page ──
+      const TYPE_COLOR = {
+        book: ['#1D4ED8', '#DBEAFE', 'BOOK'], ted: ['#B91C1C', '#FBEAEA', 'TED TALK'],
+        youtube: ['#0F766E', '#E6F5F2', 'YOUTUBE'], article: ['#B45309', '#FBF1E4', 'ARTICLE'],
+        course: ['#6D28D9', '#EEE9FB', 'COURSE'],
+      };
+      const resRows = resources.slice(0, 8).map(r => {
+        const [tc, tbg, tlbl] = TYPE_COLOR[r.type] || [SUB, PANEL, (r.type || 'RESOURCE').toUpperCase()];
+        return `<div style="border:1px solid ${LINE};border-left:4px solid ${tc};padding:10px 12px;margin-bottom:8px;background:${BG};"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:9.8px;font-weight:800;color:${INK};">${esc(r.title)}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${tc};background:${tbg};padding:3px 7px;border-radius:3px;white-space:nowrap;">${tlbl}</span></div><div style="font-size:8.5px;color:${FAINT};font-weight:600;margin-bottom:4px;">${esc(r.author)}</div><div style="font-size:8.7px;color:${SUB};line-height:1.5;">${esc(r.why)}</div></div>`;
+      }).join('');
+      const protoRows = relapse.map(p => `<div style="border:1px solid ${LINE};padding:10px 12px;margin-bottom:8px;"><div style="font-size:9px;color:${INK};font-weight:700;margin-bottom:5px;"><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:${RD};background:${RDs};padding:2px 6px;border-radius:3px;margin-right:6px;">IF</span>${esc(p.trigger)}</div><div style="font-size:8.8px;color:${SUB};line-height:1.5;"><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:${GN};background:${GNs};padding:2px 6px;border-radius:3px;margin-right:6px;">THEN</span>${esc(p.response)}</div></div>`).join('');
+      const p_resources = pageShell(`
+        ${sectionHead('Section 4', 'Your Development Toolkit', 'Resources matched to your priority dimensions, and if-then protocols for when a habit breaks.')}
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Profile-Matched Resources</div>
+        ${resRows}
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin:14px 0 8px;">If-Then Protocols</div>
+        ${protoRows}
+      `, 'Toolkit & Protocols');
+
+      // ── Programmes + Priority Matrix + Close ──
+      const FORMAT_COLOR = { Training: [GOLD, '#F6EFE2'], Coaching: ['#1D4ED8', '#DBEAFE'], Mentorship: [GN, GNs], Consulting: [C, RDs] };
+      const progRows = programs.slice(0, 4).map(p => {
+        const [fc, fbg] = FORMAT_COLOR[p.format] || [GOLD, '#F6EFE2'];
+        return `<div style="border:1px solid ${LINE};border-left:4px solid ${fc};padding:11px 13px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:10.3px;font-weight:800;color:${INK};">${esc(p.name)}</span>${p.format ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${fc};background:${fbg};padding:3px 7px;border-radius:3px;white-space:nowrap;">${esc(p.format).toUpperCase()}</span>` : ''}</div><div style="font-size:8.8px;color:${SUB};line-height:1.5;margin-bottom:4px;">${esc(p.desc)}</div><div style="font-size:8.3px;color:${GN};font-style:italic;">${esc(p.match || 'Recommended based on your profile.')}</div></div>`;
+      }).join('');
+      const matrixQuad = (title, items, col, bg) => `<div style="border:1px solid ${LINE};background:${bg};padding:12px 14px;"><div style="font-size:9.5px;font-weight:700;color:${col};margin-bottom:8px;">${esc(title)}</div>${items.map(d => `<div style="font-size:8.7px;color:${INK};font-weight:600;margin-bottom:3px;">${esc(d.l)} (${d.v}/100)</div>`).join('')}</div>`;
+      const p_close = pageShell(`
+        ${sectionHead('Section 5', 'Recommended Training & Priority Matrix')}
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Recommended Programmes · Carnelian</div>
+        ${progRows}
+        <div style="background:${C};border-radius:6px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="color:#fff;font-size:9.5px;font-weight:700;">Get in touch: hello@carnelianco.com</div>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Priority Action Matrix</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+          ${matrixQuad('Act Now', allDims.slice(7,9), RD, RDs)}
+          ${matrixQuad('Build Soon', allDims.slice(5,7), AM, AMs)}
+          ${matrixQuad('Sustain & Expand', allDims.slice(0,2), GN, GNs)}
+          ${matrixQuad('Monitor Progress', allDims.slice(2,5), SUB, PANEL)}
+        </div>
+        <div style="background:${PANEL};border:1px solid ${LINE};padding:14px 16px;">
+          <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">A Note to Close</div>
+          <div style="font-size:9px;color:${SUB};line-height:1.65;">This report is a starting point, not a verdict. Every dimension measured here is developable with deliberate effort and the right support. Take one action from this report today. Growth begins with honest self-knowledge — you have just demonstrated that.</div>
+        </div>
+      `, 'Training & Close');
+
+      const allPages = [p1, p2, p3, ...roadmapPages, p_resources, p_close];
+
+      for (let i = 0; i < allPages.length; i++) {
+        setPdfBusy(`Rendering page ${i + 1} of ${allPages.length}…`);
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+        container.innerHTML = allPages[i];
+        document.body.appendChild(container);
+        await new Promise(r => setTimeout(r, 120));
+        const canvas = await window.html2canvas(container.children[0], { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' });
+        document.body.removeChild(container);
+        const imgData = canvas.toDataURL('image/jpeg', 0.94);
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, A4_W, A4_H);
+      }
+
+      setPdfBusy('Saving…');
+      pdf.save(`${R.name?.replace(/\s+/g,'_') || 'ActionPlan'}_CORE_ActionPlan.pdf`);
+    } catch (e) {
+      console.error('Action Plan PDF export failed', e);
+      alert('Failed to generate the PDF. Please try again.');
+    } finally {
+      setPdfBusy(null);
+    }
   };
 
   // ─── PDF DOWNLOAD (Gemstone Carousel, one page per slide) ───
@@ -3373,30 +3320,46 @@ const getResources = () => {
     return res.slice(0, 5); 
   };
 
-  const getPrograms = () => {
+const getPrograms = () => {
     const progs = [];
     const gapKeys = bot2.map(d => d.k);
     const profileText = profile?.name || 'professional';
+    const industryText = R.industry || 'your sector';
+    const expLevel = R.exp || '';
+    const roleLevel = R.level || '';
+    const isEarlyCareer = ['0–2 years','3–5 years'].includes(expLevel) || roleLevel.includes('Entry') || roleLevel.includes('Junior');
+    const isMidCareer = expLevel === '6–10 years' || roleLevel.includes('Mid-Level');
+    const isSenior = ['11–15 years','16+ years'].includes(expLevel) || roleLevel.includes('Senior') || roleLevel.includes('Executive') || roleLevel.includes('Director');
 
-    if(gapKeys.includes('E') || gapKeys.includes('A') || gapKeys.includes('OCBavg')) 
-      progs.push({name:'Communication & Influence Workshop', desc:"Carnelian's two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging.", match:`Directly targets the interpersonal gaps in your ${profileText} profile.`});
-    
-    if(gapKeys.includes('EOavg') || (gameSummary?.seesaw?.val>60)) 
-      progs.push({name:'Professional Ethics & Values Programme', desc:"A Carnelian-facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency.", match:`Recommended based on your Ethical Orientation scores and Values Seesaw responses.`});
-    
-    if(gapKeys.includes('LAavg') || gapKeys.includes('O')) 
-      progs.push({name:'Learning Agility & Growth Mindset Workshop', desc:"A Carnelian programme building the specific habits that accelerate professional development.", match:`Directly targets your priority development area in adaptive learning.`});
-    
-    if(gapKeys.includes('CQavg')) 
-      progs.push({name:'Intercultural Communication & Collaboration', desc:"Carnelian's cross-cultural effectiveness programme for Pakistani multi-institutional contexts.", match:`Recommended to help you navigate diverse stakeholders in ${R.industry || 'your sector'}.`});
-    
-    if(gapKeys.includes('ES')) 
-      progs.push({name:'Resilience & Emotional Intelligence Programme', desc:"A Carnelian one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools.", match:`Directly targets your priority development area in Emotional Resilience.`});
-    
-    if(progs.length===0) 
-      progs.push({name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile.", match:`Recommended to help you leverage your balanced strengths as a ${profileText}.`});
+    // TRAINING — skill-building workshops, matched to the specific behavioural gap
+    if(gapKeys.includes('E') || gapKeys.includes('A') || gapKeys.includes('OCBavg'))
+      progs.push({format:'Training', name:'Communication & Influence Workshop', desc:"A two-day programme covering professional communication styles, stakeholder influence, and cross-contextual messaging.", match:`Directly targets the interpersonal gaps in your ${profileText} profile.`});
+    if(gapKeys.includes('EOavg') || (gameSummary?.seesaw?.val>60))
+      progs.push({format:'Training', name:'Professional Ethics & Values Programme', desc:"A facilitated workshop on ethical decision-making frameworks, integrity under pressure, and building a culture of transparency.", match:`Recommended based on your Ethical Orientation scores and Values Seesaw responses.`});
+    if(gapKeys.includes('LAavg') || gapKeys.includes('O'))
+      progs.push({format:'Training', name:'Learning Agility & Growth Mindset Workshop', desc:"A programme building the specific habits that accelerate professional development.", match:`Directly targets your priority development area in adaptive learning.`});
+    if(gapKeys.includes('CQavg'))
+      progs.push({format:'Training', name:'Intercultural Communication & Collaboration', desc:"A cross-cultural effectiveness programme for multi-institutional contexts.", match:`Recommended to help you navigate diverse stakeholders in ${industryText}.`});
+    if(gapKeys.includes('ES'))
+      progs.push({format:'Training', name:'Resilience & Emotional Intelligence Programme', desc:"A one-day programme combining evidence-based resilience frameworks with practical emotional regulation tools.", match:`Directly targets your priority development area in Emotional Resilience.`});
 
-    return progs.slice(0, 3);
+    // COACHING — 1:1, fits once there's enough role context to work individually, or a self-management gap
+    if(isMidCareer || isSenior || gapKeys.includes('ES') || gapKeys.includes('C'))
+      progs.push({format:'Coaching', name:'1:1 CORE Executive Coaching', desc:"A structured six-session coaching engagement with a Carnelian consultant, built directly around your CORE profile and the two priority areas in this report.", match: isSenior ? `Matched to your seniority (${roleLevel || expLevel}) — coaching outperforms group training at this level.` : `Recommended to work through ${bot2[0]?.l?.toLowerCase() || 'your priority area'} with individual accountability.`});
+
+    // MENTORSHIP — fits early-career, or an Emerging Professional profile
+    if(isEarlyCareer || profileText.toLowerCase().includes('emerging'))
+      progs.push({format:'Mentorship', name:'Carnelian Mentor Pairing Programme', desc:"A structured six-month pairing with a senior practitioner in your field, with fortnightly check-ins and a written development focus.", match:`Matched to your career stage (${expLevel || 'early career'}) — mentorship compounds fastest in the first few years.`});
+
+    // CONSULTING — fits senior/exec level, or when the gap looks organisational rather than personal
+    if(isSenior || gapKeys.includes('EOavg') || gapKeys.includes('C'))
+      progs.push({format:'Consulting', name:'Team & Culture Advisory Engagement', desc:"Carnelian works with your function or team directly on the systemic version of this gap, from process design to culture diagnostics.", match: isSenior ? `At ${roleLevel || 'your level'}, the highest-leverage move is usually structural, not personal — this addresses the system around you, not just your own habits.` : `Worth raising with your manager if this gap in ${bot2[0]?.l?.toLowerCase() || 'this area'} shows up across your team, not just individually.`});
+
+    if(progs.length===0)
+      progs.push({format:'Coaching', name:'CORE Coaching Session', desc:"A structured 90-minute session with a Carnelian consultant to debrief your full CORE profile.", match:`Recommended to help you leverage your balanced strengths as a ${profileText}.`});
+
+    const seen = new Set();
+    return progs.filter(p => (seen.has(p.name) ? false : (seen.add(p.name), true))).slice(0, 4);
   };
 
   const getRelapse = () => {
@@ -3464,7 +3427,7 @@ const getResources = () => {
       {/* ─── TAB 1: ACTION PLAN ─── */}
       {resTab === 'action' && (
         <div className="anim-fadeUp">
-          <div style={{background: T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'48px 40px', marginBottom:'24px', position:'relative', overflow:'hidden'}}>
+          <div className="action-pdf-card" style={{background: T.bg1, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'48px 40px', marginBottom:'24px', position:'relative', overflow:'hidden'}}>
             <div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',borderRadius:'50%',background:`radial-gradient(circle,${T.goldP} 0%,transparent 70%)`}} />
             <div style={{position:'relative',zIndex:1}}>
               <div className="mono" style={{fontSize:'10px',color:T.gold,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:'12px',fontWeight:'700'}}>Your Personal CORE Development Report</div>
@@ -3481,7 +3444,7 @@ const getResources = () => {
             </div>
           </div>
 
-          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+         <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.35rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Score Profile at a Glance</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Each bar represents a dimension of your professional profile. Green = genuine strength. Amber = developing. Red = your priority — and your development plan is built around it.</p>
 <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px 32px', marginTop:'24px'}}>
@@ -3535,7 +3498,7 @@ const getResources = () => {
             </div>
           </div>
 
-          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+        <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>What You Are Good At · And Where To Grow</h3>
             <p style={{fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'500', marginBottom:'24px'}}>
               <strong style={{color:T.t0}}>How we selected these four areas:</strong> The CORE engine breaks down your broad composite scores into 9 specific behavioural dimensions and ranks them from highest to lowest. The <strong style={{color:T.gn}}>Top 2</strong> become your anchor strengths — the natural instincts you should actively leverage. The <strong style={{color:T.rd}}>Bottom 2</strong> become your priority development areas — the specific gaps where focused effort will yield the highest career return.
@@ -3561,7 +3524,7 @@ const getResources = () => {
             </div>
           </div>
 
-          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+         <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `· ${R.industry}` : ''}</h3>
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
               <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', fontWeight:'500', margin:0}}>
@@ -3636,7 +3599,7 @@ const getResources = () => {
 
           {/* Resources & Protocols */}
           <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginBottom:'24px'}}>
-            <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
+            <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
               <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Profile-Matched Development Toolkit</h3>
               <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Every resource below was selected for your specific psychometric profile and dimension scores — not a generic reading list.</p>
               <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
@@ -3660,7 +3623,7 @@ const getResources = () => {
               </div>
             </div>
 
-            <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
+           <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px'}}>
               <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your If-Then Protocol · When Habits Break</h3>
               <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Research consistently shows relapse risk is highest in the first 30 days. These protocols are decision frameworks for situations you will encounter.</p>
               <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
@@ -3681,20 +3644,25 @@ const getResources = () => {
           </div>
 
           {/* Carnelian Programs */}
-          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
-            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Training · Carnelian Programmes</h3>
-            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>The following Carnelian programmes are specifically matched to your CORE profile and dimension scores. Your organisation can commission any of these — or you can reach out as an individual.</p>
+          <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+            <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Recommended Programmes · Carnelian</h3>
+            <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'24px', fontWeight:'500'}}>Carnelian works across training, 1:1 coaching, mentorship pairing, and consulting engagements. The options below are matched to your profile, your priority development areas, your experience level, and your industry. Your organisation can commission any of these — or you can reach out as an individual.</p>
             <div style={{display:'flex', flexDirection:'column', gap:'12px', marginBottom:'24px'}}>
-              {programs.map((p, i) => (
+              {programs.map((p, i) => {
+                const fmtCol = p.format==='Coaching'?'#3B82F6':p.format==='Mentorship'?T.gn:p.format==='Consulting'?T.c:T.gold;
+                return (
                 <div key={i} style={{background:`linear-gradient(135deg, ${T.bg2} 0%, ${T.bg3} 100%)`, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', display:'flex', gap:'16px', alignItems:'flex-start'}}>
                   <div style={{width:'32px', height:'32px', borderRadius:'50%', background:T.c, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', fontWeight:'800', flexShrink:0}}>C</div>
-                  <div>
-                    <div style={{fontSize:'14px', fontWeight:'700', color:T.gold, marginBottom:'6px'}}>{p.name}</div>
+                  <div style={{flex:1}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px', flexWrap:'wrap'}}>
+                      <div style={{fontSize:'14px', fontWeight:'700', color:T.gold}}>{p.name}</div>
+                      {p.format && <span style={{fontSize:'9px', fontWeight:'800', color:fmtCol, background:`${fmtCol}18`, padding:'3px 8px', borderRadius:'100px', textTransform:'uppercase', letterSpacing:'0.06em'}}>{p.format}</span>}
+                    </div>
                     <div style={{fontSize:'13px', color:T.t1, lineHeight:'1.6', marginBottom:'8px'}}>{p.desc}</div>
                     <div style={{fontSize:'11px', color:T.gn, fontStyle:'italic', fontWeight:'600'}}>{p.match || 'Recommended based on your profile.'}</div>
                   </div>
                 </div>
-              ))}
+              );})}
             </div>
             <div style={{background:T.c, borderRadius:'10px', padding:'20px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:'16px'}}>
               <div>
@@ -3708,7 +3676,7 @@ const getResources = () => {
           </div>
 
           {/* Priority Matrix */}
-          <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+          <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted relatively by urgency based on your unique score profile.</p>
             <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
@@ -3744,7 +3712,7 @@ const getResources = () => {
           </div>
 
           {/* Close Note */}
-          <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
+         <div className="action-pdf-card" style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'12px', padding:'32px 36px', marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'16px'}}>A Note to Close</h3>
             <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', marginBottom:'24px', fontWeight:'500'}}>This report is a starting point, not a verdict. Psychometric scores describe tendencies: they do not define your ceiling. Every dimension measured here is developable with deliberate effort and the right support. The 10‑step plans above are specific because vague advice produces no change. Take one action from this report today, not tomorrow, not next week. Use it in your next conversation with your manager, your training coordinator, or your mentor. Growth begins with honest self‑knowledge. You have just demonstrated that.</p>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:`1px solid ${T.b1}`, paddingTop:'20px', flexWrap:'wrap', gap:'12px'}}>
@@ -3755,7 +3723,10 @@ const getResources = () => {
 
           <div className="no-print" style={{display:'flex', gap:'12px', marginTop:'24px'}}>
             
-            <button onClick={downloadPDF} style={{padding:'12px 24px', borderRadius:'8px', background:T.t0, color:T.bg0, border:'none', cursor:'pointer', fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'800'}}>⬇ Download Action Plan (PDF)</button>
+            <button onClick={downloadPDF} disabled={!!pdfBusy} style={{padding:'12px 24px', borderRadius:'8px', background: pdfBusy ? T.t3 : T.t0, color:T.bg0, border:'none', cursor: pdfBusy ? 'wait' : 'pointer', fontFamily:"'Public Sans',sans-serif", fontSize:'13px', fontWeight:'800', display:'inline-flex', alignItems:'center', gap:'8px'}}>
+              {pdfBusy && <span style={{width:'12px',height:'12px',border:'2px solid rgba(255,255,255,0.35)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin 0.8s linear infinite'}} />}
+              {pdfBusy || '⬇ Download Action Plan (PDF)'}
+            </button>
           </div>
 
         </div>

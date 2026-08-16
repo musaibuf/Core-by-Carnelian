@@ -2218,7 +2218,7 @@ const ARCHETYPE_GROWTH = {
 // Minimal, dependency-free radar chart.
 const RadarChart = ({ data, T, size = 380, color = '#B01C24' }) => {
   const N = data.length;
-  const pad = 95;
+  const pad = 150;
   const w = size + pad * 2, h = size + pad * 2;
   const cx = w / 2, cy = h / 2, R = size * 0.34;
   const angleFor = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
@@ -2618,14 +2618,24 @@ const PrStyles = () => (
 );
 
 const CoreLogo = ({ h = 36 }) => {
+  const [svg, setSvg] = useState(null);
   const [err, setErr] = useState(false);
-  if (err) return (
+  useEffect(() => {
+    fetch('/core-logo-for-light-mode.svg')
+      .then(r => { if (!r.ok) throw new Error('logo fetch failed'); return r.text(); })
+      .then(raw => {
+        const cleaned = raw.replace(/<svg([^>]*)>/i, (m, attrs) => `<svg${attrs.replace(/\s(width|height)="[^"]*"/gi, '')} height="${h}" style="display:block;height:${h}px;width:auto;">`);
+        setSvg(cleaned);
+      })
+      .catch(() => setErr(true));
+  }, [h]);
+  if (err || !svg) return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
       <span style={{ fontFamily: "'Playfair Display',serif", fontSize: h * 0.72, fontWeight: 700, color: PRT.c, letterSpacing: '0.02em' }}>CORE</span>
       <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: h * 0.24, fontWeight: 700, color: PRT.faint, letterSpacing: '0.14em', textTransform: 'uppercase' }}>by Carnelian</span>
     </div>
   );
-  return <img src="/core-logo-for-light-mode.svg" alt="CORE by Carnelian" style={{ height: h, width: 'auto', objectFit: 'contain', display: 'block' }} onError={() => setErr(true)} />;
+  return <div style={{ display: 'flex', alignItems: 'center', height: h }} dangerouslySetInnerHTML={{ __html: svg }} />;
 };
 
 const PrLabel = ({ c = PRT.c, children, style = {} }) => (

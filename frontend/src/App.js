@@ -161,6 +161,37 @@ const Fonts = ({ mode }) => {
         .desktop-nav { display: flex !important; }
         .mobile-nav-controls { display: none !important; }
       }
+
+      /* ── RESULTS SCREEN: less "in the face" on mobile ── */
+      @media (max-width: 600px) {
+        /* Section titles were fixed rem sizes and never shrank on small screens */
+        h1 { font-size: 1.7rem !important; line-height: 1.25 !important; }
+        h2 { font-size: 1.4rem !important; line-height: 1.3 !important; }
+        h3 { font-size: 1.05rem !important; line-height: 1.3 !important; }
+        h4 { font-size: 0.98rem !important; line-height: 1.35 !important; }
+
+        /* Pull card padding in tighter than the 768px rule alone does */
+        div[style*="padding:'48px 40px'"] { padding: 18px 14px !important; }
+        div[style*="padding:'32px 36px'"] { padding: 16px 14px !important; }
+        div[style*="padding:'24px'"] { padding: 14px 12px !important; }
+
+        /* Cards were stacking with a full 24px gap each — most of the "wall of scroll" is whitespace, not content */
+        div[style*="marginBottom:'24px'"] { margin-bottom: 14px !important; }
+        div[style*="borderRadius:'12px'"] { border-radius: 10px !important; }
+
+        /* Body copy and score labels were desktop-sized */
+        p[style*="fontSize:'14px'"], p[style*="fontSize:'13.5px'"], p[style*="fontSize:'13px'"] { font-size: 12px !important; line-height: 1.6 !important; }
+
+        /* The 7-index ring badges and their labels take a lot of vertical room stacked 2-across on phones */
+        div[style*="width:'52px'"][style*="height:'52px'"] { width: 42px !important; height: 42px !important; }
+
+        /* Roadmap: collapse the "box inside a box" feel — keep only the per-dimension card as the visible box */
+        .roadmap-outer { background: transparent !important; border: none !important; padding: 16px 4px !important; }
+        .roadmap-dim-card { padding: 16px 14px !important; margin-bottom: 16px !important; }
+        .roadmap-step-header { padding: 10px 12px !important; gap: 8px !important; }
+        /* The "how to do this" panel was indented 52px to align under a step circle that no longer has room on phones */
+        .roadmap-howto { margin: 0 0 12px 0 !important; padding: 10px 12px !important; }
+      }
     `}</style>
   );
 };
@@ -3524,7 +3555,7 @@ const getPrograms = () => {
             </div>
           </div>
 
-         <div className="action-pdf-card" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
+         <div className="roadmap-outer" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `· ${R.industry}` : ''}</h3>
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
               <p style={{color:T.t1, fontSize:'13.5px', lineHeight:'1.8', fontWeight:'500', margin:0}}>
@@ -3539,7 +3570,7 @@ const getPrograms = () => {
             {devAreas.length > 0 ? devAreas.map((d,i)=>{
               const dimCol = d.v<45 ? T.rd : d.v<60 ? T.am : T.gn;
               return (
-              <div key={i} style={{border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px',marginBottom:'24px',background:T.bg2}}>
+              <div key={i} className="roadmap-dim-card" style={{border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px',marginBottom:'24px',background:T.bg2}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
                   <h4 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.5rem',fontWeight:'700',color:T.t0}}>{d.dim}</h4>
                   <span className="mono" style={{fontSize:'14px',fontWeight:'800',color:dimCol}}>{d.v}/100</span>
@@ -3562,6 +3593,7 @@ const getPrograms = () => {
     <div key={j} style={{background:sBg, borderRadius:'8px', overflow:'hidden'}}>
       <div
         onClick={() => setExpandedSteps(prev => ({...prev, [stepKey]: !prev[stepKey]}))}
+        className="roadmap-step-header"
         style={{display:'flex', alignItems:'flex-start', gap:'12px', padding:'12px 16px', cursor:'pointer'}}
       >
         <div style={{minWidth:'24px', height:'24px', borderRadius:'50%', background:sCol, color:'#fff', fontSize:'11px', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{j+1}</div>
@@ -3574,7 +3606,7 @@ const getPrograms = () => {
         </div>
       </div>
       {isExpanded && h.how && (
-        <div style={{margin:'0 16px 14px 52px', padding:'12px 14px', background:T.bg1, borderRadius:'6px', borderLeft:`3px solid ${sCol}`}}>
+        <div className="roadmap-howto" style={{margin:'0 16px 14px 52px', padding:'12px 14px', background:T.bg1, borderRadius:'6px', borderLeft:`3px solid ${sCol}`}}>
           <div className="mono" style={{fontSize:'9px', fontWeight:'800', color:sCol, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'6px'}}>How to do this</div>
           <div style={{fontSize:'12.5px', color:T.t1, lineHeight:'1.75', fontWeight:'500'}} dangerouslySetInnerHTML={{__html: h.how}} />
         </div>

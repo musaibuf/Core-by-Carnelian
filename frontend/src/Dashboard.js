@@ -2218,30 +2218,10 @@ const ARCHETYPE_GROWTH = {
 // Minimal, dependency-free radar chart.
 const RadarChart = ({ data, T, size = 380, color = '#B01C24' }) => {
   const N = data.length;
-  const R = size * 0.34;
-  const labelR = R * 1.32;
+  const pad = 150;
+  const w = size + pad * 2, h = size + pad * 2;
+  const cx = w / 2, cy = h / 2, R = size * 0.34;
   const angleFor = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
-  const CHAR_W = 7.3, MARGIN = 14; // rough width of a bold 12px character, plus a safety margin
-
-  // Estimate how far each label's actual text reaches left/right and top/bottom of the plot center,
-  // so the box (and therefore its true visual centroid) is sized to match, not just the point circle.
-  let leftExtent = R, rightExtent = R, topExtent = R, bottomExtent = R;
-  data.forEach((d, i) => {
-    const a = angleFor(i);
-    const dx = Math.cos(a) * labelR, dy = Math.sin(a) * labelR;
-    const textW = (d.label ? d.label.length : 0) * CHAR_W;
-    const anchor = dx < -12 ? 'end' : dx > 12 ? 'start' : 'middle';
-    const right = anchor === 'start' ? dx + textW : anchor === 'middle' ? dx + textW / 2 : dx;
-    const left = anchor === 'end' ? dx - textW : anchor === 'middle' ? dx - textW / 2 : dx;
-    rightExtent = Math.max(rightExtent, right);
-    leftExtent = Math.max(leftExtent, -left);
-    topExtent = Math.max(topExtent, -dy + 8);
-    bottomExtent = Math.max(bottomExtent, dy + 8);
-  });
-  const padL = leftExtent + MARGIN, padR = rightExtent + MARGIN;
-  const padT = topExtent + MARGIN, padB = bottomExtent + MARGIN;
-  const w = padL + padR, h = padT + padB;
-  const cx = padL, cy = padT;
   const pt = (i, frac) => {
     const a = angleFor(i);
     return [cx + Math.cos(a) * R * frac, cy + Math.sin(a) * R * frac];
@@ -3194,7 +3174,7 @@ const TeamInsightReport = ({ candidate, allData, T }) => {
   add('s2', (
     <>
       <PrSectionHead num={2} title="The detailed picture: seven overall areas" sub={`These seven areas summarise the twenty-one qualities on the next page. The dashed ring marks the 75 strength line.`} />
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 26 }}>
         <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={300} data={CI_ORDER.map(k => ({ label: CI_LABELS[k], value: ciAvg[k] }))} />
       </div>
       <div style={{ display: 'flex', gap: 14 }}>
@@ -3730,7 +3710,7 @@ const CulturePulseReport = ({ candidate, allData, T }) => {
   add('prof', (
     <>
       <PrSectionHead title="The culture profile: nine dimensions" sub="The shape shows where this organisation is even and where it is uneven. The dashed ring marks the 75 strength line." />
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 26 }}>
         <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={290} data={sortedDims.map(d => ({ label: d.l, value: d.v }))} />
       </div>
       <div style={{ display: 'flex', gap: 14 }}>

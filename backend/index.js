@@ -2,10 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const rateLimit = require('express-rate-limit');
 
 const crypto = require('crypto');
 
 const app = express();
+
+// Render sits behind a proxy — needed so express-rate-limit reads the real client IP, not Render's.
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(cors({
@@ -13,6 +17,62 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json({ limit: '25mb' })); // Parses incoming JSON requests (evidence uploads carry base64 files)
+
+// ── Shared client key (public routes only) ──
+// The frontend sends this on every public call so a random script/curl user
+// can't hit these endpoints without also having the key baked into the
+// frontend build. This is NOT strong security — anyone who reads the
+// frontend bundle can find the key — but it filters out casual scripted
+// abuse and anything that isn't your actual site making the call.
+// Set CLIENT_API_KEY in Render env vars for both frontend (build-time,
+// injected as REACT_APP_CLIENT_KEY or similar) and backend (runtime).
+const CLIENT_API_KEY = process.env.CLIENT_API_KEY || '';
+const requireClientKey = (req, res, next) => {
+  if (!CLIENT_API_KEY) return next(); // fails open if not configured, so this doesn't break local dev
+  const key = req.headers['x-client-key'] || '';
+  if (key !== CLIENT_API_KEY) {
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  }
+  next();
+};
+
+// ── Rate limiting (public endpoints) ──
+// Submission and validation endpoints are open by design (the public
+// assessment flow needs them), so they're the ones worth throttling per IP.
+// IMPORTANT: batch cohorts (e.g. an HBL intake of 100+ people) often sit on
+// one shared office network, meaning your server sees them all as ONE IP.
+// These ceilings are set well above a full group sitting together in one
+// session, so only a scripted flood ever trips them.
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 400,                 // comfortably covers a 100+ participant cohort submitting together, with room to spare
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many submissions from this address. Please try again later.' },
+});
+const validateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,  // 5 min
+  max: 150,                 // batch-code lookups happen a few times per person (typing, blur, retries) — scaled with submitLimiter
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please try again shortly.' },
+});
+const evidenceLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,                 // ~25 evidence calls per person in the Player Report x a full cohort, plus margin
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please try again shortly.' },
+});
+// A loose global limiter as a backstop across every route, admin included —
+// generous enough not to bother real usage, tight enough to blunt a scraper.
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1500,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
 
 // ── Admin auth (token = expiry + HMAC signed with ADMIN_PASSWORD) ──
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
@@ -130,7 +190,7 @@ pool.connect()
 // ----------------------------------------------------
 
 // POST: Save a new assessment
-app.post('/api/assessments', async (req, res) => {
+app.post('/api/assessments', submitLimiter, requireClientKey, async (req, res) => {
   try {
     const payload = req.body; // This is the dbPayload sent from the frontend
 
@@ -297,7 +357,7 @@ app.patch('/api/batches/:code', requireAdmin, async (req, res) => {
 });
 
 // PUBLIC: validate a batch code for the assessment form. Returns org + participant entitlements only.
-app.get('/api/batches/validate/:code', async (req, res) => {
+app.get('/api/batches/validate/:code', validateLimiter, requireClientKey, async (req, res) => {
   try {
     const r = await pool.query('SELECT code, org, status, entitlements FROM batches WHERE UPPER(code) = UPPER($1)', [req.params.code]);
     if (!r.rows.length) return res.json({ valid: false, reason: 'not_found' });
@@ -321,7 +381,7 @@ app.get('/api/batches/validate/:code', async (req, res) => {
 // ----------------------------------------------------
 // EVIDENCE SYNC (gamified report) + notification
 // ----------------------------------------------------
-app.post('/api/evidence', async (req, res) => {
+app.post('/api/evidence', evidenceLimiter, requireClientKey, async (req, res) => {
   try {
     const { doc_id, evidence, action, changed_key, name, batch } = req.body;
     if (!doc_id) return res.status(400).json({ success: false, message: 'doc_id required' });

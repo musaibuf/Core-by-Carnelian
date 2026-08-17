@@ -1584,7 +1584,9 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
     if (!code || !/^Q[1-4]-\d{3}-\d{4}$/.test(code)) { setBatchInfo(null); return null; }
     setBatchChecking(true);
     try {
-      const r = await fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(code)}`);
+      const r = await fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(code)}`, {
+        headers: { 'x-client-key': process.env.REACT_APP_CLIENT_KEY }
+      });
       const j = await r.json();
       setBatchInfo(j);
       if (j.valid) setResp(prev => ({ ...prev, org: j.org }));
@@ -1838,7 +1840,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
 
     fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-client-key': process.env.REACT_APP_CLIENT_KEY },
       body: JSON.stringify(dbPayload)
     }).catch(err => console.error("Failed to save to DB:", err));
     // -------------------------------------
@@ -2596,7 +2598,9 @@ const ResultsPage = ({reportData}) => {
       try { setEvState(JSON.parse(localStorage.getItem(`core_ev_${reportData.docId}`) || '{}')); } catch(e) {}
     }
     if (reportData?.respondent?.batch) {
-      fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(reportData.respondent.batch)}`)
+      fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(reportData.respondent.batch)}`, {
+        headers: { 'x-client-key': process.env.REACT_APP_CLIENT_KEY }
+      })
         .then(r => r.json())
         .then(j => { if (j && j.participant) setEnt(j.participant); })
         .catch(() => {});
@@ -2632,7 +2636,7 @@ const ResultsPage = ({reportData}) => {
 
   const syncEvidence = (newState, action, changedKey) => {
     fetch('https://core-by-carnelian-backend.onrender.com/api/evidence', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-client-key': process.env.REACT_APP_CLIENT_KEY },
       body: JSON.stringify({
         doc_id: reportData.docId, evidence: newState, action, changed_key: changedKey,
         name: reportData?.respondent?.name || '', batch: reportData?.respondent?.batch || '',
@@ -5507,7 +5511,7 @@ useEffect(() => {
 
                 await fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'x-client-key': process.env.REACT_APP_CLIENT_KEY },
                   body: JSON.stringify(payload)
                 });
               }

@@ -1584,7 +1584,7 @@ const [resp, setResp] = useState({name:'',email:'',phone:'',emp:'',dept:'',deptO
     if (!code || !/^Q[1-4]-\d{3}-\d{4}$/.test(code)) { setBatchInfo(null); return null; }
     setBatchChecking(true);
     try {
-      const r = await fetch(`/api/batches/validate/${encodeURIComponent(code)}`, {
+      const r = await fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(code)}`, {
         headers: { 'x-client-key': process.env.REACT_APP_CLIENT_KEY }
       });
       const j = await r.json();
@@ -1838,7 +1838,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
       report_data: reportDataObj
     };
 
-    fetch('/api/assessments', {
+    fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-client-key': process.env.REACT_APP_CLIENT_KEY },
       body: JSON.stringify(dbPayload)
@@ -2154,7 +2154,7 @@ const prevQ=()=>{ if(cur>0){setCur(cur-1); setBreaker(null); setCheer(null);} };
                   setCheckingEmail(true);
                   try {
                     // Check the remote database first
-                    const res = await fetch(`/api/assessments?email=${encodeURIComponent(resp.email)}`);
+                    const res = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(resp.email)}`);
                     if (res.ok) {
                       const data = await res.json();
                       const exactMatches = data.filter(r => r.email && r.email.toLowerCase() === resp.email.toLowerCase());
@@ -2598,7 +2598,7 @@ const ResultsPage = ({reportData}) => {
       try { setEvState(JSON.parse(localStorage.getItem(`core_ev_${reportData.docId}`) || '{}')); } catch(e) {}
     }
     if (reportData?.respondent?.batch) {
-      fetch(`/api/batches/validate/${encodeURIComponent(reportData.respondent.batch)}`, {
+      fetch(`https://core-by-carnelian-backend.onrender.com/api/batches/validate/${encodeURIComponent(reportData.respondent.batch)}`, {
         headers: { 'x-client-key': process.env.REACT_APP_CLIENT_KEY }
       })
         .then(r => r.json())
@@ -2635,7 +2635,7 @@ const ResultsPage = ({reportData}) => {
   };
 
   const syncEvidence = (newState, action, changedKey) => {
-    fetch('/api/evidence', {
+    fetch('https://core-by-carnelian-backend.onrender.com/api/evidence', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'x-client-key': process.env.REACT_APP_CLIENT_KEY },
       body: JSON.stringify({
         doc_id: reportData.docId, evidence: newState, action, changed_key: changedKey,
@@ -5100,7 +5100,7 @@ const handleSearch = async () => {
   let serverMatches = [];
   setLoading(true);
   try {
-    const res = await fetch(`/api/assessments?email=${encodeURIComponent(term)}`);
+    const res = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(term)}`);
     if (res.ok) {
       const data = await res.json();
       // Force filter on the frontend to guarantee only the searched email is shown
@@ -5478,7 +5478,7 @@ useEffect(() => {
           if (item.email && !item.email.includes('test')) {
             try {
               // 1. Check the database FIRST to see if this person's data is already there
-              const checkRes = await fetch(`/api/assessments?email=${encodeURIComponent(item.email)}`);
+              const checkRes = await fetch(`https://core-by-carnelian-backend.onrender.com/api/assessments?email=${encodeURIComponent(item.email)}`);
               let alreadyInDb = false;
               
               if (checkRes.ok) {
@@ -5509,7 +5509,7 @@ useEffect(() => {
                   report_data: item.report_data
                 };
 
-                await fetch('/api/assessments', {
+                await fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'x-client-key': process.env.REACT_APP_CLIENT_KEY },
                   body: JSON.stringify(payload)

@@ -5027,7 +5027,7 @@ const IndustryTab = ({ data, T, onSelect }) => {
 // ROOT DASHBOARD
 // ═══════════════════════════════════════════════════════════════
 // ═══ ADMIN AUTH + ACCESS PANEL + NOTIFICATIONS ═══════════════════════════════
-const API_BASE = '';
+const API_BASE = 'https://core-by-carnelian-backend.onrender.com';
 const getAdminToken = () => { try { return localStorage.getItem('core_admin_token') || ''; } catch(e) { return ''; } };
 const setAdminToken = (t) => { try { t ? localStorage.setItem('core_admin_token', t) : localStorage.removeItem('core_admin_token'); } catch(e) {} };
 const authHeaders = () => ({ 'Authorization': 'Bearer ' + getAdminToken() });
@@ -5291,7 +5291,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!authed) return;
     setLoading(true);
-    fetch('/api/assessments', { headers: authHeaders() })
+    fetch('https://core-by-carnelian-backend.onrender.com/api/assessments', { headers: authHeaders() })
       .then(res=>{
         if(res.status === 401) { setAdminToken(''); setAuthed(false); throw new Error('Session expired'); }
         if(!res.ok) throw new Error('API error'); return res.json();

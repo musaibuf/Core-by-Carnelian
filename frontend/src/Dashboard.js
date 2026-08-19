@@ -696,7 +696,7 @@ const TechnicalReport = ({ candidate, T }) => {
                       <tr key={i} style={{ borderBottom: `1px solid ${T.b1}` }}>
                         <td style={{ padding: '10px', fontSize: '12px', fontWeight: '700', color: T.t0 }}>{r.name}</td>
                         <td style={{ padding: '10px' }}><ScoreBadge score={r.score} T={T} /></td>
-                        <td style={{ padding: '10px', width: '100px' }}><Bar score={r.score} w="100%" h={6} /></td>
+                        <td style={{ padding: '10px', width: '100px' }}><MiniBar score={r.score} w="100%" h={6} /></td>
                         <td style={{ padding: '10px', fontSize: '11px', fontWeight: '800', color: col }}>{lbl}</td>
                         <td style={{ padding: '10px', fontSize: '11px', color: T.t2 }}>{rat === 'red' ? r.redNote : rat === 'amber' ? 'Structured onboarding + milestones.' : 'Standard performance management applies.'}</td>
                       </tr>

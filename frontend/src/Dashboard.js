@@ -490,385 +490,551 @@ const Sidebar = ({ activeTab, setActiveTab, T, total }) => (
 // ═══════════════════════════════════════════════════════════════
 // REPORT TABS — TECHNICAL, ACTION PLAN, PLAYER REPORT, TEAM
 // ═══════════════════════════════════════════════════════════════
+// ─── DECISION-INDEX GROUPING (maps your existing 7 composite indices to
+//     which decision each one is most relevant for) ──────────────────────
+const DECISION_INDEX_GROUPS = {
+  hiring:     { label: 'For Hiring',           keys: ['CII', 'OPS', 'SES'], color: '#3B82F6' },
+  promotion:  { label: 'For Promotion',        keys: ['LRS', 'PMS', 'TVS'], color: '#C8A84B' },
+  succession: { label: 'For Succession',       keys: ['LRS', 'ADS', 'CII'], color: '#B01C24' },
+};
 
-// ─── TECHNICAL REPORT (full HR view) ─────────────────────────
+// ─── TECHNICAL REPORT (on-screen, dashboard dark theme) ──────────────────
 const TechnicalReport = ({ candidate, T }) => {
-  const rd      = candidate.report_data || {};
-  const S       = rd.scores   || {};
-  const validity= rd.validity  || {};
-  const profile = rd.profile   || {};
-  const roles   = rd.roles     || [];
-  const patterns= rd.patterns  || [];
-  const CI      = rd.CI        || {};
-  const gs      = rd.gameSummary || {};
+  const rd       = candidate.report_data || {};
+  const S        = rd.scores    || {};
+  const validity = rd.validity  || {};
+  const profile  = rd.profile   || {};
+  const roles    = rd.roles     || [];
+  const patterns = rd.patterns  || [];
+  const CI       = rd.CI        || {};
+  const gs       = rd.gameSummary || {};
 
-  const card = (children, style={}) => (
-    <div style={{ background:T.bg2, border:`1px solid ${T.b1}`, borderRadius:'10px', padding:'20px', marginBottom:'14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
+  const isJunior = (() => {
+    const exp = candidate.experience || rd.respondent?.exp || '';
+    const lvl = candidate.level || rd.respondent?.level || '';
+    return exp === '0–2 years' || exp === '3–5 years' || lvl.includes('Entry') || lvl.includes('Junior');
+  })();
+
+  const card = (children, style = {}) => (
+    <div style={{ background: T.bg2, border: `1px solid ${T.b1}`, borderRadius: '10px', padding: '20px', marginBottom: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
       {children}
     </div>
   );
 
+  const suppressed = validity.overall === 'red' && validity.extRatio > 0.85;
+
+  // Role rows matched to decision type, for the readiness-snapshot verdicts
+  const hiringRole     = roles.find(r => !['Senior Leadership / Executive', 'Future Leadership Potential', 'People Management / Team Lead', 'Peer Coordination / Project Support'].includes(r.name));
+  const promotionRole  = roles.find(r => r.name === 'People Management / Team Lead' || r.name === 'Peer Coordination / Project Support');
+  const successionRole = roles.find(r => r.name === 'Senior Leadership / Executive' || r.name === 'Future Leadership Potential');
+
+  const verdictOf = (r) => {
+    if (!r) return { lbl: 'N/A', col: T.t3 };
+    const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
+    return {
+      lbl: rat === 'green' ? '✅ Suitable' : rat === 'amber' ? '⚠️ Conditional' : '🚫 Not Recommended',
+      col: rat === 'green' ? T.gn : rat === 'amber' ? T.am : T.rd,
+      score: r.score,
+    };
+  };
+  const hiringV = verdictOf(hiringRole);
+  const promoV  = verdictOf(promotionRole);
+  const succV   = verdictOf(successionRole);
+
   return (
     <div>
       <div id={`tech-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
-      {/* HEADER */}
-      {card(
-               <>
-          <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
-            <div>
-             <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.8rem', fontWeight:'700', color:T.t0, marginBottom:'4px' }}>{candidate.name || rd.respondent?.name}</div>
-              <div style={{ fontSize:'12px', color:T.t2, fontWeight:'600', marginBottom:'8px', lineHeight:'1.6' }}>
-                <span style={{color:T.gold}}>
-                  {(candidate.batch || rd.respondent?.batch) 
-                    ? `🏢 Org Assigned (${candidate.purpose || rd.respondent?.purpose || 'Unspecified Purpose'})`
-                    : '👤 Individual (Personal Development)'}
-                </span><br/>
-                {candidate.role || rd.respondent?.role}{(candidate.department || rd.respondent?.dept) ? ` · ${candidate.department || rd.respondent?.dept}` : ''}<br/>
-                {(candidate.email || rd.respondent?.email) && <span>{candidate.email || rd.respondent?.email}</span>}
-                {(candidate.phone || rd.respondent?.phone) && <span> · {candidate.phone || rd.respondent?.phone}</span>}<br/>
-                {(candidate.emp_id || rd.respondent?.emp) && <span>ID: {candidate.emp_id || rd.respondent?.emp} · </span>}
-                Experience: {candidate.experience || rd.respondent?.exp || 'Unspecified'}{((candidate.gender || rd.respondent?.gender) && (candidate.gender || rd.respondent?.gender) !== 'Prefer not to say') ? ` · ${candidate.gender || rd.respondent?.gender}` : ''}
+
+        {/* 1 — CANDIDATE OVERVIEW */}
+        {card(
+          <>
+            <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.8rem', fontWeight: '700', color: T.t0, marginBottom: '4px' }}>{candidate.name || rd.respondent?.name}</div>
+                <div style={{ fontSize: '12px', color: T.t2, fontWeight: '600', marginBottom: '8px', lineHeight: '1.6' }}>
+                  <span style={{ color: T.gold }}>
+                    {(candidate.batch || rd.respondent?.batch)
+                      ? `🏢 Org Assigned (${candidate.purpose || rd.respondent?.purpose || 'Unspecified Purpose'})`
+                      : '👤 Individual (Personal Development)'}
+                  </span><br/>
+                  {candidate.role || rd.respondent?.role}{(candidate.department || rd.respondent?.dept) ? ` · ${candidate.department || rd.respondent?.dept}` : ''}<br/>
+                  Experience: {candidate.experience || rd.respondent?.exp || 'Unspecified'}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <ScoreBadge score={S.overall || candidate.overall_score} T={T} />
+                  <Pill label={profile.name || candidate.profile_name} color={T.c} />
+                  <ValidityDot overall={validity.overall} T={T} />
+                </div>
               </div>
-              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
-                <ScoreBadge score={S.overall || candidate.overall_score} T={T} />
-                <Pill label={profile.name || candidate.profile_name} color={T.c} />
-                <ValidityDot overall={validity.overall} T={T} />
+              <div style={{ textAlign: 'right', fontSize: '11px', color: T.t3, fontFamily: "'JetBrains Mono',monospace" }}>
+                {candidate.industry} · {candidate.batch || 'No batch'}<br/>
+                Doc: {candidate.doc_id}<br/>
+                {new Date(candidate.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
               </div>
             </div>
-            <div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, fontWeight:'600', marginBottom:'6px' }}>
-                {candidate.industry} · {candidate.batch || 'No batch'} · {new Date(candidate.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}
+          </>
+        )}
+
+        {/* 2 — DECISION READINESS SNAPSHOT */}
+        {card(
+          <>
+            <SectionHead label="Decision Readiness Snapshot" T={T} />
+            {suppressed ? (
+              <div style={{ background: T.rdP, border: `1px solid ${T.rd}40`, borderRadius: '8px', padding: '16px', fontSize: '13px', color: T.rd, lineHeight: '1.6' }}>
+                <strong>⛔ Suppressed.</strong> Extreme response pattern detected — all readiness verdicts below are unreliable. Supervised retake required before use in any decision.
               </div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:T.t3, fontWeight:'600' }}>Doc: {candidate.doc_id}</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'6px', marginTop:'12px' }}>
-                {validity.overall === 'red' && validity.extRatio > 0.85 ? (
-                  <div style={{gridColumn:'1/-1', color:T.rd, fontSize:'10px', lineHeight:'1.4', background:T.rdP, padding:'8px', borderRadius:'6px'}}>
-                    <strong>⛔ RESULTS UNINTERPRETABLE</strong><br/>
-                    Extreme response pattern detected. Scores suppressed.
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
+                {[
+                  { l: 'Hiring Fit', sub: hiringRole?.name || '—', v: hiringV, keys: 'CII · OPS · SES' },
+                  { l: 'Promotion Readiness', sub: promotionRole?.name || '—', v: promoV, keys: 'LRS · PMS · TVS' },
+                  { l: 'Succession Potential', sub: successionRole?.name || '—', v: succV, keys: 'LRS · ADS · CII' },
+                ].map((d, i) => (
+                  <div key={i} style={{ background: T.bg3, border: `1px solid ${d.v.col}40`, borderRadius: '8px', padding: '14px' }}>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '8px', color: T.t3, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '700', marginBottom: '6px' }}>{d.l}</div>
+                    <div style={{ fontSize: '11px', color: T.t2, marginBottom: '8px' }}>{d.sub}</div>
+                    <div style={{ fontSize: '13px', fontWeight: '800', color: d.v.col, marginBottom: '4px' }}>{d.v.lbl}{d.v.score != null ? ` · ${d.v.score}` : ''}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '8px', color: T.t3 }}>Driven by: {d.keys}</div>
                   </div>
-                ) : (
-                  MODULE_KEYS.map(({ k, l, c }) => (
-                    <div key={k} style={{ background:T.bg3, borderRadius:'6px', padding:'8px', textAlign:'center' }}>
-                      <div style={{ fontFamily:"'Crimson Pro',serif", fontSize:'1.3rem', color:c, fontWeight:'700' }}>{S[k]||'—'}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginTop:'2px', fontWeight:'600', lineHeight:'1.3' }}>{l.split(' ')[0]}</div>
-                    </div>
-                  ))
-                )}
+                ))}
               </div>
+            )}
+          </>
+        )}
+
+        {/* 3 — VALIDITY */}
+        <div style={{ background: validity.overall === 'green' ? T.gnP : validity.overall === 'amber' ? T.amP : T.rdP, border: `1px solid ${validityColor(validity.overall, T)}35`, borderRadius: '10px', padding: '20px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <ValidityDot overall={validity.overall} T={T} />
+            <div style={{ fontSize: '13px', fontWeight: '700', color: T.t0 }}>{validity.overallLabel}</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px' }}>
+            {[
+              { n: `${validity.lAgree}/10`, l: 'L-Scale' },
+              { n: `${Math.round((validity.saRatio || 0) * 100)}%`, l: 'Strongly Agree' },
+              { n: `${Math.round((validity.extRatio || 0) * 100)}%`, l: 'Extreme Resp.' },
+              { n: `${validity.conScore}/100`, l: 'Consistency' },
+            ].map((v, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.35)', borderRadius: '6px', padding: '10px', textAlign: 'center' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: '700', fontSize: '1.1rem', color: T.t0 }}>{v.n}</div>
+                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '8px', color: T.t2, marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>{v.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 4 — COMPOSITE DECISION INDICES (grouped by decision, not flat) */}
+        {card(
+          <>
+            <SectionHead label="Composite Decision Indices" T={T} />
+            {suppressed ? (
+              <div style={{ background: T.rdP, border: `1px solid ${T.rd}40`, borderRadius: '8px', padding: '16px', fontSize: '13px', color: T.rd }}>⛔ Suppressed — see Decision Readiness Snapshot above.</div>
+            ) : (
+              Object.entries(DECISION_INDEX_GROUPS).map(([gk, g]) => (
+                <div key={gk} style={{ marginBottom: '18px' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', fontWeight: '800', color: g.color, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px' }}>{g.label}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${g.keys.length},1fr)`, gap: '8px' }}>
+                    {g.keys.map(k => {
+                      const def = COMPOSITE_KEYS.find(c => c.k === k);
+                      const val = CI[k] || S[k] || 0;
+                      const col = bCol(val, T);
+                      return (
+                        <div key={k} style={{ background: T.bg3, borderRadius: '7px', padding: '12px', border: `1px solid ${col}25` }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '7px', color: T.t3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: '700' }}>{def?.l || k}</div>
+                          <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.6rem', color: col, fontWeight: '700' }}>{val}</div>
+                          <MiniBar score={val} w="100%" h={4} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+
+        {/* 5 — CROSS-DIMENSIONAL RISK & READINESS PATTERNS */}
+        {card(
+          <>
+            <SectionHead label="Cross-Dimensional Risk & Readiness Patterns" T={T} />
+            {patterns.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {patterns.map((p, i) => {
+                  const isRed = p.sev === 'red', isAmber = p.sev === 'amber';
+                  const bg = isRed ? T.rdP : isAmber ? T.amP : T.gnP;
+                  const bc = isRed ? T.rd : isAmber ? T.am : T.gn;
+                  return (
+                    <div key={i} style={{ background: bg, border: `1px solid ${bc}35`, borderRadius: '10px', padding: '16px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: bc, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{isRed ? '🔴' : isAmber ? '🟡' : '🟢'} {p.name}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: T.t0, marginBottom: '6px' }}>{p.headline}</div>
+                      <div style={{ fontSize: '12px', color: T.t1, lineHeight: '1.65', marginBottom: p.action ? '10px' : '0' }}>{p.detail}</div>
+                      {p.action && <div style={{ fontSize: '12px', fontWeight: '700', color: T.t0, background: T.b0, padding: '10px 12px', borderRadius: '7px', borderLeft: `3px solid ${bc}` }}><strong>HR Action:</strong> {p.action}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : <div style={{ padding: '20px', background: T.b0, borderRadius: '8px', fontSize: '13px', color: T.t2 }}>No significant cross-dimensional patterns detected.</div>}
+          </>
+        )}
+
+        {/* 6 — ROLE SUITABILITY MATRIX */}
+        {card(
+          <>
+            <SectionHead label="Role Suitability Matrix" T={T} />
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead><tr style={{ borderBottom: `2px solid ${T.b2}` }}>
+                  {['Role Family', 'Score', 'Profile', 'Verdict', 'Guidance'].map(h => <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: T.t3, fontFamily: "'IBM Plex Mono',monospace" }}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {roles.map((r, i) => {
+                    const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
+                    const col = rat === 'green' ? T.gn : rat === 'amber' ? T.am : T.rd;
+                    const lbl = rat === 'green' ? '✅ Suitable' : rat === 'amber' ? '⚠️ Conditional' : '🚫 Not Recommended';
+                    return (
+                      <tr key={i} style={{ borderBottom: `1px solid ${T.b1}` }}>
+                        <td style={{ padding: '10px', fontSize: '12px', fontWeight: '700', color: T.t0 }}>{r.name}</td>
+                        <td style={{ padding: '10px' }}><ScoreBadge score={r.score} T={T} /></td>
+                        <td style={{ padding: '10px', width: '100px' }}><Bar score={r.score} w="100%" h={6} /></td>
+                        <td style={{ padding: '10px', fontSize: '11px', fontWeight: '800', color: col }}>{lbl}</td>
+                        <td style={{ padding: '10px', fontSize: '11px', color: T.t2 }}>{rat === 'red' ? r.redNote : rat === 'amber' ? 'Structured onboarding + milestones.' : 'Standard performance management applies.'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* 7 — SUCCESSION PIPELINE INDICATORS (new grouping, existing data) */}
+        {card(
+          <>
+            <SectionHead label="Succession Pipeline Indicators" T={T} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+              <div style={{ background: T.bg3, borderRadius: '8px', padding: '14px' }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '8px', color: T.gold, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '700', marginBottom: '8px' }}>Leadership Readiness Score</div>
+                <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '2rem', color: bCol(CI.LRS || 0, T), fontWeight: '700' }}>{CI.LRS || '—'}</div>
+                <div style={{ fontSize: '11px', color: T.t2, marginTop: '4px' }}>Composite of Conscientiousness, Social Confidence, Learning Agility, Ethical Orientation, Emotional Resilience.</div>
+              </div>
+              <div style={{ background: T.bg3, borderRadius: '8px', padding: '14px' }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '8px', color: T.gold, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '700', marginBottom: '8px' }}>Pipeline Track</div>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: T.t0, marginBottom: '4px' }}>{isJunior ? 'Future Leadership Track' : 'Senior Leadership Track'}</div>
+                <div style={{ fontSize: '11px', color: T.t2 }}>{isJunior ? 'Early-career candidate — evaluated against a future-readiness threshold, not current-seniority benchmarks.' : 'Evaluated directly against senior leadership/executive readiness benchmarks.'}</div>
+              </div>
+            </div>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: T.t3, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '700', marginBottom: '8px' }}>Supporting Learning Agility Breakdown</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px' }}>
+              {LA_KEYS.map(({ k, l }) => (
+                <div key={k} style={{ background: T.bg3, borderRadius: '7px', padding: '10px', textAlign: 'center', border: `1px solid ${T.b1}` }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '7px', color: T.t3, textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700', lineHeight: '1.3' }}>{l}</div>
+                  <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.2rem', color: '#3B82F6', fontWeight: '700' }}>{S[k] || 0}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* 8 — FIVE FOUNDATIONAL MODULES */}
+        {[
+          { title: 'Personality at Work — OCEAN Framework', col: '#EC4899', dims: [['O', 'Openness to Experience', S.O], ['C', 'Conscientiousness', S.C], ['E', 'Extraversion', S.E], ['A', 'Agreeableness', S.A], ['ES', 'Emotional Stability (inv.)', S.ES]] },
+          { title: 'Cultural Intelligence (CQ)', col: '#06B6D4', dims: CQ_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+          { title: 'Organisational Citizenship Behaviour (OCB)', col: '#F97316', dims: OCB_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+          { title: 'Adaptive Thinking & Learning Agility', col: '#3B82F6', dims: LA_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+          { title: 'Integrity & Ethical Orientation', col: '#7C3AED', dims: EO_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+        ].map((mod, i) => card(
+          <div key={i}>
+            <SectionHead label={mod.title} T={T} color={mod.col} />
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${mod.dims.length},1fr)`, gap: '8px' }}>
+              {mod.dims.map(([k, l, v]) => (
+                <div key={k} style={{ background: T.bg3, borderRadius: '7px', padding: '10px', textAlign: 'center', border: `1px solid ${T.b1}` }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '7px', color: T.t3, textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700', lineHeight: '1.3' }}>{l}</div>
+                  <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.3rem', color: mod.col, fontWeight: '700' }}>{v || 0}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '7px', color: T.t3, marginTop: '3px' }}>{bd(v || 0)}</div>
+                </div>
+              ))}
             </div>
           </div>
-        </>
-      )}
+        ))}
 
-      {/* VALIDITY */}
-      <div style={{
-        background: validity.overall==='green' ? T.gnP : validity.overall==='amber' ? T.amP : T.rdP,
-        border:`1px solid ${validityColor(validity.overall,T)}35`,
-        borderRadius:'10px', padding:'20px', marginBottom:'14px',
-      }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'12px' }}>
-          <ValidityDot overall={validity.overall} T={T} />
-          <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0 }}>{validity.overallLabel}</div>
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px', marginBottom:'12px' }}>
-          {[
-            { n:`${validity.lAgree}/10`, l:'L-Scale' },
-            { n:`${Math.round((validity.saRatio||0)*100)}%`, l:'Strongly Agree' },
-            { n:`${Math.round((validity.extRatio||0)*100)}%`, l:'Extreme Resp.' },
-            { n:`${validity.conScore}/100`, l:'Consistency' },
-          ].map((v,i) => (
-            <div key={i} style={{ background:'rgba(255,255,255,0.35)', borderRadius:'6px', padding:'10px', textAlign:'center' }}>
-              <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:'700', fontSize:'1.1rem', color:T.t0 }}>{v.n}</div>
-              <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'8px', color:T.t2, marginTop:'2px', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:'600' }}>{v.l}</div>
+        {/* 9 — GAME PERFORMANCE */}
+        {gs && Object.keys(gs).length > 0 && card(
+          <>
+            <SectionHead label="Performance Challenge Results" T={T} />
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead><tr style={{ borderBottom: `1px solid ${T.b2}` }}>{['Challenge', 'Performance', 'Modifier', 'Dimensions'].map(h => <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: T.t3, fontFamily: "'IBM Plex Mono',monospace" }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {[
+                    { t: 'Values in Balance', perf: gs.seesaw?.label || '—', pts: `${(gs.seesaw?.bonus || 0) >= 0 ? '+' : ''}${gs.seesaw?.bonus || 0}`, dims: 'Ethical Reasoning', col: (gs.seesaw?.bonus || 0) >= 0 ? T.gn : T.rd },
+                    { t: 'Quick Decision Challenge', perf: gs.scenario1?.label || '—', pts: `${(gs.scenario1?.raw || 0) >= 0 ? '+' : ''}${gs.scenario1?.raw || 0}`, dims: 'People Agility, Transparency', col: (gs.scenario1?.raw || 0) >= 0 ? T.gn : T.rd },
+                    { t: 'Ethics Under Pressure', perf: gs.scenario2?.label || '—', pts: `${(gs.scenario2?.raw || 0) >= 0 ? '+' : ''}${gs.scenario2?.raw || 0}`, dims: 'Rule Compliance, Authentic Integrity', col: (gs.scenario2?.raw || 0) >= 0 ? T.gn : T.rd },
+                  ].map((g, i) => (
+                    <tr key={i} style={{ borderBottom: `1px solid ${T.b1}` }}>
+                      <td style={{ padding: '10px', fontSize: '12px', fontWeight: '700', color: T.t0 }}>{g.t}</td>
+                      <td style={{ padding: '10px' }}><Pill label={g.perf} color={g.col} style={{ fontSize: '9px' }} /></td>
+                      <td style={{ padding: '10px', fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', fontWeight: '800', color: g.col }}>{g.pts}</td>
+                      <td style={{ padding: '10px', fontSize: '11px', color: T.t2 }}>{g.dims}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          </>
+        )}
+
+        {/* 10 — INDUSTRY LENS */}
+        {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
+          <div style={{ background: T.bg3, borderRadius: '10px', padding: '16px 18px', border: `1px solid ${T.b2}`, marginBottom: '14px' }}>
+            <SectionHead label={`Industry Lens — ${candidate.industry}`} T={T} />
+            <div style={{ fontSize: '12px', color: T.t1, lineHeight: '1.65', marginBottom: '10px' }} dangerouslySetInnerHTML={{ __html: IND[candidate.industry].lens }} />
+            <div style={{ fontSize: '12px', color: T.t1, marginBottom: '4px' }}><strong>High Potential Benchmark:</strong> {IND[candidate.industry].hiPotential}</div>
+            <div style={{ fontSize: '12px', color: T.rd }}><strong>Industry Risk Note:</strong> {IND[candidate.industry].riskNote}</div>
+          </div>
+        )}
+
+        {/* 11 — INTEGRITY STATEMENT */}
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", background: T.bg2, border: `1px solid ${T.b2}`, borderRadius: '10px', padding: '16px 20px', marginBottom: '14px', fontSize: '10.5px', color: T.t2, lineHeight: '1.7' }}>
+          <strong style={{ color: T.t0 }}>Assessment Integrity Statement:</strong> CORE is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring, promotion, or succession decisions. All red-rated patterns and readiness verdicts require triangulation with a structured behavioural interview before final HR decision. Copyright: Carnelian Pvt Ltd. Licensed use only.
         </div>
-        {(validity.flags||[]).map((f,i) => (
-          <div key={i} style={{ fontSize:'11px', fontWeight:'600', marginBottom:'3px', lineHeight:'1.6', color:f.type==='green'?T.gn:f.type==='amber'?T.am:T.rd }}>
-            <strong>{f.key}:</strong> {f.text}
+      </div>
+
+      <TechnicalReportDownloadBtn candidate={candidate} T={T} />
+    </div>
+  );
+};
+
+
+// ─── TECHNICAL REPORT PDF EXPORTER (clean, logoed, print-authored) ───────
+const TechnicalReportDownloadBtn = ({ candidate, T }) => {
+  const rd       = candidate.report_data || {};
+  const S        = rd.scores    || {};
+  const validity = rd.validity  || {};
+  const profile  = rd.profile   || {};
+  const roles    = rd.roles     || [];
+  const patterns = rd.patterns  || [];
+  const CI       = rd.CI        || {};
+  const today    = new Date(candidate.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const docId    = candidate.doc_id;
+  const name     = candidate.name || rd.respondent?.name || 'Candidate';
+
+  const isJunior = (() => {
+    const exp = candidate.experience || rd.respondent?.exp || '';
+    const lvl = candidate.level || rd.respondent?.level || '';
+    return exp === '0–2 years' || exp === '3–5 years' || lvl.includes('Entry') || lvl.includes('Junior');
+  })();
+
+  const suppressed = validity.overall === 'red' && validity.extRatio > 0.85;
+
+  const hiringRole     = roles.find(r => !['Senior Leadership / Executive', 'Future Leadership Potential', 'People Management / Team Lead', 'Peer Coordination / Project Support'].includes(r.name));
+  const promotionRole  = roles.find(r => r.name === 'People Management / Team Lead' || r.name === 'Peer Coordination / Project Support');
+  const successionRole = roles.find(r => r.name === 'Senior Leadership / Executive' || r.name === 'Future Leadership Potential');
+  const verdictOf = (r) => {
+    if (!r) return ['N/A', PRT.faint, null];
+    const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
+    return [rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended', rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd, r.score];
+  };
+  const [hiringLbl, hiringCol, hiringScore]       = verdictOf(hiringRole);
+  const [promoLbl, promoCol, promoScore]          = verdictOf(promotionRole);
+  const [succLbl, succCol, succScore]             = verdictOf(successionRole);
+
+  // ── pages ──
+  const pages = [];
+
+  // Cover
+  pages.push(
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <CoreLogo h={38} />
+        <PrLabel c={PRT.faint}>CORE BY CARNELIAN · RESTRICTED</PrLabel>
+      </div>
+      <div style={{ marginTop: 54 }}>
+        <PrLabel style={{ marginBottom: 6 }}>TECHNICAL REPORT · HIRING · PROMOTION · SUCCESSION</PrLabel>
+        <PrHead size={26}>{name}</PrHead>
+      </div>
+      <div style={{ display: 'flex', gap: 10, margin: '34px 0' }}>
+        {[
+          ['Hiring Fit', hiringLbl, hiringCol, hiringScore],
+          ['Promotion', promoLbl, promoCol, promoScore],
+          ['Succession', succLbl, succCol, succScore],
+        ].map(([l, v, c, sc], i) => (
+          <div key={i} style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${c}`, padding: '14px' }}>
+            <PrLabel c={c}>{l.toUpperCase()}</PrLabel>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: PRT.ink, marginTop: 6 }}>{v}</div>
+            {sc != null && <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: c, fontWeight: 700, marginTop: 4 }}>{sc}/100</div>}
           </div>
         ))}
       </div>
-
-     {/* COMPOSITE INDICES */}
-      {card(
-        <>
-          <SectionHead label="Cross-Module Composite Indices" T={T} />
-          {validity.overall === 'red' && validity.extRatio > 0.85 ? (
-            <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'8px', padding:'16px', fontSize:'13px', color:T.rd, lineHeight:'1.6'}}>
-              <strong>⛔ Composite indices suppressed.</strong> The extreme response pattern detected renders all dimension and composite scores statistically meaningless. Displaying these scores would create a false impression of a valid profile.
-            </div>
-          ) : (
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:'700px' }}>
-              <thead>
-                <tr style={{ borderBottom:`2px solid ${T.b2}` }}>
-                  {['Index','Score','Profile','Risk Level','What it measures'].map(h => (
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'IBM Plex Mono',monospace" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPOSITE_KEYS.map(({ k, l, green, amber }) => {
-                  const val  = CI[k] || S[k] || 0;
-                  // FIX: Use the custom thresholds for color mapping, not the default 75/50
-                  const col  = val >= green ? T.gn : val >= amber ? T.am : T.rd;
-                  const bg   = val >= green ? T.gnP : val >= amber ? T.amP : T.rdP;
-                  const barColor = val >= green ? `linear-gradient(90deg, ${darkTheme.gn}, #4ade80)` : val >= amber ? `linear-gradient(90deg, ${darkTheme.am}, #fcd34d)` : `linear-gradient(90deg, ${darkTheme.rd}, #f87171)`;
-                  const rat  = val>=green ? 'LOW RISK' : val>=amber ? 'MODERATE' : 'HIGH RISK';
-                  const desc = {
-                    CII:'Primary screen for treasury, audit, procurement, and any fiduciary role.',
-                    LRS:'Composite predictor of senior leadership performance. Use for promotion and succession.',
-                    TVS:'Predicts team cohesion contribution.',
-                    ADS:'Suitability for change, reform, and innovation roles.',
-                    SES:'Effectiveness with clients, donors, regulators, and partners.',
-                    OPS:'Sustained delivery and operational reliability under pressure.',
-                    PMS:'People management and team lead suitability.',
-                  }[k] || '';
-                  return (
-                    <tr key={k} style={{ borderBottom:`1px solid ${T.b1}` }}>
-                      <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{l}</td>
-                      <td style={{ padding:'10px 10px' }}>
-                        <span style={{ display:'inline-block', padding:'3px 10px', borderRadius:'3px', fontSize:'11px', fontWeight:'700', fontFamily:"'IBM Plex Mono',monospace", background:bg, color:col, border:`1px solid ${col}40` }}>{val}/100</span>
-                      </td>
-                      <td style={{ padding:'10px 10px', width:'120px' }}>
-                        <div style={{ height:'6px', background:T.b1, borderRadius:'3px', overflow:'hidden' }}>
-                          <div style={{ width:`${val}%`, height:'100%', background:barColor }} />
-                        </div>
-                      </td>
-                      <td style={{ padding:'10px 10px', fontSize:'11px', fontWeight:'800', color:col }}>{rat}</td>
-                      <td style={{ padding:'10px 10px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>{desc}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          )}
-        </>
-      )}
-
-      {/* PATTERNS */}
-      {patterns.length > 0 && card(
-        <>
-          <SectionHead label="Cross-Dimensional Pattern Analysis" T={T} />
-          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-            {patterns.map((p,i) => {
-              const isRed=p.sev==='red', isAmber=p.sev==='amber';
-              const bg=isRed?T.rdP:isAmber?T.amP:T.gnP;
-              const bc=isRed?T.rd:isAmber?T.am:T.gn;
-              const icon=isRed?'🔴':isAmber?'🟡':'🟢';
-              return (
-                <div key={i} style={{ background:bg, border:`1px solid ${bc}35`, borderRadius:'10px', padding:'16px' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-                    <span>{icon}</span>
-                    <span style={{ fontSize:'12px', fontWeight:'800', color:bc, textTransform:'uppercase', letterSpacing:'0.06em' }}>{p.name}</span>
-                  </div>
-                  <div style={{ fontSize:'13px', fontWeight:'700', color:T.t0, marginBottom:'6px' }}>{p.headline}</div>
-                  <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.65', marginBottom:p.action?'10px':'0' }}>{p.detail}</div>
-                  {p.action && (
-                    <div style={{ fontSize:'12px', fontWeight:'700', color:T.t0, background:T.b0, padding:'10px 12px', borderRadius:'7px', borderLeft:`3px solid ${bc}` }}>
-                      <strong>HR Action:</strong> {p.action}
-                    </div>
-                  )}
-                  {p.probeQ && p.probeQ.length > 0 && (
-                    <div style={{ marginTop:'10px' }}>
-                      <div style={{ fontSize:'10px', fontWeight:'800', color:bc, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'6px' }}>Interview Probes:</div>
-                      {p.probeQ.map((q,qi) => (
-                        <div key={qi} style={{ fontSize:'12px', color:T.t1, padding:'4px 0', borderBottom:qi<p.probeQ.length-1?`1px solid ${T.b1}`:'none' }}>→ {q}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* ROLE SUITABILITY */}
-      {card(
-        <>
-          <SectionHead label="Role Suitability Matrix" T={T} />
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:'600px' }}>
-              <thead>
-                <tr style={{ borderBottom:`2px solid ${T.b2}` }}>
-                  {['Role Family','Score','Profile','Verdict','Guidance / Probes'].map(h => (
-<th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'IBM Plex Mono',monospace" }}>{h}</th>                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {roles.map((r,i) => {
-                  const rat=r.score>=r.g?'green':r.score>=r.a?'amber':'red';
-                  const col=rat==='green'?T.gn:rat==='amber'?T.am:T.rd;
-                  const lbl=rat==='green'?'✅ Suitable':rat==='amber'?'⚠️ Conditional':'🚫 Not Recommended';
-                  return (
-                    <tr key={i} style={{ borderBottom:`1px solid ${T.b1}` }}>
-                      <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{r.name}</td>
-                      <td style={{ padding:'10px 10px' }}><ScoreBadge score={r.score} T={T} /></td>
-                      <td style={{ padding:'10px 10px', width:'100px' }}>
-                        <div style={{ height:'6px', background:T.b1, borderRadius:'3px', overflow:'hidden' }}>
-                          <div style={{ width:`${r.score}%`, height:'100%', background:barGrad(r.score) }} />
-                        </div>
-                      </td>
-                      <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'800', color:col }}>{lbl}</td>
-                      <td style={{ padding:'10px 10px', fontSize:'11px', color:T.t2, fontWeight:'600' }}>
-                        {rat==='red' ? (
-                          <div>
-                            <div style={{ color:T.rd, marginBottom:'6px' }}>{r.redNote}</div>
-                            {r.probeQ && r.probeQ.map((q,qi) => (
-                              <div key={qi} style={{ padding:'3px 0', fontSize:'11px' }}>→ {q}</div>
-                            ))}
-                          </div>
-                        ) : rat==='amber' ? 'Structured onboarding + defined milestones.'
-                          : 'Suitable. Standard performance management applies.'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-    {/* OCEAN */}
-      {card(
-        <>
-          <SectionHead label="Module 1 — Personality at Work (OCEAN)" T={T} color="#EC4899" />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'8px' }}>
-            {OCEAN_KEYS.map(k => (
-              <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'12px', textAlign:'center', border:`1px solid ${T.b1}` }}>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'5px', fontWeight:'700' }}>{OCEAN_LABELS[k]}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:'#EC4899', fontWeight:'700' }}>{S[k]||0}</div>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* CQ */}
-      {card(
-        <>
-          <SectionHead label="Module 2 — Cultural Intelligence (CQ)" T={T} color="#06B6D4" />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px' }}>
-            {CQ_KEYS.map(({ k, l }) => (
-              <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'14px', textAlign:'center', border:`1px solid ${T.b1}` }}>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.6rem', color:'#06B6D4', fontWeight:'700' }}>{S[k]||0}</div>
-                <MiniBar score={S[k]||0} w="100%" h={5} />
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* OCB */}
-      {card(
-        <>
-          <SectionHead label="Module 3 — Organisational Citizenship Behaviour (OCB)" T={T} color="#F97316" />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'8px' }}>
-            {OCB_KEYS.map(({ k, l }) => (
-              <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'12px', textAlign:'center', border:`1px solid ${T.b1}` }}>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', color:'#F97316', fontWeight:'700' }}>{S[k]||0}</div>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* LEARNING AGILITY */}
-      {card(
-        <>
-          <SectionHead label="Module 4 — Adaptive Thinking & Learning Agility" T={T} color="#3B82F6" />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
-            {LA_KEYS.map(({ k, l }) => (
-              <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'14px', textAlign:'center', border:`1px solid ${T.b1}` }}>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:'#3B82F6', fontWeight:'700' }}>{S[k]||0}</div>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ETHICAL ORIENTATION */}
-      {card(
-        <>
-          <SectionHead label="Module 5 — Integrity & Ethical Orientation" T={T} color="#7C3AED" />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'8px' }}>
-            {EO_KEYS.map(({ k, l }) => (
-              <div key={k} style={{ background:T.bg3, borderRadius:'7px', padding:'14px', textAlign:'center', border:`1px solid ${T.b1}` }}>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:T.t3, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'5px', fontWeight:'700', lineHeight:'1.3' }}>{l}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', color:'#7C3AED', fontWeight:'700' }}>{S[k]||0}</div>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'7px', color:T.t3, marginTop:'3px', fontWeight:'600' }}>{bd(S[k]||0)}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* GAME PERFORMANCE */}
-      {gs && Object.keys(gs).length > 0 && card(
-        <>
-          <SectionHead label="Performance Challenge Results (Gamified Scores)" T={T} />
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom:`1px solid ${T.b2}` }}>
-                  {['Challenge','Type','Performance','Modifier','Dimensions Affected'].map(h => (
-<th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:'9px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.1em', color:T.t3, fontFamily:"'IBM Plex Mono',monospace" }}>{h}</th>                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { t:'Values in Balance (Seesaw)', type:'Ethical Values', perf:gs.seesaw?.label||'—', pts:`${(gs.seesaw?.bonus||0)>=0?'+':''}${gs.seesaw?.bonus||0} pts · Pos: ${gs.seesaw?.val||50}/100`, col:(gs.seesaw?.bonus||0)>=0?T.gn:T.rd, dims:'Ethical Reasoning (EO_ER)' },
-                  { t:'Quick Decision Challenge',    type:'Situational Judgment', perf:gs.scenario1?.label||'—', pts:`${(gs.scenario1?.raw||0)>=0?'+':''}${gs.scenario1?.raw||0} pts`, col:(gs.scenario1?.raw||0)>=0?T.gn:T.rd, dims:'People Agility (LA_PA), Transparency (EO_T)' },
-                  { t:'Ethics Under Pressure',       type:'Situational Judgment', perf:gs.scenario2?.label||'—', pts:`${(gs.scenario2?.raw||0)>=0?'+':''}${gs.scenario2?.raw||0} pts`, col:(gs.scenario2?.raw||0)>=0?T.gn:T.rd, dims:'Rule Compliance (EO_RC), Authentic Integrity (EO_AI)' },
-                ].map((g,i) => (
-                  <tr key={i} style={{ borderBottom:`1px solid ${T.b1}` }}>
-                    <td style={{ padding:'10px 10px', fontSize:'12px', fontWeight:'700', color:T.t0 }}>{g.t}</td>
-                    <td style={{ padding:'10px 10px', fontSize:'11px', color:T.t2 }}>{g.type}</td>
-                    <td style={{ padding:'10px 10px' }}><Pill label={g.perf} color={g.col} style={{ fontSize:'9px' }} /></td>
-                    <td style={{ padding:'10px 10px', fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:'800', color:g.col }}>{g.pts}</td>
-                    <td style={{ padding:'10px 10px', fontSize:'11px', color:T.t2 }}>{g.dims}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {/* PSYCHOMETRIC PROFILE */}
-      {card(
-        <>
-          <SectionHead label="Psychometric Profile" T={T} />
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.3rem', color:T.t0, fontWeight:'700', marginBottom:'8px' }}>{profile.name || candidate.profile_name}</div>
-          <div style={{ fontSize:'13px', color:T.t2, lineHeight:'1.7', fontWeight:'600', marginBottom:profile.devNote?'12px':'0' }}>{profile.desc}</div>
-          {profile.devNote && (
-            <div style={{ background:T.b0, borderLeft:`3px solid ${T.gold}`, padding:'12px 14px', borderRadius:'0 8px 8px 0', fontSize:'12px', color:T.t1, lineHeight:'1.65' }}>{profile.devNote}</div>
-          )}
-        </>
-      )}
-
-     {/* INDUSTRY LENS */}
-      {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
-        <div style={{ background:T.bg3, borderRadius:'10px', padding:'16px 18px', border:`1px solid ${T.b2}`, marginBottom:'14px' }}>
-          <SectionHead label={`Industry Lens — ${candidate.industry}`} T={T} />
-          <div style={{ fontSize:'12px', color:T.t1, lineHeight:'1.65', marginBottom:'10px' }} dangerouslySetInnerHTML={{ __html: IND[candidate.industry].lens }} />
-          <div style={{ fontSize:'12px', color:T.t1, marginBottom:'4px' }}><strong>High Potential Benchmark:</strong> {IND[candidate.industry].hiPotential}</div>
-          <div style={{ fontSize:'12px', color:T.rd }}><strong>Industry Risk Note:</strong> {IND[candidate.industry].riskNote}</div>
-        </div>
-      )}
+      <PrMeta rows={[
+        ['Candidate', name],
+        ['Role / Department', `${candidate.role || '—'}${candidate.department ? ` · ${candidate.department}` : ''}`],
+        ['Industry', candidate.industry || 'Unspecified'],
+        ['Experience', candidate.experience || 'Unspecified'],
+        ['Profile', profile.name || candidate.profile_name || '—'],
+        ['Overall Score', `${S.overall || candidate.overall_score}/100`],
+        ['Response Validity', validity.overallLabel || 'Unknown'],
+        ['Assessment Date', today],
+        ['Report ID', docId],
+        ['Classification', 'Restricted. HR leadership only'],
+      ]} />
+      <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, padding: '10px 14px', marginTop: 14, textAlign: 'center' }}>
+        <PrBody size={7.8} color={PRT.faint}>
+          <span style={{ fontWeight: 800, color: PRT.sub }}>CONFIDENTIAL.</span> Diagnostic input for hiring, promotion, and succession decisions. Not a standalone verdict — triangulate with a structured interview. Prepared by Carnelian Co.
+        </PrBody>
       </div>
-      <DownloadBtn elementId={`tech-report-${candidate.doc_id}`} filename={`${candidate.name}_Technical_Report.pdf`} T={T} />
+    </>
+  );
+
+  // Validity + Decision Snapshot
+  pages.push(
+    <>
+      <PrSectionHead num="1" title="Response Validity" sub="Whether the figures in this report can be trusted for a decision." />
+      <PrTable cols={['Check', 'Result']} widths={[220, undefined]} rows={[
+        ['Overall', validity.overallLabel || 'Unknown'],
+        ['L-Scale agreements', `${validity.lAgree ?? '—'}/10`],
+        ['Strongly-agree rate', `${Math.round((validity.saRatio || 0) * 100)}%`],
+        ['Extreme response rate', `${Math.round((validity.extRatio || 0) * 100)}%`],
+        ['Internal consistency', `${validity.conScore ?? '—'}/100`],
+      ]} style={{ marginBottom: 20 }} />
+      <PrSectionHead num="2" title="Decision Readiness Snapshot" sub="One verdict per decision type, drawn from the composite indices most relevant to each." />
+      {suppressed ? (
+        <PrNote title="SUPPRESSED" color={PRT.rd}>Extreme response pattern detected — all readiness verdicts are unreliable. A supervised retake is required before this candidate is used in any decision.</PrNote>
+      ) : (
+        <PrTable cols={['Decision', 'Best-Fit Role', 'Score', 'Verdict', 'Driven By']} widths={[110, 170, 55, 110, undefined]} rows={[
+          ['Hiring', hiringRole?.name || '—', hiringScore ?? '—', <span style={{ color: hiringCol, fontWeight: 700 }}>{hiringLbl}</span>, 'CII · OPS · SES'],
+          ['Promotion', promotionRole?.name || '—', promoScore ?? '—', <span style={{ color: promoCol, fontWeight: 700 }}>{promoLbl}</span>, 'LRS · PMS · TVS'],
+          ['Succession', successionRole?.name || '—', succScore ?? '—', <span style={{ color: succCol, fontWeight: 700 }}>{succLbl}</span>, 'LRS · ADS · CII'],
+        ]} />
+      )}
+    </>
+  );
+
+  // Composite Decision Indices
+  pages.push(
+    <>
+      <PrSectionHead num="3" title="Composite Decision Indices" sub="Your seven composite indices, grouped by which decision they inform." />
+      {Object.entries(DECISION_INDEX_GROUPS).map(([gk, g], gi) => (
+        <div key={gk} style={{ marginBottom: 16 }}>
+          <PrLabel c={g.color}>{g.label.toUpperCase()}</PrLabel>
+          <PrTable cols={['Index', 'Score', 'Band']} widths={[undefined, 70, 100]} style={{ marginTop: 8 }} rows={g.keys.map(k => {
+            const def = COMPOSITE_KEYS.find(c => c.k === k);
+            const val = CI[k] || S[k] || 0;
+            return [def?.l || k, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(val) }}>{val}</span>, <span style={{ color: prCol(val), fontWeight: 700 }}>{prBandName(val)}</span>];
+          })} />
+        </div>
+      ))}
+    </>
+  );
+
+  // Cross-Dimensional Patterns
+  pages.push(
+    <>
+      <PrSectionHead num="4" title="Cross-Dimensional Risk & Readiness Patterns" sub="Interaction effects between dimensions that a single score would miss." />
+      {patterns.length > 0 ? patterns.map((p, i) => (
+        <PrNote key={i} title={`${p.sev === 'red' ? 'RISK' : p.sev === 'amber' ? 'WATCH' : 'STRENGTH'} · ${p.name.toUpperCase()}`} color={p.sev === 'red' ? PRT.rd : p.sev === 'amber' ? PRT.am : PRT.gn} style={{ marginBottom: 10 }}>
+          <strong style={{ color: PRT.ink }}>{p.headline}</strong><br/>{p.detail}{p.action ? <><br/><strong style={{ color: PRT.ink }}>HR Action:</strong> {p.action}</> : ''}
+        </PrNote>
+      )) : <PrBody>No significant cross-dimensional patterns detected for this candidate.</PrBody>}
+    </>
+  );
+
+  // Role Suitability Matrix
+  pages.push(
+    <>
+      <PrSectionHead num="5" title="Role Suitability Matrix" sub="Composite index-based deployment guide across role families." />
+      <PrTable cols={['Role Family', 'Score', 'Verdict', 'Guidance']} widths={[170, 60, 130, undefined]} fontSize={8.6} rows={roles.map(r => {
+        const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
+        const col = rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd;
+        const lbl = rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended';
+        return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{lbl}</span>, rat === 'red' ? r.redNote : rat === 'amber' ? 'Structured onboarding + defined milestones.' : 'Standard performance management applies.'];
+      })} />
+    </>
+  );
+
+  // Succession Pipeline
+  pages.push(
+    <>
+      <PrSectionHead num="6" title="Succession Pipeline Indicators" sub="Leadership readiness signal and the learning-agility profile behind it." />
+      <PrStats items={[
+        [CI.LRS ?? '—', 'Leadership Readiness Score'],
+        [isJunior ? 'Future' : 'Senior', 'Pipeline Track'],
+        [S.LAavg ?? '—', 'Learning Agility (avg)'],
+        [S.EOavg ?? '—', 'Ethical Orientation (avg)'],
+      ]} />
+      <div style={{ height: 16 }} />
+      <PrBody style={{ marginBottom: 12 }}>
+        {isJunior
+          ? 'Early-career candidate — evaluated against a future-readiness threshold, not current-seniority benchmarks. Development investment now compounds fastest for this pipeline stage.'
+          : 'Evaluated directly against senior leadership and executive readiness benchmarks.'}
+      </PrBody>
+      <PrTable cols={['Learning Agility Sub-Dimension', 'Score']} widths={[undefined, 80]} rows={LA_KEYS.map(({ k, l }) => [l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(S[k] || 0) }}>{S[k] || 0}</span>])} />
+    </>
+  );
+
+  // Five modules (condensed, two per page pair)
+  const moduleSet = [
+    { title: 'Personality at Work (OCEAN)', rows: [['O', 'Openness', S.O], ['C', 'Conscientiousness', S.C], ['E', 'Extraversion', S.E], ['A', 'Agreeableness', S.A], ['ES', 'Emotional Stability', S.ES]] },
+    { title: 'Cultural Intelligence', rows: CQ_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Organisational Citizenship Behaviour', rows: OCB_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Learning Agility', rows: LA_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Integrity & Ethical Orientation', rows: EO_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+  ];
+  pages.push(
+    <>
+      <PrSectionHead num="7" title="Foundational Modules" sub="The five underlying modules behind the composite indices above." />
+      {moduleSet.slice(0, 3).map((m, i) => (
+        <div key={i} style={{ marginBottom: 16 }}>
+          <PrLabel>{m.title.toUpperCase()}</PrLabel>
+          <PrTable cols={['Dimension', 'Score', 'Band']} widths={[undefined, 70, 100]} style={{ marginTop: 8 }} rows={m.rows.map(([k, l, v]) => [l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(v || 0) }}>{v || 0}</span>, <span style={{ color: prCol(v || 0), fontWeight: 700 }}>{prBandName(v || 0)}</span>])} />
+        </div>
+      ))}
+    </>
+  );
+  pages.push(
+    <>
+      <PrSectionHead title="Foundational Modules (continued)" />
+      {moduleSet.slice(3).map((m, i) => (
+        <div key={i} style={{ marginBottom: 16 }}>
+          <PrLabel>{m.title.toUpperCase()}</PrLabel>
+          <PrTable cols={['Dimension', 'Score', 'Band']} widths={[undefined, 70, 100]} style={{ marginTop: 8 }} rows={m.rows.map(([k, l, v]) => [l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(v || 0) }}>{v || 0}</span>, <span style={{ color: prCol(v || 0), fontWeight: 700 }}>{prBandName(v || 0)}</span>])} />
+        </div>
+      ))}
+      {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
+        <PrNote title={`INDUSTRY LENS — ${candidate.industry.toUpperCase()}`} color={PRT.gold} style={{ marginTop: 8 }}>
+          {IND[candidate.industry].hiPotential}
+        </PrNote>
+      )}
+    </>
+  );
+
+  // Close / integrity statement
+  pages.push(
+    <>
+      <PrSectionHead title="Assessment Integrity Statement" />
+      <PrBody>
+        CORE is a self-report instrument with four built-in validity controls. Dimension scores and composite indices are diagnostic inputs — not standalone hiring, promotion, or succession decisions. All red-rated patterns and readiness verdicts require triangulation with a structured behavioural interview before any final HR decision. Composite index weightings are derived from published meta-analytic evidence.
+      </PrBody>
+      <div style={{ height: 16 }} />
+      <PrBody size={8} color={PRT.faint}>Copyright Carnelian Pvt Ltd. Licensed use only. hello@carnelianco.com</PrBody>
+    </>
+  );
+
+  const total = pages.length;
+  const pid = i => `techpr-pg-${docId}-${i}`;
+  const ids = pages.map((_, i) => pid(i));
+  const footerLeft = `Technical Report · ${name}`;
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      <PrStyles />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Technical_Report.pdf`} />
+      {/* Hidden authored pages, captured for the PDF only */}
+      <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
+        {pages.map((body, i) => (
+          <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Restricted: HR Leadership Only">{body}</PrPage>
+        ))}
+      </div>
     </div>
   );
 };

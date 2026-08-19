@@ -490,11 +490,12 @@ const Sidebar = ({ activeTab, setActiveTab, T, total }) => (
 // ═══════════════════════════════════════════════════════════════
 // REPORT TABS — TECHNICAL, ACTION PLAN, PLAYER REPORT, TEAM
 // ═══════════════════════════════════════════════════════════════
-
 /* ═══════════════════════════════════════════════════════════════════════
-   INTEGRATION — same drop-in spot as before, replaces the previous
-   TechnicalReport + TechnicalReportDownloadBtn in full. No changes needed
-   in CandidateModal.
+   INTEGRATION — replaces the previous TechnicalReport + TechnicalReport-
+   DownloadBtn in full, same drop-in spot. No CandidateModal changes needed
+   — the tab still renders <TechnicalReport candidate={candidate} T={T} />,
+   which now shows TWO download buttons at the bottom: Client Report and
+   Internal Report.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const DECISION_INDEX_GROUPS = {
@@ -515,7 +516,6 @@ const CORE_DIMS = [
   { k: 'EOavg',  l: 'Ethical Orientation' },
 ];
 
-// ── Plain-language meanings, no jargon — used in the "key" box on every section ──
 const INDEX_MEANING = {
   CII: 'How likely this person is to follow rules and act with honesty, even without close supervision.',
   LRS: 'How ready this person is to take on a leadership role, combining reliability, confidence, adaptability, and integrity.',
@@ -556,6 +556,16 @@ const verdictOfRole = (r, colFn) => {
   };
 };
 
+// ── Deterministic radar centering — avoids html2canvas's unreliable
+//    auto-margin handling for SVG by computing the exact left offset from
+//    known page dimensions, rather than relying on CSS centering. ──
+const radarOffsetStyle = (svgSize) => {
+  const svgW = svgSize + 300; // RadarChart's own pad is 150 each side
+  const contentW = PR_W - PR_PAD * 2;
+  const ml = Math.max(0, (contentW - svgW) / 2);
+  return { marginLeft: ml, width: svgW };
+};
+
 // ─── ON-SCREEN TECHNICAL REPORT (dashboard dark theme) ───────────────────
 const TechnicalReport = ({ candidate, T }) => {
   const rd       = candidate.report_data || {};
@@ -581,7 +591,6 @@ const TechnicalReport = ({ candidate, T }) => {
   return (
     <div>
       <div id={`tech-report-${candidate.doc_id}`} style={{ padding: '10px' }}>
-
         {card(
           <>
             <SectionHead label="CORE v3.0 · Technical Report · Restricted — HR Leadership Only" T={T} />
@@ -607,7 +616,6 @@ const TechnicalReport = ({ candidate, T }) => {
         {card(
           <>
             <SectionHead label="Decision Readiness Snapshot" T={T} />
-            <div style={{ fontSize: '11px', color: T.t3, marginBottom: '12px', lineHeight: '1.6' }}>Suitable = ready now. Conditional = ready with structured support. Not Recommended = needs development first.</div>
             {suppressed ? (
               <div style={{ background: T.rdP, border: `1px solid ${T.rd}40`, borderRadius: '8px', padding: '16px', fontSize: '13px', color: T.rd }}>⛔ Suppressed — extreme response pattern, supervised retake required.</div>
             ) : (
@@ -626,71 +634,26 @@ const TechnicalReport = ({ candidate, T }) => {
         {card(
           <>
             <SectionHead label="Nine-Dimension Profile" T={T} />
-            <div style={{ fontSize: '11px', color: T.t3, marginBottom: '10px' }}>Further out on any point = a stronger, more established behaviour in that area.</div>
-            <div style={{ width: '100%' }}>
-  <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={170} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
-</div>
-          </>
-        )}
-
-        {card(
-          <>
-            <SectionHead label="Composite Decision Indices" T={T} />
-            {Object.entries(DECISION_INDEX_GROUPS).map(([gk, g]) => (
-              <div key={gk} style={{ marginBottom: '14px' }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', fontWeight: '800', color: g.color, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{g.label}</div>
-                {g.keys.map(k => {
-                  const def = COMPOSITE_KEYS.find(c => c.k === k);
-                  const val = CI[k] || S[k] || 0;
-                  return (
-                    <div key={k} style={{ marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '150px', fontSize: '11px', color: T.t1, fontWeight: '600' }}>{def?.l || k}</div>
-                        <MiniBar score={val} w={130} h={6} />
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', fontWeight: '700', color: bCol(val, T) }}>{val}</span>
-                      </div>
-                      <div style={{ fontSize: '10px', color: T.t3, marginLeft: '160px', marginTop: '2px' }}>{INDEX_MEANING[k]}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </>
-        )}
-
-        {card(
-          <>
-            <SectionHead label="Role Suitability Matrix" T={T} />
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr style={{ borderBottom: `2px solid ${T.b2}` }}>{['Role Family', 'Score', 'Verdict'].map(h => <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: '9px', color: T.t3, fontFamily: "'IBM Plex Mono',monospace" }}>{h}</th>)}</tr></thead>
-                <tbody>
-                  {roles.map((r, i) => {
-                    const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
-                    const col = rat === 'green' ? T.gn : rat === 'amber' ? T.am : T.rd;
-                    return (
-                      <tr key={i} style={{ borderBottom: `1px solid ${T.b1}` }}>
-                        <td style={{ padding: '10px', fontSize: '12px', fontWeight: '700', color: T.t0 }}>{r.name}</td>
-                        <td style={{ padding: '10px' }}><ScoreBadge score={r.score} T={T} /></td>
-                        <td style={{ padding: '10px', fontSize: '11px', fontWeight: '800', color: col }}>{rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <RadarChart T={T} color={T.c} size={250} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
             </div>
           </>
         )}
       </div>
 
-      <TechnicalReportDownloadBtn candidate={candidate} T={T} />
+      <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+        <TechnicalReportClientDownloadBtn candidate={candidate} T={T} />
+        <TechnicalReportInternalDownloadBtn candidate={candidate} T={T} />
+      </div>
     </div>
   );
 };
 
 
-// ─── PDF EXPORTER — 5 pages, plain-language key on every section ─────────
-const TechnicalReportDownloadBtn = ({ candidate, T }) => {
+// ═══════════════════════════════════════════════════════════════════════
+// CLIENT REPORT — plain language, no raw codes, no unfiltered guidance
+// ═══════════════════════════════════════════════════════════════════════
+const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
   const rd       = candidate.report_data || {};
   const S        = rd.scores    || {};
   const validity = rd.validity  || {};
@@ -737,14 +700,13 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
     if (nextSteps.length === 0) nextSteps.push('No immediate blockers identified across hiring, promotion, or succession — proceed with standard structured-interview verification.');
   }
 
-  // ── PAGE 1 — Cover + Decision Snapshot + Radar ──
   const p1 = (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <CoreLogo h={34} />
         <PrLabel c={PRT.faint}>CORE BY CARNELIAN · RESTRICTED</PrLabel>
       </div>
-      <div style={{ marginTop: 30 }}>
+      <div style={{ marginTop: 28 }}>
         <PrLabel style={{ marginBottom: 5 }}>TECHNICAL REPORT · HIRING · PROMOTION · SUCCESSION</PrLabel>
         <PrHead size={22}>{name}</PrHead>
       </div>
@@ -768,20 +730,20 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
         ['Assessment Date', today],
         ['Report ID', docId],
       ]} />
-      <div style={{ marginTop: 14 }}>
+      <PrBody size={7.6} color={PRT.faint} style={{ marginTop: 6 }}>Overall Score is this candidate's average performance across every area measured, out of 100. Profile is a short descriptive label summarising their overall working style, generated from their combined scores.</PrBody>
+      <div style={{ marginTop: 12 }}>
         <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>NINE-DIMENSION PROFILE</PrLabel>
         <PrBody size={8} color={PRT.faint} style={{ marginBottom: 8 }}>Each point is one behavioural area. The further out a point sits, the stronger and more established that behaviour is for this candidate.</PrBody>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={200} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
+        <div style={radarOffsetStyle(150)}>
+          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={150} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
         </div>
       </div>
-      <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, padding: '8px 12px', marginTop: 12, textAlign: 'center' }}>
+      <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, padding: '8px 12px', marginTop: 10, textAlign: 'center' }}>
         <PrBody size={7.4} color={PRT.faint}><span style={{ fontWeight: 800, color: PRT.sub }}>CONFIDENTIAL.</span> Diagnostic input for hiring, promotion, and succession decisions. Not a standalone verdict — confirm with a structured interview.</PrBody>
       </div>
     </>
   );
 
-  // ── PAGE 2 — Validity + Composite Indices + Patterns ──
   const p2 = (
     <>
       <PrSectionHead num="1" title="Can These Results Be Trusted?" sub="A check on how honestly and consistently the candidate answered, before anything else is read." />
@@ -826,7 +788,6 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
     </>
   );
 
-  // ── PAGE 3 — Role Suitability + Succession Pipeline ──
   const p3 = (
     <>
       <PrSectionHead num="3" title="Which Roles Suit This Candidate" sub="How this candidate's combined scores map onto common role types." />
@@ -834,7 +795,7 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
       <PrTable cols={['Role Family', 'Score', 'Verdict', 'What This Means']} widths={[145, 50, 100, undefined]} fontSize={8.2} rows={roles.map(r => {
         const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
         const col = rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd;
-        return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended'}</span>, rat === 'red' ? r.redNote : rat === 'amber' ? 'Give this person a structured start with clear early milestones.' : 'No special support needed — standard onboarding applies.'];
+        return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended'}</span>, rat === 'red' ? 'Development needed before placement — see internal report for specifics.' : rat === 'amber' ? 'Give this person a structured start with clear early milestones.' : 'No special support needed — standard onboarding applies.'];
       })} style={{ marginBottom: 16 }} />
 
       <PrSectionHead num="4" title="Leadership & Succession Outlook" sub="How ready this person is for a leadership pipeline, and the specific learning behaviours behind that reading." />
@@ -842,15 +803,13 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
       <PrStats items={[[CI.LRS ?? '—', 'Leadership Readiness'], [isJunior ? 'Future' : 'Senior', 'Pipeline Track'], [S.LAavg ?? '—', 'Learning Agility'], [S.EOavg ?? '—', 'Ethical Orientation']]} />
       <div style={{ marginTop: 10 }}>
         <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>LEARNING AGILITY — THE ABILITY TO PICK UP NEW SKILLS AND ADAPT</PrLabel>
-        {[['Mental Agility', 'Thinking through unfamiliar problems'], ['People Agility', 'Learning from and adapting to different people'], ['Change Agility', 'Adjusting to shifting priorities'], ['Results Agility', 'Delivering results in new or unfamiliar situations']].map(([l, d], i) => {
-          const kMap = { 'Mental Agility': 'LA_MA', 'People Agility': 'LA_PA', 'Change Agility': 'LA_CA', 'Results Agility': 'LA_RA' };
-          return <div key={i} style={{ marginBottom: 5 }}><PrBarRow label={l} v={S[kMap[l]] || 0} labelW={150} h={8} /><div style={{ marginLeft: 158, marginTop: -3 }}><PrBody size={7.4} color={PRT.faint}>{d}</PrBody></div></div>;
-        })}
+        {[['Mental Agility', 'Thinking through unfamiliar problems', 'LA_MA'], ['People Agility', 'Learning from and adapting to different people', 'LA_PA'], ['Change Agility', 'Adjusting to shifting priorities', 'LA_CA'], ['Results Agility', 'Delivering results in new or unfamiliar situations', 'LA_RA']].map(([l, d, k], i) => (
+          <div key={i} style={{ marginBottom: 5 }}><PrBarRow label={l} v={S[k] || 0} labelW={150} h={8} /><div style={{ marginLeft: 158, marginTop: -3 }}><PrBody size={7.4} color={PRT.faint}>{d}</PrBody></div></div>
+        ))}
       </div>
     </>
   );
 
-  // ── PAGE 4 — Foundational Modules ──
   const moduleSet = [
     { title: 'Personality', rows: [['O', 'Openness'], ['C', 'Conscientiousness'], ['E', 'Extraversion'], ['A', 'Agreeableness'], ['ES', 'Emotional Stability']] },
     { title: 'Cultural Intelligence', rows: CQ_KEYS.map(({ k, l }) => [k, l]) },
@@ -866,9 +825,7 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
         {moduleSet.map((m, i) => (
           <div key={i} style={{ marginBottom: 14 }}>
             <PrLabel>{m.title.toUpperCase()}</PrLabel>
-            <div style={{ marginTop: 5 }}>
-              {m.rows.map(([k, l]) => <PrBarRow key={k} label={l} v={S[k] || 0} labelW={135} h={7.5} />)}
-            </div>
+            <div style={{ marginTop: 5 }}>{m.rows.map(([k, l]) => <PrBarRow key={k} label={l} v={S[k] || 0} labelW={135} h={7.5} />)}</div>
           </div>
         ))}
       </div>
@@ -878,7 +835,6 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
     </>
   );
 
-  // ── PAGE 5 — Overall Summary & Recommended Next Steps ──
   const p5 = (
     <>
       <PrSectionHead num="6" title="Overall Summary & Recommended Next Steps" sub="What all of the above means in practice, and what to do next." />
@@ -893,17 +849,154 @@ const TechnicalReportDownloadBtn = ({ candidate, T }) => {
 
   const bodies = [p1, p2, p3, p4, p5];
   const total = bodies.length;
-  const pid = i => `techpr-pg-${docId}-${i}`;
+  const pid = i => `techpr-client-${docId}-${i}`;
   const ids = bodies.map((_, i) => pid(i));
   const footerLeft = `Technical Report · ${name}`;
 
   return (
-    <div style={{ marginTop: 24 }}>
+    <div style={{ flex: 1 }}>
       <PrStyles />
-      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Technical_Report.pdf`} />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Client_Report.pdf`} />
       <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
         {bodies.map((body, i) => (
           <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Restricted: HR Leadership Only">{body}</PrPage>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// INTERNAL REPORT — full technical depth, raw index codes, unfiltered
+// guidance, all patterns, all 21 sub-dimensions, gamified challenge data.
+// Never share this version with a client or candidate.
+// ═══════════════════════════════════════════════════════════════════════
+const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
+  const rd       = candidate.report_data || {};
+  const S        = rd.scores    || {};
+  const validity = rd.validity  || {};
+  const profile  = rd.profile   || {};
+  const roles    = rd.roles     || [];
+  const patterns = rd.patterns  || [];
+  const CI       = rd.CI        || {};
+  const gs       = rd.gameSummary || {};
+  const today    = new Date(candidate.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const docId    = candidate.doc_id;
+  const name     = candidate.name || rd.respondent?.name || 'Candidate';
+
+  const p1 = (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <CoreLogo h={34} />
+        <PrLabel c={PRT.rd}>INTERNAL ONLY · CARNELIAN STAFF · DO NOT SHARE</PrLabel>
+      </div>
+      <div style={{ marginTop: 28 }}>
+        <PrLabel style={{ marginBottom: 5 }}>TECHNICAL REPORT — INTERNAL VERSION</PrLabel>
+        <PrHead size={22}>{name}</PrHead>
+      </div>
+      <PrMeta rows={[
+        ['Candidate', name],
+        ['Role / Department', `${candidate.role || '—'}${candidate.department ? ` · ${candidate.department}` : ''}`],
+        ['Industry', candidate.industry || 'Unspecified'],
+        ['Experience / Level', `${candidate.experience || '—'}${candidate.level ? ` · ${candidate.level}` : ''}`],
+        ['Profile', profile.name || candidate.profile_name || '—'],
+        ['Overall Score', `${S.overall || candidate.overall_score}/100`],
+        ['Validity', `${validity.overallLabel || 'Unknown'} (L=${validity.lAgree ?? '—'}/10, Ext=${Math.round((validity.extRatio || 0) * 100)}%, Con=${validity.conScore ?? '—'})`],
+        ['Assessment Date', today],
+        ['Report ID', docId],
+      ]} style={{ marginBottom: 16 }} />
+      <PrLabel c={PRT.gold} style={{ marginBottom: 8 }}>ALL SEVEN COMPOSITE INDICES</PrLabel>
+      <PrTable cols={['Code', 'Index', 'Score']} widths={[60, undefined, 60]} rows={COMPOSITE_KEYS.map(c => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: PRT.c }}>{c.k}</span>, c.l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(CI[c.k] || 0) }}>{CI[c.k] ?? 0}</span>])} />
+      <div style={{ marginTop: 14 }}>
+        <div style={radarOffsetStyle(140)}>
+          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={140} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
+        </div>
+      </div>
+    </>
+  );
+
+  const p2 = (
+    <>
+      <PrSectionHead num="1" title="Full Cross-Dimensional Pattern Analysis" sub="All flagged interaction effects, unfiltered, including HR action items." />
+      {patterns.length > 0 ? patterns.map((p, i) => (
+        <PrNote key={i} title={`${p.sev === 'red' ? 'RISK' : p.sev === 'amber' ? 'WATCH' : 'STRENGTH'} · ${p.name.toUpperCase()}`} color={p.sev === 'red' ? PRT.rd : p.sev === 'amber' ? PRT.am : PRT.gn} style={{ marginBottom: 8 }}>
+          <strong style={{ color: PRT.ink }}>{p.headline}</strong><br/>{p.detail}{p.action ? <><br/><strong style={{ color: PRT.ink }}>HR Action:</strong> {p.action}</> : ''}
+        </PrNote>
+      )) : <PrBody>No cross-dimensional patterns flagged.</PrBody>}
+    </>
+  );
+
+  const p3 = (
+    <>
+      <PrSectionHead num="2" title="Full Role Suitability Matrix" sub="Unfiltered guidance and interview probes for every role family." />
+      <PrTable cols={['Role', 'Score', 'Verdict', 'Guidance / Risk Note']} widths={[135, 50, 90, undefined]} fontSize={8} rows={roles.map(r => {
+        const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
+        const col = rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd;
+        return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat.toUpperCase()}</span>, rat === 'red' ? r.redNote : rat === 'amber' ? 'Structured onboarding + defined milestones.' : 'Standard performance management applies.'];
+      })} style={{ marginBottom: 14 }} />
+      <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>INTERVIEW PROBES (RED-RATED ROLES)</PrLabel>
+      {roles.filter(r => r.score < r.a && r.probeQ).map((r, i) => (
+        <div key={i} style={{ marginBottom: 8 }}>
+          <PrBody size={8.4} color={PRT.ink} style={{ fontWeight: 700, marginBottom: 3 }}>{r.name}</PrBody>
+          {(r.probeQ || []).map((q, qi) => <PrBody key={qi} size={8}>{qi + 1}. {q}</PrBody>)}
+        </div>
+      ))}
+    </>
+  );
+
+  const subDimSet = [
+    { title: 'Personality (OCEAN)', rows: [['O', 'Openness', S.O], ['C', 'Conscientiousness', S.C], ['E', 'Extraversion', S.E], ['A', 'Agreeableness', S.A], ['ES', 'Emotional Stability', S.ES]] },
+    { title: 'Cultural Intelligence', rows: CQ_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Organisational Citizenship Behaviour', rows: OCB_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Learning Agility', rows: LA_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Integrity & Ethics', rows: EO_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+  ];
+  const p4 = (
+    <>
+      <PrSectionHead num="3" title="All 21 Sub-Dimensions — Raw Codes & Scores" sub="Full underlying breakdown behind the composite indices." />
+      {subDimSet.map((m, i) => (
+        <div key={i} style={{ marginBottom: 10 }}>
+          <PrLabel c={PRT.gold}>{m.title.toUpperCase()}</PrLabel>
+          <PrTable cols={['Code', 'Label', 'Score', 'Band']} widths={[60, undefined, 55, 90]} fontSize={8} style={{ marginTop: 4 }} rows={m.rows.map(([k, l, v]) => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: PRT.c }}>{k}</span>, l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(v || 0) }}>{v || 0}</span>, <span style={{ color: prCol(v || 0), fontWeight: 700 }}>{prBandName(v || 0)}</span>])} />
+        </div>
+      ))}
+    </>
+  );
+
+  const p5 = (
+    <>
+      <PrSectionHead num="4" title="Gamified Challenge Results" sub="Raw performance and score modifiers from the in-assessment behavioural challenges." />
+      <PrTable cols={['Challenge', 'Performance', 'Modifier', 'Dimensions Affected']} widths={[150, 130, 70, undefined]} fontSize={8.2} rows={[
+        ['Values in Balance (Seesaw)', gs.seesaw?.label || '—', `${(gs.seesaw?.bonus || 0) >= 0 ? '+' : ''}${gs.seesaw?.bonus || 0}`, 'Ethical Reasoning (EO_ER)'],
+        ['Quick Decision Challenge', gs.scenario1?.label || '—', `${(gs.scenario1?.raw || 0) >= 0 ? '+' : ''}${gs.scenario1?.raw || 0}`, 'People Agility (LA_PA), Transparency (EO_T)'],
+        ['Ethics Under Pressure', gs.scenario2?.label || '—', `${(gs.scenario2?.raw || 0) >= 0 ? '+' : ''}${gs.scenario2?.raw || 0}`, 'Rule Compliance (EO_RC), Authentic Integrity (EO_AI)'],
+      ]} style={{ marginBottom: 16 }} />
+      {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
+        <>
+          <PrSectionHead title="Full Industry Lens" sub={candidate.industry} />
+          <PrBody size={8.4} style={{ marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: IND[candidate.industry].lens }} />
+          <PrBody size={8.4} style={{ marginBottom: 4 }}><strong style={{ color: PRT.ink }}>High Potential Benchmark:</strong> {IND[candidate.industry].hiPotential}</PrBody>
+          <PrBody size={8.4} color={PRT.rd}><strong style={{ color: PRT.rd }}>Risk Note:</strong> {IND[candidate.industry].riskNote}</PrBody>
+        </>
+      )}
+      <PrBody size={7.4} color={PRT.faint} style={{ marginTop: 14 }}>Internal working document — Carnelian Pvt Ltd. Not for external circulation to clients or candidates.</PrBody>
+    </>
+  );
+
+  const bodies = [p1, p2, p3, p4, p5];
+  const total = bodies.length;
+  const pid = i => `techpr-internal-${docId}-${i}`;
+  const ids = bodies.map((_, i) => pid(i));
+  const footerLeft = `Internal Technical Report · ${name}`;
+
+  return (
+    <div style={{ flex: 1 }}>
+      <PrStyles />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Internal_Report.pdf`} />
+      <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
+        {bodies.map((body, i) => (
+          <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Internal Only — Do Not Share">{body}</PrPage>
         ))}
       </div>
     </div>

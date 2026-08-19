@@ -627,9 +627,9 @@ const TechnicalReport = ({ candidate, T }) => {
           <>
             <SectionHead label="Nine-Dimension Profile" T={T} />
             <div style={{ fontSize: '11px', color: T.t3, marginBottom: '10px' }}>Further out on any point = a stronger, more established behaviour in that area.</div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RadarChart T={T} color={T.c} size={250} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
-            </div>
+            <div style={{ width: '100%' }}>
+  <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={170} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
+</div>
           </>
         )}
 
@@ -2874,14 +2874,18 @@ const exportPrintPDF = async (ids, filename, setBusy) => {
     await new Promise(r => setTimeout(r, 200));
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'px', format: [PR_W, PR_H], orientation: 'portrait', hotfixes: ['px_scaling'] });
+    const missing = [];
     for (let i = 0; i < ids.length; i++) {
       setBusy(`Rendering page ${i + 1} of ${ids.length}…`);
       const el = document.getElementById(ids[i]);
-      if (!el) continue;
+      if (!el) { missing.push(i + 1); continue; }
       const canvas = await window.html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', logging: false });
       const img = canvas.toDataURL('image/jpeg', 0.92);
       if (i > 0) pdf.addPage([PR_W, PR_H], 'portrait');
       pdf.addImage(img, 'JPEG', 0, 0, PR_W, PR_H);
+    }
+    if (missing.length) {
+      alert(`Warning: page(s) ${missing.join(', ')} of ${ids.length} could not be rendered and were left out of this PDF. Please try downloading again — if this repeats, tell your developer.`);
     }
     pdf.save(filename);
   } catch (e) {

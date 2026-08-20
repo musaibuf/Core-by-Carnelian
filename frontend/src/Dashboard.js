@@ -3009,7 +3009,7 @@ const exportPrintPDF = async (ids, filename, setBusy) => {
   }
 };
 
-const PrDownloadBtn = ({ ids, filename }) => {
+const PrDownloadBtn = ({ ids, filename, label }) => {
   const [busy, setBusy] = useState(null);
   return (
     <button disabled={!!busy} onClick={() => exportPrintPDF(ids, filename, setBusy)} style={{
@@ -3018,7 +3018,7 @@ const PrDownloadBtn = ({ ids, filename }) => {
       fontFamily: "'Public Sans',sans-serif", fontSize: 13, fontWeight: 800, display: 'flex',
       justifyContent: 'center', alignItems: 'center', gap: 8, width: '100%', maxWidth: PR_W, transition: 'all 0.2s',
     }}>
-      {busy || '⬇ Download Report as PDF (A4)'}
+      {busy || label || '⬇ Download Report as PDF (A4)'}
     </button>
   );
 };

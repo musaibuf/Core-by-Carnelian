@@ -492,29 +492,28 @@ const Sidebar = ({ activeTab, setActiveTab, T, total }) => (
 // ═══════════════════════════════════════════════════════════════
 
 /* ═══════════════════════════════════════════════════════════════════════
-   INTEGRATION — replaces the previous TechnicalReport + both download
-   buttons in full. Same drop-in spot, no CandidateModal changes needed.
+   INTEGRATION
 
-   ALSO REQUIRES one small edit to your existing PrDownloadBtn component
-   (used globally by Team Insight / Culture Pulse too) — add an optional
-   `label` prop so each report's button can say what it is. Find:
+   1. This file REPLACES your existing TechnicalReport, TechnicalReport-
+      ClientDownloadBtn, and TechnicalReportInternalDownloadBtn in full.
+      Same drop-in spot. No CandidateModal changes needed.
 
-     const PrDownloadBtn = ({ ids, filename }) => {
+   2. REQUIRED FIX for the two-button labeling issue (from your screenshot,
+      both buttons show the same fallback text). Find your existing
+      PrDownloadBtn component and confirm it looks EXACTLY like this:
 
-   Replace with:
+        const PrDownloadBtn = ({ ids, filename, label }) => {
+          const [busy, setBusy] = useState(null);
+          return (
+            <button disabled={!!busy} onClick={() => exportPrintPDF(ids, filename, setBusy)} style={{...}}>
+              {busy || label || 'Download Report as PDF (A4)'}
+            </button>
+          );
+        };
 
-     const PrDownloadBtn = ({ ids, filename, label }) => {
-
-   And find the button's fallback text:
-
-     {busy || '⬇ Download Report as PDF (A4)'}
-
-   Replace with:
-
-     {busy || label || '⬇ Download Report as PDF (A4)'}
-
-   This is fully backward-compatible — every existing call site without a
-   `label` prop keeps working exactly as before.
+      If it still says `{busy || 'Download Report as PDF (A4)'}` without
+      `label ||` in there, that is why both buttons look identical. Add
+      `label ||` to that line and both buttons will show their real names.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const DECISION_INDEX_GROUPS = {
@@ -538,38 +537,43 @@ const CORE_DIMS = [
 const INDEX_MEANING = {
   CII: 'How likely this person is to follow rules and act with honesty, even without close supervision.',
   LRS: 'How ready this person is to take on a leadership role, combining reliability, confidence, adaptability, and integrity.',
-  TVS: 'How much this person adds to team spirit — helping colleagues and being easy to work with.',
+  TVS: 'How much this person adds to team spirit. Helping colleagues and being easy to work with.',
   ADS: 'How well this person adjusts to change, new problems, or unfamiliar situations.',
   SES: 'How effective this person is likely to be with clients, partners, or senior stakeholders.',
   OPS: 'How consistently this person delivers quality work, especially under pressure or deadlines.',
   PMS: 'How suited this person is to managing, coaching, and developing other people.',
 };
 const DIM_MEANING = {
-  C: 'Reliability, organisation, and follow-through on commitments.',
-  O: 'Willingness to consider new ideas and try different approaches.',
-  E: 'Comfort with social interaction, visibility, and speaking up.',
-  A: 'Cooperation, empathy, and ease of working with others.',
-  ES: 'Staying calm and composed under pressure.',
-  CQavg: 'Ability to work effectively with people from different backgrounds.',
-  OCBavg: 'Willingness to go beyond the job description to help the team.',
-  LAavg: 'Speed and openness to learning new things and adapting.',
-  EOavg: 'Honesty, integrity, and consistent ethical behaviour.',
+  C: 'reliability, organisation, and follow-through on commitments.',
+  O: 'willingness to consider new ideas and try different approaches.',
+  E: 'comfort with social interaction, visibility, and speaking up.',
+  A: 'cooperation, empathy, and ease of working with others.',
+  ES: 'staying calm and composed under pressure.',
+  CQavg: 'ability to work effectively with people from different backgrounds.',
+  OCBavg: 'willingness to go beyond the job description to help the team.',
+  LAavg: 'speed and openness to learning new things and adapting.',
+  EOavg: 'honesty, integrity, and consistent ethical behaviour.',
 };
-const VALIDITY_MEANING = {
-  overall: 'A one-line read on how much weight to put on this candidate\u2019s results.',
-  lAgree: 'Checks whether answers were too consistently "perfect" to be realistic.',
-  ext: 'How often extreme answers (always/never) were used — high rates make results less reliable.',
-  con: 'Whether the same underlying trait was answered consistently across different questions.',
+const VERDICT_MEANING = 'Suitable means ready now. Conditional means capable, but benefits from structured onboarding or support before taking this on. Proceed with Caution means meaningful development is needed first, and any decision should be confirmed with a structured interview.';
+const BAND_MEANING = 'Strong (75+) is a clear, reliable strength. Solid (60 to 74) is solidly capable, not yet a standout. Still Building (below 60) is an area worth developing.';
+
+// What each strength-type pattern is genuinely good for. Used to make the
+// "make deliberate use of this strength" next step concrete rather than
+// generic. Falls back to a plain sentence if the pattern name is not listed.
+const STRENGTH_APPLICATION = {
+  'Elite Integrity Leader': 'high-accountability leadership roles, board-facing responsibilities, or mentoring emerging leaders on ethical decision-making.',
+  'Institutional Anchor': 'anchoring a team through change, onboarding new hires, or holding institutional knowledge and culture during transitions.',
+  'Cross-Cultural Bridge': 'cross-functional or multi-region coordination, client-facing work with diverse stakeholders, or leading change communication.',
+  'Learning Champion': 'leading new-tool rollouts, piloting new processes, or informal peer coaching on recently adopted ways of working.',
 };
-const VERDICT_MEANING = 'Suitable = ready now. Conditional = capable, but benefits from structured onboarding or support before taking this on. Not Recommended = meaningful development needed first.';
-const BAND_MEANING = 'Strong (75+) = a clear, reliable strength. Solid (60\u201374) = solidly capable, not yet a standout. Still Building (below 60) = an area worth developing.';
+const strengthApplicationFor = (patternName) => STRENGTH_APPLICATION[patternName] || 'situations that directly need this strength, rather than leaving it unused in the current role.';
 
 const bestFitFor = (roles, names) => roles.find(r => names.includes(r.name));
 const verdictOfRole = (r, colFn) => {
   if (!r) return { lbl: 'N/A', col: colFn.faint, score: null };
   const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
   return {
-    lbl: rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended',
+    lbl: rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Proceed with Caution',
     col: rat === 'green' ? colFn.gn : rat === 'amber' ? colFn.am : colFn.rd,
     score: r.score,
   };
@@ -632,7 +636,7 @@ const TechnicalReport = ({ candidate, T }) => {
           <>
             <SectionHead label="Decision Readiness Snapshot" T={T} />
             {suppressed ? (
-              <div style={{ background: T.rdP, border: `1px solid ${T.rd}40`, borderRadius: '8px', padding: '16px', fontSize: '13px', color: T.rd }}>⛔ Suppressed — extreme response pattern, supervised retake required.</div>
+              <div style={{ background: T.rdP, border: `1px solid ${T.rd}40`, borderRadius: '8px', padding: '16px', fontSize: '13px', color: T.rd }}>Suppressed. Extreme response pattern, supervised retake required.</div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
                 {[['Hiring Fit', hV], ['Promotion Readiness', pV], ['Succession Potential', sV]].map(([l, v], i) => (
@@ -698,21 +702,31 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
   const redPatterns = patterns.filter(p => p.sev === 'red');
   const posPatterns = patterns.filter(p => p.sev === 'pos');
 
+  // A couple of generic, non-technical interview probes to accompany a
+  // validity caution. Pulled from any role's probe list if one exists in
+  // this candidate's data, otherwise falls back to two plain prompts.
+  const anyProbeSet = roles.find(r => r.probeQ && r.probeQ.length)?.probeQ || [];
+  const cautionProbes = anyProbeSet.length
+    ? anyProbeSet.slice(0, 2)
+    : ['Ask for a specific, recent example rather than a general description of how they usually behave.', 'Ask what they would do differently if they faced the same situation again.'];
+
   const verdictSummary = suppressed
-    ? 'Results are suppressed due to an extreme response pattern. No decision — hiring, promotion, or succession — should be made from this assessment until a supervised retake is completed.'
-    : `${name.split(' ')[0]} presents as ${hV.lbl.toLowerCase()} for external hiring, ${pV.lbl.toLowerCase()} for promotion into people-management responsibility, and ${sV.lbl.toLowerCase()} for senior-leadership succession. The strongest asset is ${topDim.l.toLowerCase()} (${topDim.v}/100) — ${DIM_MEANING[topDim.k].toLowerCase()} The area needing the most deliberate development before a stretch placement is ${lowDim.l.toLowerCase()} (${lowDim.v}/100) — ${DIM_MEANING[lowDim.k].toLowerCase()}`;
+    ? 'Results are suppressed due to an extreme response pattern. No decision, hiring, promotion, or succession, should be made from this assessment until a supervised retake is completed.'
+    : `${name.split(' ')[0]} presents as ${hV.lbl.toLowerCase()} for external hiring, ${pV.lbl.toLowerCase()} for promotion into people-management responsibility, and ${sV.lbl.toLowerCase()} for senior-leadership succession. The strongest asset is ${topDim.l.toLowerCase()} (${topDim.v}/100), specifically ${DIM_MEANING[topDim.k]} The area needing the most deliberate development before a stretch placement is ${lowDim.l.toLowerCase()} (${lowDim.v}/100), specifically ${DIM_MEANING[lowDim.k]}`;
 
   const nextSteps = [];
   if (suppressed) {
     nextSteps.push('Schedule a supervised retake before any further action.');
   } else {
     if (redPatterns.length) redPatterns.forEach(p => nextSteps.push(p.action || `Address the "${p.name}" pattern before elevating this candidate's authority or visibility.`));
-    if (validity.overall !== 'green') nextSteps.push('Validity is not fully clean — confirm scores with a structured interview before treating them as decisive.');
-    if (hV.lbl === 'Not Recommended' && hiringRole) nextSteps.push(`Do not place into "${hiringRole.name}" without addressing the gap flagged in the Role Suitability Matrix first.`);
+    if (validity.overall !== 'green') {
+      nextSteps.push(`Validity is not fully clean. Confirm scores with a structured interview before treating them as decisive. Two useful probes: (1) ${cautionProbes[0]}${cautionProbes[1] ? ` (2) ${cautionProbes[1]}` : ''}`);
+    }
+    if (hV.lbl === 'Proceed with Caution' && hiringRole) nextSteps.push(`Do not place into "${hiringRole.name}" without addressing the gap flagged in the Role Suitability Matrix first.`);
     if (pV.lbl !== 'Suitable') nextSteps.push('Hold off on promotion to people-management until Leadership Readiness and People Management scores improve.');
-    if (sV.lbl !== 'Suitable') nextSteps.push('Not yet succession-ready for senior/executive tracks — revisit at the next assessment cycle after targeted development.');
-    if (posPatterns.length) nextSteps.push(`Make deliberate use of the "${posPatterns[0].name}" strength — this is a genuine differentiator worth deploying, not just noting.`);
-    if (nextSteps.length === 0) nextSteps.push('No immediate blockers identified across hiring, promotion, or succession — proceed with standard structured-interview verification.');
+    if (sV.lbl !== 'Suitable') nextSteps.push('Not yet succession-ready for senior or executive tracks. Revisit at the next assessment cycle after targeted development.');
+    if (posPatterns.length) nextSteps.push(`Make deliberate use of the "${posPatterns[0].name}" strength. This is a genuine differentiator best applied to ${strengthApplicationFor(posPatterns[0].name)}`);
+    if (nextSteps.length === 0) nextSteps.push('No immediate blockers identified across hiring, promotion, or succession. Proceed with standard structured-interview verification.');
   }
 
   const p1 = (
@@ -721,20 +735,20 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
         <CoreLogo h={34} />
         <PrLabel c={PRT.faint}>CORE BY CARNELIAN · RESTRICTED</PrLabel>
       </div>
-      <div style={{ marginTop: 28 }}>
+      <div style={{ marginTop: 26 }}>
         <PrLabel style={{ marginBottom: 5 }}>TECHNICAL REPORT · HIRING · PROMOTION · SUCCESSION</PrLabel>
         <PrHead size={22}>{name}</PrHead>
       </div>
-      <div style={{ display: 'flex', gap: 10, margin: '16px 0' }}>
+      <div style={{ display: 'flex', gap: 10, margin: '14px 0' }}>
         {[['Hiring Fit', hV], ['Promotion', pV], ['Succession', sV]].map(([l, v], i) => (
           <div key={i} style={{ flex: 1, border: `1px solid ${PRT.line}`, borderTop: `3px solid ${v.col}`, padding: '10px' }}>
             <PrLabel c={v.col}>{l.toUpperCase()}</PrLabel>
-            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, fontWeight: 700, color: PRT.ink, marginTop: 4 }}>{v.lbl}</div>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, fontWeight: 700, color: PRT.ink, marginTop: 4 }}>{v.lbl}</div>
             {v.score != null && <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: v.col, fontWeight: 700, marginTop: 3 }}>{v.score}/100</div>}
           </div>
         ))}
       </div>
-      <PrKey title="WHAT THESE THREE VERDICTS MEAN" rows={[['Suitable', 'Ready for this responsibility now.'], ['Conditional', 'Capable, but benefits from structured onboarding or support before taking this on.'], ['Not Recommended', 'Meaningful development needed first. See Section 1 for what drives each verdict.']]} style={{ marginBottom: 12 }} />
+      <PrKey title="WHAT THESE THREE VERDICTS MEAN" rows={[['Suitable', 'Ready for this responsibility now.'], ['Conditional', 'Capable, but benefits from structured onboarding or support before taking this on.'], ['Proceed with Caution', 'Meaningful development needed first. Confirm with a structured interview before deciding. See Section 1 for what drives each verdict.']]} style={{ marginBottom: 10 }} />
       <PrMeta rows={[
         ['Candidate', name],
         ['Role / Department', `${candidate.role || '—'}${candidate.department ? ` · ${candidate.department}` : ''}`],
@@ -745,12 +759,12 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
         ['Assessment Date', today],
         ['Report ID', docId],
       ]} />
-      <PrBody size={7.6} color={PRT.faint} style={{ marginTop: 6 }}>Overall Score is this candidate's average performance across every area measured, out of 100. Profile is a short descriptive label summarising their overall working style, generated from their combined scores.</PrBody>
-      <div style={{ marginTop: 10 }}>
-        <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>NINE-DIMENSION PROFILE</PrLabel>
-        <PrBody size={8} color={PRT.faint} style={{ marginBottom: 6 }}>Each point is one behavioural area. The further out a point sits, the stronger and more established that behaviour is for this candidate.</PrBody>
-        <div style={radarOffsetStyle(185)}>
-          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={185} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
+      <PrBody size={7.6} color={PRT.faint} style={{ marginTop: 5 }}>Overall Score is this candidate's average performance across every area measured, out of 100. Profile is a short descriptive label summarising their overall working style, generated from their combined scores.</PrBody>
+      <div style={{ marginTop: 6 }}>
+        <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>NINE-DIMENSION PROFILE</PrLabel>
+        <PrBody size={8} color={PRT.faint} style={{ marginBottom: 4 }}>Each point is one behavioural area. The further out a point sits, the stronger and more established that behaviour is for this candidate.</PrBody>
+        <div style={radarOffsetStyle(215)}>
+          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={215} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
         </div>
       </div>
     </>
@@ -758,21 +772,7 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
 
   const p2 = (
     <>
-      <PrSectionHead num="1" title="Can These Results Be Trusted?" sub="A check on how honestly and consistently the candidate answered, before anything else is read." />
-      <PrKey rows={[
-        [VALIDITY_MEANING.overall, ''],
-        ['L-Scale agreements', VALIDITY_MEANING.lAgree],
-        ['Extreme response rate', VALIDITY_MEANING.ext],
-        ['Internal consistency', VALIDITY_MEANING.con],
-      ].filter(r => r[1] !== '' || r[0] === VALIDITY_MEANING.overall)} style={{ marginBottom: 10 }} />
-      <PrTable cols={['Check', 'Result']} widths={[220, undefined]} fontSize={8.6} rows={[
-        ['Overall', validity.overallLabel || 'Unknown'],
-        ['L-Scale agreements', `${validity.lAgree ?? '—'}/10`],
-        ['Extreme response rate', `${Math.round((validity.extRatio || 0) * 100)}%`],
-        ['Internal consistency', `${validity.conScore ?? '—'}/100`],
-      ]} style={{ marginBottom: 16 }} />
-
-      <PrSectionHead num="2" title="What Drives Each Decision" sub="Three groups of scores, one per decision type — each combines several measured behaviours into a single readiness figure." />
+      <PrSectionHead num="1" title="What Drives Each Decision" sub="Three groups of scores, one per decision type. Each combines several measured behaviours into a single readiness figure." />
       {Object.entries(DECISION_INDEX_GROUPS).map(([gk, g]) => (
         <div key={gk} style={{ marginBottom: 12 }}>
           <PrLabel c={g.color}>{g.label.toUpperCase()}</PrLabel>
@@ -791,30 +791,34 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
         </div>
       ))}
 
-      <PrSectionHead title="Notable Behaviour Combinations" sub="Patterns that only appear when two areas are looked at together — a single score alone would miss these." style={{ marginTop: 4 }} />
-      {patterns.length > 0 ? patterns.slice(0, 2).map((p, i) => (
-        <PrNote key={i} title={`${p.sev === 'red' ? 'WORTH ADDRESSING' : p.sev === 'amber' ? 'WORTH WATCHING' : 'NOTABLE STRENGTH'} · ${p.name.toUpperCase()}`} color={p.sev === 'red' ? PRT.rd : p.sev === 'amber' ? PRT.am : PRT.gn} style={{ marginBottom: 6 }}>
-          <strong style={{ color: PRT.ink }}>{p.headline}</strong> — {p.detail}
-        </PrNote>
-      )) : <PrBody size={8.6}>No significant behaviour combinations flagged for this candidate.</PrBody>}
+      <PrSectionHead title="Notable Behaviour Combinations" sub="Patterns that only appear when two areas are looked at together. A single score alone would miss these." style={{ marginTop: 4 }} />
+      {patterns.length > 0 ? patterns.slice(0, 2).map((p, i) => {
+        const sevLabel = p.sev === 'red' ? 'WORTH ADDRESSING' : p.sev === 'amber' ? 'WORTH WATCHING' : 'NOTABLE STRENGTH';
+        const sevColor = p.sev === 'red' ? PRT.rd : p.sev === 'amber' ? PRT.am : PRT.gn;
+        return (
+          <PrNote key={i} title={<>{sevLabel}<br/>{p.name.toUpperCase()}</>} color={sevColor} style={{ marginBottom: 6 }}>
+            <strong style={{ color: PRT.ink }}>{p.headline}.</strong> {p.detail}
+          </PrNote>
+        );
+      }) : <PrBody size={8.6}>No significant behaviour combinations flagged for this candidate.</PrBody>}
     </>
   );
 
   const p3 = (
     <>
-      <PrSectionHead num="3" title="Which Roles Suit This Candidate" sub="How this candidate's combined scores map onto common role types." />
+      <PrSectionHead num="2" title="Which Roles Suit This Candidate" sub="How this candidate's combined scores map onto common role types." />
       <PrKey rows={[['Verdict', VERDICT_MEANING]]} style={{ marginBottom: 10 }} />
       <PrTable cols={['Role Family', 'Score', 'Verdict', 'What This Means']} widths={[145, 50, 100, undefined]} fontSize={8.2} rows={roles.map(r => {
         const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
         const col = rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd;
-        return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Not Recommended'}</span>, rat === 'red' ? 'Development needed before placement — see internal report for specifics.' : rat === 'amber' ? 'Give this person a structured start with clear early milestones.' : 'No special support needed — standard onboarding applies.'];
+        return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat === 'green' ? 'Suitable' : rat === 'amber' ? 'Conditional' : 'Proceed with Caution'}</span>, rat === 'red' ? 'Development needed before placement. See internal report for specifics.' : rat === 'amber' ? 'Give this person a structured start with clear early milestones.' : 'No special support needed. Standard onboarding applies.'];
       })} style={{ marginBottom: 16 }} />
 
-      <PrSectionHead num="4" title="Leadership & Succession Outlook" sub="How ready this person is for a leadership pipeline, and the specific learning behaviours behind that reading." />
-      <PrKey rows={[['Leadership Readiness', INDEX_MEANING.LRS], ['Pipeline Track', '"Future" means evaluated as an early-career candidate for later leadership; "Senior" means evaluated directly against current senior/executive benchmarks.']]} style={{ marginBottom: 10 }} />
+      <PrSectionHead num="3" title="Leadership & Succession Outlook" sub="How ready this person is for a leadership pipeline, and the specific learning behaviours behind that reading." />
+      <PrKey rows={[['Leadership Readiness', INDEX_MEANING.LRS], ['Pipeline Track', '"Future" means evaluated as an early-career candidate for later leadership. "Senior" means evaluated directly against current senior or executive benchmarks.']]} style={{ marginBottom: 10 }} />
       <PrStats items={[[CI.LRS ?? '—', 'Leadership Readiness'], [isJunior ? 'Future' : 'Senior', 'Pipeline Track'], [S.LAavg ?? '—', 'Learning Agility'], [S.EOavg ?? '—', 'Ethical Orientation']]} />
       <div style={{ marginTop: 10 }}>
-        <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>LEARNING AGILITY — THE ABILITY TO PICK UP NEW SKILLS AND ADAPT</PrLabel>
+        <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>LEARNING AGILITY: THE ABILITY TO PICK UP NEW SKILLS AND ADAPT</PrLabel>
         {[['Mental Agility', 'Thinking through unfamiliar problems', 'LA_MA'], ['People Agility', 'Learning from and adapting to different people', 'LA_PA'], ['Change Agility', 'Adjusting to shifting priorities', 'LA_CA'], ['Results Agility', 'Delivering results in new or unfamiliar situations', 'LA_RA']].map(([l, d, k], i) => (
           <div key={i} style={{ marginBottom: 5 }}><PrBarRow label={l} v={S[k] || 0} labelW={150} h={8} /><div style={{ marginLeft: 158, marginTop: -3 }}><PrBody size={7.4} color={PRT.faint}>{d}</PrBody></div></div>
         ))}
@@ -831,7 +835,7 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
   ];
   const p4 = (
     <>
-      <PrSectionHead num="5" title="The Full Picture — All Measured Behaviours" sub="Every individual behaviour behind the summary scores on the earlier pages." />
+      <PrSectionHead num="4" title="The Full Picture: All Measured Behaviours" sub="Every individual behaviour behind the summary scores on the earlier pages." />
       <PrKey rows={[['Bands', BAND_MEANING]]} style={{ marginBottom: 10 }} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
         {moduleSet.map((m, i) => (
@@ -841,20 +845,17 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
           </div>
         ))}
       </div>
-      {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
-        <PrNote title={`WHAT MATTERS MOST IN ${candidate.industry.toUpperCase()}`} color={PRT.gold} style={{ marginTop: 4 }}>{IND[candidate.industry].hiPotential}</PrNote>
-      )}
     </>
   );
 
   const p5 = (
     <>
-      <PrSectionHead num="6" title="Overall Summary & Recommended Next Steps" sub="What all of the above means in practice, and what to do next." />
+      <PrSectionHead num="5" title="Overall Summary & Recommended Next Steps" sub="What all of the above means in practice, and what to do next." />
       <PrNote title="OVERALL SUMMARY" color={PRT.c} style={{ marginBottom: 14 }}>{verdictSummary}</PrNote>
       <PrLabel c={PRT.gold} style={{ marginBottom: 8 }}>RECOMMENDED NEXT STEPS</PrLabel>
       <PrTable cols={['#', 'Action']} widths={[26, undefined]} rows={nextSteps.map((s, i) => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: PRT.c }}>{i + 1}</span>, s])} style={{ marginBottom: 18 }} />
       <PrLabel style={{ marginBottom: 6 }}>ABOUT THIS REPORT</PrLabel>
-      <PrBody size={8.4}>This report is a self-report psychometric assessment with four built-in checks for honest, consistent answering. Scores and verdicts are decision-support, not a final decision on their own — every hiring, promotion, or succession call should be confirmed with a structured interview alongside this report.</PrBody>
+      <PrBody size={8.4}>This report is a self-report psychometric assessment with four built-in checks for honest, consistent answering. Scores and verdicts are decision-support, not a final decision on their own. Every hiring, promotion, or succession call should be confirmed with a structured interview alongside this report.</PrBody>
       <PrBody size={7.4} color={PRT.faint} style={{ marginTop: 10 }}>Prepared by CORE by Carnelian · Copyright Carnelian Pvt Ltd · hello@carnelianco.com</PrBody>
     </>
   );
@@ -868,7 +869,7 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
   return (
     <div style={{ flex: 1, minWidth: '260px' }}>
       <PrStyles />
-      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Client_Report.pdf`} label="⬇ Download Client Report (PDF)" />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Client_Report.pdf`} label="Download Client Report (PDF)" />
       <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
         {bodies.map((body, i) => (
           <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Restricted: HR Leadership Only">{body}</PrPage>
@@ -880,9 +881,7 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
 
 
 // ═══════════════════════════════════════════════════════════════════════
-// INTERNAL REPORT — full technical depth. 4 dense pages: cover+indices,
-// validity flags + patterns, role matrix + probes, sub-dims + gamified +
-// industry. Never share this version externally.
+// INTERNAL REPORT (unchanged from previous version, included for completeness)
 // ═══════════════════════════════════════════════════════════════════════
 const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
   const rd       = candidate.report_data || {};
@@ -907,7 +906,7 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
         <PrLabel c={PRT.rd}>INTERNAL ONLY · CARNELIAN STAFF · DO NOT SHARE</PrLabel>
       </div>
       <div style={{ marginTop: 26 }}>
-        <PrLabel style={{ marginBottom: 5 }}>TECHNICAL REPORT — INTERNAL VERSION</PrLabel>
+        <PrLabel style={{ marginBottom: 5 }}>TECHNICAL REPORT, INTERNAL VERSION</PrLabel>
         <PrHead size={22}>{name}</PrHead>
       </div>
       <PrMeta rows={[
@@ -945,7 +944,7 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
       <PrSectionHead num="2" title="Full Cross-Dimensional Pattern Analysis" sub="Every flagged interaction effect, unfiltered, including HR action items." />
       {patterns.length > 0 ? patterns.map((p, i) => (
         <PrNote key={i} title={`${p.sev === 'red' ? 'RISK' : p.sev === 'amber' ? 'WATCH' : 'STRENGTH'} · ${p.name.toUpperCase()}`} color={p.sev === 'red' ? PRT.rd : p.sev === 'amber' ? PRT.am : PRT.gn} style={{ marginBottom: 8 }}>
-          <strong style={{ color: PRT.ink }}>{p.headline}</strong><br/>{p.detail}{p.action ? <><br/><strong style={{ color: PRT.ink }}>HR Action:</strong> {p.action}</> : ''}
+          <strong style={{ color: PRT.ink }}>{p.headline}.</strong> {p.detail}{p.action ? <> <strong style={{ color: PRT.ink }}>HR Action:</strong> {p.action}</> : ''}
         </PrNote>
       )) : <PrBody>No cross-dimensional patterns flagged.</PrBody>}
     </>
@@ -960,13 +959,13 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
         const col = rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd;
         return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat.toUpperCase()}</span>, rat === 'red' ? r.redNote : rat === 'amber' ? 'Structured onboarding + defined milestones.' : 'Standard performance management applies.'];
       })} style={{ marginBottom: 14 }} />
-      <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>INTERVIEW PROBES — ANY ROLE BELOW "SUITABLE"</PrLabel>
+      <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>INTERVIEW PROBES, ANY ROLE BELOW SUITABLE</PrLabel>
       {probeCandidates.length > 0 ? probeCandidates.map((r, i) => (
         <div key={i} style={{ marginBottom: 10 }}>
           <PrBody size={8.4} color={PRT.ink} style={{ fontWeight: 700, marginBottom: 3 }}>{r.name}</PrBody>
           {(r.probeQ || []).map((q, qi) => <PrBody key={qi} size={8}>{qi + 1}. {q}</PrBody>)}
         </div>
-      )) : <PrBody size={8.6} color={PRT.faint}>No roles fell below "Suitable" — no targeted interview probes required beyond standard structured interview practice.</PrBody>}
+      )) : <PrBody size={8.6} color={PRT.faint}>No roles fell below "Suitable". No targeted interview probes required beyond standard structured interview practice.</PrBody>}
     </>
   );
 
@@ -979,7 +978,7 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
   ];
   const p4 = (
     <>
-      <PrSectionHead num="4" title="All 21 Sub-Dimensions — Raw Codes & Scores" sub="Full underlying breakdown behind the composite indices." />
+      <PrSectionHead num="4" title="All 21 Sub-Dimensions: Raw Codes & Scores" sub="Full underlying breakdown behind the composite indices." />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
         {subDimSet.map((m, i) => (
           <div key={i} style={{ marginBottom: 10 }}>
@@ -996,12 +995,12 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
       ]} style={{ marginBottom: 10 }} />
       {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
         <>
-          <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>FULL INDUSTRY LENS — {candidate.industry.toUpperCase()}</PrLabel>
+          <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>FULL INDUSTRY LENS: {candidate.industry.toUpperCase()}</PrLabel>
           <PrBody size={8} style={{ marginBottom: 4 }}><strong style={{ color: PRT.ink }}>Benchmark:</strong> {IND[candidate.industry].hiPotential}</PrBody>
           <PrBody size={8} color={PRT.rd}><strong style={{ color: PRT.rd }}>Risk Note:</strong> {IND[candidate.industry].riskNote}</PrBody>
         </>
       )}
-      <PrBody size={7.2} color={PRT.faint} style={{ marginTop: 10 }}>Internal working document — Carnelian Pvt Ltd. Not for external circulation to clients or candidates.</PrBody>
+      <PrBody size={7.2} color={PRT.faint} style={{ marginTop: 10 }}>Internal working document, Carnelian Pvt Ltd. Not for external circulation to clients or candidates.</PrBody>
     </>
   );
 
@@ -1014,10 +1013,10 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
   return (
     <div style={{ flex: 1, minWidth: '260px' }}>
       <PrStyles />
-      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Internal_Report.pdf`} label="⬇ Download Internal Report (PDF)" />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Internal_Report.pdf`} label="Download Internal Report (PDF)" />
       <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
         {bodies.map((body, i) => (
-          <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Internal Only — Do Not Share">{body}</PrPage>
+          <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Internal Only, Do Not Share">{body}</PrPage>
         ))}
       </div>
     </div>

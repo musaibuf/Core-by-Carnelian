@@ -490,12 +490,31 @@ const Sidebar = ({ activeTab, setActiveTab, T, total }) => (
 // ═══════════════════════════════════════════════════════════════
 // REPORT TABS — TECHNICAL, ACTION PLAN, PLAYER REPORT, TEAM
 // ═══════════════════════════════════════════════════════════════
+
 /* ═══════════════════════════════════════════════════════════════════════
-   INTEGRATION — replaces the previous TechnicalReport + TechnicalReport-
-   DownloadBtn in full, same drop-in spot. No CandidateModal changes needed
-   — the tab still renders <TechnicalReport candidate={candidate} T={T} />,
-   which now shows TWO download buttons at the bottom: Client Report and
-   Internal Report.
+   INTEGRATION — replaces the previous TechnicalReport + both download
+   buttons in full. Same drop-in spot, no CandidateModal changes needed.
+
+   ALSO REQUIRES one small edit to your existing PrDownloadBtn component
+   (used globally by Team Insight / Culture Pulse too) — add an optional
+   `label` prop so each report's button can say what it is. Find:
+
+     const PrDownloadBtn = ({ ids, filename }) => {
+
+   Replace with:
+
+     const PrDownloadBtn = ({ ids, filename, label }) => {
+
+   And find the button's fallback text:
+
+     {busy || '⬇ Download Report as PDF (A4)'}
+
+   Replace with:
+
+     {busy || label || '⬇ Download Report as PDF (A4)'}
+
+   This is fully backward-compatible — every existing call site without a
+   `label` prop keeps working exactly as before.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const DECISION_INDEX_GROUPS = {
@@ -556,11 +575,8 @@ const verdictOfRole = (r, colFn) => {
   };
 };
 
-// ── Deterministic radar centering — avoids html2canvas's unreliable
-//    auto-margin handling for SVG by computing the exact left offset from
-//    known page dimensions, rather than relying on CSS centering. ──
 const radarOffsetStyle = (svgSize) => {
-  const svgW = svgSize + 300; // RadarChart's own pad is 150 each side
+  const svgW = svgSize + 300;
   const contentW = PR_W - PR_PAD * 2;
   const ml = Math.max(0, (contentW - svgW) / 2);
   return { marginLeft: ml, width: svgW };
@@ -573,7 +589,6 @@ const TechnicalReport = ({ candidate, T }) => {
   const validity = rd.validity  || {};
   const profile  = rd.profile   || {};
   const roles    = rd.roles     || [];
-  const patterns = rd.patterns  || [];
   const CI       = rd.CI        || {};
 
   const card = (children, style = {}) => (
@@ -641,7 +656,7 @@ const TechnicalReport = ({ candidate, T }) => {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginTop: '20px', flexWrap: 'wrap' }}>
         <TechnicalReportClientDownloadBtn candidate={candidate} T={T} />
         <TechnicalReportInternalDownloadBtn candidate={candidate} T={T} />
       </div>
@@ -651,7 +666,7 @@ const TechnicalReport = ({ candidate, T }) => {
 
 
 // ═══════════════════════════════════════════════════════════════════════
-// CLIENT REPORT — plain language, no raw codes, no unfiltered guidance
+// CLIENT REPORT
 // ═══════════════════════════════════════════════════════════════════════
 const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
   const rd       = candidate.report_data || {};
@@ -731,15 +746,12 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
         ['Report ID', docId],
       ]} />
       <PrBody size={7.6} color={PRT.faint} style={{ marginTop: 6 }}>Overall Score is this candidate's average performance across every area measured, out of 100. Profile is a short descriptive label summarising their overall working style, generated from their combined scores.</PrBody>
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 10 }}>
         <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>NINE-DIMENSION PROFILE</PrLabel>
-        <PrBody size={8} color={PRT.faint} style={{ marginBottom: 8 }}>Each point is one behavioural area. The further out a point sits, the stronger and more established that behaviour is for this candidate.</PrBody>
-        <div style={radarOffsetStyle(150)}>
-          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={150} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
+        <PrBody size={8} color={PRT.faint} style={{ marginBottom: 6 }}>Each point is one behavioural area. The further out a point sits, the stronger and more established that behaviour is for this candidate.</PrBody>
+        <div style={radarOffsetStyle(185)}>
+          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={185} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
         </div>
-      </div>
-      <div style={{ background: PRT.panel, border: `1px solid ${PRT.line}`, padding: '8px 12px', marginTop: 10, textAlign: 'center' }}>
-        <PrBody size={7.4} color={PRT.faint}><span style={{ fontWeight: 800, color: PRT.sub }}>CONFIDENTIAL.</span> Diagnostic input for hiring, promotion, and succession decisions. Not a standalone verdict — confirm with a structured interview.</PrBody>
       </div>
     </>
   );
@@ -854,9 +866,9 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
   const footerLeft = `Technical Report · ${name}`;
 
   return (
-    <div style={{ flex: 1 }}>
+    <div style={{ flex: 1, minWidth: '260px' }}>
       <PrStyles />
-      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Client_Report.pdf`} />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Client_Report.pdf`} label="⬇ Download Client Report (PDF)" />
       <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
         {bodies.map((body, i) => (
           <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Restricted: HR Leadership Only">{body}</PrPage>
@@ -868,9 +880,9 @@ const TechnicalReportClientDownloadBtn = ({ candidate, T }) => {
 
 
 // ═══════════════════════════════════════════════════════════════════════
-// INTERNAL REPORT — full technical depth, raw index codes, unfiltered
-// guidance, all patterns, all 21 sub-dimensions, gamified challenge data.
-// Never share this version with a client or candidate.
+// INTERNAL REPORT — full technical depth. 4 dense pages: cover+indices,
+// validity flags + patterns, role matrix + probes, sub-dims + gamified +
+// industry. Never share this version externally.
 // ═══════════════════════════════════════════════════════════════════════
 const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
   const rd       = candidate.report_data || {};
@@ -881,9 +893,12 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
   const patterns = rd.patterns  || [];
   const CI       = rd.CI        || {};
   const gs       = rd.gameSummary || {};
+  const flags    = validity.flags || [];
   const today    = new Date(candidate.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
   const docId    = candidate.doc_id;
   const name     = candidate.name || rd.respondent?.name || 'Candidate';
+
+  const flagCol = (t) => t === 'red' ? PRT.rd : t === 'amber' ? PRT.am : PRT.gn;
 
   const p1 = (
     <>
@@ -891,7 +906,7 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
         <CoreLogo h={34} />
         <PrLabel c={PRT.rd}>INTERNAL ONLY · CARNELIAN STAFF · DO NOT SHARE</PrLabel>
       </div>
-      <div style={{ marginTop: 28 }}>
+      <div style={{ marginTop: 26 }}>
         <PrLabel style={{ marginBottom: 5 }}>TECHNICAL REPORT — INTERNAL VERSION</PrLabel>
         <PrHead size={22}>{name}</PrHead>
       </div>
@@ -905,20 +920,29 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
         ['Validity', `${validity.overallLabel || 'Unknown'} (L=${validity.lAgree ?? '—'}/10, Ext=${Math.round((validity.extRatio || 0) * 100)}%, Con=${validity.conScore ?? '—'})`],
         ['Assessment Date', today],
         ['Report ID', docId],
-      ]} style={{ marginBottom: 16 }} />
-      <PrLabel c={PRT.gold} style={{ marginBottom: 8 }}>ALL SEVEN COMPOSITE INDICES</PrLabel>
-      <PrTable cols={['Code', 'Index', 'Score']} widths={[60, undefined, 60]} rows={COMPOSITE_KEYS.map(c => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: PRT.c }}>{c.k}</span>, c.l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(CI[c.k] || 0) }}>{CI[c.k] ?? 0}</span>])} />
-      <div style={{ marginTop: 14 }}>
-        <div style={radarOffsetStyle(140)}>
-          <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={140} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
-        </div>
+      ]} style={{ marginBottom: 14 }} />
+      <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>ALL SEVEN COMPOSITE INDICES</PrLabel>
+      <PrTable cols={['Code', 'Index', 'Score']} widths={[60, undefined, 60]} rows={COMPOSITE_KEYS.map(c => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 800, color: PRT.c }}>{c.k}</span>, c.l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(CI[c.k] || 0) }}>{CI[c.k] ?? 0}</span>])} style={{ marginBottom: 12 }} />
+      <div style={radarOffsetStyle(175)}>
+        <RadarChart T={{ b2: PRT.line, t1: PRT.sub }} color={PRT.c} size={175} data={CORE_DIMS.map(d => ({ label: d.l, value: S[d.k] || 0 }))} />
       </div>
     </>
   );
 
   const p2 = (
     <>
-      <PrSectionHead num="1" title="Full Cross-Dimensional Pattern Analysis" sub="All flagged interaction effects, unfiltered, including HR action items." />
+      <PrSectionHead num="1" title="Full Validity Diagnostics" sub="Every response-quality check the assessment runs, not just the summary." />
+      {flags.length > 0 ? (
+        <PrTable cols={['Check', 'Flag', 'Detail']} widths={[110, 55, undefined]} fontSize={8.2} rows={flags.map(f => [f.key, <span style={{ color: flagCol(f.type), fontWeight: 800, textTransform: 'uppercase' }}>{f.type}</span>, f.text])} style={{ marginBottom: 16 }} />
+      ) : (
+        <PrTable cols={['Check', 'Result']} widths={[220, undefined]} fontSize={8.6} rows={[
+          ['Overall', validity.overallLabel || 'Unknown'],
+          ['L-Scale agreements', `${validity.lAgree ?? '—'}/10`],
+          ['Extreme response rate', `${Math.round((validity.extRatio || 0) * 100)}%`],
+          ['Internal consistency', `${validity.conScore ?? '—'}/100`],
+        ]} style={{ marginBottom: 16 }} />
+      )}
+      <PrSectionHead num="2" title="Full Cross-Dimensional Pattern Analysis" sub="Every flagged interaction effect, unfiltered, including HR action items." />
       {patterns.length > 0 ? patterns.map((p, i) => (
         <PrNote key={i} title={`${p.sev === 'red' ? 'RISK' : p.sev === 'amber' ? 'WATCH' : 'STRENGTH'} · ${p.name.toUpperCase()}`} color={p.sev === 'red' ? PRT.rd : p.sev === 'amber' ? PRT.am : PRT.gn} style={{ marginBottom: 8 }}>
           <strong style={{ color: PRT.ink }}>{p.headline}</strong><br/>{p.detail}{p.action ? <><br/><strong style={{ color: PRT.ink }}>HR Action:</strong> {p.action}</> : ''}
@@ -927,73 +951,70 @@ const TechnicalReportInternalDownloadBtn = ({ candidate, T }) => {
     </>
   );
 
+  const probeCandidates = roles.filter(r => r.score < r.g && r.probeQ && r.probeQ.length);
   const p3 = (
     <>
-      <PrSectionHead num="2" title="Full Role Suitability Matrix" sub="Unfiltered guidance and interview probes for every role family." />
+      <PrSectionHead num="3" title="Full Role Suitability Matrix" sub="Unfiltered guidance and risk notes for every role family." />
       <PrTable cols={['Role', 'Score', 'Verdict', 'Guidance / Risk Note']} widths={[135, 50, 90, undefined]} fontSize={8} rows={roles.map(r => {
         const rat = r.score >= r.g ? 'green' : r.score >= r.a ? 'amber' : 'red';
         const col = rat === 'green' ? PRT.gn : rat === 'amber' ? PRT.am : PRT.rd;
         return [r.name, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: col }}>{r.score}</span>, <span style={{ color: col, fontWeight: 700 }}>{rat.toUpperCase()}</span>, rat === 'red' ? r.redNote : rat === 'amber' ? 'Structured onboarding + defined milestones.' : 'Standard performance management applies.'];
       })} style={{ marginBottom: 14 }} />
-      <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>INTERVIEW PROBES (RED-RATED ROLES)</PrLabel>
-      {roles.filter(r => r.score < r.a && r.probeQ).map((r, i) => (
-        <div key={i} style={{ marginBottom: 8 }}>
+      <PrLabel c={PRT.gold} style={{ marginBottom: 6 }}>INTERVIEW PROBES — ANY ROLE BELOW "SUITABLE"</PrLabel>
+      {probeCandidates.length > 0 ? probeCandidates.map((r, i) => (
+        <div key={i} style={{ marginBottom: 10 }}>
           <PrBody size={8.4} color={PRT.ink} style={{ fontWeight: 700, marginBottom: 3 }}>{r.name}</PrBody>
           {(r.probeQ || []).map((q, qi) => <PrBody key={qi} size={8}>{qi + 1}. {q}</PrBody>)}
         </div>
-      ))}
+      )) : <PrBody size={8.6} color={PRT.faint}>No roles fell below "Suitable" — no targeted interview probes required beyond standard structured interview practice.</PrBody>}
     </>
   );
 
   const subDimSet = [
     { title: 'Personality (OCEAN)', rows: [['O', 'Openness', S.O], ['C', 'Conscientiousness', S.C], ['E', 'Extraversion', S.E], ['A', 'Agreeableness', S.A], ['ES', 'Emotional Stability', S.ES]] },
     { title: 'Cultural Intelligence', rows: CQ_KEYS.map(({ k, l }) => [k, l, S[k]]) },
-    { title: 'Organisational Citizenship Behaviour', rows: OCB_KEYS.map(({ k, l }) => [k, l, S[k]]) },
+    { title: 'Org. Citizenship Behaviour', rows: OCB_KEYS.map(({ k, l }) => [k, l, S[k]]) },
     { title: 'Learning Agility', rows: LA_KEYS.map(({ k, l }) => [k, l, S[k]]) },
     { title: 'Integrity & Ethics', rows: EO_KEYS.map(({ k, l }) => [k, l, S[k]]) },
   ];
   const p4 = (
     <>
-      <PrSectionHead num="3" title="All 21 Sub-Dimensions — Raw Codes & Scores" sub="Full underlying breakdown behind the composite indices." />
-      {subDimSet.map((m, i) => (
-        <div key={i} style={{ marginBottom: 10 }}>
-          <PrLabel c={PRT.gold}>{m.title.toUpperCase()}</PrLabel>
-          <PrTable cols={['Code', 'Label', 'Score', 'Band']} widths={[60, undefined, 55, 90]} fontSize={8} style={{ marginTop: 4 }} rows={m.rows.map(([k, l, v]) => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: PRT.c }}>{k}</span>, l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(v || 0) }}>{v || 0}</span>, <span style={{ color: prCol(v || 0), fontWeight: 700 }}>{prBandName(v || 0)}</span>])} />
-        </div>
-      ))}
-    </>
-  );
-
-  const p5 = (
-    <>
-      <PrSectionHead num="4" title="Gamified Challenge Results" sub="Raw performance and score modifiers from the in-assessment behavioural challenges." />
-      <PrTable cols={['Challenge', 'Performance', 'Modifier', 'Dimensions Affected']} widths={[150, 130, 70, undefined]} fontSize={8.2} rows={[
-        ['Values in Balance (Seesaw)', gs.seesaw?.label || '—', `${(gs.seesaw?.bonus || 0) >= 0 ? '+' : ''}${gs.seesaw?.bonus || 0}`, 'Ethical Reasoning (EO_ER)'],
-        ['Quick Decision Challenge', gs.scenario1?.label || '—', `${(gs.scenario1?.raw || 0) >= 0 ? '+' : ''}${gs.scenario1?.raw || 0}`, 'People Agility (LA_PA), Transparency (EO_T)'],
-        ['Ethics Under Pressure', gs.scenario2?.label || '—', `${(gs.scenario2?.raw || 0) >= 0 ? '+' : ''}${gs.scenario2?.raw || 0}`, 'Rule Compliance (EO_RC), Authentic Integrity (EO_AI)'],
-      ]} style={{ marginBottom: 16 }} />
+      <PrSectionHead num="4" title="All 21 Sub-Dimensions — Raw Codes & Scores" sub="Full underlying breakdown behind the composite indices." />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+        {subDimSet.map((m, i) => (
+          <div key={i} style={{ marginBottom: 10 }}>
+            <PrLabel c={PRT.gold}>{m.title.toUpperCase()}</PrLabel>
+            <PrTable cols={['Code', 'Label', 'Score', 'Band']} widths={[46, undefined, 40, 70]} fontSize={7.4} style={{ marginTop: 4 }} rows={m.rows.map(([k, l, v]) => [<span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: PRT.c }}>{k}</span>, l, <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 700, color: prCol(v || 0) }}>{v || 0}</span>, <span style={{ color: prCol(v || 0), fontWeight: 700 }}>{prBandName(v || 0)}</span>])} />
+          </div>
+        ))}
+      </div>
+      <PrSectionHead num="5" title="Gamified Challenge Results" sub="Raw performance and score modifiers from the in-assessment behavioural challenges." style={{ marginTop: 4 }} />
+      <PrTable cols={['Challenge', 'Performance', 'Modifier', 'Dimensions Affected']} widths={[145, 115, 60, undefined]} fontSize={8} rows={[
+        ['Values in Balance (Seesaw)', gs.seesaw?.label || '—', `${(gs.seesaw?.bonus || 0) >= 0 ? '+' : ''}${gs.seesaw?.bonus || 0}`, 'EO_ER'],
+        ['Quick Decision Challenge', gs.scenario1?.label || '—', `${(gs.scenario1?.raw || 0) >= 0 ? '+' : ''}${gs.scenario1?.raw || 0}`, 'LA_PA, EO_T'],
+        ['Ethics Under Pressure', gs.scenario2?.label || '—', `${(gs.scenario2?.raw || 0) >= 0 ? '+' : ''}${gs.scenario2?.raw || 0}`, 'EO_RC, EO_AI'],
+      ]} style={{ marginBottom: 10 }} />
       {candidate.industry && typeof IND !== 'undefined' && IND[candidate.industry] && (
         <>
-          <PrSectionHead title="Full Industry Lens" sub={candidate.industry} />
-          <PrBody size={8.4} style={{ marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: IND[candidate.industry].lens }} />
-          <PrBody size={8.4} style={{ marginBottom: 4 }}><strong style={{ color: PRT.ink }}>High Potential Benchmark:</strong> {IND[candidate.industry].hiPotential}</PrBody>
-          <PrBody size={8.4} color={PRT.rd}><strong style={{ color: PRT.rd }}>Risk Note:</strong> {IND[candidate.industry].riskNote}</PrBody>
+          <PrLabel c={PRT.gold} style={{ marginBottom: 4 }}>FULL INDUSTRY LENS — {candidate.industry.toUpperCase()}</PrLabel>
+          <PrBody size={8} style={{ marginBottom: 4 }}><strong style={{ color: PRT.ink }}>Benchmark:</strong> {IND[candidate.industry].hiPotential}</PrBody>
+          <PrBody size={8} color={PRT.rd}><strong style={{ color: PRT.rd }}>Risk Note:</strong> {IND[candidate.industry].riskNote}</PrBody>
         </>
       )}
-      <PrBody size={7.4} color={PRT.faint} style={{ marginTop: 14 }}>Internal working document — Carnelian Pvt Ltd. Not for external circulation to clients or candidates.</PrBody>
+      <PrBody size={7.2} color={PRT.faint} style={{ marginTop: 10 }}>Internal working document — Carnelian Pvt Ltd. Not for external circulation to clients or candidates.</PrBody>
     </>
   );
 
-  const bodies = [p1, p2, p3, p4, p5];
+  const bodies = [p1, p2, p3, p4];
   const total = bodies.length;
   const pid = i => `techpr-internal-${docId}-${i}`;
   const ids = bodies.map((_, i) => pid(i));
   const footerLeft = `Internal Technical Report · ${name}`;
 
   return (
-    <div style={{ flex: 1 }}>
+    <div style={{ flex: 1, minWidth: '260px' }}>
       <PrStyles />
-      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Internal_Report.pdf`} />
+      <PrDownloadBtn ids={ids} filename={`${name.replace(/\s+/g, '_')}_Internal_Report.pdf`} label="⬇ Download Internal Report (PDF)" />
       <div style={{ position: 'fixed', top: -99999, left: -99999, pointerEvents: 'none' }}>
         {bodies.map((body, i) => (
           <PrPage key={i} id={pid(i)} pageNo={i + 1} total={total} footerLeft={footerLeft} footerRight="Internal Only — Do Not Share">{body}</PrPage>

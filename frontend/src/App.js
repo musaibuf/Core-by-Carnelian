@@ -469,7 +469,17 @@ const BREAKERS = {
 
 // ─── SCORING ENGINE ───────────────────────────────────────────────────────────
 const scoreDim = (dim, answers) => {
-  const items = QS.map((q,i)=>({...q,ans:answers[i]})).filter(q=>q.d===dim&&!q.validity);
+  // item_13 (array index 12) is excluded from E scoring.
+  // It measures social ENERGY DRAIN ("After a day with significant social
+  // interaction at work, I need time alone to recharge"), not social confidence.
+  // Validated against n=213: after reverse-coding it correlates NEGATIVELY with
+  // other social measures (Cultural Behaviour -0.10, Courtesy -0.09) while
+  // item_12 correlates positively (+0.21, +0.14). The two items correlate at
+  // r=0.06, alpha=0.117. Including it cancels valid signal from item_12.
+  // It remains in the questionnaire and still feeds the consistency check.
+  // Remove this exclusion once a proper replacement item exists.
+  const items = QS.map((q,i)=>({...q,ans:answers[i],idx:i}))
+    .filter(q => q.d===dim && !q.validity && !(dim==='E' && q.idx===12));
   if (!items.length) return 50;
   const vals = items.map(q => q.r ? (6-q.ans) : q.ans);
   return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*20);
@@ -502,11 +512,11 @@ const computeValidity = (answers) => {
 
   const flags=[];
   if(extRatio>0.80) flags.push({type:'red',key:'L-Scale (Contextual)',text:`${lAgree}/10 L-Scale agreements. With ${Math.round(extRatio*100)}% extreme responses, this result is uninterpretable.`});
-  else if(lAgree>=5) flags.push({type:'red',key:'L-Scale',text:`Likely Inflated: Agreed with ${lAgree}/10 impossible-standard items.`});
-  else if(lAgree>=3) flags.push({type:'amber',key:'L-Scale',text:`Moderate Inflation Risk: Agreed with ${lAgree}/10 L-scale items.`});
+   else if(lAgree>9) flags.push({type:'red',key:'L-Scale',text:`Likely Inflated: Agreed with ${lAgree}/10 impossible-standard items.`});
+  else if(lAgree>7) flags.push({type:'amber',key:'L-Scale',text:`Moderate Inflation Risk: Agreed with ${lAgree}/10 L-scale items.`});
   else flags.push({type:'green',key:'L-Scale',text:`Valid: Agreed with only ${lAgree}/10 L-scale items.`});
 
-  if(saRatio>0.55) flags.push({type:'amber',key:'Acquiescence',text:`${Math.round(saRatio*100)}% of responses were "Strongly Agree" — possible acquiescence bias.`});
+    if(saRatio>0.45) flags.push({type:'amber',key:'Acquiescence',text:`${Math.round(saRatio*100)}% of responses were "Strongly Agree" — possible acquiescence bias.`});
   else flags.push({type:'green',key:'Acquiescence',text:`Response distribution appears natural (${Math.round(saRatio*100)}% Strongly Agree).`});
 
   if(extRatio>0.90) flags.push({type:'red',key:'Extreme Responses',text:`CRITICAL: ${Math.round(extRatio*100)}% extreme responses. Dimension scores are statistically meaningless.`});
@@ -516,9 +526,17 @@ const computeValidity = (answers) => {
 
   if(conScore<20) flags.push({type:'red',key:'Consistency',text:`CRITICAL: Consistency index is ${conScore}/100. Severe contradictions detected.`});
   else if(conScore<40) flags.push({type:'red',key:'Consistency',text:`Very low internal consistency (${conScore}/100). Results unlikely to represent genuine profile.`});
-  else if(conScore<55) flags.push({type:'red',key:'Consistency',text:`Low internal consistency (${conScore}/100). Contradictory responses detected.`});
-  else if(conScore<75) flags.push({type:'amber',key:'Consistency',text:`Moderate consistency (${conScore}/100). Some contradictions across item pairs.`});
+   else if(conScore<56) flags.push({type:'red',key:'Consistency',text:`Low internal consistency (${conScore}/100). Contradictory responses detected.`});
+  else if(conScore<71) flags.push({type:'amber',key:'Consistency',text:`Moderate consistency (${conScore}/100). Some contradictions across item pairs.`});
   else flags.push({type:'green',key:'Consistency',text:`High internal consistency (${conScore}/100).`});
+
+  let maxRun=1, curRun=1;
+  for(let i=1;i<answers.length;i++){
+    if(answers[i]===answers[i-1]){ curRun++; if(curRun>maxRun) maxRun=curRun; }
+    else curRun=1;
+  }
+  if(maxRun>=20) flags.push({type:'red',key:'Long-String',text:`${maxRun} of ${answers.length} consecutive identical answers. Response pattern indicates disengagement.`});
+  else flags.push({type:'green',key:'Long-String',text:`No excessive answer repetition (longest run: ${maxRun}).`});
 
   if(catastrophic||incoherentData||extremeCareless){
     flags.push({type:'red',key:'Pattern Override',text:`PATTERN ALERT: Response pattern is incompatible with genuine self-reflection. Results are unreliable.`});
@@ -530,7 +548,7 @@ const computeValidity = (answers) => {
   if(catastrophic||extremeCareless||(conScore<30&&extRatio>0.70)){overall='red';overallLabel='Invalid · Do Not Use Results. Recommend Immediate Verification.';}
   else if(conScore<20||extRatio>0.90){overall='red';overallLabel='Invalid · Results Uninterpretable. Retake Required.';}
   else if(redCount>=2){overall='red';overallLabel='Low · Recommend Verification Interview Before Any Decision.';}
-  else if(redCount===1||amberCount>=2){overall='amber';overallLabel='Moderate · Interpret with Caution. Cross-Validate with Interview.';}
+    else if(redCount===1){overall='amber';overallLabel='Moderate · Interpret with Caution. Cross-Validate with Interview.';}
   else{overall='green';overallLabel='High · Proceed with Confidence.';}
   
   return{lAgree,saRatio,extRatio,conScore,flags,overall,overallLabel};
@@ -546,14 +564,14 @@ const getProfile = (s) => {
   
   // 2. Tier 1 (Elite - Keep strict)
   if(C>=76&&E>=68&&EOavg>=74&&LAavg>=65) return {name:'Strategic Integrity Leader',tier:1,desc:"A high-performance profile combining delivery drive, social presence, strong ethical orientation, and adaptive learning. Ready for senior leadership in high-accountability environments."};
-  if(C>=70&&OCBavg>=74&&EOavg>=68) return {name:'Institutional Anchor',tier:1,desc:"Conscientious, ethical, and deeply invested in organisational citizenship. The institutional backbone delivers consistently, supports colleagues, and upholds institutional norms."};
+    if(C>=80&&OCBavg>=77&&EOavg>=78) return {name:'Institutional Anchor',tier:1,desc:"Conscientious, ethical, and deeply invested in organisational citizenship. The institutional backbone delivers consistently, supports colleagues, and upholds institutional norms."};
   
-  // 3. Tier 2 (Relaxed thresholds to properly categorize mid-range scorers)
-  if(O>=62&&LAavg>=65&&CQavg>=62) return {name:'Adaptive Innovator',tier:2,desc:"High intellectual curiosity combined with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
-  if(EOavg>=70&&C>=62) return {name:'Ethics-Driven Executor',tier:2,desc:"A reliable and principled professional with strong compliance orientation and consistent delivery. Excellent for audit, compliance, and risk management."};
-  if(CQavg>=65&&E>=60&&A>=60) return {name:'Cross-Cultural Bridge',tier:2,desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
-  if(OCBavg>=65&&A>=60&&EOavg>=60) return {name:'Collaborative Team Leader',tier:2,desc:"An empathetic, cooperative, and institutionally committed professional who strengthens team cohesion. Brings out the best in colleagues."};
-  if(LAavg>=65&&O>=62) return {name:'Learning Champion',tier:2,desc:"A fast learner who thrives on intellectual challenge and new knowledge. Strong asset in research, training design, and capacity building."};
+    // 3. Tier 2 (Percentile-anchored to Pakistani norming sample, n=213)
+    if(O>=67&&LAavg>=68&&CQavg>=73) return {name:'Adaptive Innovator',tier:2,desc:"High intellectual curiosity combined with strong learning agility and cultural intelligence. Suited for policy development, change management, and reform initiatives."};
+    if(EOavg>=70&&C>=70) return {name:'Ethics-Driven Executor',tier:2,desc:"A reliable and principled professional with strong compliance orientation and consistent delivery. Excellent for audit, compliance, and risk management."};
+    if(CQavg>=73&&E>=60&&A>=73) return {name:'Cross-Cultural Bridge',tier:2,desc:"A socially adept, culturally intelligent professional who builds effective relationships across diverse institutional and regional contexts."};
+    if(OCBavg>=73&&A>=73&&EOavg>=70) return {name:'Collaborative Team Leader',tier:2,desc:"An empathetic, cooperative, and institutionally committed professional who strengthens team cohesion. Brings out the best in colleagues."};
+    if(LAavg>=65&&O>=62&&CQavg<73) return {name:'Learning Champion',tier:2,desc:"A fast learner who thrives on intellectual challenge and new knowledge. Strong asset in research, training design, and capacity building."};
   
   // 4. Tier 3 (Catch specific developmental patterns)
   if(O>=65&&C<55&&LAavg>=60) return {name:'Visionary Sprinter',tier:3,desc:"High intellectual energy and idea generation combined with lower structured delivery. Most effective in short-burst, project-based environments."};
@@ -2671,6 +2689,37 @@ const ResultsPage = ({reportData}) => {
 
   const {scores:S, profile, respondent:R, docId, date, CI, validity, roles, gameSummary, patterns} = reportData;
 
+
+  // Percentile norms from CORE Pakistani norming sample (n=213, Aug 2026).
+// Maps a raw dimension score to its percentile within that dimension.
+// Needed because dimensions have different distributions - a 65 in Social
+// Confidence is the 47th percentile, but a 65 in Team Citizenship is the 14th.
+const DIM_NORMS = {
+  O:      {p10:53, p25:60, p50:67, p75:73, p90:80},
+  C:      {p10:55, p25:60, p50:70, p75:80, p90:90},
+  E:      {p10:50, p25:60, p50:70, p75:80, p90:90},
+  A:      {p10:60, p25:67, p50:80, p75:87, p90:93},
+  ES:     {p10:42, p25:60, p50:70, p75:80, p90:90},
+  CQavg:  {p10:64, p25:69, p50:73, p75:80, p90:87},
+  OCBavg: {p10:65, p25:69, p50:73, p75:77, p90:84},
+  LAavg:  {p10:58, p25:61, p50:68, p75:75, p90:82},
+  EOavg:  {p10:61, p25:65, p50:71, p75:78, p90:84},
+};
+
+// Convert a raw score to a percentile using linear interpolation between anchors.
+const toPercentile = (k, v) => {
+  const n = DIM_NORMS[k];
+  if (!n || v == null) return 50;
+  const pts = [[n.p10,10],[n.p25,25],[n.p50,50],[n.p75,75],[n.p90,90]];
+  if (v <= pts[0][0]) return Math.max(1, 10 * v / pts[0][0]);
+  if (v >= pts[4][0]) return Math.min(99, 90 + 9 * (v - pts[4][0]) / Math.max(1, 100 - pts[4][0]));
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [rl, pl] = pts[i], [rh, ph] = pts[i+1];
+    if (v >= rl && v <= rh) return pl + (ph - pl) * (v - rl) / Math.max(1, rh - rl);
+  }
+  return 50;
+};
+
   // ─── ACTION PLAN DATA PREP ───
 const allDims = [
   {k:'C', l:'Conscientiousness', v:S.C,
@@ -2700,10 +2749,12 @@ const allDims = [
   {k:'EOavg', l:'Ethical Integrity', v:S.EOavg,
     str:'Your commitment to transparency and authentic behaviour is rare and highly valued.',
     gap:'How consistently your behaviour aligns with professional standards, transparent disclosure, and principled decision-making — especially under pressure.'},
-].filter(d => d.v !== undefined && d.v !== null).sort((a,b) => b.v - a.v);
+].filter(d => d.v !== undefined && d.v !== null)
+ .map(d => ({...d, pct: toPercentile(d.k, d.v)}))
+ .sort((a,b) => b.pct - a.pct);
 
   const top2 = allDims.slice(0, 2);
-  const bot2 = [...allDims].sort((a,b) => a.v - b.v).slice(0, 2);
+  const bot2 = [...allDims].sort((a,b) => a.pct - b.pct).slice(0, 2);
 
   // ── CONTEXT ENGINE ──
   const ind = R.industry || '';
@@ -3192,7 +3243,7 @@ const buildHabits = (content, dim, profile, R) => {
         const [fc, fbg] = FORMAT_COLOR[p.format] || [GOLD, '#F6EFE2'];
         return `<div style="border:1px solid ${LINE};border-left:4px solid ${fc};padding:11px 13px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:10.3px;font-weight:800;color:${INK};">${esc(p.name)}</span>${p.format ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:6.8px;font-weight:700;letter-spacing:0.06em;color:${fc};background:${fbg};padding:3px 7px;border-radius:3px;white-space:nowrap;">${esc(p.format).toUpperCase()}</span>` : ''}</div><div style="font-size:8.8px;color:${SUB};line-height:1.5;margin-bottom:4px;">${esc(p.desc)}</div><div style="font-size:8.3px;color:${GN};font-style:italic;">${esc(p.match || 'Recommended based on your profile.')}</div></div>`;
       }).join('');
-      const matrixQuad = (title, items, col, bg) => `<div style="border:1px solid ${LINE};background:${bg};padding:12px 14px;"><div style="font-size:9.5px;font-weight:700;color:${col};margin-bottom:8px;">${esc(title)}</div>${items.map(d => `<div style="font-size:8.7px;color:${INK};font-weight:600;margin-bottom:3px;">${esc(d.l)} (${d.v}/100)</div>`).join('')}</div>`;
+      const matrixQuad = (title, items, col, bg) => `<div style="border:1px solid ${LINE};background:${bg};padding:12px 14px;"><div style="font-size:9.5px;font-weight:700;color:${col};margin-bottom:8px;">${esc(title)}</div>${items.map(d => `<div style="font-size:8.7px;color:${INK};font-weight:600;margin-bottom:3px;">${esc(d.l)} (${d.v}/100 &middot; ${Math.round(d.pct)}th)</div>`).join('')}</div>`;
       const p_close = pageShell(`
         ${sectionHead('Section 5', 'Recommended Training & Priority Matrix')}
         <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:${INK};margin-bottom:8px;">Recommended Programmes · Carnelian</div>
@@ -3295,7 +3346,8 @@ const getResources = () => {
       res.push({type:'book', title:'Atomic Habits', author:'James Clear', url:'https://www.amazon.com/Atomic-Habits-Proven-Build-Break/dp/0735211299', why:'Shifts the focus from "trying harder" to building foolproof, microscopic systems that guarantee execution.'});
       res.push({type:'ted', title:'Inside the Mind of a Master Procrastinator', author:'Tim Urban', url:'https://www.youtube.com/watch?v=arj7oStGLkU', why:'A hilarious but painfully accurate breakdown of why we delay tasks and how the "Panic Monster" takes over.'});
       res.push({type:'article', title:"Management Time: Who's Got the Monkey?", author:'William Oncken Jr. (HBR)', url:'https://hbr.org/1999/11/management-time-whos-got-the-monkey', why:'One of the most famous HBR articles ever written. It teaches you how to stop dropping the ball on tasks and how to manage dependencies effectively.'});
-      res.push({type:'course', title:'Time Management Fundamentals', author:'Dave Crenshaw', url:'https://www.linkedin.com/learning/time-management-fundamentals', why:'A highly practical, structured course on optimizing your daily workflow, managing your calendar, and eliminating bottlenecks.'});
+           res.push({type:'course', title:'Time Management Fundamentals', author:'Dave Crenshaw', url:'https://www.linkedin.com/learning/time-management-fundamentals', why:'A highly practical, structured course on optimizing your daily workflow, managing your calendar, and eliminating bottlenecks.'});
+      res.push({type:'article', title:'The Akrasia Effect: Why We Don\'t Follow Through', author:'James Clear', url:'https://jamesclear.com/akrasia', why:'Explains the specific gap between intending to do something and actually doing it, and gives three concrete tactics for closing it.'});
     }
     if(gapKeys.includes('ES')){
       res.push({type:'book', title:'Chatter: The Voice in Our Head', author:'Ethan Kross', url:'https://www.amazon.com/Chatter-Voice-Head-Matters-Harness/dp/0525575235', why:'Written by a neuroscientist, it provides evidence-based techniques for managing your inner critical voice when stakes are high.'});
@@ -3312,7 +3364,7 @@ const getResources = () => {
     if(gapKeys.includes('LAavg')){
       res.push({type:'book', title:'Think Again', author:'Adam Grant', url:'https://www.amazon.com/Think-Again-Power-Knowing-What/dp/1984878107', why:"Learning agility isn't just about learning new things; it's about the willingness to unlearn old habits that no longer serve you."});
       res.push({type:'ted', title:'The Power of Believing That You Can Improve', author:'Carol Dweck', url:'https://www.youtube.com/watch?v=_X0mgOOSpLU', why:'The pioneer of the "Growth Mindset" explains the neuroscience behind why some people adapt and others stagnate.'});
-      res.push({type:'article', title:'Improve Your Ability to Learn', author:'Matthew Mullane (HBR)', url:'https://hbr.org/2015/06/improve-your-ability-to-learn', why:'A concise framework for accelerating your learning agility in fast-changing corporate environments.'});
+      res.push({type:'article', title:'Improve Your Ability to Learn', author:'Flaum & Winkler (HBR)', url:'https://hbr.org/2015/06/improve-your-ability-to-learn', why:'A concise framework for accelerating your learning agility in fast-changing corporate environments.'});
       res.push({type:'course', title:'Learning How to Learn', author:'Barbara Oakley (Coursera)', url:'https://www.coursera.org/learn/learning-how-to-learn', why:'One of the most popular courses in the world. It teaches the actual neuroscience of absorbing new, complex information quickly.'});
     }
     if(gapKeys.includes('EOavg')){
@@ -3323,13 +3375,13 @@ const getResources = () => {
     }
     if(gapKeys.includes('A')){
       res.push({type:'book', title:'Crucial Conversations', author:'Patterson, Grenny, et al.', url:'https://www.amazon.com/Crucial-Conversations-Talking-Stakes-Second/dp/0071771328', why:'The ultimate guide to disagreeing with colleagues and stakeholders without triggering defensiveness or damaging the relationship.'});
-      res.push({type:'ted', title:'Dare to Disagree', author:'Margaret Heffernan', url:'https://www.youtube.com/watch?v=PY_kd46RcRM', why:"Shows how the best teams don't avoid conflict—they use \"constructive conflict\" to build better ideas together."});
+      res.push({type:'ted', title:'Dare to Disagree', author:'Margaret Heffernan', url:'https://www.youtube.com/watch?v=PY_kd46RfVE', why:"Shows how the best teams don't avoid conflict—they use \"constructive conflict\" to build better ideas together."});
       res.push({type:'article', title:'How to Navigate Conflict with a Coworker', author:'Amy Gallo (HBR)', url:'https://hbr.org/2022/09/how-to-navigate-conflict-with-a-coworker', why:'A highly practical guide to de-escalating workplace friction and finding consensus when you fundamentally disagree.'});
       res.push({type:'course', title:'Conflict Resolution Foundations', author:'LinkedIn Learning', url:'https://www.linkedin.com/learning/conflict-resolution-foundations', why:'Teaches the exact phrasing and frameworks needed to turn an adversarial argument into a collaborative problem-solving session.'});
     }
     if(gapKeys.includes('O')){
       res.push({type:'book', title:'Originals', author:'Adam Grant', url:'https://www.amazon.com/Originals-How-Non-Conformists-Move-World/dp/014312885X', why:'Explores how to recognize good ideas, speak up without getting silenced, and champion innovation in bureaucratic environments.'});
-      res.push({type:'ted', title:'Where Good Ideas Come From', author:'Steven Johnson', url:'https://www.youtube.com/watch?v=NugRZGDbHbc', why:'Explores how innovation actually happens in professional environments through "liquid networks" rather than isolated genius.'});
+      res.push({type:'ted', title:'Where Good Ideas Come From', author:'Steven Johnson', url:'https://www.youtube.com/watch?v=0af00UcTO-c', why:'Explores how innovation actually happens in professional environments through "liquid networks" rather than isolated genius.'});
       res.push({type:'article', title:'The Innovator’s DNA', author:'Dyer, Gregersen, Christensen (HBR)', url:'https://hbr.org/2009/12/the-innovators-dna', why:'Breaks down the five specific, learnable habits of highly innovative professionals (Associating, Questioning, Observing, Networking, Experimenting).'});
       res.push({type:'course', title:'Design Thinking for Innovation', author:'Coursera', url:'https://www.coursera.org/learn/uva-darden-design-thinking-innovation', why:'Provides a structured, step-by-step process for creative problem solving that you can apply to any rigid corporate process.'});
     }
@@ -3716,32 +3768,32 @@ const getPrograms = () => {
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Priority Action Matrix</h3>
             <p style={{color:T.t2, fontSize:'13px', lineHeight:'1.7', marginBottom:'12px', fontWeight:'500'}}>Dimensions sorted relatively by urgency based on your unique score profile.</p>
             <div style={{fontSize:'12px', color:T.t3, marginBottom:'24px', padding:'10px 14px', background:T.bg2, borderRadius:'6px', lineHeight:'1.6', fontWeight:'500'}}>
-              <strong style={{color:T.t2}}>Where these come from:</strong> This matrix sorts the 9 core behavioural dimensions from your lowest scores (Act Now) to your highest scores (Sustain & Expand), giving you a perfectly personalized roadmap.
+              <strong style={{color:T.t2}}>Where these come from:</strong> This matrix ranks your 9 dimensions by how your score compares to how people typically score in that area, not by the raw number alone. A 70 can be a genuine strength in one dimension and a priority in another, so the percentile is what sets the order here.
             </div>
             
             <div className="grid-2-col" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
              <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'12px'}}>🔴 Act Now (Priority)</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.rd,display:'inline-block',flexShrink:0}}></span>Act Now (Priority)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(7, 9).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
+                  {allDims.slice(7, 9).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
                 </ul>
               </div>
               <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'12px'}}>🟡 Build Soon (Secondary)</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.am,display:'inline-block',flexShrink:0}}></span>Build Soon (Secondary)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(5, 7).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
+                  {allDims.slice(5, 7).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
                 </ul>
               </div>
               <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.gn, marginBottom:'12px'}}>🟢 Sustain & Expand (Strengths)</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.gn, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.gn,display:'inline-block',flexShrink:0}}></span>Sustain &amp; Expand (Strengths)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(0, 2).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
+                  {allDims.slice(0, 2).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
                 </ul>
               </div>
               <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px'}}>
-                <div style={{fontSize:'13px', fontWeight:'800', color:T.t2, marginBottom:'12px'}}>🔵 Monitor Progress (Balanced)</div>
+                <div style={{fontSize:'13px', fontWeight:'800', color:T.t2, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.t2,display:'inline-block',flexShrink:0}}></span>Monitor Progress (Balanced)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(2, 5).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
+                  {allDims.slice(2, 5).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
                 </ul>
               </div>
             </div>

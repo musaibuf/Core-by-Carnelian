@@ -36,8 +36,7 @@ const barGrad = (v) =>
   v >= 75 ? 'linear-gradient(90deg,#22c55e,#4ade80)'
   : v >= 50 ? 'linear-gradient(90deg,#f59e0b,#fcd34d)'
   : 'linear-gradient(90deg,#ef4444,#f87171)';
-const validityColor = (overall, T) =>
-  overall === 'green' ? T.gn : overall === 'amber' ? T.am : T.rd;
+
 
 const COMPOSITE_KEYS = [
   { k:'CII', l:'Compliance & Integrity',   green:70, amber:54 },
@@ -48,8 +47,6 @@ const COMPOSITE_KEYS = [
   { k:'OPS', l:'Operational Reliability',  green:67, amber:51 },
   { k:'PMS', l:'People Management',        green:67, amber:51 },
 ];
-const OCEAN_KEYS   = ['O','C','E','A','ES'];
-const OCEAN_LABELS = { O:'Openness', C:'Conscientiousness', E:'Extraversion', A:'Agreeableness', ES:'Emotional Stability' };
 const MODULE_KEYS  = [
   { k:'OCEANavg', l:'Personality (OCEAN)', c:'#EC4899' },
   { k:'CQavg',    l:'Cultural Intelligence', c:'#06B6D4' },
@@ -623,7 +620,6 @@ const TechnicalReport = ({ candidate, T }) => {
   const validity = rd.validity  || {};
   const profile  = rd.profile   || {};
   const roles    = rd.roles     || [];
-  const CI       = rd.CI        || {};
 
   const card = (children, style = {}) => (
     <div style={{ background: T.bg2, border: `1px solid ${T.b1}`, borderRadius: '10px', padding: '20px', marginBottom: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', ...style }}>
@@ -1149,7 +1145,7 @@ const ActionPlanDownloadBtn = ({ R, S, CI, profile, allDims, top2, bot2, devArea
 
       const dimRows = allDims.map(d => { const [bl,bc] = band(d.v); return [`<span style="font-weight:600;">${esc(d.l)}</span>`, `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${d.v}/100</span>`, `<span style="font-weight:700;color:${bc};">${bl}</span>`]; });
       const idxRows = [['CII','Compliance & Integrity',CI.CII],['LRS','Leadership Readiness',CI.LRS],['TVS','Team Value',CI.TVS],['ADS','Adaptability',CI.ADS],['SES','Stakeholder Engagement',CI.SES],['OPS','Operations',CI.OPS],['PMS','People Management',CI.PMS]]
-        .map(([k,l,v]) => { const [bl,bc] = band(v); return [`<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${C};">${k}</span>`, `<span style="font-weight:600;">${esc(l)}</span>`, `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${v}</span>`]; });
+               .map(([k,l,v]) => { const [,bc] = band(v); return [`<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${C};">${k}</span>`, `<span style="font-weight:600;">${esc(l)}</span>`, `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${bc};">${v}</span>`]; });
       const p2 = pageShell(`
         ${sectionHead('Section 1', 'Score Profile at a Glance', 'Nine behavioural dimensions, ranked, plus the seven composite indices built from them.')}
         ${keyBlock([['Bands', '75+ is a genuine strength. 50 to 74 is developing. Below 50 is the priority — the plan below is built around it.'], ['Indices', 'Composite indices combine several dimensions to show how they interact, weighted for their role relevance.']])}
@@ -1161,6 +1157,9 @@ const ActionPlanDownloadBtn = ({ R, S, CI, profile, allDims, top2, bot2, devArea
 
       const strengthCard = (d) => `<div style="border:1px solid ${LINE};border-left:4px solid ${GN};background:${GNs};padding:14px 16px;margin-bottom:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.12em;color:${GN};text-transform:uppercase;margin-bottom:5px;">Core Strength</div><div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:${INK};margin-bottom:6px;">${esc(d.l)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${GN};font-weight:700;">${d.v}/100</span></div><div style="font-size:9.3px;color:${SUB};line-height:1.55;">${esc(d.str)}</div></div>`;
       const growthCard = (d) => `<div style="border:1px solid ${LINE};border-left:4px solid ${RD};background:${RDs};padding:14px 16px;margin-bottom:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:0.12em;color:${RD};text-transform:uppercase;margin-bottom:5px;">Priority Development Area</div><div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:${INK};margin-bottom:6px;">${esc(d.l)} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${RD};font-weight:700;">${d.v}/100</span></div><div style="font-size:9.3px;color:${SUB};line-height:1.55;">${esc(d.gap || 'A core driver of professional effectiveness and the highest-leverage development opportunity right now.')}</div></div>`;
+            const currentPct = Math.round(allDims.reduce((a,d)=>a+d.pct,0)/allDims.length);
+            const targetPct = Math.round(currentPct + bot2.reduce((a,d)=>a+Math.max(0,50-d.pct),0)/allDims.length);
+      const ordSuffix = n => { const j=n%10, k=n%100; if(j===1&&k!==11) return 'st'; if(j===2&&k!==12) return 'nd'; if(j===3&&k!==13) return 'rd'; return 'th'; };
       const p3 = pageShell(`
         ${sectionHead('Section 2', 'What They Are Good At, And Where To Grow', 'The two clearest strengths, and the two areas this development plan targets.')}
         ${keyBlock([['How these were picked', 'Nine dimensions ranked highest to lowest. The top two are the anchor strengths. The bottom two are the priority development areas, the focus of Section 3.']])}
@@ -1224,7 +1223,32 @@ const ActionPlanDownloadBtn = ({ R, S, CI, profile, allDims, top2, bot2, devArea
         </div>
       `, 'Programmes & Close');
 
-      const allPages = [p1, p2, p3, ...roadmapPages, p_resources, p_close];
+           const p_trajectory = pageShell(`
+        ${sectionHead('Section 2.5', 'Growth Trajectory', 'Where this candidate\'s profile sits today, and what focused work on their two priority areas can realistically move.')}
+        <div style="background:${PANEL};border:1px solid ${LINE};border-left:4px solid ${GOLD};padding:14px 16px;margin-bottom:16px;font-size:9.5px;color:${SUB};line-height:1.7;">
+          ${targetPct > currentPct
+            ? `This candidate's overall profile currently sits at roughly the <strong style="color:${INK};">${currentPct}${ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed. Focused, consistent work on their two priority development areas could realistically bring that to around the <strong style="color:${GOLD};">${targetPct}${ordSuffix(targetPct)} percentile</strong> within a few months.`
+            : `This candidate's overall profile currently sits at roughly the <strong style="color:${INK};">${currentPct}${ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed, with no single dimension holding them back. Development here is about deepening existing strengths rather than closing a gap. The two areas below are where they have the most room relative to their own profile, not weaknesses.`}
+        </div>
+                <div style="display:${targetPct > currentPct ? 'flex' : 'none'};gap:14px;align-items:center;">
+          <div style="flex:1;text-align:center;padding:14px;background:${BG};border:1px solid ${LINE};border-radius:6px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${FAINT};font-weight:700;letter-spacing:0.1em;">TODAY</div>
+                       <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${INK};margin-top:6px;">${currentPct}${ordSuffix(currentPct)}</div>
+          </div>
+          <div style="font-size:16px;color:${GOLD};">&rarr;</div>
+          <div style="flex:1;text-align:center;padding:14px;background:${GNs};border:1px solid ${GN}40;border-radius:6px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${GN};font-weight:700;letter-spacing:0.1em;">WITHIN REACH</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${GN};margin-top:6px;">${targetPct}${ordSuffix(targetPct)}</div>
+          </div>
+        </div>
+                ${targetPct > currentPct ? '' : `<div style="text-align:center;padding:16px;background:${GNs};border:1px solid ${GN}40;border-radius:6px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${GN};font-weight:700;letter-spacing:0.1em;">CURRENT STANDING</div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${GN};margin-top:6px;">${currentPct}${ordSuffix(currentPct)} percentile</div>
+        </div>`}
+        <div style="font-size:8px;color:${FAINT};margin-top:12px;font-style:italic;">${targetPct > currentPct ? 'Directional estimate only, not a guarantee. Confirm actual movement on the next CORE retake.' : 'Percentiles compare this candidate to other professionals CORE has assessed. Confirm movement on the next CORE retake.'}</div>
+      `, 'Growth Trajectory');
+
+      const allPages = [p1, p2, p3, p_trajectory, ...roadmapPages, p_resources, p_close];
 
       for (let i = 0; i < allPages.length; i++) {
         setPdfBusy(`Rendering page ${i + 1} of ${allPages.length}…`);
@@ -1287,7 +1311,10 @@ const ActionPlanReport = ({ candidate, T }) => {
    .sort((a,b) => b.pct - a.pct);
 
   const top2 = allDims.slice(0,2);
-  const bot2 = [...allDims].sort((a,b)=>a.pct-b.pct).slice(0,2);
+   const bot2 = [...allDims].sort((a,b)=>a.pct-b.pct).slice(0,2);
+  const currentPct = Math.round(allDims.reduce((a,d)=>a+d.pct,0)/allDims.length);
+    const targetPct = Math.round(currentPct + bot2.reduce((a,d)=>a+Math.max(0,50-d.pct),0)/allDims.length);
+  const ordSuffix = n => { const j=n%10, k=n%100; if(j===1&&k!==11) return 'st'; if(j===2&&k!==12) return 'nd'; if(j===3&&k!==13) return 'rd'; return 'th'; };
 
   const ind = candidate.industry || '';
   const lvl = candidate.level || candidate.experience || '';
@@ -1654,6 +1681,28 @@ const ActionPlanReport = ({ candidate, T }) => {
           </div>
         </>
       )}
+
+            <div style={{background:T.bg2,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'24px 28px',marginBottom:'20px'}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.gold,marginBottom:'10px'}}>◈ Growth Trajectory</div>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:'1.3rem',fontWeight:'700',color:T.t0,marginBottom:'10px'}}>Where This Candidate Stands, And What This Plan Can Move</h3>
+        <p style={{color:T.t1,fontSize:'13px',lineHeight:'1.75',fontWeight:'500',marginBottom:'16px'}}>
+                    {targetPct > currentPct
+                      ? <>This candidate's overall profile currently sits at roughly the <strong style={{color:T.t0}}>{currentPct}{ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed. Focused, consistent work on their two priority development areas could realistically bring that to around the <strong style={{color:T.gold}}>{targetPct}{ordSuffix(targetPct)} percentile</strong> within a few months.</>
+                      : <>This candidate's overall profile currently sits at roughly the <strong style={{color:T.t0}}>{currentPct}{ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed, with no single dimension holding them back. Development here is about deepening existing strengths rather than closing a gap. The areas below are where they have the most room relative to their own profile.</>}
+        </p>
+                <div style={{display: targetPct > currentPct ? 'flex' : 'none',alignItems:'center',gap:'12px'}}>
+          <div style={{flex:1,textAlign:'center',padding:'14px',background:T.bg1,borderRadius:'8px',border:`1px solid ${T.b2}`}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'9px',color:T.t3,fontWeight:'700'}}>TODAY</div>
+                        <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.6rem',fontWeight:'700',color:T.t0,marginTop:'4px'}}>{currentPct}{ordSuffix(currentPct)}</div>
+          </div>
+          <div style={{fontSize:'18px',color:T.gold}}>→</div>
+          <div style={{flex:1,textAlign:'center',padding:'14px',background:`${T.gold}12`,borderRadius:'8px',border:`1px solid ${T.gold}40`}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:'9px',color:T.gold,fontWeight:'700'}}>WITHIN REACH</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:'1.6rem',fontWeight:'700',color:T.gold,marginTop:'4px'}}>{targetPct}{ordSuffix(targetPct)}</div>
+          </div>
+        </div>
+        <p style={{color:T.t3,fontSize:'10.5px',lineHeight:'1.6',marginTop:'12px',fontStyle:'italic'}}>Directional estimate only, not a guarantee. Confirm actual movement on the next CORE retake.</p>
+      </div>
 
       {/* DEVELOPMENT ROADMAP */}
       {devAreas.length > 0 && (
@@ -2456,31 +2505,6 @@ const RadarChart = ({ data, T, size = 380, color = '#B01C24' }) => {
   );
 };
 
-// SVG donut, renders correctly in html2canvas/PDF unlike CSS conic-gradient.
-const DonutChart = ({ segments, size = 240, hole = 160, T, centerTop, centerBottom }) => {
-  const total = segments.reduce((a, s) => a + s.value, 0) || 1;
-  const cx = size / 2, cy = size / 2, r = size / 2;
-  let angle = -90;
-  const paths = segments.map((s, i) => {
-    const frac = s.value / total;
-    if (frac >= 0.999) return <circle key={i} cx={cx} cy={cy} r={r} fill={s.color} />;
-    const a0 = angle * Math.PI / 180;
-    angle += frac * 360;
-    const a1 = angle * Math.PI / 180;
-    const large = frac > 0.5 ? 1 : 0;
-    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
-    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
-    return <path key={i} d={`M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`} fill={s.color} />;
-  });
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size}>{paths}<circle cx={cx} cy={cy} r={hole / 2} fill={T.bg1} /></svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        {centerTop}{centerBottom}
-      </div>
-    </div>
-  );
-};
 
 // ─── CULTURE PULSE REPORT (Multi-Dept Org) ────────────────────────
 const CULTURE_PERSONAS = [
@@ -2652,7 +2676,6 @@ const PR_W = 794, PR_H = 1123, PR_PAD = 46;
 
 const prBandName = v => v >= 75 ? 'Strong' : v >= 60 ? 'Solid' : 'Still building';
 const prCol = v => v >= 75 ? PRT.gn : v >= 60 ? PRT.am : PRT.rd;
-const prSoft = v => v >= 75 ? PRT.gnSoft : v >= 60 ? PRT.amSoft : PRT.rdSoft;
 
 const prChunk = (arr, first, rest) => {
   const out = [];

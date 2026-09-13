@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Bolt, WorkspacePremium, AccountBalance, Lightbulb,
-  Balance, Public, Groups, RocketLaunch,
-  Diversity3, Shield, AltRoute, MenuBook,
-  TrendingUp
-} from '@mui/icons-material';
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 let T = {};
@@ -543,7 +537,6 @@ const computeValidity = (answers) => {
   }
 
   const redCount=flags.filter(f=>f.type==='red').length;
-  const amberCount=flags.filter(f=>f.type==='amber').length;
   let overall,overallLabel;
   if(catastrophic||extremeCareless||(conScore<30&&extRatio>0.70)){overall='red';overallLabel='Invalid · Do Not Use Results. Recommend Immediate Verification.';}
   else if(conScore<20||extRatio>0.90){overall='red';overallLabel='Invalid · Results Uninterpretable. Retake Required.';}
@@ -2754,7 +2747,10 @@ const allDims = [
  .sort((a,b) => b.pct - a.pct);
 
   const top2 = allDims.slice(0, 2);
-  const bot2 = [...allDims].sort((a,b) => a.pct - b.pct).slice(0, 2);
+    const bot2 = [...allDims].sort((a,b) => a.pct - b.pct).slice(0, 2);
+  const currentPct = Math.round(allDims.reduce((a,d)=>a+d.pct,0)/allDims.length);
+   const targetPct = Math.round(currentPct + bot2.reduce((a,d)=>a+Math.max(0,50-d.pct),0)/allDims.length);
+  const ordSuffix = n => { const j=n%10, k=n%100; if(j===1&&k!==11) return 'st'; if(j===2&&k!==12) return 'nd'; if(j===3&&k!==13) return 'rd'; return 'th'; };
 
   // ── CONTEXT ENGINE ──
   const ind = R.industry || '';
@@ -3051,28 +3047,6 @@ const buildHabits = (content, dim, profile, R) => {
       fut: content.fut
     };
   });
-  
-      const bars = [
-        ['Overall Match', S.overall], ['Personality & Drive', S.OCEANavg], ['Cultural Agility', S.CQavg],
-        ['Team Citizenship', S.OCBavg], ['Learning Agility', S.LAavg], ['Ethical Integrity', S.EOavg],
-        ['Conscientiousness', S.C], ['Emotional Resilience', S.ES]
-      ].filter(([_,v]) => v !== undefined && v !== null);
-
-  // ─── PDF DOWNLOAD (Action Plan) — captures the exact on-screen cards, page by page ───
-  const loadScriptOnceAP = (src, flag) => new Promise((resolve, reject) => {
-    if (window[flag]) { resolve(); return; }
-    const existing = document.querySelector(`script[data-${flag}]`);
-    if (existing) {
-      const check = setInterval(() => { if (window[flag]) { clearInterval(check); resolve(); } }, 50);
-      return;
-    }
-    const s = document.createElement('script');
-    s.src = src;
-    s.setAttribute(`data-${flag}`, '1');
-    s.onload = () => { window[flag] = true; resolve(); };
-    s.onerror = reject;
-    document.body.appendChild(s);
-  });
 
   const downloadPDF = async () => {
     setPdfBusy('Loading export engine…');
@@ -3175,7 +3149,7 @@ const buildHabits = (content, dim, profile, R) => {
       });
       const idxRows = [['CII','Compliance & Integrity',CI.CII],['LRS','Leadership Readiness',CI.LRS],['TVS','Team Value',CI.TVS],['ADS','Adaptability',CI.ADS],['SES','Stakeholder Engagement',CI.SES],['OPS','Operations',CI.OPS],['PMS','People Management',CI.PMS]]
         .map(([k,l,v]) => {
-          const [bl,bc] = band(v);
+                    const [,bc] = band(v);
           return [
             `<span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:${C};">${k}</span>`,
             `<span style="font-weight:600;">${esc(l)}</span>`,
@@ -3264,7 +3238,32 @@ const buildHabits = (content, dim, profile, R) => {
         </div>
       `, 'Training & Close');
 
-      const allPages = [p1, p2, p3, ...roadmapPages, p_resources, p_close];
+            const p_trajectory = pageShell(`
+                ${sectionHead('Section 2.5', 'Your Growth Trajectory', targetPct > currentPct ? 'Where your profile sits today, and what focused work on your two priority areas can realistically move.' : 'Where your profile sits today, and where to keep building.')}
+        <div style="background:${PANEL};border:1px solid ${LINE};border-left:4px solid ${GOLD};padding:14px 16px;margin-bottom:16px;font-size:9.5px;color:${SUB};line-height:1.7;">
+                                        ${targetPct > currentPct
+                      ? `Right now, your overall profile sits at roughly the <strong style="color:${INK};">${currentPct}${ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed. Genuine, consistent work on your two priority development areas over the next few months is realistically enough to get you to around the <strong style="color:${GOLD};">${targetPct}${ordSuffix(targetPct)} percentile</strong>. The ten-step plans that follow give you a clear, practical place to start.`
+                      : `Right now, your overall profile sits at roughly the <strong style="color:${INK};">${currentPct}${ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed, and no single dimension is holding you back. At this stage, development is less about closing a gap and more about deepening what you already do well. The two areas below are where you have the most room to grow relative to your own profile, not weaknesses.`}
+        </div>
+                <div style="display:${targetPct > currentPct ? 'flex' : 'none'};gap:14px;align-items:center;">
+          <div style="flex:1;text-align:center;padding:14px;background:${BG};border:1px solid ${LINE};border-radius:6px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${FAINT};font-weight:700;letter-spacing:0.1em;">TODAY</div>
+                      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${INK};margin-top:6px;">${currentPct}${ordSuffix(currentPct)}</div>
+          </div>
+          <div style="font-size:16px;color:${GOLD};">&rarr;</div>
+          <div style="flex:1;text-align:center;padding:14px;background:${GNs};border:1px solid ${GN}40;border-radius:6px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${GN};font-weight:700;letter-spacing:0.1em;">WITHIN REACH</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${GN};margin-top:6px;">${targetPct}${ordSuffix(targetPct)}</div>
+          </div>
+        </div>
+                     ${targetPct > currentPct ? '' : `<div style="text-align:center;padding:16px;background:${GNs};border:1px solid ${GN}40;border-radius:6px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:${GN};font-weight:700;letter-spacing:0.1em;">YOUR CURRENT STANDING</div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${GN};margin-top:6px;">${currentPct}${ordSuffix(currentPct)} percentile</div>
+        </div>`}
+        <div style="font-size:8px;color:${FAINT};margin-top:12px;font-style:italic;">${targetPct > currentPct ? "This is a directional estimate, not a guarantee. It's built from bringing your two priority development areas up to a typical level. Real progress is measured on your next CORE retake." : 'Percentiles compare you to other professionals CORE has assessed. Real progress is measured on your next CORE retake.'}</div>
+      `, 'Growth Trajectory');
+
+      const allPages = [p1, p2, p3, p_trajectory, ...roadmapPages, p_resources, p_close];
 
       for (let i = 0; i < allPages.length; i++) {
         setPdfBusy(`Rendering page ${i + 1} of ${allPages.length}…`);
@@ -3611,6 +3610,45 @@ const getPrograms = () => {
             </div>
           </div>
 
+                  <div style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'28px 32px',marginBottom:'24px'}}>
+            <div className="mono" style={{fontSize:'9px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.12em',color:T.gold,marginBottom:'10px'}}>◈ Your Growth Trajectory</div>
+                        <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>{targetPct > currentPct ? 'Where You Stand, And Where This Plan Can Take You' : 'Where You Stand Today'}</h3>
+            {targetPct > currentPct ? (
+              <>
+                <p style={{color:T.t1,fontSize:'13.5px',lineHeight:'1.8',fontWeight:'500',marginBottom:'18px'}}>
+                  Right now, your overall profile sits at roughly the <strong style={{color:T.t0}}>{currentPct}{ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed. That is your honest starting point, not a ceiling.
+                  <br/><br/>
+                  Genuine, focused work on your two priority development areas below, sustained over the next few months, is realistically enough to get you there. The ten-step plans on the pages that follow give you a clear, practical place to start.
+                </p>
+                <div style={{display:'flex',alignItems:'center',gap:'14px'}}>
+                  <div style={{flex:1,textAlign:'center',padding:'16px',background:T.bg2,borderRadius:'8px',border:`1px solid ${T.b2}`}}>
+                    <div className="mono" style={{fontSize:'9px',color:T.t3,fontWeight:'700',letterSpacing:'0.1em'}}>TODAY</div>
+                    <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.t0,marginTop:'6px'}}>{currentPct}{ordSuffix(currentPct)}</div>
+                  </div>
+                  <div style={{fontSize:'20px',color:T.gold}}>→</div>
+                  <div style={{flex:1,textAlign:'center',padding:'16px',background:`${T.gold}12`,borderRadius:'8px',border:`1px solid ${T.gold}40`}}>
+                    <div className="mono" style={{fontSize:'9px',color:T.gold,fontWeight:'700',letterSpacing:'0.1em'}}>WITHIN REACH</div>
+                    <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.gold,marginTop:'6px'}}>{targetPct}{ordSuffix(targetPct)}</div>
+                  </div>
+                </div>
+                <p style={{color:T.t3,fontSize:'11px',lineHeight:'1.6',marginTop:'14px',fontStyle:'italic'}}>This is a directional estimate, not a guarantee. It's built from bringing your two priority development areas up to a typical level. Real progress is measured on your next CORE retake.</p>
+              </>
+            ) : (
+              <>
+                <p style={{color:T.t1,fontSize:'13.5px',lineHeight:'1.8',fontWeight:'500',marginBottom:'18px'}}>
+                  Right now, your overall profile sits at roughly the <strong style={{color:T.t0}}>{currentPct}{ordSuffix(currentPct)} percentile</strong> against other professionals CORE has assessed, and no single dimension is holding you back.
+                  <br/><br/>
+                  At this stage, development is less about closing a gap and more about deepening what you already do well. The two areas below are simply where you have the most room to grow relative to your own profile, not weaknesses. The ten-step plans that follow will help you build there deliberately.
+                </p>
+                <div style={{textAlign:'center',padding:'20px',background:`${T.gold}12`,borderRadius:'8px',border:`1px solid ${T.gold}40`}}>
+                  <div className="mono" style={{fontSize:'9px',color:T.gold,fontWeight:'700',letterSpacing:'0.1em'}}>YOUR CURRENT STANDING</div>
+                  <div style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.9rem',fontWeight:'700',color:T.gold,marginTop:'6px'}}>{currentPct}{ordSuffix(currentPct)} percentile</div>
+                </div>
+                <p style={{color:T.t3,fontSize:'11px',lineHeight:'1.6',marginTop:'14px',fontStyle:'italic'}}>Percentiles compare you to other professionals CORE has assessed. Real progress is measured on your next CORE retake.</p>
+              </>
+            )}
+          </div>
+
          <div className="roadmap-outer" style={{background:T.bg1,border:`1px solid ${T.b2}`,borderRadius:'12px',padding:'32px 36px',marginBottom:'24px'}}>
             <h3 style={{fontFamily:"'Crimson Pro',serif",fontSize:'1.4rem',fontWeight:'700',color:T.t0,marginBottom:'12px'}}>Your Development Roadmap {R.industry ? `· ${R.industry}` : ''}</h3>
             <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px 24px', marginBottom:'20px', borderLeft:`4px solid ${T.gold}`}}>
@@ -3775,25 +3813,25 @@ const getPrograms = () => {
              <div style={{background:T.rdP, border:`1px solid ${T.rd}40`, borderRadius:'10px', padding:'20px'}}>
                 <div style={{fontSize:'13px', fontWeight:'800', color:T.rd, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.rd,display:'inline-block',flexShrink:0}}></span>Act Now (Priority)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(7, 9).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
+                                   {allDims.slice(7, 9).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
               <div style={{background:T.amP, border:`1px solid ${T.am}40`, borderRadius:'10px', padding:'20px'}}>
                 <div style={{fontSize:'13px', fontWeight:'800', color:T.am, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.am,display:'inline-block',flexShrink:0}}></span>Build Soon (Secondary)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(5, 7).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
+                                    {allDims.slice(5, 7).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
               <div style={{background:T.gnP, border:`1px solid ${T.gn}40`, borderRadius:'10px', padding:'20px'}}>
                 <div style={{fontSize:'13px', fontWeight:'800', color:T.gn, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.gn,display:'inline-block',flexShrink:0}}></span>Sustain &amp; Expand (Strengths)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(0, 2).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
+                                   {allDims.slice(0, 2).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
               <div style={{background:T.bg2, border:`1px solid ${T.b2}`, borderRadius:'10px', padding:'20px'}}>
                 <div style={{fontSize:'13px', fontWeight:'800', color:T.t2, marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px'}}><span style={{width:'10px',height:'10px',borderRadius:'50%',background:T.t2,display:'inline-block',flexShrink:0}}></span>Monitor Progress (Balanced)</div>
                 <ul style={{paddingLeft:'20px', margin:0, color:T.t0, fontSize:'13px', lineHeight:'1.6', fontWeight:'600'}}>
-                  {allDims.slice(2, 5).map(d=><li key={d.l}>{d.l} ({d.v}/100 · {Math.round(d.pct)}th percentile)</li>)}
+                                   {allDims.slice(2, 5).map(d=><li key={d.l}>{d.l} ({d.v}/100)</li>)}
                 </ul>
               </div>
             </div>
